@@ -1,6 +1,5 @@
 typedef
 =======
-
 a few fundamental components
 
 只是让轮子更圆。另外，仅仅快是不行的。
