@@ -246,7 +246,6 @@ public class InstallmentByteBuffer extends OutputStream {
         try {
             return new String(array(), "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            // unlikely to happen
             throw new Error("Not support utf8");
         }
     }
