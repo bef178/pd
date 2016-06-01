@@ -153,6 +153,10 @@ public class InstallmentByteBuffer extends OutputStream {
         return this;
     }
 
+    public InstallmentByteBuffer append(String s) {
+        return append(s.getBytes());
+    }
+
     /**
      * @return a copy of valid in bounds byte array
      */
