@@ -83,10 +83,14 @@ public final class FormatCodec {
                 Integer.SIZE / Byte.SIZE * 2;
 
         public static int fromUtf8(byte[] utf8) {
-            assert utf8 != null && utf8.length > 0;
+            return fromUtf8(utf8, 0);
+        }
+
+        public static int fromUtf8(byte[] a, int i) {
+            assert a != null && a.length > i;
 
             int n = 0;
-            int ch = utf8[0];
+            int ch = a[i];
             if ((ch & 0x80) == 0) {
                 return ch;
             } else if ((ch & 0x40) == 0) {
@@ -110,8 +114,8 @@ public final class FormatCodec {
                 return -1;
             }
 
-            for (int i = 1; i < n; ++i) {
-                ch = utf8[i] & 0x3F | (ch << 6);
+            for (++i; i < n; ++i) {
+                ch = a[i] & 0x3F | (ch << 6);
             }
             return ch;
         }
@@ -299,6 +303,32 @@ public final class FormatCodec {
                 bytes = 6;
             }
             return bytes;
+        }
+
+        public static int utf8LengthByUtf8(byte[] a) {
+            return utf8LengthByUtf8(a, 0);
+        }
+
+        public static int utf8LengthByUtf8(byte[] a, int i) {
+            return utf8LengthByUtf8(a[i]);
+        }
+
+        public static int utf8LengthByUtf8(int ch) {
+            ch &= 0xFF;
+            if ((ch & 0x80) == 0) {
+                return 1;
+            } else if ((ch & 0x20) == 0) {
+                return 2;
+            } else if ((ch & 0x10) == 0) {
+                return 3;
+            } else if ((ch & 0x08) == 0) {
+                return 4;
+            } else if ((ch & 0x04) == 0) {
+                return 5;
+            } else if ((ch & 0x02) == 0) {
+                return 6;
+            }
+            return -1;
         }
 
         private Unicode() {

@@ -20,12 +20,37 @@ public class InstallmentByteBuffer extends OutputStream {
             return next >= 0 && next < used;
         }
 
+        /**
+         * @return next byte
+         */
         public int next() {
             if (hasNext()) {
                 return get(next++) & 0xFF;
             } else {
                 return -1;
             }
+        }
+
+        /**
+         * get from underlying byte sequence assuming encoded with utf8<br/>
+         * throws {@link ParsingException} if fail
+         */
+        public int getNextCodePoint() {
+            int n = FormatCodec.Unicode.utf8LengthByUtf8(peek());
+            if (n < 0) {
+                throw new ParsingException();
+            }
+
+            // have to copy coz cannot pass the function next() into FormatCodec.Unicode
+            byte[] a = new byte[n];
+            for (int i = 0; i < n; ++i) {
+                int ch = next();
+                if (ch < 0) {
+                    throw new ParsingException();
+                }
+                a[i] = (byte) (ch & 0xFF);
+            }
+            return FormatCodec.Unicode.fromUtf8(a);
         }
 
         /**
