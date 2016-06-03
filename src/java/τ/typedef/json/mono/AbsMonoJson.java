@@ -5,33 +5,8 @@ import τ.typedef.json.JsonMapping;
 import τ.typedef.json.JsonScalar;
 import τ.typedef.json.JsonSequence;
 
-public abstract class AbsMonoJson implements JsonScalar, JsonSequence,
+abstract class AbsMonoJson implements JsonScalar, JsonSequence,
         JsonMapping {
-
-    protected static void checkType(AbsMonoJson j, Type t) {
-        checkType(j.type(), t);
-    }
-
-    /**
-     * assert type equals or throw {@link IllegalTypeException}
-     */
-    public static void checkType(Type type, Type t) {
-        if (type != t) {
-            throw new IllegalTypeException();
-        }
-    }
-
-    /**
-     * @return <code>false</code> if must set type later
-     */
-    static boolean requireType(Type type, Type t) {
-        if (type == null) {
-            return false;
-        } else if (type != t) {
-            throw new IllegalTypeException();
-        }
-        return true;
-    }
 
     private final Type type;
 
@@ -46,8 +21,13 @@ public abstract class AbsMonoJson implements JsonScalar, JsonSequence,
         throw new IllegalTypeException();
     }
 
-    final void checkType(Type expected) {
-        checkType(this, expected);
+    /**
+     * assert type equals or throw {@link IllegalTypeException}
+     */
+    protected final void checkType(Type expected) {
+        if (this.type() != expected) {
+            throw new IllegalTypeException();
+        }
     }
 
     @Override

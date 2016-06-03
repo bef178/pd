@@ -2,6 +2,7 @@ package τ.typedef.json.mono;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import τ.typedef.json.Json;
 import τ.typedef.json.JsonMapping;
@@ -10,29 +11,11 @@ import τ.typedef.json.JsonSequence;
 
 class MonoJson extends AbsMonoJson {
 
-    public static class Producer implements Json.Producer {
-
-        @Override
-        public JsonMapping produceMapping() {
-            return new MonoJson(Type.MAPPING);
-        }
-
-        @Override
-        public JsonScalar produceScalar() {
-            return new MonoJson(Type.SCALAR);
-        }
-
-        @Override
-        public JsonSequence produceSequence() {
-            return new MonoJson(Type.SEQUENCE);
-        }
-    }
-
     private String scalar;
     private ArrayList<AbsMonoJson> sequence;
     private HashMap<String, AbsMonoJson> mapping;
 
-    private MonoJson(Type type) {
+    MonoJson(Type type) {
         super(type);
         switch (type) {
             case SCALAR:
@@ -62,68 +45,62 @@ class MonoJson extends AbsMonoJson {
         return this;
     }
 
-    private AbsMonoJson getJson(int index) {
+    @Override
+    public AbsMonoJson getJson(int index) {
         checkType(Type.SEQUENCE);
         return sequence.get(index);
     }
 
-    private AbsMonoJson getJson(String key) {
+    private AbsMonoJson getJson(int index, Type t) {
+        AbsMonoJson j = getJson(index);
+        if (j != null && j.type() == t) {
+            return j;
+        }
+        throw new IllegalTypeException();
+    }
+
+    @Override
+    public AbsMonoJson getJson(String key) {
         checkType(Type.MAPPING);
         return mapping.get(key);
     }
 
+    private AbsMonoJson getJson(String key, Type t) {
+        AbsMonoJson j = getJson(key);
+        if (j != null && j.type() == t) {
+            return j;
+        }
+        throw new IllegalTypeException();
+    }
+
     @Override
     public JsonMapping getMapping(int index) {
-        AbsMonoJson j = getJson(index);
-        if (j != null) {
-            checkType(j, Type.MAPPING);
-        }
-        return j;
+        return getJson(index, Type.MAPPING);
     }
 
     @Override
     public JsonMapping getMapping(String key) {
-        AbsMonoJson j = getJson(key);
-        if (j != null) {
-            checkType(j, Type.MAPPING);
-        }
-        return j;
+        return getJson(key, Type.MAPPING);
     }
 
     @Override
     public JsonScalar getScalar(int index) {
-        AbsMonoJson j = getJson(index);
-        if (j != null) {
-            checkType(j, Type.SCALAR);
-        }
-        return j;
+        return getJson(index, Type.SCALAR);
     }
 
     @Override
     public JsonScalar getScalar(String key) {
-        AbsMonoJson j = getJson(key);
-        if (j != null) {
-            checkType(j, Type.SCALAR);
-        }
-        return j;
+        return getJson(key, Type.SCALAR);
     }
 
     @Override
     public JsonSequence getSequence(int index) {
-        AbsMonoJson j = getJson(index);
-        if (j != null) {
-            checkType(j, Type.SEQUENCE);
-        }
-        return j;
+        return getJson(index, Type.SEQUENCE);
     }
 
     @Override
     public JsonSequence getSequence(String key) {
-        AbsMonoJson j = getJson(key);
-        if (j != null) {
-            checkType(j, Type.SEQUENCE);
-        }
-        return j;
+        return getJson(key, Type.SEQUENCE);
     }
 
     @Override
@@ -151,6 +128,12 @@ class MonoJson extends AbsMonoJson {
     @Override
     public boolean isEmpty() {
         return size() == 0;
+    }
+
+    @Override
+    public Set<String> keys() {
+        checkType(Type.MAPPING);
+        return mapping.keySet();
     }
 
     @Override

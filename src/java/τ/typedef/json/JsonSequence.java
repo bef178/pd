@@ -7,11 +7,13 @@ public interface JsonSequence extends Json {
      */
     public JsonSequence clear();
 
+    public Json getJson(int index);
+
     public JsonMapping getMapping(int index);
 
-    public JsonSequence getSequence(int index);
-
     public JsonScalar getScalar(int index);
+
+    public JsonSequence getSequence(int index);
 
     /**
      * @return this object

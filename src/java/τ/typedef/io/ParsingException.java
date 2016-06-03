@@ -2,16 +2,6 @@ package τ.typedef.io;
 
 public class ParsingException extends RuntimeException {
 
-    public static ParsingException compose(String expected, String got) {
-        return new ParsingException(
-                "Excepted '" + expected + "', got '" + got);
-    }
-
-    public static ParsingException compose(String expected, int got) {
-        return ParsingException.compose(expected,
-                Character.toChars(got).toString());
-    }
-
     /**
      * generated serial version UID
      */
@@ -24,12 +14,31 @@ public class ParsingException extends RuntimeException {
     }
 
     public ParsingException(String detail) {
-        super(detail);
+        this(detail, -1);
     }
 
     public ParsingException(String detail, int pos) {
         super(detail);
         this.pos = pos;
+    }
+
+    public ParsingException(int expectedCodePoint, int acturalCodePoint) {
+        this(Character.toChars(expectedCodePoint).toString(),
+                Character.toChars(acturalCodePoint).toString(), -1);
+    }
+
+    public ParsingException(int expectedCodePoint, int acturalCodePoint,
+            int pos) {
+        this(Character.toChars(expectedCodePoint).toString(),
+                Character.toChars(acturalCodePoint).toString(), pos);
+    }
+
+    public ParsingException(String expected, String actual) {
+        this(expected, actual, -1);
+    }
+
+    public ParsingException(String expected, String actual, int pos) {
+        this("Excepted '" + expected + "', got '" + actual + "'", pos);
     }
 
     @Override
