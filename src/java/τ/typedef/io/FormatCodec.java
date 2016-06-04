@@ -2,7 +2,6 @@ package τ.typedef.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.BitSet;
 
 import τ.typedef.basic.Blob;
@@ -10,6 +9,7 @@ import τ.typedef.basic.Blob;
 public final class FormatCodec {
 
     public static final class Base64 extends FormatCodecBase64 {
+        // dummy
     }
 
     public static final class PrivateContract {
@@ -30,38 +30,29 @@ public final class FormatCodec {
                     return 0x0C;
                 case 'r':
                     return 0x0D;
-                case 'x':
-                    int n = Unicode.hexByte2HexInt(blob.next());
-                    assert n >= 1 && n <= 6;
-                    // get utf8bytes
-                    byte[] utf8 = new byte[n];
-                    for (int i = 0; i < n; ++i) {
-                        int hi = Unicode.hexByte2HexInt(blob.next());
-                        int lo = Unicode.hexByte2HexInt(blob.next());
-                        utf8[i] = (byte) ((hi << 4) | lo);
-                    }
-                    return Unicode.fromUtf8(utf8);
+                case 'b':
+                    return '\b';
+                case 'u':
+                    return Unicode.fromUtf8HexBytes(blob);
                 default:
                     return ch;
             }
         }
 
-        public static int decode(byte[] a) {
-            return decode(new Blob(a, 0));
-        }
-
-        public static byte[] encode(int ch) {
-            byte[] utf8 = Unicode.toUtf8(ch);
-            byte[] result = new byte[3 + utf8.length * 2];
-            result[0] = '\\';
-            result[1] = 'x';
-            result[2] = Unicode.hexInt2HexByte(utf8.length);
-            for (int i = 0; i < utf8.length; ++i) {
-                byte[] a = Unicode.toHexBytes(utf8[i]);
-                result[3 + i++] = a[0];
-                result[3 + i] = a[1];
+        public static int encode(int ch, Blob blob) {
+            int n = 2 + Unicode.utf8Length(ch) * 2;
+            if (blob != null) {
+                if (blob.isEmpty()) {
+                    blob.init(n);
+                }
+                int start = blob.i;
+                blob.next((byte) '\\');
+                blob.next((byte) 'u');
+                int m = Unicode.toUtf8HexBytes(ch, blob);
+                assert m == n - 2;
+                blob.i = start;
             }
-            return result;
+            return n;
         }
 
         private static void expect(int expected, int actual) {
@@ -79,43 +70,40 @@ public final class FormatCodec {
 
     public static final class Unicode {
 
-        private static final int NUM_HEX_BYTES_FROM_INT =
-                Integer.SIZE / Byte.SIZE * 2;
-
-        public static int fromUtf8(byte[] utf8) {
-            return fromUtf8(utf8, 0);
+        public static int fromUtf8(Blob blob) {
+            int ch = blob.next() & 0xFF;
+            int n = utf8LengthByUtf8((byte) ch);
+            if (n < 0) {
+                throw new ParsingException();
+            }
+            if (n == 1) {
+                return ch;
+            }
+            ch = ch & ~(0xFF >>> (8 - n) << (8 - n));
+            for (int i = 1; i < n; ++i) {
+                ch = blob.next() & 0x3F | (ch << 6);
+            }
+            return ch;
         }
 
-        public static int fromUtf8(byte[] a, int i) {
-            assert a != null && a.length > i;
+        public static int fromUtf8HexBytes(Blob blob) {
+            int firstByte = (hexByte2HexInt(blob.next()) << 4)
+                    | hexByte2HexInt(blob.next());
 
-            int n = 0;
-            int ch = a[i];
-            if ((ch & 0x80) == 0) {
-                return ch;
-            } else if ((ch & 0x40) == 0) {
-                return -1;
-            } else if ((ch & 0x20) == 0) {
-                n = 2;
-                ch = ch & 0x1F;
-            } else if ((ch & 0x10) == 0) {
-                n = 3;
-                ch = ch & 0x0F;
-            } else if ((ch & 0x08) == 0) {
-                n = 4;
-                ch = ch & 0x07;
-            } else if ((ch & 0x04) == 0) {
-                n = 5;
-                ch = ch & 0x03;
-            } else if ((ch & 0x02) == 0) {
-                n = 6;
-                ch = ch & 0x01;
-            } else {
-                return -1;
+            int n = utf8LengthByUtf8((byte) firstByte);
+            if (n < 0) {
+                throw new ParsingException();
             }
 
-            for (++i; i < n; ++i) {
-                ch = a[i] & 0x3F | (ch << 6);
+            if (n == 1) {
+                return firstByte;
+            }
+
+            int ch = firstByte & ~(0xFF >>> (8 - n) << (8 - n));
+            for (int j = 0; j < n; ++j) {
+                int b = (Unicode.hexByte2HexInt(blob.next()) << 4)
+                        | Unicode.hexByte2HexInt(blob.next());
+                ch = b & 0x3F | (ch << 6);
             }
             return ch;
         }
@@ -159,9 +147,7 @@ public final class FormatCodec {
         }
 
         /**
-         * 0x00 => '0', 0x0A => 'A', etc<br/>
-         * <br/>
-         * may throw IndexOutOfBoundsException<br/>
+         * 0x00 => '0', 0x0A => 'A'<br/>
          */
         public static byte hexInt2HexByte(int i) {
             return DIGIT_HEX[i];
@@ -175,74 +161,51 @@ public final class FormatCodec {
         }
 
         /**
-         * for a byte, this implementation is better than
-         * {@link #toHexBytes(int)}
-         */
-        public static byte[] toHexBytes(byte b) {
-            return new byte[] {
-                    DIGIT_HEX[0x0F & (b >> 4)],
-                    DIGIT_HEX[0x0F & (b >> 0)]
-            };
-        }
-
-        /**
-         * the functionality is very similar to
-         * <code>Integer.toHexString(ch).toUpperCase().getBytes("UTF-8");</code><br/>
-         * usually, it is invoked with escape purpose, so defaults to best fit
+         * 0x61 => "61", 0x161 => "0161", 0x6161 => "6161"<br/>
+         * output to the given blob<br/>
+         * it will be a dry run if the blob is null, and the blob will be enlarged if it is empty<br/>
          *
-         * @param ch
-         *            the code point
-         * @return character-like presentation of the code point, in bytes
+         * @return the number of bytes written
          */
-        public static byte[] toHexBytes(int ch) {
-            return toHexBytes(ch, 0);
-        }
-
-        /**
-         * @param ch
-         *            a code point
-         * @param preferredLength
-         *            expects shortest array if 0
-         * @return an even-length (at least 2) byte array with char-presenting
-         *         of ch;
-         */
-        public static byte[] toHexBytes(int ch, int preferredLength) {
+        public static int toHexBytes(int ch, int minLength, Blob blob) {
             assert ch >= 0;
-            assert preferredLength >= 0
-                    && preferredLength <= NUM_HEX_BYTES_FROM_INT;
+            minLength = (minLength + 1) & ~0x01;
 
-            int pos = NUM_HEX_BYTES_FROM_INT;
-            byte[] bytes = new byte[pos];
-            while (ch != 0 && pos-- > 0) {
-                bytes[pos] = hexInt2HexByte(ch & 0x0F);
-                ch >>>= 4;
+            int n = 2;
+            for (int i = ch >>> 8; i != 0; i >>>= 8) {
+                n += 2;
+            }
+            if (n < minLength) {
+                n = minLength;
             }
 
-            int startIndex = NUM_HEX_BYTES_FROM_INT - preferredLength;
-            while (pos > startIndex
-                    || (pos & 0x01) == 1
-                    || pos == NUM_HEX_BYTES_FROM_INT) {
-                bytes[--pos] = '0';
-            }
-            if (pos == 0) {
-                return bytes;
+            if (blob != null) {
+                if (blob.isEmpty()) {
+                    blob.init(n);
+                }
+                for (int i = blob.i + n - 1; i >= blob.i; --i) {
+                    blob.a[i] = DIGIT_HEX[ch & 0x0F];
+                    ch >>>= 4;
+                }
             } else {
-                return Arrays.copyOfRange(bytes, pos,
-                        NUM_HEX_BYTES_FROM_INT);
+                // dry run
             }
+            return n;
         }
 
-        public static byte[] toUcs4(int ch) {
+        public static int toUcs4(int ch, Blob blob) {
             assert ch >= 0;
-            byte[] ucs4 = new byte[] {
-                    0, 0, 0, 0
-            };
-            int pos = 4;
-            while (ch != 0) {
-                ucs4[--pos] = (byte) (0xFF & ch);
-                ch >>>= 8;
+            if (blob != null) {
+                if (blob.isEmpty()) {
+                    blob.init(4);
+                }
+                int pos = blob.i + 4;
+                while (ch != 0) {
+                    blob.a[--pos] = (byte) (0xFF & ch);
+                    ch >>>= 8;
+                }
             }
-            return ucs4;
+            return 4;
         }
 
         /**
@@ -252,35 +215,58 @@ public final class FormatCodec {
          *
          * @return standard utf8 byte sequence
          */
-        public static byte[] toUtf8(int ch) {
+        public static int toUtf8(int ch, Blob blob) {
             assert ch >= 0;
+            final int n = utf8Length(ch);
 
-            int n = utf8Length(ch);
-
-            if (n == 1) {
-                // ASCII
-                byte[] utf8 = new byte[1];
-                utf8[0] = (byte) ch;
-                return utf8;
+            if (blob != null) {
+                if (blob.isEmpty()) {
+                    blob.init(n);
+                }
+                if (n == 1) {
+                    // ASCII
+                    blob.a[blob.i] = (byte) ch;
+                } else {
+                    int pos = blob.i + n;
+                    while (--pos != blob.i) {
+                        int b = ch & 0x3F | 0x80;
+                        blob.a[pos] = (byte) b;
+                        ch >>>= 6;
+                    }
+                    // set leading bits
+                    blob.a[pos] = (byte) (ch | (0xFF >> (8 - n) << (8 - n)));
+                }
             }
+            return n;
+        }
 
-            byte[] utf8 = new byte[n];
-            int pos = n;
-            while (ch != 0) {
-                // set data
-                int b = ch & 0x3F | 0x80;
-                utf8[--pos] = (byte) b;
-                ch >>>= 6;
+        public static int toUtf8HexBytes(int ch, Blob blob) {
+            assert ch >= 0;
+            final int n = utf8Length(ch);
+
+            if (blob != null) {
+                if (blob.isEmpty()) {
+                    blob.init(n * 2);
+                }
+                if (n == 1) {
+                    toHexBytes(ch, 0, blob);
+                } else {
+                    blob.i += n * 2;
+                    for (int i = n; i > 1; --i) {
+                        blob.i -= 2;
+                        toHexBytes(ch & 0x3F | 0x80, 0, blob);
+                        ch >>>= 6;
+                    }
+                    blob.i -= 2;
+                    int b = ch | (0xFF >> (8 - n) << (8 - n));
+                    toHexBytes(b, 0, blob);
+                }
             }
-
-            // set leading bits
-            utf8[0] |= 0xFF >> (8 - n) << (8 - n);
-
-            return utf8;
+            return n * 2;
         }
 
         // UTF-8 uses 6b * 5 + 1b = 31b, the highest bit is not used
-        private static int utf8Length(int ch) {
+        public static int utf8Length(int ch) {
             assert ch >= 0;
             int bytes = 0;
             if (ch <= 0x7F) {
@@ -305,27 +291,18 @@ public final class FormatCodec {
             return bytes;
         }
 
-        public static int utf8LengthByUtf8(byte[] a) {
-            return utf8LengthByUtf8(a, 0);
-        }
-
-        public static int utf8LengthByUtf8(byte[] a, int i) {
-            return utf8LengthByUtf8(a[i]);
-        }
-
-        public static int utf8LengthByUtf8(int ch) {
-            ch &= 0xFF;
-            if ((ch & 0x80) == 0) {
+        public static int utf8LengthByUtf8(byte b) {
+            if ((b & 0x80) == 0) {
                 return 1;
-            } else if ((ch & 0x20) == 0) {
+            } else if ((b & 0x20) == 0) {
                 return 2;
-            } else if ((ch & 0x10) == 0) {
+            } else if ((b & 0x10) == 0) {
                 return 3;
-            } else if ((ch & 0x08) == 0) {
+            } else if ((b & 0x08) == 0) {
                 return 4;
-            } else if ((ch & 0x04) == 0) {
+            } else if ((b & 0x04) == 0) {
                 return 5;
-            } else if ((ch & 0x02) == 0) {
+            } else if ((b & 0x02) == 0) {
                 return 6;
             }
             return -1;
@@ -375,12 +352,18 @@ public final class FormatCodec {
         public static OutputStream encodeAndPut(byte b, OutputStream ostream)
                 throws IOException {
             ostream.write('%');
-            ostream.write(Unicode.toHexBytes(b));
+            Blob blob = new Blob();
+            Unicode.toHexBytes(b, 0, blob);
+            ostream.write(blob.a);
             return ostream;
         }
 
         public static boolean shouldBeEncoded(int ch) {
             return SHOULD_BE_ENCODED.get(ch);
+        }
+
+        private Uri() {
+            // private dummy
         }
     }
 

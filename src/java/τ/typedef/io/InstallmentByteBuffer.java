@@ -6,6 +6,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import τ.typedef.basic.Blob;
+
 /**
  * some thing of smart array & queue & installment savings
  */
@@ -36,7 +38,7 @@ public class InstallmentByteBuffer extends OutputStream {
          * throws {@link ParsingException} if fail
          */
         public int getNextCodePoint() {
-            int n = FormatCodec.Unicode.utf8LengthByUtf8(peek());
+            int n = FormatCodec.Unicode.utf8LengthByUtf8((byte) peek());
             if (n < 0) {
                 throw new ParsingException();
             }
@@ -50,7 +52,7 @@ public class InstallmentByteBuffer extends OutputStream {
                 }
                 a[i] = (byte) (ch & 0xFF);
             }
-            return FormatCodec.Unicode.fromUtf8(a);
+            return FormatCodec.Unicode.fromUtf8(new Blob(a, 0));
         }
 
         /**

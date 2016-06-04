@@ -1,30 +1,16 @@
 package τ.typedef;
 
-import java.util.BitSet;
-
 public final class Ctype {
 
-    private static final BitSet ALPHANUM;
-
-    static {
-        ALPHANUM = new BitSet(128);
-        for (int i = 'A'; i <= 'Z'; ++i) {
-            ALPHANUM.set(i);
-        }
-        for (int i = 'a'; i <= 'z'; ++i) {
-            ALPHANUM.set(i);
-        }
-        for (int i = '0'; i <= '9'; ++i) {
-            ALPHANUM.set(i);
-        }
+    public static boolean isAlpha(int ch) {
+        return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
     }
 
     /**
      * [A-Za-z0-9]
      */
     public static boolean isAlphanum(int ch) {
-        assert ch >= 0;
-        return ALPHANUM.get(ch);
+        return isAlpha(ch) || isDigit(ch);
     }
 
     public static boolean isDigit(int ch) {
@@ -47,6 +33,48 @@ public final class Ctype {
 
     public static boolean isLower(int ch) {
         return ch >= 'a' && ch <= 'z';
+    }
+
+    public static boolean isPrintable(int ch) {
+        return ch == ' ' || isAlpha(ch) || isDigit(ch) || isPunct(ch);
+    }
+
+    public static boolean isPunct(int ch) {
+        switch (ch) {
+            case '!':
+            case '\"':
+            case '#':
+            case '%':
+            case '&':
+            case '\'':
+            case '(':
+            case ')':
+            case ';':
+            case '<':
+            case '=':
+            case '>':
+            case '?':
+            case '[':
+            case '\\':
+            case ']':
+            case '*':
+            case '+':
+            case ',':
+            case '-':
+            case '.':
+            case '/':
+            case ':':
+            case '^':
+            case '_':
+            case '{':
+            case '|':
+            case '}':
+            case '~':
+                return true;
+            default:
+                break;
+        }
+        return false;
     }
 
     public static boolean isUpper(int ch) {
