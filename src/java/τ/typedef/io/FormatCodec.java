@@ -8,16 +8,23 @@ import τ.typedef.basic.Blob;
 
 public final class FormatCodec {
 
+    public interface Nextable {
+
+        byte next();
+    }
+
     public static final class Base64 extends FormatCodecBase64 {
         // dummy
     }
 
     public static final class PrivateContract {
 
-        public static int decode(Blob blob) {
-            expect('\\', blob.next());
-            int ch = blob.next();
+        public static int decode(Nextable callback) {
+            expect('\\', callback.next());
+            int ch = callback.next();
             switch (ch) {
+                case '\\':
+                    return '\\';
                 case 'a':
                     return 0x07;
                 case 't':
@@ -33,7 +40,7 @@ public final class FormatCodec {
                 case 'b':
                     return '\b';
                 case 'u':
-                    return Unicode.fromUtf8HexBytes(blob);
+                    return Unicode.fromUtf8HexBytes(callback);
                 default:
                     return ch;
             }
@@ -86,9 +93,9 @@ public final class FormatCodec {
             return ch;
         }
 
-        public static int fromUtf8HexBytes(Blob blob) {
-            int firstByte = (hexByte2HexInt(blob.next()) << 4)
-                    | hexByte2HexInt(blob.next());
+        public static int fromUtf8HexBytes(Nextable callback) {
+            int firstByte = (hexByte2HexInt(callback.next()) << 4)
+                    | hexByte2HexInt(callback.next());
 
             int n = utf8LengthByUtf8((byte) firstByte);
             if (n < 0) {
@@ -100,9 +107,9 @@ public final class FormatCodec {
             }
 
             int ch = firstByte & ~(0xFF >>> (8 - n) << (8 - n));
-            for (int j = 0; j < n; ++j) {
-                int b = (Unicode.hexByte2HexInt(blob.next()) << 4)
-                        | Unicode.hexByte2HexInt(blob.next());
+            for (int i = 1; i < n; ++i) {
+                int b = (Unicode.hexByte2HexInt(callback.next()) << 4)
+                        | Unicode.hexByte2HexInt(callback.next());
                 ch = b & 0x3F | (ch << 6);
             }
             return ch;

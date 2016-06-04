@@ -1,7 +1,5 @@
 package τ.typedef.io;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,27 +9,12 @@ import τ.typedef.basic.Blob;
 /**
  * some thing of smart array & queue & installment savings
  */
-public class InstallmentByteBuffer extends OutputStream {
+public class InstallmentByteBuffer {
 
     // not extend java.io.Reader
     public class Reader {
 
         private int next = 0;
-
-        public boolean hasNext() {
-            return next >= 0 && next < used;
-        }
-
-        /**
-         * @return next byte
-         */
-        public int next() {
-            if (hasNext()) {
-                return get(next++) & 0xFF;
-            } else {
-                return -1;
-            }
-        }
 
         /**
          * get from underlying byte sequence assuming encoded with utf8<br/>
@@ -55,6 +38,21 @@ public class InstallmentByteBuffer extends OutputStream {
             return FormatCodec.Unicode.fromUtf8(new Blob(a, 0));
         }
 
+        public boolean hasNext() {
+            return next >= 0 && next < used;
+        }
+
+        /**
+         * @return next byte
+         */
+        public int next() {
+            if (hasNext()) {
+                return get(next++) & 0xFF;
+            } else {
+                return -1;
+            }
+        }
+
         /**
          * For reading, get the cursor's offset.
          */
@@ -62,15 +60,20 @@ public class InstallmentByteBuffer extends OutputStream {
             return next;
         }
 
-        /**
-         * may throw IndexOutOfBoundsException
-         */
         public int peek() {
             if (hasNext()) {
                 return get(next) & 0xFF;
             } else {
                 return -1;
             }
+        }
+
+        public boolean putBack() {
+            if (next > 0) {
+                --next;
+                return true;
+            }
+            return false;
         }
 
         /**
@@ -131,29 +134,31 @@ public class InstallmentByteBuffer extends OutputStream {
         setupCapacity(capacity);
     }
 
+    public InstallmentByteBuffer append(Blob blob) {
+        return append(blob.a, blob.i, blob.a.length);
+    }
+
     public InstallmentByteBuffer append(byte[] a) {
         return append(a, 0, a.length);
     }
 
-    public InstallmentByteBuffer append(byte[] a, int start, int length) {
+    public InstallmentByteBuffer append(byte[] a, int i, int j) {
         if (readonly()) {
             return this;
         }
 
-        setupCapacity(used + length);
-
-        int i = start;
-        int j = start + length;
+        int n = j - i;
+        setupCapacity(used + n);
 
         if ((used & INSTALLMENT_MASK) != 0) {
-            int n = INSTALLMENT_BYTES - (used & INSTALLMENT_MASK);
-            if (n > length) {
-                n = length;
+            int left = INSTALLMENT_BYTES - (used & INSTALLMENT_MASK);
+            if (left > n) {
+                left = n;
             }
             System.arraycopy(a, i, savings.get(used >> INSTALLMENT_BITS),
-                    used & INSTALLMENT_MASK, n);
-            i += n;
-            used += n;
+                    used & INSTALLMENT_MASK, left);
+            i += left;
+            used += left;
         }
 
         while (i + INSTALLMENT_BYTES < j) {
@@ -175,7 +180,7 @@ public class InstallmentByteBuffer extends OutputStream {
     public InstallmentByteBuffer append(int b) {
         if (!readonly()) {
             setupCapacity(used + 1);
-            put(used++, (byte) (b & 0x3F));
+            put(used++, (byte) (b & 0xFF));
         }
         return this;
     }
@@ -292,10 +297,5 @@ public class InstallmentByteBuffer extends OutputStream {
             Arrays.fill(a, (byte) 0);
         }
         used = 0;
-    }
-
-    @Override
-    public void write(int oneByte) throws IOException {
-        append(oneByte);
     }
 }

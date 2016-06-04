@@ -1,7 +1,6 @@
 package τ.typedef.io;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 class FormatCodecBase64 {
 
@@ -53,8 +52,9 @@ class FormatCodecBase64 {
                 prefix, suffix);
     }
 
-    public static OutputStream encode(byte[] a, int bytesPerLine,
-            int firstOffset, byte[] prefix, byte[] suffix, OutputStream o)
+    public static InstallmentByteBuffer encode(byte[] a, int bytesPerLine,
+            int firstOffset, byte[] prefix, byte[] suffix,
+            InstallmentByteBuffer o)
             throws IOException {
         return encode(a, 0, a.length, bytesPerLine, firstOffset,
                 prefix, suffix, o);
@@ -71,9 +71,9 @@ class FormatCodecBase64 {
     /**
      * it is user who should put the prefix/suffix before/after invoke this method if necessary
      */
-    public static OutputStream encode(byte[] a, int i, int n,
+    public static InstallmentByteBuffer encode(byte[] a, int i, int n,
             int bytesPerLine, int firstOffset,
-            byte[] prefix, byte[] suffix, OutputStream o)
+            byte[] prefix, byte[] suffix, InstallmentByteBuffer o)
             throws IOException {
         assert a != null;
         assert i >= 0 && i < a.length;
@@ -98,29 +98,29 @@ class FormatCodecBase64 {
             rest = m;
         }
         for (int j = 0; j < rest; ++i) {
-            o.write(ibbr.next());
+            o.append(ibbr.next());
         }
         m -= rest;
         if (m > 0) {
-            o.write(suffix);
+            o.append(suffix);
         }
 
         // middle lines
         rest = bytesPerLine - prefix.length - suffix.length;
         while (m >= rest) {
-            o.write(prefix);
+            o.append(prefix);
             while (rest-- > 0) {
-                o.write(ibbr.next());
+                o.append(ibbr.next());
             }
-            o.write(suffix);
+            o.append(suffix);
             m -= rest;
         }
 
         if (m > 0) {
             rest = m;
-            o.write(prefix);
+            o.append(prefix);
             while (rest-- > 0) {
-                o.write(ibbr.next());
+                o.append(ibbr.next());
             }
         }
         return o;
