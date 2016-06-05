@@ -1,6 +1,8 @@
 #ifndef _INCLUDED_LISTENTRY_T
 #define _INCLUDED_LISTENTRY_T
 
+#include "ListHead_t.h"
+
 typedef struct ListEntry {
 	ListHead_t * listHead;
 	void * data;
