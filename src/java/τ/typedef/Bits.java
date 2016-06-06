@@ -6,8 +6,8 @@ public final class Bits {
         self &= ~bits;
     }
 
-    public static boolean has(int self, int bits) {
-        return (self & bits) != 0;
+    public static int get(int self, int bits) {
+        return self & bits;
     }
 
     public static void set(int self, int bits) {
