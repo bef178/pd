@@ -1,46 +1,61 @@
 package τ.typedef.io;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 class FormatCodecBase64 {
 
-    private static final char[] ENCODE_ALPHABET = {
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-            'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-            'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-            'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-            'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-            '8', '9', '+', '/'
-    };
+    private static final char[] ENCODE_MAP;
+    private static final char[] DECODE_MAP;
+
+    static {
+        ENCODE_MAP = new char[] {
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
+                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
+                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
+                '8', '9', '+', '/'
+        };
+
+        DECODE_MAP = new char[127];
+        Arrays.fill(DECODE_MAP, (char) -1);
+        for (char i = 0; i < ENCODE_MAP.length; ++i) {
+            DECODE_MAP[ENCODE_MAP[i]] = i;
+        }
+    }
+
+    private static int decodeTuple(int b0, int b1, int b2, int b3,
+            byte[] a, int i) {
+        assert a != null && i >= 0 && i + 3 <= a.length;
+        b0 = (byte) DECODE_MAP[b0 & 0xFF];
+        b1 = (byte) DECODE_MAP[b1 & 0xFF];
+        b2 = (byte) DECODE_MAP[b2 & 0xFF];
+        b3 = (byte) DECODE_MAP[b3 & 0xFF];
+        assert b0 != -1;
+        assert b1 != -1;
+        assert b2 != -1;
+        assert b3 != -1;
+
+        a[i] = (byte) ((b0 << 2) | (b1 >> 4));
+        a[i + 1] = (byte) ((b1 << 4) | (b2 >> 2));
+        a[i + 2] = (byte) ((b2 << 6) | b3);
+        return 3;
+    }
 
     private static InstallmentByteBuffer encode(byte[] a, int i, int j) {
         assert a != null;
         assert i >= 0 && i < a.length;
         assert j >= i && j < a.length;
-        // encode
+
         InstallmentByteBuffer ibb = new InstallmentByteBuffer();
         while (j - i >= 3) {
-            ibb.append(encode3(a, i));
+            ibb.append(encodeTuple(a, i, i + 3));
             i += 3;
         }
-        switch (j - i) {
-            case 2:
-                ibb.append(encode3(new byte[] {
-                        a[i], a[i + 1], 0
-                }, i));
-                ibb.append('=');
-                break;
-            case 1:
-                ibb.append(encode3(new byte[] {
-                        a[i], 0, 0
-                }, i));
-                ibb.append('=');
-                ibb.append('=');
-                break;
-            case 0:
-                break;
-            default:
-                throw new IllegalArgumentException();
+        if (j > i) {
+            ibb.append(encodeTuple(a, i, j));
         }
         return ibb;
     }
@@ -60,26 +75,28 @@ class FormatCodecBase64 {
                 prefix, suffix, o);
     }
 
-    public static byte[] encode(byte[] a, int i, int n, int bytesPerLine,
+    public static byte[] encode(byte[] a, int i, int j, int bytesPerLine,
             int firstOffset, byte[] prefix, byte[] suffix)
             throws IOException {
         InstallmentByteBuffer o = new InstallmentByteBuffer();
-        encode(a, i, n, bytesPerLine, firstOffset, prefix, suffix, o);
+        encode(a, i, j, bytesPerLine, firstOffset, prefix, suffix, o);
         return o.toByteArray();
     }
 
     /**
-     * it is user who should put the prefix/suffix before/after invoke this method if necessary
+     * it is user who should put the prefix/suffix before/after invoke this
+     * method if necessary
      */
-    public static InstallmentByteBuffer encode(byte[] a, int i, int n,
+    public static InstallmentByteBuffer encode(byte[] a, int i, int j,
             int bytesPerLine, int firstOffset,
             byte[] prefix, byte[] suffix, InstallmentByteBuffer o)
             throws IOException {
         assert a != null;
         assert i >= 0 && i < a.length;
-        assert n >= 0 && i + n <= a.length;
+        assert j >= i && j <= a.length;
         assert bytesPerLine > 0;
         assert firstOffset >= 0;
+
         if (firstOffset > 0) {
             assert bytesPerLine >= prefix.length + suffix.length
                     + firstOffset;
@@ -87,7 +104,7 @@ class FormatCodecBase64 {
             assert bytesPerLine > prefix.length + suffix.length;
         }
 
-        InstallmentByteBuffer.Reader ibbr = encode(a, i, i + n).reader();
+        InstallmentByteBuffer.Reader ibbr = encode(a, i, j).reader();
 
         ibbr.rewind();
         int m = ibbr.size();
@@ -97,7 +114,7 @@ class FormatCodecBase64 {
         if (rest > m) {
             rest = m;
         }
-        for (int j = 0; j < rest; ++i) {
+        for (int k = 0; k < rest; ++i) {
             o.append(ibbr.next());
         }
         m -= rest;
@@ -105,7 +122,7 @@ class FormatCodecBase64 {
             o.append(suffix);
         }
 
-        // middle lines
+        // non-first lines
         rest = bytesPerLine - prefix.length - suffix.length;
         while (m >= rest) {
             o.append(prefix);
@@ -126,21 +143,39 @@ class FormatCodecBase64 {
         return o;
     }
 
-    private static byte[] encode3(byte[] a, int i) {
-        return encode3(a, i, new byte[4], 0);
+    private static byte[] encodeTuple(byte[] a, int i, int j) {
+        switch (j - i) {
+            case 3: {
+                byte[] r = new byte[4];
+                encodeTuple(a[i], a[i + 1], a[i + 2], r, i);
+                return r;
+            }
+            case 2: {
+                byte[] r = new byte[5];
+                encodeTuple(a[i], a[i + 1], 0, r, i);
+                r[4] = '=';
+                return r;
+            }
+            case 1: {
+                byte[] r = new byte[6];
+                encodeTuple(a[i], (byte) 0, 0, r, i);
+                r[4] = '=';
+                r[5] = '=';
+                return r;
+            }
+            default:
+                break;
+        }
+        throw new ParsingException();
     }
 
-    private static byte[] encode3(byte[] a, int i, byte[] result, int offset) {
-        assert a != null;
-        assert i >= 0 && i + 3 < a.length;
-        assert result != null;
-        assert offset >= 0 && offset + 4 < result.length;
-        result[0] = (byte) ENCODE_ALPHABET[a[i] >>> 2];
-        result[1] = (byte) ENCODE_ALPHABET[((0x03 & a[i]) << 4)
-                | (a[i + 1] >>> 4)];
-        result[2] = (byte) ENCODE_ALPHABET[((0x0F & a[i + 1]) << 2)
-                | (a[i + 2] >>> 6)];
-        result[3] = (byte) ENCODE_ALPHABET[0x3F & a[i + 2]];
-        return result;
+    private static int encodeTuple(int b0, int b1, int b2,
+            byte[] a, int i) {
+        assert a != null && i >= 0 && i + 4 <= a.length;
+        a[i] = (byte) ENCODE_MAP[(b0 & 0xFF) >>> 2];
+        a[i + 1] = (byte) ENCODE_MAP[((0x03 & b0) << 4) | ((b1 & 0xFF) >>> 4)];
+        a[i + 2] = (byte) ENCODE_MAP[((0x0F & b1) << 2) | ((b2 & 0xFF) >>> 6)];
+        a[i + 3] = (byte) ENCODE_MAP[0x3F & b2];
+        return 4;
     }
 }
