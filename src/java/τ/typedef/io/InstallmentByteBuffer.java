@@ -68,12 +68,12 @@ public class InstallmentByteBuffer {
             }
         }
 
-        public boolean putBack() {
+        public void putBack() {
             if (next > 0) {
                 --next;
-                return true;
+                return;
             }
-            return false;
+            throw new IndexOutOfBoundsException();
         }
 
         /**
