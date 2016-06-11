@@ -10,6 +10,14 @@ public final class Bits {
         return self & bits;
     }
 
+    public static boolean hasAll(int self, int bits) {
+        return get(self, bits) == bits;
+    }
+
+    public static boolean hasAny(int self, int bits) {
+        return get(self, bits) != 0;
+    }
+
     public static void set(int self, int bits) {
         self |= bits;
     }
