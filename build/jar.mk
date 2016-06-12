@@ -25,7 +25,7 @@ $(OUT_JAR): $(SRC_FILES)
 		-classpath $(LIB_DIR)/junit.jar \
 		-d $(OUT_OBJ_DIR)
 	@echo "packaging ..."
-	@jar cf $@ -C $(OUT_OBJ_DIR) .
+	@jar cfm $@ $(TOP)/build/manifest.mf -C $(OUT_OBJ_DIR) .
 
 .PHONY: clean
 clean:
