@@ -11,13 +11,13 @@ OUT_TOP := $(TOP)/out
 OUT_DIR := $(OUT_TOP)/cc
 OUT_CC := $(OUT_TOP)/typedef.a
 
-HEADERS := $(SRC_DIR)/τ/typedef/typedef.h
+HEADERS := $(SRC_DIR)/t/typedef/typedef.h
 OBJECTS :=
 
 #-----------------------------------------------------------
 # lib
 
-LOCAL_PACKAGE := τ/typedef/fundamental
+LOCAL_PACKAGE := t/typedef/fundamental
 LOCAL_SRC_DIR := $(SRC_DIR)/$(LOCAL_PACKAGE)
 
 HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
@@ -26,7 +26,7 @@ OBJECTS += $(patsubst $(SRC_DIR)/%.c,$(OUT_DIR)/%.o,$(shell find -L $(LOCAL_SRC_
 #-----------------------------------------------------------
 # basic types
 
-LOCAL_PACKAGE := τ/typedef/basic
+LOCAL_PACKAGE := t/typedef/basic
 LOCAL_SRC_DIR := $(SRC_DIR)/$(LOCAL_PACKAGE)
 
 HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
