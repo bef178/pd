@@ -2,58 +2,37 @@ package t.typedef.basic;
 
 public class NamedTag {
 
-    /**
-     * the trunk/content/description of this tag
-     */
-    private String desc = null;
+    public String value = null;
 
     /**
      * refer to the concept that this tag describes<br/>
-     * better to be a non-ambiguous constant
      */
-    private String name = null;
+    private final int type;
 
-    /**
-     * the explanation/comment/remarks against the content
-     */
-    private String remarks = null;
-
-    public String desc() {
-        return desc;
+    public NamedTag() {
+        this(-1);
     }
 
-    public String name() {
-        return name;
+    public NamedTag(int type) {
+        this.type = type;
     }
 
-    public String remarks() {
-        return remarks;
-    }
-
-    public boolean hasDesc() {
-        return desc != null;
-    }
-
-    public boolean hasName() {
-        return name != null;
-    }
-
-    public boolean hasRemarks() {
-        return remarks != null;
-    }
-
-    public NamedTag desc(String desc) {
-        this.desc = desc;
-        return this;
-    }
-
-    public NamedTag name(String name) {
-        this.name = name;
-        return this;
-    }
-
-    public NamedTag remarks(String remarks) {
-        this.remarks = remarks;
-        return this;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o instanceof NamedTag) {
+            NamedTag t = (NamedTag) o;
+            if (this.type != t.type) {
+                return false;
+            }
+            if (this.value != null) {
+                return this.value.equals(t.value);
+            } else {
+                return t.value == null;
+            }
+        }
+        return false;
     }
 }

@@ -10,8 +10,7 @@ public final class Rect {
     public final int x1, y1;
 
     public Rect(int x0, int y0, int x1, int y1) {
-        assert x0 <= x1;
-        assert y0 <= y1;
+        assert isValid();
 
         this.x0 = x0;
         this.y0 = y0;
