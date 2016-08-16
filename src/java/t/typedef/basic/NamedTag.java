@@ -5,16 +5,16 @@ public class NamedTag {
     public String value = null;
 
     /**
-     * refer to the concept that this tag describes<br/>
+     * the concept/category of this tag<br/>
      */
-    private final int type;
+    private final String name;
 
     public NamedTag() {
-        this(-1);
+        this(null);
     }
 
-    public NamedTag(int type) {
-        this.type = type;
+    public NamedTag(String name) {
+        this.name = (name == null) ? "" : name;
     }
 
     @Override
@@ -24,7 +24,7 @@ public class NamedTag {
         }
         if (o instanceof NamedTag) {
             NamedTag t = (NamedTag) o;
-            if (this.type != t.type) {
+            if (this.name != t.name) {
                 return false;
             }
             if (this.value != null) {
