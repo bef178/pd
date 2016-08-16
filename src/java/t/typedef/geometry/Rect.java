@@ -45,7 +45,7 @@ public final class Rect {
     }
 
     public int getHeight() {
-        return y1 - y0 + 1;
+        return y1 - y0;
     }
 
     public Rect getIntersection(Rect r) {
@@ -64,7 +64,7 @@ public final class Rect {
     }
 
     public int getWidth() {
-        return x1 - x0 + 1;
+        return x1 - x0;
     }
 
     @Override
