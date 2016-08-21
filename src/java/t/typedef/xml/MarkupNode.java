@@ -6,14 +6,14 @@ import java.util.List;
 
 public class MarkupNode extends Node {
 
-    private Tag tag = null;
+    private Attribute tagName = null;
 
     /**
      * <code>null<code> iff no such attribute in this markup<br/>
      */
-    private DefaultNamespace defaultNamespace = null;
+    private Attribute defaultNamespace = null;
 
-    private Collection<Namespace> namespaces = new LinkedList<>();
+    private Collection<Attribute> namespaces = new LinkedList<>();
 
     private Collection<Attribute> attributes = new LinkedList<>();
 
@@ -22,40 +22,74 @@ public class MarkupNode extends Node {
     private Node parent = null;
 
     private boolean isValid() {
-        return tag != null || tag.isValid();
+        return tagName != null || tagName.isValid();
+    }
+
+    private StringBuilder printTagName(StringBuilder o) {
+        if (!tagName.getNamespace().isEmpty()) {
+            o.append(tagName.getNamespace()).append(":");
+        }
+        o.append(tagName.getName());
+        return o;
     }
 
     @Override
-    public StringBuilder toString(StringBuilder factory) {
+    public StringBuilder toString(StringBuilder o, Config c) {
+        assert o != null;
+
         if (!isValid()) {
             throw new IllegalArgumentException();
         }
 
-        factory.append('<');
-        tag.toString(factory);
+        c.printIndent(o);
+        o.append('<');
+        printTagName(o);
         if (defaultNamespace != null) {
-            factory.append(' ');
-            defaultNamespace.toString(factory);
+            if (defaultNamespace.getNamespace().isEmpty()
+                    && defaultNamespace.getName().equals("xmlns")) {
+                o.append(' ');
+                defaultNamespace.toString(o);
+            } else {
+                throw new IllegalArgumentException();
+            }
         }
-        for (Namespace ns : namespaces) {
-            factory.append('\n');
-            ns.toString(factory);
+        o.append('\n');
+
+        c.indent += 2;
+        for (Attribute ns : namespaces) {
+            if (ns.getNamespace().equals("xmlns")
+                    && !ns.getName().isEmpty()
+                    && !ns.getValue().isEmpty()) {
+                c.printIndent(o);
+                ns.toString(o);
+                o.append('\n');
+            } else {
+                throw new IllegalArgumentException();
+            }
         }
         for (Attribute attr : attributes) {
-            factory.append('\n');
-            attr.toString(factory);
+            c.printIndent(o);
+            attr.toString(o);
+            o.append('\n');
         }
+        c.indent -= 2;
+
         if (children.isEmpty()) {
-            factory.append("/>");
+            o.append("/>").append('\n');
         } else {
-            factory.append('>').append('\n');
+            o.append('>').append('\n');
+
+            c.indent++;
             for (Node child : children) {
-                child.toString(factory);
+                child.toString(o, c);
             }
-            factory.append("</");
-            tag.toString(factory);
-            factory.append('>');
+            c.indent--;
+
+            c.printIndent(o);
+            o.append("</");
+            printTagName(o);
+            o.append('>').append('\n');
         }
-        return factory;
+        return o;
     }
 }

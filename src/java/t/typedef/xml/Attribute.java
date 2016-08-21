@@ -7,7 +7,7 @@ public class Attribute extends KeyValue {
     protected String p;
 
     public Attribute() {
-        setNamespaceAbbr("");
+        setNamespace("");
         setName("");
         setValue("");
     }
@@ -16,7 +16,7 @@ public class Attribute extends KeyValue {
         return this.k;
     }
 
-    public String getNamespaceAbbr() {
+    public String getNamespace() {
         return this.p;
     }
 
@@ -29,8 +29,8 @@ public class Attribute extends KeyValue {
         return this;
     }
 
-    public Attribute setNamespaceAbbr(String nsAbbr) {
-        this.p = (nsAbbr == null) ? "" : nsAbbr;
+    public Attribute setNamespace(String abbr) {
+        this.p = (abbr == null) ? "" : abbr;
         return this;
     }
 
@@ -44,8 +44,8 @@ public class Attribute extends KeyValue {
         if (!isValid()) {
             throw new IllegalArgumentException();
         }
-        if (!getNamespaceAbbr().isEmpty()) {
-            factory.append(getNamespaceAbbr()).append(":");
+        if (!getNamespace().isEmpty()) {
+            factory.append(getNamespace()).append(":");
         }
         factory.append(getName()).append('=')
                 .append('"').append(getValue()).append('"');
