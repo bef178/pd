@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import t.typedef.Ctype;
 import t.typedef.basic.Blob;
+import t.typedef.io.Factory;
 import t.typedef.io.FormatCodec;
 import t.typedef.io.InstallmentByteBuffer;
 import t.typedef.io.ParsingException;
@@ -143,34 +144,8 @@ public class JsonFactory {
 
         private static JsonScalar buildS(final Reader r,
                 Json.Producer producer) {
-            int ch = r.next();
-            if (ch != '"') {
-                throw new ParsingException('"', ch);
-            }
-
-            JsonScalar S = producer.produceScalar();
-            StringBuilder sb = new StringBuilder();
-
-            while (true) {
-                ch = r.next();
-                if (ch == '"') {
-                    S.set(sb.toString());
-                    return S;
-                }
-
-                if (ch == '\\') {
-                    r.putBack();
-                    ch = FormatCodec.PrivateContract.decode(
-                            new FormatCodec.Nextable() {
-
-                                @Override
-                                public byte next() {
-                                    return (byte) r.next();
-                                }
-                            });
-                }
-                sb.appendCodePoint(ch);
-            }
+            return producer.produceScalar()
+                    .set(Factory.fromScalar(r).toString());
         }
     }
 
