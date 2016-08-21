@@ -25,8 +25,8 @@ public final class Blob {
         return a == null || a.length == 0;
     }
 
-    public byte next() {
-        return a[i++];
+    public int next() {
+        return a[i++] & 0xFF;
     }
 
     public void next(byte b) {

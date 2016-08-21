@@ -11,8 +11,10 @@ import t.typedef.basic.Blob;
  */
 public class InstallmentByteBuffer {
 
-    // not extend java.io.Reader
-    public class Reader {
+    /**
+     * not a java.io.Reader<br/>
+     */
+    public class Reader implements FormatCodec.Nextable {
 
         private int next = 0;
 
@@ -42,9 +44,7 @@ public class InstallmentByteBuffer {
             return next >= 0 && next < used;
         }
 
-        /**
-         * @return next byte
-         */
+        @Override
         public int next() {
             if (hasNext()) {
                 return get(next++) & 0xFF;

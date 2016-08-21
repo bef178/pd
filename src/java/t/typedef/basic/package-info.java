@@ -1,4 +1,4 @@
 /**
- * independent general-purpose class
+ * independent general-purpose type
  */
 package t.typedef.basic;

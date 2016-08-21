@@ -10,7 +10,10 @@ public final class FormatCodec {
 
     public interface Nextable {
 
-        byte next();
+        /**
+         * @return next byte
+         */
+        int next();
     }
 
     public static final class Base64 extends FormatCodecBase64 {
@@ -19,9 +22,9 @@ public final class FormatCodec {
 
     public static final class PrivateContract {
 
-        public static int decode(Nextable callback) {
-            expect('\\', callback.next());
-            int ch = callback.next();
+        public static int decode(Nextable provider) {
+            expect('\\', provider.next());
+            int ch = provider.next();
             switch (ch) {
                 case '\\':
                     return '\\';
@@ -40,7 +43,7 @@ public final class FormatCodec {
                 case 'b':
                     return '\b';
                 case 'u':
-                    return Unicode.fromUtf8HexBytes(callback);
+                    return Unicode.fromUtf8HexBytes(provider);
                 default:
                     return ch;
             }
@@ -108,8 +111,8 @@ public final class FormatCodec {
 
             int ch = firstByte & ~(0xFF >>> (8 - n) << (8 - n));
             for (int i = 1; i < n; ++i) {
-                int b = (Unicode.hexByte2HexInt(callback.next()) << 4)
-                        | Unicode.hexByte2HexInt(callback.next());
+                int b = (hexByte2HexInt(callback.next()) << 4)
+                        | hexByte2HexInt(callback.next());
                 ch = b & 0x3F | (ch << 6);
             }
             return ch;
