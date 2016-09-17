@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import t.typedef.json.IllegalTypeException;
 import t.typedef.json.Json;
-import t.typedef.json.JsonMapping;
+import t.typedef.json.JsonDict;
+import t.typedef.json.JsonList;
 import t.typedef.json.JsonScalar;
-import t.typedef.json.JsonSequence;
 
 class MonoJson extends AbsMonoJson {
 
@@ -20,10 +21,10 @@ class MonoJson extends AbsMonoJson {
         switch (type) {
             case SCALAR:
                 break;
-            case SEQUENCE:
+            case LIST:
                 sequence = new ArrayList<>();
                 break;
-            case MAPPING:
+            case DICT:
                 mapping = new HashMap<>();
                 break;
             default:
@@ -47,7 +48,7 @@ class MonoJson extends AbsMonoJson {
 
     @Override
     public AbsMonoJson getJson(int index) {
-        checkType(Type.SEQUENCE);
+        checkType(Type.LIST);
         return sequence.get(index);
     }
 
@@ -61,7 +62,7 @@ class MonoJson extends AbsMonoJson {
 
     @Override
     public AbsMonoJson getJson(String key) {
-        checkType(Type.MAPPING);
+        checkType(Type.DICT);
         return mapping.get(key);
     }
 
@@ -74,33 +75,33 @@ class MonoJson extends AbsMonoJson {
     }
 
     @Override
-    public JsonMapping getMapping(int index) {
-        return getJson(index, Type.MAPPING);
+    public JsonDict getJsonDict(int index) {
+        return getJson(index, Type.DICT);
     }
 
     @Override
-    public JsonMapping getMapping(String key) {
-        return getJson(key, Type.MAPPING);
+    public JsonDict getJsonDict(String key) {
+        return getJson(key, Type.DICT);
     }
 
     @Override
-    public JsonScalar getScalar(int index) {
+    public JsonScalar getJsonScalar(int index) {
         return getJson(index, Type.SCALAR);
     }
 
     @Override
-    public JsonScalar getScalar(String key) {
+    public JsonScalar getJsonScalar(String key) {
         return getJson(key, Type.SCALAR);
     }
 
     @Override
-    public JsonSequence getSequence(int index) {
-        return getJson(index, Type.SEQUENCE);
+    public JsonList getJsonList(int index) {
+        return getJson(index, Type.LIST);
     }
 
     @Override
-    public JsonSequence getSequence(String key) {
-        return getJson(key, Type.SEQUENCE);
+    public JsonList getJsonList(String key) {
+        return getJson(key, Type.LIST);
     }
 
     @Override
@@ -110,16 +111,16 @@ class MonoJson extends AbsMonoJson {
     }
 
     @Override
-    public JsonSequence insert(int index, Json value) {
-        checkType(Type.SEQUENCE);
+    public JsonList insert(int index, Json value) {
+        checkType(Type.LIST);
         checkInstance(value);
         sequence.add(index, (AbsMonoJson) value);
         return this;
     }
 
     @Override
-    public JsonSequence insert(Json value) {
-        checkType(Type.SEQUENCE);
+    public JsonList insert(Json value) {
+        checkType(Type.LIST);
         checkInstance(value);
         sequence.add((AbsMonoJson) value);
         return this;
@@ -132,35 +133,35 @@ class MonoJson extends AbsMonoJson {
 
     @Override
     public Set<String> keys() {
-        checkType(Type.MAPPING);
+        checkType(Type.DICT);
         return mapping.keySet();
     }
 
     @Override
-    public JsonMapping put(String key, Json value) {
-        checkType(Type.MAPPING);
+    public JsonDict put(String key, Json value) {
+        checkType(Type.DICT);
         checkInstance(value);
         mapping.put(key, (AbsMonoJson) value);
         return this;
     }
 
     @Override
-    public JsonSequence remove(int index) {
-        checkType(Type.SEQUENCE);
+    public JsonList remove(int index) {
+        checkType(Type.LIST);
         sequence.remove(index);
         return this;
     }
 
     @Override
     public AbsMonoJson remove(String key) {
-        checkType(Type.MAPPING);
+        checkType(Type.DICT);
         mapping.remove(key);
         return this;
     }
 
     @Override
-    public JsonSequence set(int index, Json value) {
-        checkType(Type.SEQUENCE);
+    public JsonList set(int index, Json value) {
+        checkType(Type.LIST);
         checkInstance(value);
         sequence.set(index, (AbsMonoJson) value);
         return this;
@@ -176,9 +177,9 @@ class MonoJson extends AbsMonoJson {
     @Override
     public int size() {
         switch (type()) {
-            case SEQUENCE:
+            case LIST:
                 return sequence.size();
-            case MAPPING:
+            case DICT:
                 return mapping.size();
             default:
                 throw new IllegalTypeException();

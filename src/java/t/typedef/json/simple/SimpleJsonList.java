@@ -2,21 +2,22 @@ package t.typedef.json.simple;
 
 import java.util.ArrayList;
 
+import t.typedef.json.IllegalTypeException;
 import t.typedef.json.Json;
-import t.typedef.json.JsonMapping;
+import t.typedef.json.JsonDict;
+import t.typedef.json.JsonList;
 import t.typedef.json.JsonScalar;
-import t.typedef.json.JsonSequence;
 
-class SimpleJsonSequence implements JsonSequence {
+class SimpleJsonList implements JsonList {
 
     private ArrayList<Json> q = new ArrayList<Json>();
 
-    SimpleJsonSequence() {
+    SimpleJsonList() {
         // dummy
     }
 
     @Override
-    public JsonSequence clear() {
+    public JsonList clear() {
         q.clear();
         return this;
     }
@@ -35,28 +36,28 @@ class SimpleJsonSequence implements JsonSequence {
     }
 
     @Override
-    public JsonMapping getMapping(int index) {
-        return (JsonMapping) getJson(index, Type.MAPPING);
+    public JsonDict getJsonDict(int index) {
+        return (JsonDict) getJson(index, Type.DICT);
     }
 
     @Override
-    public JsonScalar getScalar(int index) {
+    public JsonScalar getJsonScalar(int index) {
         return (JsonScalar) getJson(index, Type.SCALAR);
     }
 
     @Override
-    public JsonSequence getSequence(int index) {
-        return (JsonSequence) getJson(index, Type.SEQUENCE);
+    public JsonList getJsonList(int index) {
+        return (JsonList) getJson(index, Type.LIST);
     }
 
     @Override
-    public JsonSequence insert(int index, Json value) {
+    public JsonList insert(int index, Json value) {
         q.add(index, value);
         return this;
     }
 
     @Override
-    public JsonSequence insert(Json value) {
+    public JsonList insert(Json value) {
         q.add(value);
         return this;
     }
@@ -67,13 +68,13 @@ class SimpleJsonSequence implements JsonSequence {
     }
 
     @Override
-    public JsonSequence remove(int index) {
+    public JsonList remove(int index) {
         q.remove(index);
         return this;
     }
 
     @Override
-    public JsonSequence set(int index, Json value) {
+    public JsonList set(int index, Json value) {
         q.set(index, value);
         return this;
     }
@@ -85,6 +86,6 @@ class SimpleJsonSequence implements JsonSequence {
 
     @Override
     public Type type() {
-        return Type.SEQUENCE;
+        return Type.LIST;
     }
 }

@@ -1,25 +1,25 @@
 package t.typedef.json.mono;
 
-import t.typedef.json.Json;
-import t.typedef.json.JsonMapping;
-import t.typedef.json.JsonScalar;
-import t.typedef.json.JsonSequence;
 import t.typedef.json.Json.Type;
+import t.typedef.json.JsonDict;
+import t.typedef.json.JsonList;
+import t.typedef.json.JsonScalar;
+import t.typedef.json.Producer;
 
-public class MonoJsonProducer implements Json.Producer {
+public class MonoJsonProducer implements Producer {
 
     @Override
-    public JsonMapping produceMapping() {
-        return new MonoJson(Type.MAPPING);
+    public JsonDict produceJsonDict() {
+        return new MonoJson(Type.DICT);
     }
 
     @Override
-    public JsonScalar produceScalar() {
+    public JsonScalar produceJsonScalar() {
         return new MonoJson(Type.SCALAR);
     }
 
     @Override
-    public JsonSequence produceSequence() {
-        return new MonoJson(Type.SEQUENCE);
+    public JsonList produceJsonList() {
+        return new MonoJson(Type.LIST);
     }
 }

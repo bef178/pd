@@ -3,21 +3,22 @@ package t.typedef.json.simple;
 import java.util.HashMap;
 import java.util.Set;
 
+import t.typedef.json.IllegalTypeException;
 import t.typedef.json.Json;
-import t.typedef.json.JsonMapping;
+import t.typedef.json.JsonDict;
+import t.typedef.json.JsonList;
 import t.typedef.json.JsonScalar;
-import t.typedef.json.JsonSequence;
 
-class SimpleJsonMapping implements JsonMapping {
+class SimpleJsonDict implements JsonDict {
 
     private HashMap<String, Json> m = new HashMap<>();
 
-    SimpleJsonMapping() {
+    SimpleJsonDict() {
         // dummy
     }
 
     @Override
-    public JsonMapping clear() {
+    public JsonDict clear() {
         m.clear();
         return this;
     }
@@ -36,18 +37,18 @@ class SimpleJsonMapping implements JsonMapping {
     }
 
     @Override
-    public JsonMapping getMapping(String key) {
-        return (JsonMapping) getJson(key, Type.MAPPING);
+    public JsonDict getJsonDict(String key) {
+        return (JsonDict) getJson(key, Type.DICT);
     }
 
     @Override
-    public JsonScalar getScalar(String key) {
+    public JsonScalar getJsonScalar(String key) {
         return (JsonScalar) getJson(key, Type.SCALAR);
     }
 
     @Override
-    public JsonSequence getSequence(String key) {
-        return (JsonSequence) getJson(key, Type.SEQUENCE);
+    public JsonList getJsonList(String key) {
+        return (JsonList) getJson(key, Type.LIST);
     }
 
     @Override
@@ -61,13 +62,13 @@ class SimpleJsonMapping implements JsonMapping {
     }
 
     @Override
-    public JsonMapping put(String key, Json value) {
+    public JsonDict put(String key, Json value) {
         m.put(key, value);
         return this;
     }
 
     @Override
-    public JsonMapping remove(String key) {
+    public JsonDict remove(String key) {
         m.remove(key);
         return this;
     }
@@ -79,6 +80,6 @@ class SimpleJsonMapping implements JsonMapping {
 
     @Override
     public Type type() {
-        return Type.MAPPING;
+        return Type.DICT;
     }
 }

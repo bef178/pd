@@ -9,13 +9,12 @@ import java.util.Map.Entry;
 
 import t.typedef.Ctype;
 import t.typedef.basic.Blob;
-import t.typedef.io.Factory;
 import t.typedef.io.FormatCodec;
 import t.typedef.io.InstallmentByteBuffer;
-import t.typedef.io.ParsingException;
 import t.typedef.io.InstallmentByteBuffer.Reader;
+import t.typedef.io.ParsingException;
 
-public class JsonFactory {
+public class Factory {
 
     private static class Builder {
 
@@ -32,7 +31,7 @@ public class JsonFactory {
             }
         }
 
-        private static Json build(Reader r, Json.Producer producer) {
+        private static Json build(Reader r, Producer producer) {
             skipWhitespaces(r);
             switch (r.peek()) {
                 case '"':
@@ -47,7 +46,7 @@ public class JsonFactory {
         }
 
         private static Entry<String, Json> buildEntry(Reader r,
-                Json.Producer producer) {
+                Producer producer) {
             String key = buildS(r, producer).getString();
 
             skipWhitespaces(r);
@@ -62,14 +61,13 @@ public class JsonFactory {
             return new SimpleImmutableEntry<String, Json>(key, value);
         }
 
-        private static JsonMapping buildM(Reader r,
-                Json.Producer producer) {
+        private static JsonDict buildM(Reader r, Producer producer) {
             int ch = r.next();
             if (ch != '{') {
                 throw new ParsingException("{", ch);
             }
 
-            JsonMapping M = producer.produceMapping();
+            JsonDict M = producer.produceJsonDict();
             int state = STATE_SEGMENT_BEGIN;
 
             while (true) {
@@ -103,14 +101,13 @@ public class JsonFactory {
             }
         }
 
-        private static JsonSequence buildQ(Reader r,
-                Json.Producer producer) {
+        private static JsonList buildQ(Reader r, Producer producer) {
             int ch = r.next();
             if (ch != '[') {
                 throw new ParsingException("[", ch);
             }
 
-            JsonSequence Q = producer.produceSequence();
+            JsonList Q = producer.produceJsonList();
             int state = STATE_SEGMENT_BEGIN;
 
             while (true) {
@@ -142,10 +139,9 @@ public class JsonFactory {
             }
         }
 
-        private static JsonScalar buildS(final Reader r,
-                Json.Producer producer) {
-            return producer.produceScalar()
-                    .set(Factory.fromScalar(r).toString());
+        private static JsonScalar buildS(final Reader r, Producer producer) {
+            return producer.produceJsonScalar()
+                    .set(t.typedef.io.Factory.fromScalar(r).toString());
         }
     }
 
@@ -158,21 +154,21 @@ public class JsonFactory {
                 case SCALAR:
                     serializeS((JsonScalar) json, o);
                     break;
-                case SEQUENCE:
-                    serializeQ((JsonSequence) json, prefix,
+                case LIST:
+                    serializeQ((JsonList) json, prefix,
                             INNER_PREFIX, LF, o);
                     break;
-                case MAPPING:
-                    serializeM((JsonMapping) json, prefix,
+                case DICT:
+                    serializeM((JsonDict) json, prefix,
                             INNER_PREFIX, LF, o);
                     break;
                 default:
-                    throw new Json.IllegalTypeException();
+                    throw new IllegalTypeException();
             }
             return o;
         }
 
-        private static void serializeM(JsonMapping jsonM,
+        private static void serializeM(JsonDict jsonM,
                 String prefix, final String INNER_PREFIX, final String LF,
                 InstallmentByteBuffer o) {
             final String prefix1 = prefix + INNER_PREFIX;
@@ -207,7 +203,7 @@ public class JsonFactory {
             o.append('}');
         }
 
-        private static void serializeQ(JsonSequence jsonQ,
+        private static void serializeQ(JsonList jsonQ,
                 String prefix, final String INNER_PREFIX, final String LF,
                 InstallmentByteBuffer o) {
             final String prefix1 = prefix + INNER_PREFIX;
@@ -270,7 +266,7 @@ public class JsonFactory {
         }
     }
 
-    public static Json build(String src, Json.Producer producer) {
+    public static Json build(String src, Producer producer) {
         Reader r = new InstallmentByteBuffer().append(src).reader();
         return Builder.build(r, producer);
     }
@@ -305,7 +301,7 @@ public class JsonFactory {
                 new InstallmentByteBuffer()).toString();
     }
 
-    private JsonFactory() {
+    private Factory() {
         // private dummy
     }
 }

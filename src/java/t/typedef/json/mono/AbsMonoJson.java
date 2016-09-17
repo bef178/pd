@@ -1,12 +1,12 @@
 package t.typedef.json.mono;
 
+import t.typedef.json.IllegalTypeException;
 import t.typedef.json.Json;
-import t.typedef.json.JsonMapping;
+import t.typedef.json.JsonDict;
+import t.typedef.json.JsonList;
 import t.typedef.json.JsonScalar;
-import t.typedef.json.JsonSequence;
 
-abstract class AbsMonoJson implements JsonScalar, JsonSequence,
-        JsonMapping {
+abstract class AbsMonoJson implements JsonScalar, JsonList, JsonDict {
 
     private final Type type;
 

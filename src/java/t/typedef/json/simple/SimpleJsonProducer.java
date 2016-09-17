@@ -1,24 +1,24 @@
 package t.typedef.json.simple;
 
-import t.typedef.json.Json;
-import t.typedef.json.JsonMapping;
+import t.typedef.json.JsonDict;
+import t.typedef.json.JsonList;
 import t.typedef.json.JsonScalar;
-import t.typedef.json.JsonSequence;
+import t.typedef.json.Producer;
 
-public class SimpleJsonProducer implements Json.Producer {
+public class SimpleJsonProducer implements Producer {
 
     @Override
-    public JsonMapping produceMapping() {
-        return new SimpleJsonMapping();
+    public JsonDict produceJsonDict() {
+        return new SimpleJsonDict();
     }
 
     @Override
-    public JsonScalar produceScalar() {
+    public JsonScalar produceJsonScalar() {
         return new SimpleJsonScalar();
     }
 
     @Override
-    public JsonSequence produceSequence() {
-        return new SimpleJsonSequence();
+    public JsonList produceJsonList() {
+        return new SimpleJsonList();
     }
 }
