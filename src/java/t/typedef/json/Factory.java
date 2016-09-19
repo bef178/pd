@@ -148,19 +148,16 @@ public class Factory {
     private static class Serializer {
 
         private static InstallmentByteBuffer serialize(Json json,
-                String prefix, final String INNER_PREFIX, final String LF,
-                InstallmentByteBuffer o) {
+                Config config, InstallmentByteBuffer o) {
             switch (json.type()) {
                 case SCALAR:
                     serializeS((JsonScalar) json, o);
                     break;
                 case LIST:
-                    serializeQ((JsonList) json, prefix,
-                            INNER_PREFIX, LF, o);
+                    serializeQ((JsonList) json, config, o);
                     break;
                 case DICT:
-                    serializeM((JsonDict) json, prefix,
-                            INNER_PREFIX, LF, o);
+                    serializeM((JsonDict) json, config, o);
                     break;
                 default:
                     throw new IllegalTypeException();
@@ -168,71 +165,70 @@ public class Factory {
             return o;
         }
 
-        private static void serializeM(JsonDict jsonM,
-                String prefix, final String INNER_PREFIX, final String LF,
+        private static void serializeM(JsonDict json, Config config,
                 InstallmentByteBuffer o) {
-            final String prefix1 = prefix + INNER_PREFIX;
-            boolean isEmpty = jsonM.isEmpty();
+            boolean isEmpty = json.isEmpty();
 
             o.append('{');
             if (!isEmpty) {
-                o.append(LF);
+                o.append(config.eol);
             }
 
-            List<String> keys = new ArrayList<String>(jsonM.keys());
+            config.indentCount++;
+            List<String> keys = new ArrayList<String>(json.keys());
             Collections.sort(keys);
             Iterator<String> it = keys.iterator();
             while (it.hasNext()) {
-                o.append(prefix1);
+                config.printWhitespace(o);
                 String key = it.next();
-                Json value = jsonM.getJson(key);
+                Json value = json.getJson(key);
 
                 serializeS(key, o);
                 o.append(':');
-                serialize(value, prefix1, INNER_PREFIX, LF, o);
+                serialize(value, config, o);
 
                 if (it.hasNext()) {
                     o.append(",");
                 }
-                o.append(LF);
+                o.append(config.eol);
             }
+            config.indentCount--;
 
             if (!isEmpty) {
-                o.append(prefix);
+                config.printWhitespace(o);
             }
             o.append('}');
         }
 
-        private static void serializeQ(JsonList jsonQ,
-                String prefix, final String INNER_PREFIX, final String LF,
+        private static void serializeQ(JsonList json, Config config,
                 InstallmentByteBuffer o) {
-            final String prefix1 = prefix + INNER_PREFIX;
-            final String lineEnd = LF;
-            boolean isEmpty = jsonQ.isEmpty();
+            boolean isEmpty = json.isEmpty();
 
             o.append('[');
             if (!isEmpty) {
-                o.append(lineEnd);
+                o.append(config.eol);
             }
 
-            for (int i = 0; i < jsonQ.size(); ++i) {
-                o.append(prefix1);
-                serialize(jsonQ.getJson(i), prefix1, INNER_PREFIX, LF, o);
-                if (i < jsonQ.size() - 1) {
+            config.indentCount++;
+            for (int i = 0; i < json.size(); ++i) {
+                config.printWhitespace(o);
+                serialize(json.getJson(i), config, o);
+                if (i < json.size() - 1) {
                     o.append(",");
                 }
-                o.append(lineEnd);
+                o.append(config.eol);
             }
+            config.indentCount--;
 
             if (!isEmpty) {
-                o.append(prefix);
+                config.printWhitespace(o);
             }
             o.append(']');
         }
 
-        private static void serializeS(JsonScalar jsonS,
+        private static void serializeS(JsonScalar json,
                 InstallmentByteBuffer o) {
-            serializeS(jsonS.getString(), o);
+            serializeS(json.getString(), o);
         }
 
         private static void serializeS(String s, InstallmentByteBuffer o) {
@@ -290,14 +286,17 @@ public class Factory {
     }
 
     public static String serializeAsCheatSheet(Json json, String prefix) {
-        return Serializer.serialize(json, prefix,
-                "", "",
+        return Serializer.serialize(json, new Config(prefix),
                 new InstallmentByteBuffer()).toString();
     }
 
     public static String serializeAsWellFormed(Json json, String prefix) {
-        return Serializer.serialize(json, prefix,
-                "  ", System.getProperty("line.separator"),
+        Config config = new Config();
+        config.eol = System.getProperty("line.separator");
+        config.margin = prefix;
+        config.tab2space = 2;
+
+        return Serializer.serialize(json, config,
                 new InstallmentByteBuffer()).toString();
     }
 
