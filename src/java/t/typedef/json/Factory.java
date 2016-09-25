@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import t.typedef.Ctype;
-import t.typedef.basic.Blob;
-import t.typedef.io.FormatCodec;
 import t.typedef.io.InstallmentByteBuffer;
 import t.typedef.io.InstallmentByteBuffer.Reader;
 import t.typedef.io.ParsingException;
@@ -141,7 +139,7 @@ public class Factory {
 
         private static JsonScalar buildS(final Reader r, Producer producer) {
             return producer.produceJsonScalar()
-                    .set(t.typedef.io.Factory.fromScalar(r).toString());
+                    .set(t.typedef.io.Factory.buildScalar(r).toString());
         }
     }
 
@@ -232,33 +230,7 @@ public class Factory {
         }
 
         private static void serializeS(String s, InstallmentByteBuffer o) {
-            o.append('\"');
-            for (int i = 0; i < s.length(); ++i) {
-
-                char c = s.charAt(i);
-                if (Ctype.isAlphanum(c)) {
-                    o.append(c);
-                    continue;
-                }
-
-                int ch = c;
-                if (Character.isHighSurrogate(c)) {
-                    char chLow = s.charAt(++i);
-                    if (Character.isLowSurrogate(chLow)) {
-                        ch = Character.toCodePoint(c, chLow);
-                    } else {
-                        throw new ParsingException();
-                    }
-                } else if (Character.isLowSurrogate(c)) {
-                    throw new ParsingException();
-                }
-                // faster than String.getBytes("UTF-8") with exception handled
-                // faster than toUtf8() then toHexText()
-                Blob blob = new Blob();
-                FormatCodec.PrivateContract.encode(ch, blob);
-                o.append(blob.a);
-            }
-            o.append('\"');
+           t.typedef.io.Factory.serialize(s, o);
         }
     }
 
