@@ -5,53 +5,54 @@ CC := gcc
 CCFLAGS = -std=c99 -Werror $(addprefix -include ,$(HEADERS))
 
 TOP := .
-SRC_DIR := $(TOP)/src/cc
+SRC := $(TOP)/src/cc
 
-OUT_TOP := $(TOP)/out
-OUT_DIR := $(OUT_TOP)/cc
-OUT_CC := $(OUT_TOP)/typedef.a
+OUT := $(TOP)/out
+OUT_CC := $(OUT)/cc
+OUT_TARGET_A := $(OUT)/t.typedef.a
+OUT_TARGET_O := $(OUT)/t.typedef.o
+OUT_TARGET := $(OUT_TARGET_A) $(OUT_TARGET_O)
 
-HEADERS := $(SRC_DIR)/t/typedef/typedef.h
+HEADERS := $(SRC)/t/typedef/typedef.h
 OBJECTS :=
 
 #-----------------------------------------------------------
 # lib
 
 LOCAL_PACKAGE := t/typedef/fundamental
-LOCAL_SRC_DIR := $(SRC_DIR)/$(LOCAL_PACKAGE)
+LOCAL_SRC_DIR := $(SRC)/$(LOCAL_PACKAGE)
 
 HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
-OBJECTS += $(patsubst $(SRC_DIR)/%.c,$(OUT_DIR)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
+OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
 
 #-----------------------------------------------------------
 # basic types
 
 LOCAL_PACKAGE := t/typedef/basic
-LOCAL_SRC_DIR := $(SRC_DIR)/$(LOCAL_PACKAGE)
+LOCAL_SRC_DIR := $(SRC)/$(LOCAL_PACKAGE)
 
 HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
-OBJECTS += $(patsubst $(SRC_DIR)/%.c,$(OUT_DIR)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
+OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
 
 #-----------------------------------------------------------
 
 OBJECTS := $(strip $(OBJECTS))
 
 .PHONY: cc
-cc: $(OUT_TOP)/typedef.a $(OUT_TOP)/typedef.o
+cc: $(OUT_TARGET)
 
-$(OUT_TOP)/typedef.a: $(OBJECTS)
+$(OUT_TARGET_A): $(OBJECTS)
 	ar cr $@ $^
 
-$(OUT_TOP)/typedef.o: $(OBJECTS)
+$(OUT_TARGET_O): $(OBJECTS)
 	ld -r $^ -o $@
 
-$(OUT_DIR)/%.o : $(SRC_DIR)/%.c
+$(OUT_CC)/%.o : $(SRC)/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CCFLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:
 	@echo "cleaning ..."
-	@rm -rf $(OUT_TOP)/typedef.a
-	@rm -rf $(OUT_TOP)/typedef.o
-	@rm -rf $(OUT_DIR)
+	@rm -rf $(OUT_TARGET)
+	@rm -rf $(OUT_CC)
