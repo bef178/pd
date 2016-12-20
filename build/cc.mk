@@ -4,23 +4,24 @@
 CC := gcc
 CCFLAGS = -std=c99 -Werror $(addprefix -include ,$(HEADERS))
 
+PACKAGE := cc.typedef
+
 TOP := .
-SRC := $(TOP)/src/cc
+SRC := $(TOP)/src-cc/$(subst .,/,$(PACKAGE))
 
 OUT := $(TOP)/out
 OUT_CC := $(OUT)/cc
-OUT_TARGET_A := $(OUT)/t.typedef.a
-OUT_TARGET_O := $(OUT)/t.typedef.o
+OUT_TARGET_A := $(OUT)/$(PACKAGE).a
+OUT_TARGET_O := $(OUT)/$(PACKAGE).o
 OUT_TARGET := $(OUT_TARGET_A) $(OUT_TARGET_O)
 
-HEADERS := $(SRC)/t/typedef/typedef.h
+HEADERS := $(SRC)/typedef.h
 OBJECTS :=
 
 #-----------------------------------------------------------
 # lib
 
-LOCAL_PACKAGE := t/typedef/fundamental
-LOCAL_SRC_DIR := $(SRC)/$(LOCAL_PACKAGE)
+LOCAL_SRC_DIR := $(SRC)/primitive
 
 HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
 OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
@@ -28,8 +29,7 @@ OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) 
 #-----------------------------------------------------------
 # basic types
 
-LOCAL_PACKAGE := t/typedef/basic
-LOCAL_SRC_DIR := $(SRC)/$(LOCAL_PACKAGE)
+LOCAL_SRC_DIR := $(SRC)/basic
 
 HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
 OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
