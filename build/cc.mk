@@ -7,7 +7,7 @@ CCFLAGS = -std=c99 -Werror $(addprefix -include ,$(HEADERS))
 PACKAGE := cc.typedef
 
 TOP := .
-SRC := $(TOP)/src-cc/$(subst .,/,$(PACKAGE))
+SRC := $(TOP)/src/$(subst .,/,$(PACKAGE))
 
 OUT := $(TOP)/out
 OUT_CC := $(OUT)/cc

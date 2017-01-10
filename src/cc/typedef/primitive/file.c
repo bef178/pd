@@ -2,25 +2,25 @@
 #define CR 0x0D
 
 /**
- *  Read 1 line from @fp to @buffer, excluding the line terminator, which will be consumed.
+ *  Read 1 line from fp to buffer, excluding the line terminator, which will be consumed.
  *  Line terminators are LF, CR, or CR followed by LF.
- *  Read @size - 1 bytes at most.
+ *  Read size - 1 bytes at most.
  *  returns actual bytes read
  */
 interface int file_getLine(FILE * fp, byte * buffer, const int size) {
-    assert(fp != NULL && buffer != NULL);
-    assert(size > 0);
+    assert(fp != NULL);
+    assert(buffer != NULL && size > 0);
 
     int n = size - 1;
 
     bool b = true;
     while (n > 0 && b) {
-        int c = fgetc(fp);
-        switch (c) {
+        int ch = fgetc(fp);
+        switch (ch) {
             case CR:
-                c = fgetc(fp);
-                if (c != LF && c != EOF) {
-                    ungetc(c, fp);
+                ch = fgetc(fp);
+                if (ch != LF && ch != EOF) {
+                    ungetc(ch, fp);
                 }
                 // fall through
             case EOF:
@@ -29,7 +29,7 @@ interface int file_getLine(FILE * fp, byte * buffer, const int size) {
                 b = false;
                 break;
             default:
-                *buffer++ = c;
+                *buffer++ = ch;
                 --n;
                 break;
         }
