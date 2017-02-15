@@ -29,8 +29,4 @@ typedef _Bool bool;
 typedef int (* compare_fp)(void *, void *);
 typedef void (* drop_fp)(void * asThis);
 
-#ifndef WORD_SIZE
-#define WORD_SIZE   (sizeof(void *))
-#endif
-
 #endif /* _INCLUDED_BASE */

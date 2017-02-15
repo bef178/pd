@@ -18,6 +18,10 @@ interface int toUpper(int ch);
 interface int getBit(const void * stream, int offset);
 interface void setBit(void * stream, int offset);
 interface void clearBit(void * stream, int offset);
-interface uint32 rotateL(uint32 mem, int offset);
+interface int32 rotateL(int32 mem, int offset);
+interface int32 rotateR(int32 mem, int offset);
+
+// logical (compare to arithmetic) shift right
+interface int32 lshiftR(int32 mem, int offset);
 
 #endif // _INCLUDE_BYTE_BIT

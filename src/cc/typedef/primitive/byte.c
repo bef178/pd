@@ -56,7 +56,17 @@ interface void clearBit(void * stream, int offset) {
     CLEAR_BITS(((byte *)stream)[offset >> 3], 1 << (7 - (offset & 7)));
 }
 
-interface uint32 rotateL(uint32 mem, int offset) {
+interface int32 rotateL(int32 mem, int offset) {
     assert(offset >= 0 && offset <= 32);
-    return (mem << offset) | (mem >> (32 - offset));
+    return rotateR(mem, 32 - offset);
+}
+
+interface int32 rotateR(int32 mem, int offset) {
+    assert(offset >= 0 && offset <= 32);
+    return (mem << (32 - offset)) | lshiftR(mem, offset);
+}
+
+interface int32 lshiftR(int32 mem, int offset) {
+    assert(offset >= 0 && offset <= 32);
+    return (mem >> offset) & ((1 << (32 - offset)) - 1);
 }

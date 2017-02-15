@@ -34,7 +34,7 @@ int utf8_glyphSize(const byte * utf8) {
  * convert 1 utf8 character to 1 ucs4 character
  * return the size of this @utf8 character
  */
-int utf8_toUcs4(const byte * utf8, uint32 * ucs4) {
+int utf8_toUcs4(const byte * utf8, int32 * ucs4) {
     assert(utf8 != NULL && ucs4 != NULL);
 
     int size = utf8_glyphSize(utf8);
@@ -45,7 +45,7 @@ int utf8_toUcs4(const byte * utf8, uint32 * ucs4) {
             *ucs4 = *utf8;
             break;
         default: {
-            uint32 ch = 0;
+            int32 ch = 0;
             // parse the head
             for (int i = size + 1; i < 8; ++i) {
                 ch <<= 1;

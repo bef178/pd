@@ -25,7 +25,6 @@ interface void Blob_drop(Blob_t * asThis) {
 
 interface Blob_t * Blob_pick(const byte * a, const int n) {
     assert(n >= 0);
-    // assert(WORD_SIZE == sizeof(void *))
 
     // ugly but enables the immutability of Blob_t
 
