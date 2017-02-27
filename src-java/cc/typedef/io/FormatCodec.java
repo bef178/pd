@@ -8,23 +8,15 @@ import cc.typedef.basic.Blob;
 
 public final class FormatCodec {
 
-    public interface Nextable {
-
-        /**
-         * @return next byte
-         */
-        int next();
-    }
-
     public static final class Base64 extends FormatCodecBase64 {
         // dummy
     }
 
     public static final class PrivateContract {
 
-        public static int decode(Nextable provider) {
-            expect('\\', provider.next());
-            int ch = provider.next();
+        public static int decode(Nextable it) {
+            expect('\\', it.next());
+            int ch = it.next();
             switch (ch) {
                 case '\\':
                     return '\\';
@@ -43,7 +35,7 @@ public final class FormatCodec {
                 case 'b':
                     return '\b';
                 case 'u':
-                    return Unicode.fromUtf8HexBytes(provider);
+                    return Unicode.fromUtf8HexBytes(it);
                 default:
                     return ch;
             }
@@ -96,9 +88,9 @@ public final class FormatCodec {
             return ch;
         }
 
-        public static int fromUtf8HexBytes(Nextable callback) {
-            int firstByte = (hexByte2HexInt(callback.next()) << 4)
-                    | hexByte2HexInt(callback.next());
+        public static int fromUtf8HexBytes(Nextable it) {
+            int firstByte = (hexByte2HexInt(it.next()) << 4)
+                    | hexByte2HexInt(it.next());
 
             int n = utf8LengthByUtf8((byte) firstByte);
             if (n < 0) {
@@ -111,8 +103,8 @@ public final class FormatCodec {
 
             int ch = firstByte & ~(0xFF >>> (8 - n) << (8 - n));
             for (int i = 1; i < n; ++i) {
-                int b = (hexByte2HexInt(callback.next()) << 4)
-                        | hexByte2HexInt(callback.next());
+                int b = (hexByte2HexInt(it.next()) << 4)
+                        | hexByte2HexInt(it.next());
                 ch = b & 0x3F | (ch << 6);
             }
             return ch;

@@ -1,6 +1,8 @@
 package cc.typedef.basic;
 
-public final class Blob {
+import cc.typedef.io.Nextable;
+
+public final class Blob implements Nextable {
 
     public byte[] a = null;
 
@@ -25,6 +27,7 @@ public final class Blob {
         return a == null || a.length == 0;
     }
 
+    @Override
     public int next() {
         return a[i++] & 0xFF;
     }

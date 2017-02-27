@@ -14,7 +14,7 @@ public class InstallmentByteBuffer {
     /**
      * not a java.io.Reader<br/>
      */
-    public class Reader implements FormatCodec.Nextable {
+    public class Reader implements Nextable {
 
         private int next = 0;
 
