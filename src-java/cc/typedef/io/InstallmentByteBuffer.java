@@ -61,6 +61,7 @@ public class InstallmentByteBuffer {
             return next;
         }
 
+        @Override
         public int peek() {
             if (hasNext()) {
                 return get(next) & 0xFF;

@@ -40,4 +40,9 @@ public final class Blob implements Nextable {
     public void next(byte b) {
         a[i++] = b;
     }
+
+    @Override
+    public int peek() {
+        return a[i] & 0xFF;
+    }
 }
