@@ -139,7 +139,7 @@ public class Factory {
 
         private static JsonScalar buildS(final Reader r, Producer producer) {
             return producer.produceJsonScalar()
-                    .set(cc.typedef.io.Factory.buildScalar(r).toString());
+                    .set(cc.typedef.io.Factory.parseString(r).toString());
         }
     }
 

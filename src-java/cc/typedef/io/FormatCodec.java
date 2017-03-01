@@ -12,10 +12,19 @@ public final class FormatCodec {
         // dummy
     }
 
+    public static final class Csv extends FormatCodecCsv {
+        // dummy
+    }
+
     public static final class PrivateContract {
 
         public static int decode(Nextable it) {
-            expect('\\', it.next());
+            int last = it.next();
+            return decode(last, it);
+        }
+
+        public static int decode(int last, Nextable it) {
+            expect('\\', last);
             int ch = it.next();
             switch (ch) {
                 case '\\':

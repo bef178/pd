@@ -6,24 +6,33 @@ import cc.typedef.primitive.Ctype;
 public final class Factory {
 
     /**
-     * a scalar appears as a quoted String
+     * accept a quoted string
      */
-    public static CharSequence buildScalar(InstallmentByteBuffer.Reader r) {
-        int ch = r.next();
-        if (ch != '"') {
-            throw new ParsingException('"', ch);
+    public static CharSequence parseString(InstallmentByteBuffer.Reader r) {
+        return parseString(r, '\"', '\"');
+    }
+
+    public static CharSequence parseString(InstallmentByteBuffer.Reader r,
+            final int start, final int end) {
+        int ch = -1;
+        if (start >= 0) {
+            // there is a start delimiter, taste it
+            ch = r.next();
+            if (ch != start) {
+                throw new ParsingException(start, ch);
+            }
         }
 
         StringBuilder sb = new StringBuilder();
         while (true) {
             ch = r.next();
-            if (ch == '"') {
+            if (ch == end) {
+                // consume the end delimiter then exit
                 return sb;
             }
 
             if (ch == '\\') {
-                r.putBack();
-                ch = FormatCodec.PrivateContract.decode(r);
+                ch = FormatCodec.PrivateContract.decode(ch, r);
             }
             sb.appendCodePoint(ch);
         }
