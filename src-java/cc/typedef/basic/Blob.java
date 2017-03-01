@@ -17,6 +17,11 @@ public final class Blob implements Nextable {
         this.i = i;
     }
 
+    @Override
+    public boolean hasNext() {
+        return i >= 0 && i < a.length;
+    }
+
     public void init(int n) {
         assert n >= 0;
         a = new byte[n];

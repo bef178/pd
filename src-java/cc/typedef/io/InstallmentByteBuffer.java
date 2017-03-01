@@ -40,8 +40,9 @@ public class InstallmentByteBuffer {
             return FormatCodec.Unicode.fromUtf8(new Blob(a, 0));
         }
 
+        @Override
         public boolean hasNext() {
-            return next >= 0 && next < used;
+            return next >= 0 && next < size();
         }
 
         @Override
