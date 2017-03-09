@@ -3,7 +3,7 @@ package cc.typedef.io;
 import java.io.IOException;
 import java.util.Arrays;
 
-class FormatCodecBase64 {
+class CodecBase64 {
 
     private static final char[] ENCODE_MAP;
     private static final char[] DECODE_MAP;

@@ -6,17 +6,17 @@ import java.util.BitSet;
 
 import cc.typedef.basic.Blob;
 
-public final class FormatCodec {
+public final class Codec {
 
-    public static final class Base64 extends FormatCodecBase64 {
+    public static final class Base64 extends CodecBase64 {
         // dummy
     }
 
-    public static final class Csv extends FormatCodecCsv {
+    public static final class Csv extends CodecCsv {
         // dummy
     }
 
-    public static final class PrivateContract extends FormatCodecPrivateContract {
+    public static final class Glyph extends CodecGlyph {
         // dummy
     }
 

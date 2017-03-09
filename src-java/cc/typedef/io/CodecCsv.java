@@ -3,7 +3,7 @@ package cc.typedef.io;
 import java.util.LinkedList;
 import java.util.List;
 
-class FormatCodecCsv {
+class CodecCsv {
 
     private enum State {
         IDLE, REC_WIP, REC_END
@@ -42,8 +42,7 @@ class FormatCodecCsv {
                             break;
                         case '\\':
                             state = State.REC_WIP;
-                            record.append(FormatCodec.PrivateContract
-                                    .decode('\\', it));
+                            record.append(Codec.Glyph.decode('\\', it));
                             break;
                         default:
                             state = State.REC_WIP;
@@ -55,7 +54,7 @@ class FormatCodecCsv {
                     if (ch == '\\') {
                         state = State.REC_WIP;
                         record.append(
-                                FormatCodec.PrivateContract.decode('\\', it));
+                                Codec.Glyph.decode('\\', it));
                         break;
                     }
                     if (delimiter >= 0) {

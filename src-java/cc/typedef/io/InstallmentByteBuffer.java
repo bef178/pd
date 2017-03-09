@@ -23,7 +23,7 @@ public class InstallmentByteBuffer {
          * throws {@link ParsingException} if fail
          */
         public int getNextCodePoint() {
-            int n = FormatCodec.Unicode.utf8LengthByUtf8((byte) peek());
+            int n = Codec.Unicode.utf8LengthByUtf8((byte) peek());
             if (n < 0) {
                 throw new ParsingException();
             }
@@ -37,7 +37,7 @@ public class InstallmentByteBuffer {
                 }
                 a[i] = (byte) (ch & 0xFF);
             }
-            return FormatCodec.Unicode.fromUtf8(new Blob(a, 0));
+            return Codec.Unicode.fromUtf8(new Blob(a, 0));
         }
 
         @Override

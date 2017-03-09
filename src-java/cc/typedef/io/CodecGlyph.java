@@ -2,7 +2,7 @@ package cc.typedef.io;
 
 import cc.typedef.basic.Blob;
 
-class FormatCodecPrivateContract {
+class CodecGlyph {
 
     public static int decode(Nextable it) {
         assert it != null;
@@ -33,14 +33,14 @@ class FormatCodecPrivateContract {
             case 'b':
                 return '\b';
             case 'u':
-                return FormatCodec.Unicode.fromUtf8HexBytes(it);
+                return Codec.Unicode.fromUtf8HexBytes(it);
             default:
                 return ch;
         }
     }
 
     public static int encode(int ch, Blob blob) {
-        int n = 2 + FormatCodec.Unicode.utf8Length(ch) * 2;
+        int n = 2 + Codec.Unicode.utf8Length(ch) * 2;
         if (blob != null) {
             if (blob.isEmpty()) {
                 blob.init(n);
@@ -48,7 +48,7 @@ class FormatCodecPrivateContract {
             int start = blob.i;
             blob.next((byte) '\\');
             blob.next((byte) 'u');
-            int m = FormatCodec.Unicode.toUtf8HexBytes(ch, blob);
+            int m = Codec.Unicode.toUtf8HexBytes(ch, blob);
             assert m == n - 2;
             blob.i = start;
         }

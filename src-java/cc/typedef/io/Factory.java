@@ -8,16 +8,16 @@ public final class Factory {
     /**
      * accept a quoted string
      */
-    public static CharSequence parseString(InstallmentByteBuffer.Reader r) {
-        return parseString(r, '\"', '\"');
+    public static CharSequence parseString(Nextable it) {
+        return parseString(it, '\"', '\"');
     }
 
-    public static CharSequence parseString(InstallmentByteBuffer.Reader r,
-            final int start, final int end) {
+    public static CharSequence parseString(Nextable it, final int start,
+            final int end) {
         int ch = -1;
         if (start >= 0) {
             // there is a start delimiter, taste it
-            ch = r.next();
+            ch = it.next();
             if (ch != start) {
                 throw new ParsingException(start, ch);
             }
@@ -25,14 +25,14 @@ public final class Factory {
 
         StringBuilder sb = new StringBuilder();
         while (true) {
-            ch = r.next();
+            ch = it.next();
             if (ch == end) {
                 // consume the end delimiter then exit
                 return sb;
             }
 
             if (ch == '\\') {
-                ch = FormatCodec.PrivateContract.decode(ch, r);
+                ch = Codec.Glyph.decode(ch, it);
             }
             sb.appendCodePoint(ch);
         }
@@ -61,7 +61,7 @@ public final class Factory {
             // faster than String.getBytes("UTF-8") with exception handled
             // faster than toUtf8() then toHexText()
             Blob blob = new Blob();
-            FormatCodec.PrivateContract.encode(ch, blob);
+            Codec.Glyph.encode(ch, blob);
             w.append(blob.a);
         }
         w.append('\"');
