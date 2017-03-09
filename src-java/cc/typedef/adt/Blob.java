@@ -1,4 +1,4 @@
-package cc.typedef.basic;
+package cc.typedef.adt;
 
 import cc.typedef.io.Nextable;
 

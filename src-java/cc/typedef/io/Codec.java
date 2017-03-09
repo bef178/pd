@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.BitSet;
 
-import cc.typedef.basic.Blob;
+import cc.typedef.adt.Blob;
 
 public final class Codec {
 

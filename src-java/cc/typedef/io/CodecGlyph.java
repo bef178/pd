@@ -1,6 +1,6 @@
 package cc.typedef.io;
 
-import cc.typedef.basic.Blob;
+import cc.typedef.adt.Blob;
 
 class CodecGlyph {
 

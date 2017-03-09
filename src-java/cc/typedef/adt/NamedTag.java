@@ -1,4 +1,4 @@
-package cc.typedef.basic;
+package cc.typedef.adt;
 
 final public class NamedTag extends KeyValue {
 

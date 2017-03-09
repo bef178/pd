@@ -1,4 +1,4 @@
-package cc.typedef.basic;
+package cc.typedef.adt;
 
 import java.util.Collection;
 import java.util.LinkedList;

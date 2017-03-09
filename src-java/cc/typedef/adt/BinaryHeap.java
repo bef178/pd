@@ -1,4 +1,4 @@
-package cc.typedef.basic;
+package cc.typedef.adt;
 
 import java.util.Arrays;
 import java.util.Comparator;

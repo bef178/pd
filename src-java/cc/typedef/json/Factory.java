@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
-import cc.typedef.basic.Blob;
+import cc.typedef.adt.Blob;
 import cc.typedef.io.Codec;
 import cc.typedef.io.InstallmentByteBuffer;
 import cc.typedef.io.InstallmentByteBuffer.Reader;

@@ -4,7 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import cc.typedef.basic.Blob;
+import cc.typedef.adt.Blob;
 
 /**
  * some thing of smart array & queue & installment savings

@@ -1,4 +1,4 @@
 /**
  * independent general-purpose type
  */
-package cc.typedef.basic;
+package cc.typedef.adt;
