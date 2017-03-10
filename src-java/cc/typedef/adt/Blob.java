@@ -12,6 +12,10 @@ public final class Blob implements Nextable {
         // dummy
     }
 
+    public Blob(int n) {
+        init(n);
+    }
+
     public Blob(byte[] a, int i) {
         this.a = a;
         this.i = i;

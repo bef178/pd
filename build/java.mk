@@ -6,7 +6,7 @@ PACKAGE := cc.typedef
 TOP ?= .
 
 SRC := $(TOP)/src-java
-SRC_FILES := $(shell find -L $(SRC) -name "*.java")
+SRC_FILES := $(shell find -L $(SRC)/$(subst .,/,$(PACKAGE)) -name "*.java")
 
 LIB := $(TOP)/lib
 
