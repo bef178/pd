@@ -46,8 +46,8 @@ class CodecGlyph {
                 blob.init(n);
             }
             int start = blob.i;
-            blob.next((byte) '\\');
-            blob.next((byte) 'u');
+            blob.push((byte) '\\');
+            blob.push((byte) 'u');
             int m = Codec.Unicode.toUtf8HexBytes(ch, blob);
             assert m == n - 2;
             blob.i = start;

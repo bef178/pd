@@ -13,19 +13,19 @@ public class TestCodecGlyph {
 
     @Test
     public void testBasicMultilingualPlane() {
-        // 我 25105 =utf8=E68891
-        int expectedGlyph = "我".codePointAt(0);
-        byte[] expectedBytes = "\\uE68891".getBytes();
+        // 汉 27721 =utf8=E6B189
+        int expectedCodePoint = "汉".codePointAt(0);
+        String expected = "\\uE6B189";
 
         Blob blob = new Blob(8);
-        int n = Codec.Glyph.encode(expectedGlyph, blob);
-        Assert.assertTrue(Arrays.equals(expectedBytes, blob.a));
+        int n = Codec.Glyph.encode(expectedCodePoint, blob);
+        Assert.assertTrue(Arrays.equals(expected.getBytes(), blob.a));
         Assert.assertEquals(8, n);
 
-        Nextable it = new InstallmentByteBuffer().append(expectedBytes)
+        Nextable it = new InstallmentByteBuffer().append(expected)
                 .reader();
         int ch = Codec.Glyph.decode(it);
-        Assert.assertEquals(expectedGlyph, ch);
+        Assert.assertEquals(expectedCodePoint, ch);
     }
 
     @Test

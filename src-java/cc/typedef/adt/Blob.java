@@ -1,8 +1,9 @@
 package cc.typedef.adt;
 
 import cc.typedef.io.Nextable;
+import cc.typedef.io.Pushable;
 
-public final class Blob implements Nextable {
+public final class Blob implements Nextable, Pushable {
 
     public byte[] a = null;
 
@@ -12,13 +13,13 @@ public final class Blob implements Nextable {
         // dummy
     }
 
-    public Blob(int n) {
-        init(n);
-    }
-
     public Blob(byte[] a, int i) {
         this.a = a;
         this.i = i;
+    }
+
+    public Blob(int n) {
+        init(n);
     }
 
     @Override
@@ -41,12 +42,13 @@ public final class Blob implements Nextable {
         return a[i++] & 0xFF;
     }
 
-    public void next(byte b) {
-        a[i++] = b;
-    }
-
     @Override
     public int peek() {
         return a[i] & 0xFF;
+    }
+
+    @Override
+    public void push(int b) {
+        a[i++] = (byte) (b & 0xFF);
     }
 }

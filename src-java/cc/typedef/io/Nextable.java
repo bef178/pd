@@ -5,7 +5,7 @@ public interface Nextable {
     boolean hasNext();
 
     /**
-     * @return next int8
+     * return an int in [0, 255]
      */
     int next();
 
