@@ -1,7 +1,5 @@
 package cc.typedef.io;
 
-import cc.typedef.adt.Blob;
-
 class CodecGlyph {
 
     private static final byte[] HEX_DIGIT_TO_LITERAL = {
@@ -44,19 +42,13 @@ class CodecGlyph {
         return decode(last, it);
     }
 
-    public static int encode(int ch, Blob blob) {
+    public static int encode(int ch, Pushable it) {
         int n = 2 + utf8Length(ch) * 2;
-        if (blob != null) {
-            if (blob.isEmpty()) {
-                blob.init(n);
-            }
-            int start = blob.i;
-            blob.push('\\');
-            blob.push('u');
-            int m = toUtf8Bytes(ch, blob, true);
-            assert m == n - 2;
-            blob.i = start;
-        }
+        assert it != null;
+        it.push('\\');
+        it.push('u');
+        int m = toUtf8Bytes(ch, it, true);
+        assert m == n - 2;
         return n;
     }
 
