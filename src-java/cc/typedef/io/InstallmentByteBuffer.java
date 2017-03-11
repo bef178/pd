@@ -20,24 +20,9 @@ public class InstallmentByteBuffer {
 
         /**
          * get from underlying byte sequence assuming encoded with utf8<br/>
-         * throws {@link ParsingException} if fail
          */
         public int getNextCodePoint() {
-            int n = Codec.Unicode.utf8LengthByUtf8((byte) peek());
-            if (n < 0) {
-                throw new ParsingException();
-            }
-
-            // have to copy coz cannot pass the function next() into FormatCodec.Unicode
-            byte[] a = new byte[n];
-            for (int i = 0; i < n; ++i) {
-                int ch = next();
-                if (ch < 0) {
-                    throw new ParsingException();
-                }
-                a[i] = (byte) (ch & 0xFF);
-            }
-            return Codec.Unicode.fromUtf8(new Blob(a, 0));
+            return Codec.Glyph.fromUtf8Bytes(this, false);
         }
 
         @Override
