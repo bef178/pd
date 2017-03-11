@@ -42,19 +42,18 @@ class CodecCsv {
                             break;
                         case '\\':
                             state = State.REC_WIP;
-                            record.append(Codec.Glyph.decode('\\', it));
+                            record.appendCodePoint(Codec.Glyph.decode('\\', it));
                             break;
                         default:
                             state = State.REC_WIP;
-                            record.append(ch);
+                            record.appendCodePoint(ch);
                             break;
                     }
                     break;
                 case REC_WIP:
                     if (ch == '\\') {
                         state = State.REC_WIP;
-                        record.append(
-                                Codec.Glyph.decode('\\', it));
+                        record.appendCodePoint(Codec.Glyph.decode('\\', it));
                         break;
                     }
                     if (delimiter >= 0) {
@@ -67,7 +66,7 @@ class CodecCsv {
                             record.setLength(0);
                             delimiter = -1;
                         } else {
-                            record.append(ch);
+                            record.appendCodePoint(ch);
                         }
                     } else {
                         switch (ch) {
@@ -78,7 +77,7 @@ class CodecCsv {
                                 record.setLength(0);
                                 break;
                             default:
-                                record.append(ch);
+                                record.appendCodePoint(ch);
                                 break;
                         }
                     }

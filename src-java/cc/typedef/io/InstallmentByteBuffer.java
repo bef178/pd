@@ -230,15 +230,15 @@ public class InstallmentByteBuffer {
         seek(0);
     }
 
-    public void seek(int pos) {
+    public boolean seek(int pos) {
         if (readonly) {
-            return;
+            return false;
         }
         if (pos >= 0 && pos < used) {
             used = pos;
-        } else {
-            throw new IndexOutOfBoundsException();
+            return true;
         }
+        throw new IndexOutOfBoundsException();
     }
 
     private void setupCapacity(int newLength) {
