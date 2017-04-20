@@ -34,16 +34,11 @@ interface void List_insert(List_t * asThis, int index, void * data);
 
 interface void * List_remove(List_t * asThis, int index);
 
-interface typedef struct {
-    int index;
-    ListEntry_t * node;
-} ListSearchResult_t;
-
 /**
- * NULL for not found
+ * negative for not found
  */
-interface ListSearchResult_t * List_search(List_t * asThis, void * data,
-        int startIndex, compare_fp dataCmpr);
+interface int List_search(List_t * asThis, void * data, int startIndex,
+        compare_fp dataCmpr);
 
 // straight insertion sort
 interface void List_sort(List_t * asThis, compare_fp dataCmpr);

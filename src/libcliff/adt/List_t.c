@@ -141,10 +141,10 @@ interface void * List_remove(List_t * asThis, int index) {
 }
 
 /**
- * NULL for not found
+ * negative for not found
  */
-interface ListSearchResult_t * List_search(List_t * asThis, void * data,
-        int startIndex, compare_fp dataCmpr) {
+interface int List_search(List_t * asThis, void * data, int startIndex,
+        compare_fp dataCmpr) {
     assert(asThis != NULL);
     assert(List_isIndexForGet(asThis, startIndex));
     assert(data != NULL);
@@ -155,15 +155,12 @@ interface ListSearchResult_t * List_search(List_t * asThis, void * data,
     while (p->next != NULL && p->next != head) {
         node = ListEntry_getByLink(p->next);
         if (dataCmpr(node->data, data) == 0) {
-            ListSearchResult_t * r = mem_pick(sizeof(ListSearchResult_t));
-            r->index = startIndex;
-            r->node = node;
-            return r;
+            return startIndex;
         }
         p = p->next;
         ++startIndex;
     }
-    return NULL;
+    return -1;
 }
 
 // straight insertion sort

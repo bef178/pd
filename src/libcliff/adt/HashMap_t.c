@@ -68,14 +68,12 @@ interface void * HashMap_put(HashMap_t * asThis, Blob_t * key, void * value) {
 
     List_t * slot = HashMap_findSlot(asThis, key);
     KeyValue_t * entry = KeyValue_malloc(key, value);
-    ListSearchResult_t * r = List_search(slot, entry, 0, KeyValue_compare);
-    if (r != NULL) {
+    int i = List_search(slot, entry, 0, KeyValue_compare);
+    if (i >= 0) {
         KeyValue_free(entry);
-        entry = r->node->data;
+        entry = List_get(slot, i);
         void * origValue = entry->value;
         entry->value = value;
-        mem_drop(r);
-        r = NULL;
         return origValue;
     } else {
         // insert
@@ -90,22 +88,20 @@ interface void * HashMap_remove(HashMap_t * asThis, Blob_t * key) {
     assert(key != NULL);
 
     List_t * slot = HashMap_findSlot(asThis, key);
-    ListSearchResult_t * r = NULL;
+    int i = -1;
     {
         KeyValue_t * entry = KeyValue_malloc(key, NULL);
-        r = List_search(slot, entry, 0, KeyValue_compare);
+        i = List_search(slot, entry, 0, KeyValue_compare);
         KeyValue_free(entry);
         entry = NULL;
     }
-    if (r != NULL) {
+    if (i >= 0) {
         // remove
-        KeyValue_t * entry = List_remove(slot, r->index);
+        KeyValue_t * entry = List_remove(slot, i);
         --asThis->size;
         void * origValue = entry->value;
         KeyValue_free(entry);
         entry = NULL;
-        mem_drop(r);
-        r = NULL;
         return origValue;
     }
     return NULL;
@@ -117,16 +113,15 @@ interface void * HashMap_get(HashMap_t * asThis, Blob_t * key) {
 
     List_t * slot = HashMap_findSlot(asThis, key);
     KeyValue_t * temp = KeyValue_malloc(key, NULL);
-    ListSearchResult_t * r = List_search(slot, temp, 0, KeyValue_compare);
+    int i = List_search(slot, temp, 0, KeyValue_compare);
     KeyValue_free(temp);
     temp = NULL;
-    if (r == NULL) {
+    if (i < 0) {
         return NULL;
-    } else {
-        KeyValue_t * entry =
-                List_search(slot, temp, 0, &KeyValue_compare)->node->data;
-        return entry->value;
     }
+
+    temp = List_get(slot, i);
+    return temp->value;
 }
 
 interface int HashMap_size(HashMap_t * asThis) {
