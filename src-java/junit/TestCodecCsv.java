@@ -2,11 +2,11 @@ package junit;
 
 import java.util.List;
 
+import libcliff.io.Codec;
+import libcliff.io.InstallmentByteBuffer;
+import libcliff.io.Nextable;
 import org.junit.Assert;
 import org.junit.Test;
-import cc.typedef.io.Codec;
-import cc.typedef.io.InstallmentByteBuffer;
-import cc.typedef.io.Nextable;
 
 public class TestCodecCsv {
 

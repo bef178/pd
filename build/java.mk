@@ -1,7 +1,7 @@
 #-----------------------------------------------------------
-# makefile for typedef java
+# makefile for java
 
-PACKAGE := cc.typedef
+PACKAGE := libcliff
 
 TOP ?= .
 

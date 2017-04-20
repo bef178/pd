@@ -3,12 +3,12 @@ package junit;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
+import libcliff.adt.Blob;
+import libcliff.io.Codec;
+import libcliff.io.InstallmentByteBuffer;
+import libcliff.io.Nextable;
 import org.junit.Assert;
 import org.junit.Test;
-import cc.typedef.adt.Blob;
-import cc.typedef.io.Codec;
-import cc.typedef.io.InstallmentByteBuffer;
-import cc.typedef.io.Nextable;
 
 public class TestCodecGlyph {
 

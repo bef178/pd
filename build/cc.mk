@@ -1,10 +1,10 @@
 #-----------------------------------------------------------
-# makefile for typedef cc
+# makefile for cc
 
 CC := gcc
 CCFLAGS = -std=c99 -Werror $(addprefix -include ,$(HEADERS))
 
-PACKAGE := cc.typedef
+PACKAGE := libcliff
 
 TOP := .
 SRC := $(TOP)/src/$(subst .,/,$(PACKAGE))
@@ -15,7 +15,7 @@ OUT_TARGET_A := $(OUT)/$(PACKAGE).a
 OUT_TARGET_O := $(OUT)/$(PACKAGE).o
 OUT_TARGET := $(OUT_TARGET_A) $(OUT_TARGET_O)
 
-HEADERS := $(SRC)/typedef.h
+HEADERS := $(SRC)/libcliff.h
 OBJECTS :=
 
 #-----------------------------------------------------------
@@ -23,15 +23,17 @@ OBJECTS :=
 
 LOCAL_SRC_DIR := $(SRC)/primitive
 
-HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
+#HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
+HEADERS += $(addprefix $(LOCAL_SRC_DIR)/,logd.h byte.h bytes.h)
 OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
 
 #-----------------------------------------------------------
-# basic types
+# abstract data type
 
-LOCAL_SRC_DIR := $(SRC)/basic
+LOCAL_SRC_DIR := $(SRC)/adt
 
-HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
+#HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
+HEADERS += $(addprefix $(LOCAL_SRC_DIR)/,Blob_t.h KeyValue_t.h ListHead_t.h ListEntry_t.h List_t.h HashMap_t.h)
 OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
 
 #-----------------------------------------------------------
@@ -42,14 +44,16 @@ OBJECTS := $(strip $(OBJECTS))
 cc: $(OUT_TARGET)
 
 $(OUT_TARGET_A): $(OBJECTS)
-	ar cr $@ $^
+	@echo "archiving ..."
+	@ar cr $@ $^
 
 $(OUT_TARGET_O): $(OBJECTS)
-	ld -r $^ -o $@
+	@echo "linking ..."
+	@ld -r $^ -o $@
 
 $(OUT_CC)/%.o : $(SRC)/%.c
-	@mkdir -p $(@D)
-	$(CC) $(CCFLAGS) -c $< -o $@
+	@-mkdir -p $(@D)
+	@$(CC) $(CCFLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:
