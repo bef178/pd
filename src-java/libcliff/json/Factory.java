@@ -203,9 +203,9 @@ public class Factory {
                 }
                 // faster than String.getBytes("UTF-8") with exception handled
                 // faster than toUtf8() then toHexText()
-                Blob blob = new Blob();
-                Codec.Glyph.encode(ch, blob);
-                w.append(blob.a);
+                Blob blob = new Blob(16);
+                int n = Codec.Glyph.encode(ch, blob);
+                w.append(blob.a, 0, n);
             }
             w.append('\"');
         }
