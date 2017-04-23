@@ -1,5 +1,5 @@
 /**
- * Deque_t.c
+ * Deque.c
  *
  * 双端循环队列(数组)
  * head: 如果队非空，则从这里出队；总是指向一个有值的slot
@@ -11,49 +11,49 @@ interface typedef struct deque {
     int head;
     int size;
     void * slots[0];
-} Deque_t;
+} Deque;
 
-Deque_t * Deque_pick(int capacity) {
-    void * asThis = mem_pick(sizeof(Deque_t) + capacity * WORD_SIZE);
-    word memberOffset = (word) &(((Deque_t *) 0)->capacity);
+Deque * Deque_pick(int capacity) {
+    void * asThis = mem_pick(sizeof(Deque) + capacity * WORD_SIZE);
+    word memberOffset = (word) &(((Deque *) 0)->capacity);
     *(int *) ((word) asThis + memberOffset) = capacity;
-    return (Deque_t *)asThis;
+    return (Deque *)asThis;
 }
 
-void Deque_drop(Deque_t * asThis) {
+void Deque_drop(Deque * asThis) {
     if (asThis != NULL) {
         mem_drop(asThis);
         asThis = NULL;
     }
 }
 
-int Deque_capacity(Deque_t * asThis) {
+int Deque_capacity(Deque * asThis) {
     assert(asThis != NULL);
     return asThis->capacity;
 }
 
-int Deque_size(Deque_t * asThis) {
+int Deque_size(Deque * asThis) {
     assert(asThis != NULL);
     return asThis->size;
 }
 
-bool Deque_isEmpty(Deque_t * asThis) {
+bool Deque_isEmpty(Deque * asThis) {
     return Deque_size(asThis) == 0;
 }
 
-bool Deque_isFull(Deque_t * asThis) {
+bool Deque_isFull(Deque * asThis) {
     return Deque_size(asThis) == Deque_capacity(asThis);
 }
 
-void Deque_clear(Deque_t * asThis) {
+void Deque_clear(Deque * asThis) {
     assert(asThis != NULL);
     int capacity = asThis->capacity;
-    mem_reset(asThis, sizeof(Deque_t) + capacity * WORD_SIZE);
-    word memberOffset = (word) &(((Deque_t *) 0)->capacity);
+    mem_reset(asThis, sizeof(Deque) + capacity * WORD_SIZE);
+    word memberOffset = (word) &(((Deque *) 0)->capacity);
     *(int *) ((word)asThis + memberOffset) = capacity;
 }
 
-void Deque_pushHead(Deque_t * asThis, void * entry) {
+void Deque_pushHead(Deque * asThis, void * entry) {
     assert(asThis != NULL);
     assert(!Deque_isFull(asThis));
     asThis->head--;
@@ -64,7 +64,7 @@ void Deque_pushHead(Deque_t * asThis, void * entry) {
     asThis->size++;
 }
 
-void Deque_pushTail(Deque_t * asThis, void * entry) {
+void Deque_pushTail(Deque * asThis, void * entry) {
     assert(asThis != NULL);
     assert(!Deque_isFull(asThis));
     int tail = asThis->head + asThis->size;
@@ -75,7 +75,7 @@ void Deque_pushTail(Deque_t * asThis, void * entry) {
     asThis->size++;
 }
 
-void * Deque_pullHead(Deque_t * asThis) {
+void * Deque_pullHead(Deque * asThis) {
     assert(asThis != NULL);
     assert(!Deque_isEmpty(asThis));
     void * entry = asThis->slots[asThis->head];
@@ -88,7 +88,7 @@ void * Deque_pullHead(Deque_t * asThis) {
     return entry;
 }
 
-void * Deque_pullTail(Deque_t * asThis) {
+void * Deque_pullTail(Deque * asThis) {
     assert(asThis != NULL);
     assert(!Deque_isEmpty(asThis));
     int tail = asThis->head + asThis->size;
@@ -101,13 +101,13 @@ void * Deque_pullTail(Deque_t * asThis) {
     return entry;
 }
 
-void * Deque_peekHead(Deque_t * asThis) {
+void * Deque_peekHead(Deque * asThis) {
     assert(asThis != NULL);
     assert(!Deque_isEmpty(asThis));
     return asThis->slots[asThis->head];
 }
 
-void * Deque_peekTail(Deque_t * asThis) {
+void * Deque_peekTail(Deque * asThis) {
     assert(asThis != NULL);
     assert(!Deque_isEmpty(asThis));
     int tail = asThis->head + asThis->size - 1;
@@ -118,26 +118,26 @@ void * Deque_peekTail(Deque_t * asThis) {
 }
 
 // as queue & stack
-void * Deque_peek(Deque_t * asThis) {
+void * Deque_peek(Deque * asThis) {
     return Deque_peekHead(asThis);
 }
 
 // as queue
-void Deque_enqueue(Deque_t * asThis, void * entry) {
+void Deque_enqueue(Deque * asThis, void * entry) {
     Deque_pushTail(asThis, entry);
 }
 
 // as queue
-void * Deque_dequeue(Deque_t * asThis) {
+void * Deque_dequeue(Deque * asThis) {
     return Deque_pullHead(asThis);
 }
 
 // as stack
-void Deque_push(Deque_t * asThis, void * entry) {
+void Deque_push(Deque * asThis, void * entry) {
     Deque_pushHead(asThis, entry);
 }
 
 // as stack
-void * Deque_pull(Deque_t * asThis) {
+void * Deque_pull(Deque * asThis) {
     return Deque_pullHead(asThis);
 }

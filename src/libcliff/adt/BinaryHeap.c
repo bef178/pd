@@ -1,5 +1,5 @@
 /**
- * BinaryHeap_t.c
+ * BinaryHeap.c
  *
  * 大顶堆
  * TANG Hao
@@ -9,11 +9,11 @@
 interface typedef struct {
     const int capacity;
     int size;
-    const compare_fp cmpr;
+    const compare_fp compare;
     void * slots[0];
-} BinaryHeap_t;
+} BinaryHeap;
 
-static void BinaryHeap_filterDn(BinaryHeap_t * asThis, int index) {
+static void BinaryHeap_filterDn(BinaryHeap * asThis, int index) {
     assert(asThis != NULL);
     assert(index >= 0);
 
@@ -23,11 +23,11 @@ static void BinaryHeap_filterDn(BinaryHeap_t * asThis, int index) {
 
         int t = index;
         if (i < asThis->size
-                && asThis->cmpr(asThis->slots[i], asThis->slots[t]) > 0) {
+                && asThis->compare(asThis->slots[i], asThis->slots[t]) > 0) {
             t = i;
         }
         if (j < asThis->size
-                && asThis->cmpr(asThis->slots[j], asThis->slots[t]) > 0) {
+                && asThis->compare(asThis->slots[j], asThis->slots[t]) > 0) {
             t = j;
         }
         if (t == index) {
@@ -41,13 +41,13 @@ static void BinaryHeap_filterDn(BinaryHeap_t * asThis, int index) {
     }
 }
 
-static void BinaryHeap_filterUp(BinaryHeap_t * asThis, int index) {
+static void BinaryHeap_filterUp(BinaryHeap * asThis, int index) {
     assert(asThis != NULL);
     assert(index >= 0);
 
     while (index != 0) {
         int t = (index - 1) / 2; // parent
-        if (asThis->cmpr(asThis->slots[t], asThis->slots[index]) >= 0) {
+        if (asThis->compare(asThis->slots[t], asThis->slots[index]) >= 0) {
             break;
         }
         void * data = asThis->slots[index];
@@ -57,31 +57,31 @@ static void BinaryHeap_filterUp(BinaryHeap_t * asThis, int index) {
     }
 }
 
-interface BinaryHeap_t * BinaryHeap_pick(int capacity, compare_fp cmpr) {
-    BinaryHeap_t * asThis = mem_pick(sizeof(BinaryHeap_t) + capacity);
-    word memberOffset = (word) &(((BinaryHeap_t *) 0)->capacity);
+interface BinaryHeap * BinaryHeap_pick(int capacity, compare_fp compare) {
+    BinaryHeap * asThis = mem_pick(sizeof(BinaryHeap) + capacity);
+    word memberOffset = (word) &(((BinaryHeap *) 0)->capacity);
     *(int *) ((word) asThis + memberOffset) = capacity;
-    memberOffset = (word) &(((BinaryHeap_t *) 0)->cmpr);
-    *(compare_fp *) ((word) asThis + memberOffset) = cmpr;
+    memberOffset = (word) &(((BinaryHeap *) 0)->compare);
+    *(compare_fp *) ((word) asThis + memberOffset) = compare;
     return asThis;
 }
 
-interface void BinaryHeap_drop(BinaryHeap_t * asThis) {
+interface void BinaryHeap_drop(BinaryHeap * asThis) {
     if (asThis != NULL) {
         mem_drop(asThis);
         asThis = NULL;
     }
 }
 
-interface bool BinaryHeap_isFull(BinaryHeap_t * asThis) {
+interface bool BinaryHeap_isFull(BinaryHeap * asThis) {
     return asThis->size == asThis->capacity;
 }
 
-interface bool BinaryHeap_isEmpty(BinaryHeap_t * asThis) {
+interface bool BinaryHeap_isEmpty(BinaryHeap * asThis) {
     return asThis->size == 0;
 }
 
-interface void BinaryHeap_insert(BinaryHeap_t * asThis, void * data) {
+interface void BinaryHeap_insert(BinaryHeap * asThis, void * data) {
     assert(asThis != NULL);
     assert(data != NULL);
     assert(!BinaryHeap_isFull(asThis));
@@ -89,7 +89,7 @@ interface void BinaryHeap_insert(BinaryHeap_t * asThis, void * data) {
     BinaryHeap_filterUp(asThis, asThis->size - 1);
 }
 
-interface void * BinaryHeap_remove(BinaryHeap_t * asThis) {
+interface void * BinaryHeap_remove(BinaryHeap * asThis) {
     assert(asThis != NULL);
     assert(!BinaryHeap_isEmpty(asThis));
     void * data = asThis->slots[0];

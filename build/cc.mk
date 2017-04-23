@@ -33,7 +33,7 @@ OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) 
 LOCAL_SRC_DIR := $(SRC)/adt
 
 #HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
-HEADERS += $(addprefix $(LOCAL_SRC_DIR)/,Blob_t.h KeyValue_t.h ListHead_t.h ListEntry_t.h List_t.h HashMap_t.h)
+HEADERS += $(addprefix $(LOCAL_SRC_DIR)/,Blob.h KeyValue.h list/List.h HashMap.h)
 OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
 
 #-----------------------------------------------------------

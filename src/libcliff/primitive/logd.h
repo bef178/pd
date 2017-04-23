@@ -1,5 +1,5 @@
-#ifndef _INCLUDE_LOGD
-#define _INCLUDE_LOGD
+#ifndef _INCLUDED_LOGD
+#define _INCLUDED_LOGD
 
 extern const char * ERROR_INVALID_ARGUMENT;
 extern const char * ERROR_OOM;
@@ -10,4 +10,4 @@ extern const char * ERROR_OOM;
 interface void logMessage(FILE * file, const char * prefix, const char * msg,
         const char * filepath, const int fileline);
 
-#endif // _INCLUDE_LOGD
+#endif // _INCLUDED_LOGD

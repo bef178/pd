@@ -3,20 +3,20 @@ interface typedef struct binary_tree_node {
     struct binary_tree_node * l;
     struct binary_tree_node * r;
     void * value;
-} BinaryTreeNode_t;
+} BinaryTreeNode;
 
 static int max(int i, int j) {
     return i >= j ? i : j;
 }
 
-interface int BinaryTreeNode_depth(BinaryTreeNode_t * asRoot) {
+interface int BinaryTreeNode_depth(BinaryTreeNode * asRoot) {
     if (asRoot == NULL) {
         return 0;
     }
     return max(BinaryTreeNode_depth(asRoot->l), BinaryTreeNode_depth(asRoot->r)) + 1;
 }
 
-interface BinaryTreeNode_t * findRoot(BinaryTreeNode_t * node) {
+interface BinaryTreeNode * findRoot(BinaryTreeNode * node) {
     while (node->parent != NULL) {
         node = node->parent;
     }
@@ -26,10 +26,10 @@ interface BinaryTreeNode_t * findRoot(BinaryTreeNode_t * node) {
 /**
  * return the delinked node
  */
-interface BinaryTreeNode_t * BinaryTreeNode_linkL(BinaryTreeNode_t * asThis,
-        BinaryTreeNode_t * node) {
+interface BinaryTreeNode * BinaryTreeNode_linkL(BinaryTreeNode * asThis,
+        BinaryTreeNode * node) {
     assert(asThis != NULL);
-    BinaryTreeNode_t * delinked = asThis->l;
+    BinaryTreeNode * delinked = asThis->l;
     if ((asThis->l = node) != NULL) {
         node->parent = asThis;
     }
@@ -42,10 +42,10 @@ interface BinaryTreeNode_t * BinaryTreeNode_linkL(BinaryTreeNode_t * asThis,
 /**
  * return the delinked node
  */
-interface BinaryTreeNode_t * BinaryTreeNode_linkR(BinaryTreeNode_t * asThis,
-        BinaryTreeNode_t * node) {
+interface BinaryTreeNode * BinaryTreeNode_linkR(BinaryTreeNode * asThis,
+        BinaryTreeNode * node) {
     assert(asThis != NULL);
-    BinaryTreeNode_t * delinked = asThis->r;
+    BinaryTreeNode * delinked = asThis->r;
     if ((asThis->r = node) != NULL) {
         node->parent = asThis;
     }
@@ -55,13 +55,13 @@ interface BinaryTreeNode_t * BinaryTreeNode_linkR(BinaryTreeNode_t * asThis,
     return delinked;
 }
 
-BinaryTreeNode_t * BinaryTreeNode_pick(void * data) {
-    BinaryTreeNode_t * asThis = mem_pick(sizeof(BinaryTreeNode_t));
+BinaryTreeNode * BinaryTreeNode_pick(void * data) {
+    BinaryTreeNode * asThis = mem_pick(sizeof(BinaryTreeNode));
     asThis->value = data;
     return asThis;
 }
 
-void BinaryTreeNode_drop(BinaryTreeNode_t * asThis) {
+void BinaryTreeNode_drop(BinaryTreeNode * asThis) {
     if (asThis == NULL) {
         return;
     }
@@ -72,7 +72,7 @@ void BinaryTreeNode_drop(BinaryTreeNode_t * asThis) {
 /**
  * ignore 'value': potential memory leak
  */
-void BinaryTree_drop(BinaryTreeNode_t * asThis) {
+void BinaryTree_drop(BinaryTreeNode * asThis) {
     if (asThis == NULL) {
         return;
     }
