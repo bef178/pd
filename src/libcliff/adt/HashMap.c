@@ -59,7 +59,7 @@ interface void * HashMap_get(HashMap * caller, Blob * key) {
 
     List * slot = HashMap_findSlot(caller, key);
     KeyValue * temp = KeyValue_malloc(key, NULL);
-    int i = List_indexOf(slot, temp, 0, KeyValue_compare);
+    int i = List_indexOf(slot, 0, temp, KeyValue_compare);
     KeyValue_free(temp);
     temp = NULL;
     if (i < 0) {
@@ -79,7 +79,7 @@ interface void * HashMap_put(HashMap * caller, Blob * key, void * value) {
 
     List * slot = HashMap_findSlot(caller, key);
     KeyValue * entry = KeyValue_malloc(key, value);
-    int i = List_indexOf(slot, entry, 0, KeyValue_compare);
+    int i = List_indexOf(slot, 0, entry, KeyValue_compare);
     if (i >= 0) {
         KeyValue_free(entry);
         entry = List_get(slot, i);
@@ -101,7 +101,7 @@ interface void * HashMap_remove(HashMap * caller, Blob * key) {
     int i = -1;
     {
         KeyValue * entry = KeyValue_malloc(key, NULL);
-        i = List_indexOf(slot, entry, 0, KeyValue_compare);
+        i = List_indexOf(slot, 0, entry, KeyValue_compare);
         KeyValue_free(entry);
         entry = NULL;
     }

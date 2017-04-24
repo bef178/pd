@@ -1,32 +1,35 @@
+interface typedef struct list_head {
+    struct list_head * next;
+    struct list_head * prev;
+} ListHead;
+
+void ListHead_enlinkNext(ListHead * caller, ListHead * futureNext);
+
 interface ListHead * ListHead_malloc() {
-    return (ListHead *) mem_pick(sizeof(ListHead));
+    ListHead * p = (ListHead *) mem_pick(sizeof(ListHead));
+    ListHead_enlinkNext(p, p);
+    return p;
 }
 
 interface void ListHead_free(ListHead * caller) {
     mem_drop(caller);
 }
 
-// self-express circular doubly linked list
-interface void ListHead_init(ListHead * caller) {
-    caller->next = caller;
-    caller->prev = caller;
-}
-
 /**
  * simply connect the two nodes, both joints should be NULL
  */
-interface void ListHead_attachNext(ListHead * caller, ListHead * futureNext) {
+void ListHead_enlinkNext(ListHead * caller, ListHead * futureNext) {
+    caller->next = futureNext;
     if (futureNext != NULL) {
-        caller->next = futureNext;
         futureNext->prev = caller;
     }
 }
 
 /**
  * simply disconnect the two nodes, both joints will be NULL
- * return the detached node
+ * return the delinked node
  */
-interface ListHead * ListHead_detachNext(ListHead * caller) {
+ListHead * ListHead_delinkNext(ListHead * caller) {
     ListHead * asNext = caller->next;
     if (asNext != NULL) {
         caller->next = NULL;
@@ -41,38 +44,41 @@ interface ListHead * ListHead_detachNext(ListHead * caller) {
  */
 interface void ListHead_insertNext(ListHead * caller, ListHead * futureNext) {
     assert(futureNext != NULL);
-
-    futureNext->next = caller->next;
-    futureNext->prev = caller;
-
-    if (caller->next != NULL) {
-        caller->next->prev = futureNext;
-    }
-    caller->next = futureNext;
+    // futureNext->next = caller->next;
+    // futureNext->prev = caller;
+    // if (caller->next != NULL) {
+    //     caller->next->prev = futureNext;
+    // }
+    // caller->next = futureNext;
+    ListHead * asNext = ListHead_delinkNext(caller);
+    ListHead_enlinkNext(caller, futureNext);
+    ListHead_enlinkNext(futureNext, asNext);
 }
 
 interface ListHead * ListHead_removeNext(ListHead * caller) {
     ListHead * asNext = caller->next;
     if (asNext != NULL) {
-        asNext->next->prev = caller;
-        caller->next = asNext->next;
-        asNext->next = NULL;
-        asNext->prev = NULL;
+        // caller->next = asNext->next;
+        // if (asNext->next != null) {
+        //     asNext->next->prev = caller;
+        // }
+        // asNext->next = NULL;
+        // asNext->prev = NULL;
+        ListHead_enlinkNext(caller, ListHead_delinkNext(asNext));
     }
     return asNext;
 }
 
-/**
- * the guest node will be clean
- * note if caller is the only element, the self-express list will be gone
- */
-interface void ListHead_remove(ListHead * caller) {
-    if (caller->prev != NULL) {
-        caller->prev->next = caller->next;
+interface ListHead * ListHead_offset(ListHead * caller, int n) {
+    ListHead * p = caller;
+    if (n >= 0) {
+        while (n-- > 0 && p != NULL) {
+            p = p->next;
+        }
+    } else {
+        while (n++ < 0 && p != NULL) {
+            p = p->prev;
+        }
     }
-    if (caller->next != NULL) {
-        caller->next->prev = caller->prev;
-    }
-    caller->next = NULL;
-    caller->prev = NULL;
+    return p;
 }
