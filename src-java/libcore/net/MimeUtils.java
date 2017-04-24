@@ -47,9 +47,11 @@ public final class MimeUtils {
         add("application/dsptype", "tsp");
         add("application/epub+zip", "epub");
         add("application/hta", "hta");
+        add("application/json", "json");
         add("application/mac-binhex40", "hqx");
         add("application/mathematica", "nb");
         add("application/msaccess", "mdb");
+        add("application/octet-stream", "bin");
         add("application/oda", "oda");
         add("application/ogg", "ogx");
         add("application/pdf", "pdf");
@@ -320,6 +322,7 @@ public final class MimeUtils {
         add("text/html", "html");
         add("text/h323", "323");
         add("text/iuls", "uls");
+        add("text/javascript", "js");
         add("text/mathml", "mml");
         // add ".txt" first so it will be the default for guessExtensionFromMimeType
         add("text/plain", "txt");
