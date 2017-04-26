@@ -46,9 +46,9 @@ typedef uint64_t word;
 // size_t描述了用途而不是类型的特征，弃之
 
 // additional keyword
-#define interface
 #define package
 #define import
+#define interface
 #define _type
 #define _method
 
