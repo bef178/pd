@@ -6,8 +6,7 @@ PACKAGE := libcliff
 TOP ?= .
 
 SRC := $(TOP)/src-java
-SRC_FILES := $(shell find -L $(SRC)/$(subst .,/,$(PACKAGE)) -name "*.java") \
-	$(shell find -L $(SRC)/libcore -name "*.java")
+SRC_FILES := $(shell find -L $(SRC) -name "*.java")
 
 LIB := $(TOP)/lib
 
