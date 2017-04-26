@@ -2,7 +2,7 @@
 #define _INCLUDED_LOGD
 
 extern const char * ERROR_INVALID_ARGUMENT;
-extern const char * ERROR_OOM;
+extern const char * ERROR_OUT_OF_MEMORY;
 
 #define logd(msg)   logMessage(stdout, NULL, msg, __FILE__, __LINE__)
 #define loge(msg)   logMessage(stderr, NULL, msg, __FILE__, __LINE__)

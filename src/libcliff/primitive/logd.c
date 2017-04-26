@@ -1,9 +1,5 @@
-/***************************************
- * logd.c
- */
-
 interface const char * ERROR_INVALID_ARGUMENT = "E: invalid argument";
-interface const char * ERROR_OOM = "E: out of memory";
+interface const char * ERROR_OUT_OF_MEMORY = "E: out of memory";
 
 interface void logMessage(FILE * file, const char * prefix, const char * msg,
         const char * filepath, const int fileline) {
