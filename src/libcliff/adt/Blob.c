@@ -1,14 +1,10 @@
 interface Blob * Blob_malloc(const byte * a, const int n) {
     assert(n >= 0);
+    void * p = mem_pick(sizeof(Blob) + n);
+    MEMBER_SET(Blob, p, int, n, n);
 
     // ugly but enables the immutability of Blob
-
-    void * p = mem_pick(sizeof(Blob) + n);
-
-    word memberOffset = (word) &(((Blob *) 0)->n);
-    *(word *) ((word) p + memberOffset) = n;
-
-    memberOffset = (word) &(((Blob *) 0)->a);
+    int memberOffset = MEMBER_OFFSET(Blob, a);
     mem_copy((void *) ((word) p + memberOffset), a, n);
     return (Blob *) p;
 }

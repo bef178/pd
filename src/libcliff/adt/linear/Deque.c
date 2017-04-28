@@ -13,8 +13,7 @@ interface typedef struct deque {
 
 interface Deque * Deque_malloc(int capacity) {
     void * p = mem_pick(sizeof(Deque) + capacity * WORD_SIZE);
-    word memberOffset = (word) &(((Deque *) 0)->capacity);
-    *(int *) ((word) p + memberOffset) = capacity;
+    MEMBER_SET(Deque, p, int, capacity, capacity);
     return (Deque *) p;
 }
 

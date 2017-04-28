@@ -13,11 +13,8 @@ interface typedef struct {
 
 interface BinaryHeap * BinaryHeap_malloc(int capacity, compare_f * compare) {
     BinaryHeap * p = mem_pick(sizeof(BinaryHeap) + capacity);
-    word memberOffset = MEMBER_OFFSET(BinaryHeap, capacity);
-    *(int *) ((word) p + memberOffset) = capacity;
-    memberOffset = MEMBER_OFFSET(BinaryHeap, compare);
-    *(compare_f **) ((word) p + memberOffset) = compare;
-    //p->compare = compare;
+    MEMBER_SET(BinaryHeap, p, int, capacity, capacity);
+    MEMBER_SET(BinaryHeap, p, compare_f *, compare, compare);
     return p;
 }
 
