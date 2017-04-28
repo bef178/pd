@@ -1,4 +1,4 @@
-package libcliff.adt;
+package libcliff.adt.linear;
 
 import java.util.Iterator;
 
