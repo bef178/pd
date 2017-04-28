@@ -134,7 +134,7 @@ interface void * List_remove(List * caller, int index) {
 /**
  * negative for not found
  */
-interface int List_indexOf(List * caller, int start, void * data, compare_fp compare) {
+interface int List_indexOf(List * caller, int start, void * data, compare_f * compare) {
     start = betterIndex(caller->size, start);
     start = start >= 0 ? start + 1 : start;
     Node * p = Node_offset(caller->head, start);

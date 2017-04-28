@@ -21,6 +21,6 @@ void List_insert(List * caller, int index, void * data);
 
 void * List_remove(List * caller, int index);
 
-int List_indexOf(List * caller, int start, void * data, compare_fp compare);
+int List_indexOf(List * caller, int start, void * data, compare_f * compare);
 
 #endif // _INCLUDED_ADT_LIST
