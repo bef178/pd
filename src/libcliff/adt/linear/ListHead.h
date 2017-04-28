@@ -1,18 +1,3 @@
-/**
- * ListHead is really not a good name.
- * It is actually "link head"; but linux kernel uses list_head so it inherts.
- *
- * TODO i should compose a very fore-most processor:
- *  1. create a .h file
- *      x. include-guard
- *      x. interface macro/typedef
- *      x. forward declaration of interface struct/variable/function
- *      x. relevant comments
- *  2. modify current .c file
- *      x. remove interface macro/typedef
- *      x. add forward declaration of non-interface function
- */
-
 #ifndef _INCLUDED_ADT_LISTHEAD
 #define _INCLUDED_ADT_LISTHEAD
 
