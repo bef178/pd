@@ -127,13 +127,12 @@ static word hash_djb(const byte * bytes, const int size) {
     return hashCode;
 }
 
-interface word mem_hash(const void * p, const int size) {
+interface word mem_hash(const byte * p, const int size) {
     assert(p != NULL && size >= 0);
     if (size == 0) {
         return 0;
     }
-    const byte * bytes = (const byte *) p;
-    return hash_djb(bytes, size);
+    return hash_djb(p, size);
 }
 
 /**
