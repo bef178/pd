@@ -23,7 +23,7 @@ void Node_free(Node * caller) {
 }
 
 Node * Node_containerOf(ListHead * p) {
-    return ListHead_getContainer(p, Node, link);
+    return GET_CONTAINER(p, Node, link);
 }
 
 void Node_insertNext(Node * caller, Node * futureNext) {
