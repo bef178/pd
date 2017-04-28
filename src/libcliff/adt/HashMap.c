@@ -22,7 +22,7 @@ int HashMap_alignCapacity(int requiredCapacity) {
 
 List * HashMap_findSlot(HashMap * caller, void * key) {
     word hashCode = caller->key_hash(key, sizeof(void *));
-    hashCode = mem_rehash(hashCode) & (caller->capacity - 1);
+    hashCode = rehash(hashCode) & (caller->capacity - 1);
     return caller->slots[hashCode];
 }
 
@@ -43,7 +43,7 @@ interface HashMap * HashMap_malloc(int capacity, compare_f * key_compare, hash_f
     }
     MEMBER_SET(HashMap, p, compare_f *, key_compare, key_compare);
     if (key_hash == NULL) {
-        key_hash = &mem_hash;
+        key_hash = &hash;
     }
     MEMBER_SET(HashMap, p, hash_f *, key_hash, key_hash);
     for (int i = 0; i < capacity; ++i) {

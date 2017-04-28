@@ -8,9 +8,6 @@ interface bool mem_resize(void ** mem, int size);
 interface int mem_compare(const byte * m1, const byte * m2, int n);
 interface void mem_copy(byte * t, const byte * s, int n);
 
-interface word mem_hash(const byte * mem, const int size);
-interface word mem_rehash(word hashCode);
-
 interface int str_concatenate(byte * t, const byte * s);
 interface int str_compare(const byte * s1, const byte * s2);
 interface int str_copy(byte * t, const byte * s);

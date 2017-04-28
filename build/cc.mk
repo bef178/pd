@@ -23,8 +23,7 @@ OBJECTS :=
 
 LOCAL_SRC_DIR := $(SRC)/primitive
 
-#HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
-HEADERS += $(addprefix $(LOCAL_SRC_DIR)/,logd.h byte.h bytes.h)
+HEADERS += $(shell find -L $(LOCAL_SRC_DIR) -name "*.h")
 OBJECTS += $(patsubst $(SRC)/%.c,$(OUT_CC)/%.o,$(shell find -L $(LOCAL_SRC_DIR) -name "*.c"))
 
 #-----------------------------------------------------------
