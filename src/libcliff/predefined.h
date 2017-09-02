@@ -45,6 +45,12 @@ typedef uint64_t word;
 // 每种类型应该描述自身
 // size_t描述了用途而不是类型的特征，弃之
 
+typedef _Bool boolean;
+#define false   (0)
+#define true    (!!1)
+
+#define null    ((void *)0)
+
 // additional keyword
 #define package
 #define import
@@ -58,6 +64,6 @@ typedef uint64_t word;
 //
 // int8_t c = -1;
 // assert (unsigned) c == 255;
-// assert (unsigned int) c == 4294967295;
+// assert (unsigned int32) c == 4294967295;
 
 #endif /* _INCLUDED_PREDEFINED */
