@@ -5,9 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// 将编译器/语言特性提供给库的用户
-#include "predefined.h"
-
 #ifndef NULL
 #define NULL ((void *)0)
 #endif

@@ -2,7 +2,7 @@
 # makefile for cc
 
 CC := gcc
-CCFLAGS = -std=c99 -Werror $(addprefix -include ,$(STD_HEADER) $(HEADERS))
+CCFLAGS = -std=c99 -Werror $(addprefix -include ,$(HEADERS))
 
 PACKAGE := libcliff
 
@@ -16,9 +16,7 @@ OUT_TARGET_A := $(OUT)/$(PACKAGE).a
 OUT_TARGET_O := $(OUT)/$(PACKAGE).o
 OUT_TARGET := $(OUT_TARGET_H) $(OUT_TARGET_A) $(OUT_TARGET_O)
 
-STD_HEADER := $(SRC)/std.h
-
-HEADERS := $(SRC)/predefined.h $(SRC)/libcliff.h
+HEADERS := $(TOP)/src/predefined.h $(SRC)/libcliff.h
 OBJECTS :=
 
 #-----------------------------------------------------------
