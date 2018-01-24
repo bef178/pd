@@ -80,7 +80,7 @@ class CodecBase64 {
             throws IOException {
         InstallmentByteBuffer o = new InstallmentByteBuffer();
         encode(a, i, j, bytesPerLine, firstOffset, prefix, suffix, o);
-        return o.toByteArray();
+        return o.getBytes();
     }
 
     /**

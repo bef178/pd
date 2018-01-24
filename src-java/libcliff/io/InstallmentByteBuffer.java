@@ -4,8 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import libcliff.adt.Blob;
-
 /**
  * some thing of smart array & queue & installment savings
  */
@@ -18,13 +16,6 @@ public class InstallmentByteBuffer {
 
         private int next = 0;
 
-        /**
-         * get from underlying byte sequence assuming encoded with utf8<br/>
-         */
-        public int getNextCodePoint() {
-            return Codec.Glyph.fromUtf8Bytes(this, false);
-        }
-
         @Override
         public boolean hasNext() {
             return next >= 0 && next < size();
@@ -32,11 +23,7 @@ public class InstallmentByteBuffer {
 
         @Override
         public int next() {
-            if (hasNext()) {
-                return get(next++) & 0xFF;
-            } else {
-                return -1;
-            }
+            return get(next++) & 0xFF;
         }
 
         /**
@@ -48,19 +35,11 @@ public class InstallmentByteBuffer {
 
         @Override
         public int peek() {
-            if (hasNext()) {
-                return get(next) & 0xFF;
-            } else {
-                return -1;
-            }
+            return get(next) & 0xFF;
         }
 
         public void putBack() {
-            if (next > 0) {
-                --next;
-                return;
-            }
-            throw new IndexOutOfBoundsException();
+            seek(used - 1);
         }
 
         /**
@@ -73,9 +52,9 @@ public class InstallmentByteBuffer {
         public void seek(int pos) {
             if (pos >= 0 && pos < used) {
                 next = pos;
-            } else {
-                throw new IndexOutOfBoundsException();
+                return;
             }
+            throw new IndexOutOfBoundsException();
         }
 
         public void seek(int offset, int whence) {
@@ -111,8 +90,6 @@ public class InstallmentByteBuffer {
     private ArrayList<byte[]> savings = new ArrayList<>();
     private int used = 0;
 
-    private boolean readonly = false;
-
     public InstallmentByteBuffer() {
         this(INSTALLMENT_BYTES);
     }
@@ -121,19 +98,11 @@ public class InstallmentByteBuffer {
         setupCapacity(capacity);
     }
 
-    public InstallmentByteBuffer append(Blob blob) {
-        return append(blob.a, blob.i, blob.a.length);
-    }
-
     public InstallmentByteBuffer append(byte[] a) {
         return append(a, 0, a.length);
     }
 
     public InstallmentByteBuffer append(byte[] a, int i, int j) {
-        if (readonly()) {
-            return this;
-        }
-
         int n = j - i;
         setupCapacity(used + n);
 
@@ -165,10 +134,8 @@ public class InstallmentByteBuffer {
     }
 
     public InstallmentByteBuffer append(int b) {
-        if (!readonly()) {
-            setupCapacity(used + 1);
-            put(used++, (byte) (b & 0xFF));
-        }
+        setupCapacity(used + 1);
+        put(used++, (byte) (b & 0xFF));
         return this;
     }
 
@@ -176,10 +143,18 @@ public class InstallmentByteBuffer {
         return append(s.getBytes());
     }
 
+    public int capacity() {
+        return savings.size() << INSTALLMENT_BITS;
+    }
+
+    private int get(int pos) {
+        return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
+    }
+
     /**
      * @return a copy of valid in bounds byte array
      */
-    private byte[] array() {
+    public byte[] getBytes() {
         byte[] array = new byte[used];
         int i = 0;
         while (i + INSTALLMENT_BYTES <= used) {
@@ -190,14 +165,6 @@ public class InstallmentByteBuffer {
         System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
                 0, array, i, used - i);
         return array;
-    }
-
-    public int capacity() {
-        return savings.size() << INSTALLMENT_BITS;
-    }
-
-    private int get(int pos) {
-        return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
     }
 
     public boolean isEmpty() {
@@ -212,28 +179,11 @@ public class InstallmentByteBuffer {
         return new Reader();
     }
 
-    public boolean readonly() {
-        return readonly;
-    }
-
-    /**
-     * Writable to read only is a one-way street.
-     */
-    public void readonly(boolean ro) {
-        if (readonly) {
-            return;
-        }
-        readonly = ro;
-    }
-
     public void rewind() {
         seek(0);
     }
 
     public boolean seek(int pos) {
-        if (readonly) {
-            return false;
-        }
         if (pos >= 0 && pos < used) {
             used = pos;
             return true;
@@ -260,14 +210,10 @@ public class InstallmentByteBuffer {
         return used;
     }
 
-    public byte[] toByteArray() {
-        return array();
-    }
-
     @Override
     public String toString() {
         try {
-            return new String(array(), "UTF-8");
+            return new String(getBytes(), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new Error("Not support utf8");
         }
@@ -277,9 +223,6 @@ public class InstallmentByteBuffer {
      * For writing, erase every slot's content and reset size.<br/>
      */
     public void wipe() {
-        if (readonly) {
-            return;
-        }
         for (byte[] a : savings) {
             Arrays.fill(a, (byte) 0);
         }
