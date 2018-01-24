@@ -1,10 +1,5 @@
 package libcliff.net;
 
-import java.io.File;
-import java.util.Locale;
-
-import libcore.net.MimeUtils;
-
 public class MimeType {
 
     private enum Category {
@@ -71,20 +66,6 @@ public class MimeType {
             }
         }
         return false;
-    }
-
-    public static String guessByFile(File file) {
-        if (file.isDirectory()) {
-            return MIME_DIRECTORY;
-        }
-
-        String path = file.getName();
-        int i = path.lastIndexOf('.');
-        if (i >= 0) {
-            String ext = path.substring(i + 1).toLowerCase(Locale.ROOT);
-            return MimeUtils.guessMimeTypeFromExtension(ext);
-        }
-        return null;
     }
 
     /**
