@@ -1,9 +1,5 @@
 .PHONY: all
-all: cc java
-
-.PHONY: cc
-cc:
-	make -f build/cc.mk
+all: java
 
 .PHONY: java
 java:
@@ -11,5 +7,4 @@ java:
 
 .PHONY: clean
 clean:
-	make clean -f build/cc.mk
 	make clean -f build/java.mk
