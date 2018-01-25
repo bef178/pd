@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.BitSet;
 
-import libcliff.adt.Blob;
 import libcliff.io.Codec.Glyph;
 
 /**

@@ -1,7 +1,4 @@
-package libcliff.adt;
-
-import libcliff.io.Nextable;
-import libcliff.io.Pushable;
+package libcliff.io;
 
 public final class Blob implements Nextable, Pushable {
 
@@ -48,7 +45,16 @@ public final class Blob implements Nextable, Pushable {
     }
 
     @Override
-    public void push(int b) {
-        a[i++] = (byte) (b & 0xFF);
+    public Blob push(byte[] a, int i, int j) {
+        while (i < j) {
+            push(a[i++]);
+        }
+        return this;
+    }
+
+    @Override
+    public Blob push(int ch) {
+        a[i++] = (byte) (ch & 0xFF);
+        return this;
     }
 }

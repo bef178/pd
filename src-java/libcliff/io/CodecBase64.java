@@ -51,11 +51,11 @@ class CodecBase64 {
 
         InstallmentByteBuffer ibb = new InstallmentByteBuffer();
         while (j - i >= 3) {
-            ibb.append(encodeTuple(a, i, i + 3));
+            ibb.push(encodeTuple(a, i, i + 3));
             i += 3;
         }
         if (j > i) {
-            ibb.append(encodeTuple(a, i, j));
+            ibb.push(encodeTuple(a, i, j));
         }
         return ibb;
     }
@@ -115,29 +115,29 @@ class CodecBase64 {
             rest = m;
         }
         for (int k = 0; k < rest; ++i) {
-            o.append(ibbr.next());
+            o.push(ibbr.next());
         }
         m -= rest;
         if (m > 0) {
-            o.append(suffix);
+            o.push(suffix);
         }
 
         // non-first lines
         rest = bytesPerLine - prefix.length - suffix.length;
         while (m >= rest) {
-            o.append(prefix);
+            o.push(prefix);
             while (rest-- > 0) {
-                o.append(ibbr.next());
+                o.push(ibbr.next());
             }
-            o.append(suffix);
+            o.push(suffix);
             m -= rest;
         }
 
         if (m > 0) {
             rest = m;
-            o.append(prefix);
+            o.push(prefix);
             while (rest-- > 0) {
-                o.append(ibbr.next());
+                o.push(ibbr.next());
             }
         }
         return o;
