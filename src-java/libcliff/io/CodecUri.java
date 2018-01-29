@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.BitSet;
 
-import libcliff.io.Codec.Glyph;
+import libcliff.io.codec.Hexari;
 
 /**
  * for characters within a uri component
@@ -46,7 +46,7 @@ class CodecUri {
             throws IOException {
         ostream.write('%');
         Blob blob = new Blob();
-        Glyph.toUtf8Bytes(b, blob, true);
+        Hexari.toHexariText(b, blob);
         ostream.write(blob.a);
         return ostream;
     }

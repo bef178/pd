@@ -57,7 +57,8 @@ public final class Blob implements Nextable, BytePipe {
     }
 
     @Override
-    public void push(int ch) {
+    public int push(int ch) {
         a[i++] = (byte) (ch & 0xFF);
+        return 1;
     }
 }

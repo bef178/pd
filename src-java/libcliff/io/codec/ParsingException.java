@@ -1,4 +1,4 @@
-package libcliff.io;
+package libcliff.io.codec;
 
 public class ParsingException extends RuntimeException {
 

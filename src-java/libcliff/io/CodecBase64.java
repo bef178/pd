@@ -3,6 +3,8 @@ package libcliff.io;
 import java.io.IOException;
 import java.util.Arrays;
 
+import libcliff.io.codec.ParsingException;
+
 class CodecBase64 {
 
     private static final char[] ENCODE_MAP;

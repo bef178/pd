@@ -6,14 +6,6 @@ public final class Codec {
         // dummy
     }
 
-    public static final class Csv extends CodecCsv {
-        // dummy
-    }
-
-    public static final class Glyph extends CodecGlyph {
-        // dummy
-    }
-
     public static final class Uri extends CodecUri {
         // dummy
     }

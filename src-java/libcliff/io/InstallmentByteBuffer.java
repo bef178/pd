@@ -178,9 +178,10 @@ public class InstallmentByteBuffer implements BytePipe {
     }
 
     @Override
-    public void push(int b) {
+    public int push(int b) {
         setupCapacity(used + 1);
         put(used++, (byte) (b & 0xFF));
+        return 1;
     }
 
     public InstallmentByteBuffer push(String s) {
