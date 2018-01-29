@@ -7,12 +7,12 @@ import java.util.Arrays;
 /**
  * some thing of smart array & queue & installment savings
  */
-public class InstallmentByteBuffer implements Pushable {
+public class InstallmentByteBuffer implements BytePipe {
 
     /**
      * not a java.io.Reader<br/>
      */
-    public class Reader implements Nextable {
+    public class Reader implements Nextable, Pullable {
 
         private int next = 0;
 
@@ -36,6 +36,11 @@ public class InstallmentByteBuffer implements Pushable {
         @Override
         public int peek() {
             return get(next) & 0xFF;
+        }
+
+        @Override
+        public int pull() {
+            return next();
         }
 
         public void putBack() {
@@ -88,7 +93,10 @@ public class InstallmentByteBuffer implements Pushable {
     private static final int INSTALLMENT_MASK = INSTALLMENT_BYTES - 1;
 
     private ArrayList<byte[]> savings = new ArrayList<>();
+
     private int used = 0;
+
+    private Reader reader = null;
 
     public InstallmentByteBuffer() {
         this(INSTALLMENT_BYTES);
@@ -126,11 +134,18 @@ public class InstallmentByteBuffer implements Pushable {
         return used == 0;
     }
 
+    @Override
+    public int pull() {
+        if (reader == null) {
+            reader = new Reader();
+        }
+        return reader.next();
+    }
+
     public InstallmentByteBuffer push(byte[] a) {
         return push(a, 0, a.length);
     }
 
-    @Override
     public InstallmentByteBuffer push(byte[] a, int i, int j) {
         int n = j - i;
         setupCapacity(used + n);
@@ -163,10 +178,9 @@ public class InstallmentByteBuffer implements Pushable {
     }
 
     @Override
-    public InstallmentByteBuffer push(int b) {
+    public void push(int b) {
         setupCapacity(used + 1);
         put(used++, (byte) (b & 0xFF));
-        return this;
     }
 
     public InstallmentByteBuffer push(String s) {

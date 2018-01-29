@@ -1,6 +1,6 @@
 package libcliff.io;
 
-public final class Blob implements Nextable, Pushable {
+public final class Blob implements Nextable, BytePipe {
 
     public byte[] a = null;
 
@@ -45,6 +45,10 @@ public final class Blob implements Nextable, Pushable {
     }
 
     @Override
+    public int pull() {
+        return next();
+    }
+
     public Blob push(byte[] a, int i, int j) {
         while (i < j) {
             push(a[i++]);
@@ -53,8 +57,7 @@ public final class Blob implements Nextable, Pushable {
     }
 
     @Override
-    public Blob push(int ch) {
+    public void push(int ch) {
         a[i++] = (byte) (ch & 0xFF);
-        return this;
     }
 }
