@@ -47,9 +47,9 @@ public class Hexari implements BytePipe {
         throw new IllegalArgumentException();
     }
 
-    public static int fromHexariText(Pullable pipe) {
-        return (fromHexariText(pipe.pull()) << 4)
-                | fromHexariText(pipe.pull());
+    public static int fromHexariText(Pullable pullable) {
+        return (fromHexariText(pullable.pull()) << 4)
+                | fromHexariText(pullable.pull());
     }
 
     public static Pullable pullable(final Pullable pullable) {
