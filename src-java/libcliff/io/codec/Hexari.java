@@ -14,8 +14,8 @@ public class Hexari implements BytePipe {
             'A', 'B', 'C', 'D', 'E', 'F'
     };
 
-    private static int fromHexariText(int ascii) {
-        switch (ascii) {
+    private static int fromHexariText(int hexari) {
+        switch (hexari) {
             case '0':
             case '1':
             case '2':
@@ -26,27 +26,30 @@ public class Hexari implements BytePipe {
             case '7':
             case '8':
             case '9':
-                return ascii - '0';
+                return hexari - '0';
             case 'A':
             case 'B':
             case 'C':
             case 'D':
             case 'E':
             case 'F':
-                return ascii - 'A' + 10;
+                return hexari - 'A' + 10;
             case 'a':
             case 'b':
             case 'c':
             case 'd':
             case 'e':
             case 'f':
-                return ascii - 'a' + 10;
+                return hexari - 'a' + 10;
             default:
                 break;
         }
-        throw new IllegalArgumentException();
+        throw new ParsingException();
     }
 
+    /**
+     * e.g. "AF" => 0xAF
+     */
     public static int fromHexariText(Pullable pullable) {
         return (fromHexariText(pullable.pull()) << 4)
                 | fromHexariText(pullable.pull());
@@ -78,20 +81,15 @@ public class Hexari implements BytePipe {
         };
     }
 
-    private static int toHexariText(int i) {
-        assert i >= 0 && i < 16;
-        return HEX_DIGIT_TO_LITERAL[i];
-    }
-
     /**
      * accept an int in [0, 255]<br/>
      * return pushed bytes size
      */
-    public static int toHexariText(int i, Pushable pushable) {
-        i = i & 0xFF;
+    public static int toHexariText(int aByte, Pushable pushable) {
+        aByte = aByte & 0xFF;
         int size = 0;
-        size += pushable.push(toHexariText(i >>> 4));
-        size += pushable.push(toHexariText(i & 0x0F));
+        size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
+        size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte & 0x0F]);
         return size;
     }
 
@@ -107,7 +105,7 @@ public class Hexari implements BytePipe {
     }
 
     @Override
-    public int push(int i) {
-        return toHexariText(i, downstream);
+    public int push(int aByte) {
+        return toHexariText(aByte, downstream);
     }
 }

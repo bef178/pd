@@ -1,14 +1,12 @@
 package libcliff.io;
 
+import java.util.Arrays;
+
 public final class Blob implements Nextable, BytePipe {
 
     public byte[] a = null;
 
     public int i = 0;
-
-    public Blob() {
-        // dummy
-    }
 
     public Blob(byte[] a, int i) {
         this.a = a;
@@ -17,6 +15,10 @@ public final class Blob implements Nextable, BytePipe {
 
     public Blob(int n) {
         init(n);
+    }
+
+    public byte[] getBytes() {
+        return Arrays.copyOfRange(a, 0, i);
     }
 
     @Override
@@ -60,5 +62,9 @@ public final class Blob implements Nextable, BytePipe {
     public int push(int ch) {
         a[i++] = (byte) (ch & 0xFF);
         return 1;
+    }
+
+    public void rewind() {
+        this.i = 0;
     }
 }

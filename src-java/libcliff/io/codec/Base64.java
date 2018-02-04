@@ -30,6 +30,7 @@ public class Base64 implements BytePipe {
             }
             if (base64 == null) {
                 // the first time
+                base64 = new int[4];
                 pullBase64Bytes(pullable, base64);
             }
             if (pIndex == 3) {
@@ -43,15 +44,15 @@ public class Base64 implements BytePipe {
                 }
                 pIndex = 0;
             }
-            int i = parsed[pIndex++];
-            if (i == -1) {
+            int aByte = parsed[pIndex++];
+            if (aByte == -1) {
                 ends = true;
             }
-            return i;
+            return aByte;
         }
 
         private int pullBase64Bytes(Pullable pullable, int[] base64) {
-            assert base64.length >= 4;
+            assert base64 != null && base64.length >= 4;
             for (int i = 0; i < 4; ++i) {
                 int j = pullable.pull();
                 if (j == -1) {

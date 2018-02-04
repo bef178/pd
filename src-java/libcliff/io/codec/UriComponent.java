@@ -80,7 +80,7 @@ public class UriComponent implements BytePipe {
     }
 
     @Override
-    public int push(int i) {
-        return encodeByte(i, downstream);
+    public int push(int aByte) {
+        return encodeByte(aByte, downstream);
     }
 }

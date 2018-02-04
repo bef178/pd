@@ -6,10 +6,12 @@ import libcliff.io.Pushable;
 
 public class Escaped implements BytePipe {
 
-    public static int decode(Pullable pipe) {
-        int first = pipe.pull() & 0xFF;
+    /**
+     * @return a code point
+     */
+    public static int decode(int first, Pullable pullable) {
         if (first == '\\') {
-            int ch = pipe.pull() & 0xFF;
+            int ch = pullable.pull() & 0xFF;
             switch (ch) {
                 case '\\':
                     return '\\';
@@ -28,11 +30,11 @@ public class Escaped implements BytePipe {
                 case 'b':
                     return '\b';
                 case 'u':
-                    if (pipe instanceof BytePipe) {
-                        return new Utf8(new Hexari((BytePipe) pipe)).pull();
+                    if (pullable instanceof BytePipe) {
+                        return new Utf8(new Hexari((BytePipe) pullable)).pull();
                     } else {
                         // TODO Codec.pullable(Utf8, Hexari).pull();
-                        return Utf8.pullable(Hexari.pullable(pipe)).pull();
+                        return Utf8.pullable(Hexari.pullable(pullable)).pull();
                     }
                 default:
                     return ch;
@@ -40,6 +42,11 @@ public class Escaped implements BytePipe {
         } else {
             return first;
         }
+    }
+
+    public static int decode(Pullable pullable) {
+        int first = pullable.pull() & 0xFF;
+        return decode(first, pullable);
     }
 
     public static int encode(int ch, Pushable pipe) {
