@@ -3,8 +3,8 @@ package libcliff.io.codec;
 import java.util.Arrays;
 
 import libcliff.io.BytePipe;
-import libcliff.io.Pullable;
-import libcliff.io.Pushable;
+import libcliff.io.BytePullable;
+import libcliff.io.BytePushable;
 
 public class Base64 implements BytePipe {
 
@@ -24,7 +24,7 @@ public class Base64 implements BytePipe {
             dst[2] = (base64[2] << 6) | base64[3];
         }
 
-        public int pull(Pullable pullable) {
+        public int pull(BytePullable pullable) {
             if (ends) {
                 return -1;
             }
@@ -51,7 +51,7 @@ public class Base64 implements BytePipe {
             return aByte;
         }
 
-        private int pullBase64Bytes(Pullable pullable, int[] base64) {
+        private int pullBase64Bytes(BytePullable pullable, int[] base64) {
             assert base64 != null && base64.length >= 4;
             for (int i = 0; i < 4; ++i) {
                 int j = pullable.pull();
@@ -72,11 +72,11 @@ public class Base64 implements BytePipe {
 
         private boolean ends = false;
 
-        public int push(int i, Pushable pushable) {
+        public int push(int aByte, BytePushable pushable) {
             if (ends) {
                 return -1;
             }
-            parsed[pIndex++] = i & 0xFF;
+            parsed[pIndex++] = aByte & 0xFF;
             if (pIndex == 3) {
                 pIndex = 0;
                 return toBase64Bytes(parsed, 0, 3, pushable);
@@ -84,13 +84,13 @@ public class Base64 implements BytePipe {
             return 0;
         }
 
-        public int pushEnd(Pushable pushable) {
+        public int pushEnd(BytePushable pushable) {
             ends = true;
             return toBase64Bytes(parsed, 0, pIndex, pushable);
         }
 
         private int toBase64Bytes(int byte0, int byte1, int byte2,
-                Pushable pushable) {
+                BytePushable pushable) {
             int size = 0;
             size += pushable.push(
                     ENCODE_MAP[(byte0 & 0xFF) >>> 2]);
@@ -103,8 +103,7 @@ public class Base64 implements BytePipe {
             return size;
         }
 
-        private int toBase64Bytes(int[] a, int i, int j,
-                Pushable pushable) {
+        private int toBase64Bytes(int[] a, int i, int j, BytePushable pushable) {
             switch (j - i) {
                 case 0:
                     return 0;
@@ -170,11 +169,11 @@ public class Base64 implements BytePipe {
     }
 
     @Override
-    public int push(int i) {
+    public int push(int aByte) {
         if (pusher == null) {
             pusher = new Pusher();
         }
-        return pusher.push(i, downstream);
+        return pusher.push(aByte, downstream);
     }
 
     public int pushEnd() {

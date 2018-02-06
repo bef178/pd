@@ -1,12 +1,14 @@
 package libcliff.io.codec;
 
 import libcliff.io.BytePipe;
+import libcliff.io.BytePullable;
+import libcliff.io.BytePushable;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
-public class Ucs4 implements BytePipe {
+public class Ucs4 implements Pullable, Pushable {
 
-    public static int fromUcs4Bytes(Pullable pullable) {
+    public static int fromUcs4Bytes(BytePullable pullable) {
         int ch = 0;
         for (int i = 0; i < 4; ++i) {
             ch = (ch << 8) | (pullable.pull() & 0xFF);
@@ -14,7 +16,7 @@ public class Ucs4 implements BytePipe {
         return ch;
     }
 
-    public static int toUcs4Bytes(int ch, Pushable pushable) {
+    public static int toUcs4Bytes(int ch, BytePushable pushable) {
         int size = 0;
         for (int i = 0; i < 4; ++i) {
             int c = ch;

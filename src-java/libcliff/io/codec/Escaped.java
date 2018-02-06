@@ -1,15 +1,17 @@
 package libcliff.io.codec;
 
 import libcliff.io.BytePipe;
+import libcliff.io.BytePullable;
+import libcliff.io.BytePushable;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
-public class Escaped implements BytePipe {
+public class Escaped implements Pullable, Pushable {
 
     /**
      * @return a code point
      */
-    public static int decode(int first, Pullable pullable) {
+    public static int decode(int first, BytePullable pullable) {
         if (first == '\\') {
             int ch = pullable.pull() & 0xFF;
             switch (ch) {
@@ -44,19 +46,19 @@ public class Escaped implements BytePipe {
         }
     }
 
-    public static int decode(Pullable pullable) {
+    public static int decode(BytePullable pullable) {
         int first = pullable.pull() & 0xFF;
         return decode(first, pullable);
     }
 
-    public static int encode(int ch, Pushable pipe) {
+    public static int encode(int ch, BytePushable pushable) {
         int size = 0;
-        size += pipe.push('\\');
-        size += pipe.push('u');
-        if (pipe instanceof BytePipe) {
-            return size + new Utf8(new Hexari((BytePipe) pipe)).push(ch);
+        size += pushable.push('\\');
+        size += pushable.push('u');
+        if (pushable instanceof BytePipe) {
+            return size + new Utf8(new Hexari((BytePipe) pushable)).push(ch);
         } else {
-            return size + Utf8.pushable(Hexari.pushable(pipe)).push(ch);
+            return size + Utf8.pushable(Hexari.pushable(pushable)).push(ch);
         }
     }
 

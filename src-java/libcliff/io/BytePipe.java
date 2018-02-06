@@ -1,5 +1,5 @@
 package libcliff.io;
 
-public interface BytePipe extends Pullable, Pushable {
+public interface BytePipe extends BytePullable, BytePushable {
     // dummy
 }

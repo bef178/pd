@@ -3,69 +3,66 @@ package libcliff.io.codec;
 import java.util.BitSet;
 
 import libcliff.io.BytePipe;
+import libcliff.io.BytePullable;
+import libcliff.io.BytePushable;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
-/**
- * for characters within a uri component
- */
-public class UriComponent implements BytePipe {
+public class UriComponent implements Pullable, Pushable {
 
-    private static final BitSet SHOULD_ENCODE;
+    private static final BitSet SHOULD_NOT_ENCODE;
 
     static {
-        SHOULD_ENCODE = new BitSet(256);
-
-        for (int i = 0; i < SHOULD_ENCODE.length(); ++i) {
-            SHOULD_ENCODE.set(i);
-        }
+        SHOULD_NOT_ENCODE = new BitSet(256);
 
         // rfc3986 2.3 Unreserved Characters
         for (int i = 'A'; i <= 'Z'; ++i) {
-            SHOULD_ENCODE.clear(i);
+            SHOULD_NOT_ENCODE.set(i);
         }
         for (int i = 'a'; i <= 'z'; ++i) {
-            SHOULD_ENCODE.clear(i);
+            SHOULD_NOT_ENCODE.set(i);
         }
         for (int i = '0'; i <= '9'; ++i) {
-            SHOULD_ENCODE.clear(i);
+            SHOULD_NOT_ENCODE.set(i);
         }
         final String UNRESERVED = "-_.~";
-        for (int ch : UNRESERVED.toCharArray()) {
-            SHOULD_ENCODE.clear(ch);
+        for (int i : UNRESERVED.toCharArray()) {
+            SHOULD_NOT_ENCODE.set(i);
         }
 
-        // reserved character should be encoded if it not a delimiter
+        // reserved character should be encoded if it is not a delimiter
         final String GEN_DELIMS = ":/?#[]@";
+        for (int i : GEN_DELIMS.toCharArray()) {
+            SHOULD_NOT_ENCODE.clear(i);
+        }
+
         final String SUB_DELIMS = "!$&'()*+,;=";
-        final String RESERVED = GEN_DELIMS + SUB_DELIMS;
-        for (int i : RESERVED.getBytes()) {
-            SHOULD_ENCODE.set(i & 0xFF);
+        for (int i : SUB_DELIMS.toCharArray()) {
+            SHOULD_NOT_ENCODE.clear(i);
         }
     }
 
-    public static int decodeByte(Pullable pullable) {
-        int ch = pullable.pull();
-        if (ch == '%') {
+    public static int decode(BytePullable pullable) {
+        int aByte = pullable.pull();
+        if (aByte == '%') {
             return Hexari.fromHexariText(pullable);
         } else {
-            return ch;
+            return aByte;
         }
     }
 
-    public static int encodeByte(int aByte, Pushable pushable) {
-        if (requiresEncode(aByte)) {
-            int size = 0;
-            size += pushable.push('%');
-            size += Hexari.toHexariText(aByte & 0xFF, pushable);
-            return size;
+    public static int encode(int ch, BytePushable pushable) {
+        if (requiresEncode(ch)) {
+            return Utf8.pushable(UriByte.pushable(pushable)).push(ch);
         } else {
-            return pushable.push(aByte & 0xFF);
+            return pushable.push(ch & 0xFF);
         }
     }
 
     private static boolean requiresEncode(int ch) {
-        return SHOULD_ENCODE.get(ch);
+        return ch >= 0 && ch < SHOULD_NOT_ENCODE.size()
+                ? !SHOULD_NOT_ENCODE.get(ch)
+                : true;
     }
 
     private BytePipe downstream = null;
@@ -76,11 +73,11 @@ public class UriComponent implements BytePipe {
 
     @Override
     public int pull() {
-        return decodeByte(downstream);
+        return decode(downstream);
     }
 
     @Override
-    public int push(int aByte) {
-        return encodeByte(aByte, downstream);
+    public int push(int ch) {
+        return encode(ch, downstream);
     }
 }

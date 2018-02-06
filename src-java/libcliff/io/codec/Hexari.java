@@ -1,8 +1,8 @@
 package libcliff.io.codec;
 
 import libcliff.io.BytePipe;
-import libcliff.io.Pullable;
-import libcliff.io.Pushable;
+import libcliff.io.BytePullable;
+import libcliff.io.BytePushable;
 
 /**
  * A HexariText is ASCII presentation of a hex digit, like '9', 'A' or 'e'
@@ -50,16 +50,16 @@ public class Hexari implements BytePipe {
     /**
      * e.g. "AF" => 0xAF
      */
-    public static int fromHexariText(Pullable pullable) {
+    public static int fromHexariText(BytePullable pullable) {
         return (fromHexariText(pullable.pull()) << 4)
                 | fromHexariText(pullable.pull());
     }
 
-    public static Pullable pullable(final Pullable pullable) {
+    public static BytePullable pullable(final BytePullable pullable) {
 
-        return new Pullable() {
+        return new BytePullable() {
 
-            private Pullable pipe = pullable;
+            private BytePullable pipe = pullable;
 
             @Override
             public int pull() {
@@ -68,15 +68,15 @@ public class Hexari implements BytePipe {
         };
     }
 
-    public static Pushable pushable(final Pushable pushable) {
+    public static BytePushable pushable(final BytePushable pushable) {
 
-        return new Pushable() {
+        return new BytePushable() {
 
-            private Pushable pipe = pushable;
+            private BytePushable pipe = pushable;
 
             @Override
-            public int push(int i) {
-                return toHexariText(i, this.pipe);
+            public int push(int aByte) {
+                return toHexariText(aByte, this.pipe);
             }
         };
     }
@@ -85,7 +85,7 @@ public class Hexari implements BytePipe {
      * accept an int in [0, 255]<br/>
      * return pushed bytes size
      */
-    public static int toHexariText(int aByte, Pushable pushable) {
+    public static int toHexariText(int aByte, BytePushable pushable) {
         aByte = aByte & 0xFF;
         int size = 0;
         size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
