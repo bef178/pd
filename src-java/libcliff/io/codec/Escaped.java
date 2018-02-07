@@ -4,12 +4,12 @@ import libcliff.io.BytePipe;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
+/**
+ * ch => utf8 byte[]
+ */
 public class Escaped implements BytePipe {
 
-    /**
-     * @return a code point
-     */
-    public static int decode(int first, Pullable pullable) {
+    public static int fromEscaped(int first, Pullable pullable) {
         if (first == '\\') {
             int ch = pullable.pull() & 0xFF;
             switch (ch) {
@@ -30,12 +30,10 @@ public class Escaped implements BytePipe {
                 case 'b':
                     return '\b';
                 case 'u':
-                    if (pullable instanceof BytePipe) {
-                        return new Utf8(new Hexari((BytePipe) pullable)).pull();
-                    } else {
-                        // TODO Codec.pullable(Utf8, Hexari).pull();
-                        return Utf8.pullable(Hexari.pullable(pullable)).pull();
-                    }
+                    // TODO Codec.pullable(Utf8, Hexari).pull();
+                    // TODO Utf8.pipe(Hexari).pipe(pullable);
+                    // TODO Pipe.join(Utf8, Hexari).pipe(pullable);
+                    return Utf8.fromUtf8Bytes(Hexari.pipe(pullable));
                 default:
                     return ch;
             }
@@ -44,20 +42,16 @@ public class Escaped implements BytePipe {
         }
     }
 
-    public static int decode(Pullable pullable) {
+    public static int fromEscaped(Pullable pullable) {
         int first = pullable.pull() & 0xFF;
-        return decode(first, pullable);
+        return fromEscaped(first, pullable);
     }
 
-    public static int encode(int ch, Pushable pipe) {
+    public static int toEscaped(int ch, Pushable pushable) {
         int size = 0;
-        size += pipe.push('\\');
-        size += pipe.push('u');
-        if (pipe instanceof BytePipe) {
-            return size + new Utf8(new Hexari((BytePipe) pipe)).push(ch);
-        } else {
-            return size + Utf8.pushable(Hexari.pushable(pipe)).push(ch);
-        }
+        size += pushable.push('\\');
+        size += pushable.push('u');
+        return size + Utf8.toUtf8Bytes(ch, Hexari.pipe(pushable));
     }
 
     private BytePipe downstream = null;
@@ -68,11 +62,11 @@ public class Escaped implements BytePipe {
 
     @Override
     public int pull() {
-        return decode(downstream);
+        return fromEscaped(downstream);
     }
 
     @Override
     public int push(int ch) {
-        return encode(ch, downstream);
+        return toEscaped(ch, downstream);
     }
 }

@@ -1,10 +1,13 @@
 package libcliff.io.codec;
 
-import libcliff.io.BytePipe;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
+import libcliff.io.Pipe;
 
-public class Utf8 implements BytePipe {
+/**
+ * ch => utf8 byte[]
+ */
+public class Utf8 implements Pipe {
 
     public static int fromUtf8Bytes(Pullable pullable) {
         int firstByte = pullable.pull() & 0xFF;
@@ -23,29 +26,12 @@ public class Utf8 implements BytePipe {
         }
     }
 
-    public static Pullable pullable(final Pullable pullable) {
-
-        return new Pullable() {
-
-            private Pullable pipe = pullable;
-
-            @Override
-            public int pull() {
-                return fromUtf8Bytes(this.pipe);
-            }
-        };
+    public static Pullable pullable(Pullable pullable) {
+        return new Utf8().setPullable(pullable);
     }
 
-    public static Pushable pushable(final Pushable pushable) {
-        return new Pushable() {
-
-            private Pushable pipe = pushable;
-
-            @Override
-            public int push(int i) {
-                return toUtf8Bytes(i, this.pipe);
-            }
-        };
+    public static Pushable pushable(Pushable pushable) {
+        return new Utf8().setPushable(pushable);
     }
 
     /**
@@ -119,19 +105,31 @@ public class Utf8 implements BytePipe {
         return -1;
     }
 
-    private BytePipe downstream = null;
+    private Pullable downstreamPullable = null;
 
-    public Utf8(BytePipe downstream) {
-        this.downstream = downstream;
+    private Pushable downstreamPushable = null;
+
+    public Utf8() {
+        // dummy
     }
 
     @Override
     public int pull() {
-        return fromUtf8Bytes(downstream);
+        return fromUtf8Bytes(downstreamPullable);
     }
 
     @Override
     public int push(int ch) {
-        return toUtf8Bytes(ch, downstream);
+        return toUtf8Bytes(ch, downstreamPushable);
+    }
+
+    public Utf8 setPullable(Pullable pullable) {
+        downstreamPullable = pullable;
+        return this;
+    }
+
+    public Utf8 setPushable(Pushable pushable) {
+        downstreamPushable = pushable;
+        return this;
     }
 }

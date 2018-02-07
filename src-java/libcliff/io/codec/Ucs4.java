@@ -1,10 +1,14 @@
 package libcliff.io.codec;
 
 import libcliff.io.BytePipe;
+import libcliff.io.Pipe;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
-public class Ucs4 implements BytePipe {
+/**
+ * ch  => byte[4]
+ */
+public class Ucs4 implements Pipe {
 
     public static int fromUcs4Bytes(Pullable pullable) {
         int ch = 0;

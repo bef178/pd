@@ -5,7 +5,9 @@ import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
 /**
- * A HexariText is ASCII presentation of a hex digit, like '9', 'A' or 'e'
+ * A HexariByte is ASCII presentation of a hex digit, like '9', 'A' or 'e'<br/>
+ * <br/>
+ * byte 0x65 => byte[] { '6', '5' } under all conditions
  */
 public class Hexari implements BytePipe {
 
@@ -14,7 +16,7 @@ public class Hexari implements BytePipe {
             'A', 'B', 'C', 'D', 'E', 'F'
     };
 
-    private static int fromHexariText(int hexari) {
+    private static int fromHexariByte(int hexari) {
         switch (hexari) {
             case '0':
             case '1':
@@ -47,45 +49,29 @@ public class Hexari implements BytePipe {
         throw new ParsingException();
     }
 
-    /**
-     * e.g. "AF" => 0xAF
-     */
-    public static int fromHexariText(Pullable pullable) {
-        return (fromHexariText(pullable.pull()) << 4)
-                | fromHexariText(pullable.pull());
+    public static int fromHexariBytes(Pullable pullable) {
+        return (fromHexariByte(pullable.pull()) << 4)
+                | fromHexariByte(pullable.pull());
     }
 
-    public static Pullable pullable(final Pullable pullable) {
-
-        return new Pullable() {
-
-            private Pullable pipe = pullable;
-
-            @Override
-            public int pull() {
-                return fromHexariText(this.pipe);
-            }
-        };
+    public static BytePipe pipe(BytePipe pipe) {
+        return new Hexari().setDownstream((Pullable) pipe)
+                .setDownstream((Pushable) pipe);
     }
 
-    public static Pushable pushable(final Pushable pushable) {
+    public static Pullable pipe(Pullable pipe) {
+        return new Hexari().setDownstream(pipe);
+    }
 
-        return new Pushable() {
-
-            private Pushable pipe = pushable;
-
-            @Override
-            public int push(int i) {
-                return toHexariText(i, this.pipe);
-            }
-        };
+    public static Pushable pipe(Pushable pipe) {
+        return new Hexari().setDownstream(pipe);
     }
 
     /**
      * accept an int in [0, 255]<br/>
      * return pushed bytes size
      */
-    public static int toHexariText(int aByte, Pushable pushable) {
+    public static int toHexariBytes(int aByte, Pushable pushable) {
         aByte = aByte & 0xFF;
         int size = 0;
         size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
@@ -93,19 +79,31 @@ public class Hexari implements BytePipe {
         return size;
     }
 
-    private BytePipe downstream = null;
+    private Pullable downstreamPullable = null;
 
-    public Hexari(BytePipe downstream) {
-        this.downstream = downstream;
+    private Pushable downstreamPushable = null;
+
+    private Hexari() {
+        // dummy
     }
 
     @Override
     public int pull() {
-        return fromHexariText(downstream);
+        return fromHexariBytes(downstreamPullable);
     }
 
     @Override
     public int push(int aByte) {
-        return toHexariText(aByte, downstream);
+        return toHexariBytes(aByte, downstreamPushable);
+    }
+
+    public Hexari setDownstream(Pullable pullable) {
+        downstreamPullable = pullable;
+        return this;
+    }
+
+    public Hexari setDownstream(Pushable pushable) {
+        downstreamPushable = pushable;
+        return this;
     }
 }

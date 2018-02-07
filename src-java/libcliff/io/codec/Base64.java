@@ -6,6 +6,9 @@ import libcliff.io.BytePipe;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
+/**
+ * byte[3] => byte[4]
+ */
 public class Base64 implements BytePipe {
 
     private class Puller {
@@ -72,11 +75,11 @@ public class Base64 implements BytePipe {
 
         private boolean ends = false;
 
-        public int push(int i, Pushable pushable) {
+        public int push(int aByte, Pushable pushable) {
             if (ends) {
                 return -1;
             }
-            parsed[pIndex++] = i & 0xFF;
+            parsed[pIndex++] = aByte & 0xFF;
             if (pIndex == 3) {
                 pIndex = 0;
                 return toBase64Bytes(parsed, 0, 3, pushable);
@@ -170,11 +173,11 @@ public class Base64 implements BytePipe {
     }
 
     @Override
-    public int push(int i) {
+    public int push(int aByte) {
         if (pusher == null) {
             pusher = new Pusher();
         }
-        return pusher.push(i, downstream);
+        return pusher.push(aByte, downstream);
     }
 
     public int pushEnd() {

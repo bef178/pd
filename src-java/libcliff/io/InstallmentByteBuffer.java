@@ -178,9 +178,9 @@ public class InstallmentByteBuffer implements BytePipe {
     }
 
     @Override
-    public int push(int b) {
+    public int push(int aByte) {
         setupCapacity(used + 1);
-        put(used++, (byte) (b & 0xFF));
+        put(used++, (byte) (aByte & 0xFF));
         return 1;
     }
 

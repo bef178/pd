@@ -6,6 +6,9 @@ import java.util.List;
 import libcliff.io.Blob;
 import libcliff.io.Pullable;
 
+/**
+ * a,"b",'c' => [a,b,c]
+ */
 class Csv {
 
     private enum State {
@@ -44,7 +47,7 @@ class Csv {
                             break;
                         default:
                             state = State.REC_WIP;
-                            record.push(ch);
+                            Utf8.toUtf8Bytes(ch, record);
                             break;
                     }
                     break;
@@ -59,7 +62,7 @@ class Csv {
                             record.rewind();
                             delimiter = -1;
                         } else {
-                            record.push(ch);
+                            Utf8.toUtf8Bytes(ch, record);
                         }
                     } else {
                         switch (ch) {
@@ -70,7 +73,7 @@ class Csv {
                                 record.rewind();
                                 break;
                             default:
-                                record.push(ch);
+                                Utf8.toUtf8Bytes(ch, record);
                                 break;
                         }
                     }
