@@ -1,14 +1,12 @@
 package libcliff.io.codec;
 
 import libcliff.io.BytePipe;
-import libcliff.io.BytePullable;
-import libcliff.io.BytePushable;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
-public class Utf8 implements Pullable, Pushable {
+public class Utf8 implements BytePipe {
 
-    public static int fromUtf8Bytes(BytePullable pullable) {
+    public static int fromUtf8Bytes(Pullable pullable) {
         int firstByte = pullable.pull() & 0xFF;
         int n = utf8LengthByFirstByte(firstByte);
         if (n < 0) {
@@ -25,11 +23,11 @@ public class Utf8 implements Pullable, Pushable {
         }
     }
 
-    public static Pullable pullable(final BytePullable pullable) {
+    public static Pullable pullable(final Pullable pullable) {
 
         return new Pullable() {
 
-            private BytePullable pipe = pullable;
+            private Pullable pipe = pullable;
 
             @Override
             public int pull() {
@@ -38,10 +36,10 @@ public class Utf8 implements Pullable, Pushable {
         };
     }
 
-    public static Pushable pushable(final BytePushable pushable) {
+    public static Pushable pushable(final Pushable pushable) {
         return new Pushable() {
 
-            private BytePushable pipe = pushable;
+            private Pushable pipe = pushable;
 
             @Override
             public int push(int i) {
@@ -55,7 +53,7 @@ public class Utf8 implements Pullable, Pushable {
      * <br/>
      * returns the size of utf8 bytes
      */
-    public static int toUtf8Bytes(int ch, BytePushable pushable) {
+    public static int toUtf8Bytes(int ch, Pushable pushable) {
         final int n = utf8Length(ch);
         if (n == 1) {
             // ASCII
