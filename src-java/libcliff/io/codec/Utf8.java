@@ -109,7 +109,7 @@ public class Utf8 implements Pipe {
 
     private Pushable downstreamPushable = null;
 
-    public Utf8() {
+    private Utf8() {
         // dummy
     }
 

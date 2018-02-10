@@ -9,7 +9,7 @@ import libcliff.io.Pushable;
 /**
  * byte[3] => byte[4]
  */
-public class Base64 implements BytePipe {
+public class Base64 extends BytePipe {
 
     private class Puller {
 
@@ -98,9 +98,11 @@ public class Base64 implements BytePipe {
             size += pushable.push(
                     ENCODE_MAP[(byte0 & 0xFF) >>> 2]);
             size += pushable.push(
-                    ENCODE_MAP[((byte0 & 0x03) << 4) | ((byte1 & 0xFF) >>> 4)]);
+                    ENCODE_MAP[((byte0 & 0x03) << 4)
+                            | ((byte1 & 0xFF) >>> 4)]);
             size += pushable.push(
-                    ENCODE_MAP[((byte1 & 0x0F) << 2) | ((byte2 & 0xFF) >>> 6)]);
+                    ENCODE_MAP[((byte1 & 0x0F) << 2)
+                            | ((byte2 & 0xFF) >>> 6)]);
             size += pushable.push(
                     ENCODE_MAP[byte2 & 0x3F]);
             return size;
@@ -165,7 +167,7 @@ public class Base64 implements BytePipe {
     }
 
     @Override
-    public int pull() {
+    protected int pullByte() {
         if (puller == null) {
             puller = new Puller();
         }
@@ -173,17 +175,20 @@ public class Base64 implements BytePipe {
     }
 
     @Override
-    public int push(int aByte) {
+    public int push(int ch) {
         if (pusher == null) {
             pusher = new Pusher();
         }
-        return pusher.push(aByte, downstream);
+        if (ch == -1) {
+            pusher.pushEnd(downstream);
+        }
+        return super.push(ch);
     }
 
-    public int pushEnd() {
-        if (pusher == null) {
-            pusher = new Pusher();
-        }
-        return pusher.pushEnd(downstream);
+    @Override
+    protected int pushByte(int aByte) {
+        assert aByte >= 0 && aByte <= 0xFF;
+
+        return pusher.push(aByte, downstream);
     }
 }

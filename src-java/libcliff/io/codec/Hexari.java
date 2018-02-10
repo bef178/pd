@@ -9,7 +9,7 @@ import libcliff.io.Pushable;
  * <br/>
  * byte 0x65 => byte[] { '6', '5' } under all conditions
  */
-public class Hexari implements BytePipe {
+public class Hexari extends BytePipe {
 
     private static final byte[] HEX_DIGIT_TO_LITERAL = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -83,17 +83,13 @@ public class Hexari implements BytePipe {
 
     private Pushable downstreamPushable = null;
 
-    private Hexari() {
-        // dummy
-    }
-
     @Override
-    public int pull() {
+    protected int pullByte() {
         return fromHexariBytes(downstreamPullable);
     }
 
     @Override
-    public int push(int aByte) {
+    protected int pushByte(int aByte) {
         return toHexariBytes(aByte, downstreamPushable);
     }
 

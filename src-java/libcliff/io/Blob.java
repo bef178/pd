@@ -2,7 +2,7 @@ package libcliff.io;
 
 import java.util.Arrays;
 
-public final class Blob implements Nextable, BytePipe {
+public final class Blob extends BytePipe implements Nextable {
 
     public byte[] a = null;
 
@@ -47,7 +47,7 @@ public final class Blob implements Nextable, BytePipe {
     }
 
     @Override
-    public int pull() {
+    protected int pullByte() {
         return next();
     }
 
@@ -59,7 +59,7 @@ public final class Blob implements Nextable, BytePipe {
     }
 
     @Override
-    public int push(int aByte) {
+    protected int pushByte(int aByte) {
         a[i++] = (byte) (aByte & 0xFF);
         return 1;
     }

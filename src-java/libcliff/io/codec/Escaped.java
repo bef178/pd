@@ -1,13 +1,14 @@
 package libcliff.io.codec;
 
 import libcliff.io.BytePipe;
+import libcliff.io.Pipe;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
 /**
  * ch => utf8 byte[]
  */
-public class Escaped implements BytePipe {
+public class Escaped implements Pipe {
 
     public static int fromEscaped(int first, Pullable pullable) {
         if (first == '\\') {

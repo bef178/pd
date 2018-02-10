@@ -7,7 +7,7 @@ import java.util.Arrays;
 /**
  * some thing of smart array & queue & installment savings
  */
-public class InstallmentByteBuffer implements BytePipe {
+public class InstallmentByteBuffer extends BytePipe {
 
     /**
      * not a java.io.Reader<br/>
@@ -135,7 +135,7 @@ public class InstallmentByteBuffer implements BytePipe {
     }
 
     @Override
-    public int pull() {
+    protected int pullByte() {
         if (reader == null) {
             reader = new Reader();
         }
@@ -178,7 +178,7 @@ public class InstallmentByteBuffer implements BytePipe {
     }
 
     @Override
-    public int push(int aByte) {
+    protected int pushByte(int aByte) {
         setupCapacity(used + 1);
         put(used++, (byte) (aByte & 0xFF));
         return 1;
