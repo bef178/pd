@@ -2,15 +2,15 @@ package libcliff.io.codec;
 
 import java.util.BitSet;
 
-import libcliff.io.BytePipe;
-import libcliff.io.Pipe;
+import libcliff.io.PullStream;
 import libcliff.io.Pullable;
+import libcliff.io.PushStream;
 import libcliff.io.Pushable;
 
 /**
  * ch => byte[]
  */
-public class UriComponent implements Pipe {
+public class UriComponent implements PullStream, PushStream {
 
     private static final BitSet SHOULD_NOT_ENCODE;
 
@@ -44,13 +44,13 @@ public class UriComponent implements Pipe {
         }
     }
 
-    public static int decode(Pullable pullable) {
-        return Utf8.pullable(UriByte.pullable(pullable)).pull();
+    public static int decode(Pullable upstream) {
+        return PullStream.join(upstream, new UriByte(), new Utf8()).pull();
     }
 
     public static int encode(int ch, Pushable pushable) {
         if (requiresEncode(ch)) {
-            return Utf8.pushable(UriByte.pushable(pushable)).push(ch);
+            return PushStream.join(pushable, new UriByte(), new Utf8()).push(ch);
         } else {
             return pushable.push(ch & 0xFF);
         }
@@ -62,19 +62,29 @@ public class UriComponent implements Pipe {
                 : true;
     }
 
-    private BytePipe downstream = null;
+    private Pullable upstream = null;
 
-    public UriComponent(BytePipe downstream) {
-        this.downstream = downstream;
-    }
+    private Pushable downstream = null;
 
     @Override
     public int pull() {
-        return decode(downstream);
+        return decode(upstream);
     }
 
     @Override
     public int push(int ch) {
         return encode(ch, downstream);
+    }
+
+    @Override
+    public PushStream join(Pushable downstream) {
+        this.downstream = downstream;
+        return this;
+    }
+
+    @Override
+    public PullStream join(Pullable upstream) {
+        this.upstream = upstream;
+        return this;
     }
 }

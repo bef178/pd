@@ -1,24 +1,24 @@
 package libcliff.io.codec;
 
-import libcliff.io.BytePipe;
-import libcliff.io.Pipe;
+import libcliff.io.PullStream;
 import libcliff.io.Pullable;
+import libcliff.io.PushStream;
 import libcliff.io.Pushable;
 
 /**
  * ch  => byte[4]
  */
-public class Ucs4 implements Pipe {
+public class Ucs4 implements PullStream, PushStream {
 
-    public static int fromUcs4Bytes(Pullable pullable) {
+    public static int fromUcs4Bytes(Pullable upstream) {
         int ch = 0;
         for (int i = 0; i < 4; ++i) {
-            ch = (ch << 8) | (pullable.pull() & 0xFF);
+            ch = (ch << 8) | (upstream.pull() & 0xFF);
         }
         return ch;
     }
 
-    public static int toUcs4Bytes(int ch, Pushable pushable) {
+    public static int toUcs4Bytes(int ch, Pushable downstream) {
         int size = 0;
         for (int i = 0; i < 4; ++i) {
             int c = ch;
@@ -26,20 +26,30 @@ public class Ucs4 implements Pipe {
             while (j-- > 0) {
                 c >>>= 8;
             }
-            size += pushable.push(c & 0xFF);
+            size += downstream.push(c & 0xFF);
         }
         return size;
     }
 
-    private BytePipe downstream = null;
+    private Pullable upstream = null;
 
-    public Ucs4(BytePipe downstream) {
+    private Pushable downstream = null;
+
+    @Override
+    public Ucs4 join(Pullable upstream) {
+        this.upstream = upstream;
+        return this;
+    }
+
+    @Override
+    public Ucs4 join(Pushable downstream) {
         this.downstream = downstream;
+        return this;
     }
 
     @Override
     public int pull() {
-        return fromUcs4Bytes(downstream);
+        return fromUcs4Bytes(upstream);
     }
 
     @Override

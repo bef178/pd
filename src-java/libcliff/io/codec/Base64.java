@@ -2,16 +2,17 @@ package libcliff.io.codec;
 
 import java.util.Arrays;
 
-import libcliff.io.BytePipe;
+import libcliff.io.BytePullStream;
+import libcliff.io.BytePushStream;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
 /**
  * byte[3] => byte[4]
  */
-public class Base64 extends BytePipe {
+public class Base64 implements BytePullStream, BytePushStream {
 
-    private class Puller {
+    private class Puller implements BytePullStream {
 
         private int[] base64 = null;
 
@@ -21,24 +22,45 @@ public class Base64 extends BytePipe {
 
         private boolean ends = false;
 
-        private void decodeBase64Bytes(int[] base64, int[] dst) {
+        private Pullable upstream = null;
+
+        private void fromBase64Bytes(int[] base64, int[] dst) {
             dst[0] = (base64[0] << 2) | (base64[1] >> 4);
             dst[1] = (base64[1] << 4) | (base64[2] >> 2);
             dst[2] = (base64[2] << 6) | base64[3];
         }
 
-        public int pull(Pullable pullable) {
+        private int getBase64Bytes(Pullable pullable, int[] base64) {
+            assert base64 != null && base64.length >= 4;
+            for (int i = 0; i < 4; ++i) {
+                int j = pullable.pull();
+                if (j == -1) {
+                    return i;
+                }
+                base64[i] = DECODE_MAP[j & 0xFF];
+            }
+            return 4;
+        }
+
+        @Override
+        public Puller join(Pullable upstream) {
+            this.upstream = upstream;
+            return this;
+        }
+
+        @Override
+        public int pull() {
             if (ends) {
                 return -1;
             }
             if (base64 == null) {
                 // the first time
                 base64 = new int[4];
-                pullBase64Bytes(pullable, base64);
+                getBase64Bytes(upstream, base64);
             }
             if (pIndex == 3) {
-                decodeBase64Bytes(base64, parsed);
-                pullBase64Bytes(pullable, base64);
+                fromBase64Bytes(base64, parsed);
+                getBase64Bytes(upstream, base64);
                 if (base64[0] == '=') {
                     parsed[0] = -1;
                     if (base64[1] == '=') {
@@ -53,21 +75,9 @@ public class Base64 extends BytePipe {
             }
             return aByte;
         }
-
-        private int pullBase64Bytes(Pullable pullable, int[] base64) {
-            assert base64 != null && base64.length >= 4;
-            for (int i = 0; i < 4; ++i) {
-                int j = pullable.pull();
-                if (j == -1) {
-                    return i;
-                }
-                base64[i] = DECODE_MAP[j & 0xFF];
-            }
-            return 4;
-        }
     }
 
-    private class Pusher {
+    private class Pusher implements BytePushStream {
 
         private int[] parsed = new int[3];
 
@@ -75,21 +85,30 @@ public class Base64 extends BytePipe {
 
         private boolean ends = false;
 
-        public int push(int aByte, Pushable pushable) {
+        private Pushable downstream = null;
+
+        public int flush() {
+            ends = true;
+            return toBase64Bytes(parsed, 0, pIndex, downstream);
+        }
+
+        @Override
+        public Pusher join(Pushable downstream) {
+            this.downstream = downstream;
+            return this;
+        }
+
+        @Override
+        public int push(int aByte) {
             if (ends) {
                 return -1;
             }
             parsed[pIndex++] = aByte & 0xFF;
             if (pIndex == 3) {
                 pIndex = 0;
-                return toBase64Bytes(parsed, 0, 3, pushable);
+                return toBase64Bytes(parsed, 0, 3, downstream);
             }
             return 0;
-        }
-
-        public int pushEnd(Pushable pushable) {
-            ends = true;
-            return toBase64Bytes(parsed, 0, pIndex, pushable);
         }
 
         private int toBase64Bytes(int byte0, int byte1, int byte2,
@@ -98,11 +117,9 @@ public class Base64 extends BytePipe {
             size += pushable.push(
                     ENCODE_MAP[(byte0 & 0xFF) >>> 2]);
             size += pushable.push(
-                    ENCODE_MAP[((byte0 & 0x03) << 4)
-                            | ((byte1 & 0xFF) >>> 4)]);
+                    ENCODE_MAP[((byte0 & 0x03) << 4) | ((byte1 & 0xFF) >>> 4)]);
             size += pushable.push(
-                    ENCODE_MAP[((byte1 & 0x0F) << 2)
-                            | ((byte2 & 0xFF) >>> 6)]);
+                    ENCODE_MAP[((byte1 & 0x0F) << 2) | ((byte2 & 0xFF) >>> 6)]);
             size += pushable.push(
                     ENCODE_MAP[byte2 & 0x3F]);
             return size;
@@ -156,39 +173,37 @@ public class Base64 extends BytePipe {
         }
     }
 
-    private BytePipe downstream = null;
-
     private Puller puller = null;
 
     private Pusher pusher = null;
 
-    public Base64(BytePipe downstream) {
-        this.downstream = downstream;
+    private Base64() {
+        puller = new Puller();
+        pusher = new Pusher();
     }
 
     @Override
-    protected int pullByte() {
-        if (puller == null) {
-            puller = new Puller();
-        }
-        return puller.pull(downstream);
+    public Puller join(Pullable upstream) {
+        return puller.join(upstream);
+    }
+
+    @Override
+    public Pusher join(Pushable downstream) {
+        return pusher.join(downstream);
+    }
+
+    @Override
+    public int pull() {
+        return puller.pull();
     }
 
     @Override
     public int push(int ch) {
-        if (pusher == null) {
-            pusher = new Pusher();
+        if (ch >= 0) {
+            return pusher.push(ch);
+        } else if (ch == -1) {
+            return pusher.flush();
         }
-        if (ch == -1) {
-            pusher.pushEnd(downstream);
-        }
-        return super.push(ch);
-    }
-
-    @Override
-    protected int pushByte(int aByte) {
-        assert aByte >= 0 && aByte <= 0xFF;
-
-        return pusher.push(aByte, downstream);
+        throw new ParsingException();
     }
 }

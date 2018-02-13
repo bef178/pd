@@ -1,6 +1,7 @@
 package libcliff.io.codec;
 
-import libcliff.io.BytePipe;
+import libcliff.io.BytePullStream;
+import libcliff.io.BytePushStream;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
 
@@ -9,7 +10,7 @@ import libcliff.io.Pushable;
  * <br/>
  * byte 0x65 => byte[] { '6', '5' } under all conditions
  */
-public class Hexari extends BytePipe {
+public class Hexari implements BytePullStream, BytePushStream {
 
     private static final byte[] HEX_DIGIT_TO_LITERAL = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -50,21 +51,7 @@ public class Hexari extends BytePipe {
     }
 
     public static int fromHexariBytes(Pullable pullable) {
-        return (fromHexariByte(pullable.pull()) << 4)
-                | fromHexariByte(pullable.pull());
-    }
-
-    public static BytePipe pipe(BytePipe pipe) {
-        return new Hexari().setDownstream((Pullable) pipe)
-                .setDownstream((Pushable) pipe);
-    }
-
-    public static Pullable pipe(Pullable pipe) {
-        return new Hexari().setDownstream(pipe);
-    }
-
-    public static Pushable pipe(Pushable pipe) {
-        return new Hexari().setDownstream(pipe);
+        return (fromHexariByte(pullable.pull()) << 4) | fromHexariByte(pullable.pull());
     }
 
     /**
@@ -72,34 +59,35 @@ public class Hexari extends BytePipe {
      * return pushed bytes size
      */
     public static int toHexariBytes(int aByte, Pushable pushable) {
-        aByte = aByte & 0xFF;
         int size = 0;
         size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
         size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte & 0x0F]);
         return size;
     }
 
-    private Pullable downstreamPullable = null;
+    private Pullable upstream = null;
 
-    private Pushable downstreamPushable = null;
-
-    @Override
-    protected int pullByte() {
-        return fromHexariBytes(downstreamPullable);
-    }
+    private Pushable downstream = null;
 
     @Override
-    protected int pushByte(int aByte) {
-        return toHexariBytes(aByte, downstreamPushable);
-    }
-
-    public Hexari setDownstream(Pullable pullable) {
-        downstreamPullable = pullable;
+    public Hexari join(Pullable upstream) {
+        this.upstream = upstream;
         return this;
     }
 
-    public Hexari setDownstream(Pushable pushable) {
-        downstreamPushable = pushable;
+    @Override
+    public Hexari join(Pushable downstream) {
+        this.downstream = downstream;
         return this;
+    }
+
+    @Override
+    public int pull() {
+        return fromHexariBytes(upstream);
+    }
+
+    @Override
+    public int push(int aByte) {
+        return toHexariBytes(aByte, downstream);
     }
 }

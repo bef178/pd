@@ -1,13 +1,14 @@
 package libcliff.io.codec;
 
+import libcliff.io.PullStream;
 import libcliff.io.Pullable;
+import libcliff.io.PushStream;
 import libcliff.io.Pushable;
-import libcliff.io.Pipe;
 
 /**
  * ch => utf8 byte[]
  */
-public class Utf8 implements Pipe {
+public class Utf8 implements PullStream, PushStream {
 
     public static int fromUtf8Bytes(Pullable pullable) {
         int firstByte = pullable.pull() & 0xFF;
@@ -24,14 +25,6 @@ public class Utf8 implements Pipe {
             }
             return ch;
         }
-    }
-
-    public static Pullable pullable(Pullable pullable) {
-        return new Utf8().setPullable(pullable);
-    }
-
-    public static Pushable pushable(Pushable pushable) {
-        return new Utf8().setPushable(pushable);
     }
 
     /**
@@ -105,31 +98,29 @@ public class Utf8 implements Pipe {
         return -1;
     }
 
-    private Pullable downstreamPullable = null;
+    private Pullable upstream = null;
 
-    private Pushable downstreamPushable = null;
+    private Pushable downstream = null;
 
-    private Utf8() {
-        // dummy
+    @Override
+    public Utf8 join(Pullable pullable) {
+        upstream = pullable;
+        return this;
+    }
+
+    @Override
+    public Utf8 join(Pushable pushable) {
+        downstream = pushable;
+        return this;
     }
 
     @Override
     public int pull() {
-        return fromUtf8Bytes(downstreamPullable);
+        return fromUtf8Bytes(upstream);
     }
 
     @Override
     public int push(int ch) {
-        return toUtf8Bytes(ch, downstreamPushable);
-    }
-
-    public Utf8 setPullable(Pullable pullable) {
-        downstreamPullable = pullable;
-        return this;
-    }
-
-    public Utf8 setPushable(Pushable pushable) {
-        downstreamPushable = pushable;
-        return this;
+        return toUtf8Bytes(ch, downstream);
     }
 }

@@ -22,7 +22,7 @@ java: $(OUT_TARGET)
 $(OUT_TARGET): $(SRC_FILES)
 	@echo "compiling ..."
 	@-mkdir -p $(OUT_OBJ)
-	@javac -source 1.7 -target 1.7 $(SRC_FILES) \
+	@javac -source 1.8 -target 1.8 $(SRC_FILES) \
 		-classpath $(LIB)/junit.jar \
 		-d $(OUT_OBJ)
 	@echo "packaging ..."
