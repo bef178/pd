@@ -38,7 +38,7 @@ class Csv {
                         case COMMA:
                             state = State.IDLE;
                             target.add(record.getBytes());
-                            record.rewind();
+                            record.wipe();
                             break;
                         case QUOTE:
                         case SINGLE_QUOTE:
@@ -59,7 +59,7 @@ class Csv {
                         if (ch == delimiter) {
                             state = State.REC_END;
                             target.add(record.getBytes());
-                            record.rewind();
+                            record.wipe();
                             delimiter = -1;
                         } else {
                             Utf8.toUtf8Bytes(ch, record);
@@ -70,7 +70,7 @@ class Csv {
                             case COMMA:
                                 state = State.IDLE;
                                 target.add(record.getBytes());
-                                record.rewind();
+                                record.wipe();
                                 break;
                             default:
                                 Utf8.toUtf8Bytes(ch, record);

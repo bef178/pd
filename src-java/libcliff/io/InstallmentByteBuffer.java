@@ -1,57 +1,35 @@
 package libcliff.io;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * some thing of smart array & queue & installment savings
+ * a byte buffer with installment savings
  */
-public class InstallmentByteBuffer implements Pullable, Pushable {
+public class InstallmentByteBuffer implements Pushable {
 
     /**
      * not a java.io.Reader<br/>
      */
-    public class Reader implements Nextable, Pullable {
+    public class Reader implements Pullable {
 
         private int next = 0;
 
-        @Override
         public boolean hasNext() {
             return next >= 0 && next < size();
         }
 
-        @Override
-        public int next() {
-            return get(next++) & 0xFF;
-        }
-
-        /**
-         * For reading, get the cursor's offset.
-         */
-        public int offset() {
-            return next;
-        }
-
-        @Override
         public int peek() {
             return get(next) & 0xFF;
         }
 
         @Override
         public int pull() {
-            return next();
+            return get(next++) & 0xFF;
         }
 
         public void putBack() {
             seek(used - 1);
-        }
-
-        /**
-         * Rewind for reading.
-         */
-        public void rewind() {
-            seek(0);
         }
 
         public void seek(int pos) {
@@ -62,7 +40,7 @@ public class InstallmentByteBuffer implements Pullable, Pushable {
             throw new IndexOutOfBoundsException();
         }
 
-        public void seek(int offset, int whence) {
+        public void seek(int whence, int offset) {
             switch (whence) {
                 case SEEK_SET:
                     whence = 0;
@@ -96,8 +74,6 @@ public class InstallmentByteBuffer implements Pullable, Pushable {
 
     private int used = 0;
 
-    private Reader reader = null;
-
     public InstallmentByteBuffer() {
         this(INSTALLMENT_BYTES);
     }
@@ -128,18 +104,6 @@ public class InstallmentByteBuffer implements Pullable, Pushable {
         System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
                 0, array, i, used - i);
         return array;
-    }
-
-    public boolean isEmpty() {
-        return used == 0;
-    }
-
-    @Override
-    public int pull() {
-        if (reader == null) {
-            reader = new Reader();
-        }
-        return reader.next();
     }
 
     public InstallmentByteBuffer push(byte[] a) {
@@ -196,18 +160,6 @@ public class InstallmentByteBuffer implements Pullable, Pushable {
         return new Reader();
     }
 
-    public void rewind() {
-        seek(0);
-    }
-
-    public boolean seek(int pos) {
-        if (pos >= 0 && pos < used) {
-            used = pos;
-            return true;
-        }
-        throw new IndexOutOfBoundsException();
-    }
-
     private void setupCapacity(int newLength) {
         if (savings == null) {
             savings = new ArrayList<>();
@@ -229,11 +181,7 @@ public class InstallmentByteBuffer implements Pullable, Pushable {
 
     @Override
     public String toString() {
-        try {
-            return new String(getBytes(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new Error("Not support utf8");
-        }
+        return new String(getBytes());
     }
 
     /**
