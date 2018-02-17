@@ -31,8 +31,7 @@ public class Escaped implements PullStream, PushStream {
                 case 'b':
                     return '\b';
                 case 'u':
-                    return PullStream.join(pullable, new Hexari(), new Utf8())
-                            .pull();
+                    return PullStream.pull(new Utf8(), new Hexari(), pullable);
                 default:
                     return ch;
             }
@@ -50,8 +49,7 @@ public class Escaped implements PullStream, PushStream {
         int size = 0;
         size += pushable.push('\\');
         size += pushable.push('u');
-        return size + PushStream.join(pushable, new Hexari(), new Utf8())
-                .push(ch);
+        return size + PushStream.push(ch, new Utf8(), new Hexari(), pushable);
     }
 
     private Pullable upstream = null;

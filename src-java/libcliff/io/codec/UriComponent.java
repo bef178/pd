@@ -45,12 +45,12 @@ public class UriComponent implements PullStream, PushStream {
     }
 
     public static int decode(Pullable upstream) {
-        return PullStream.join(upstream, new UriByte(), new Utf8()).pull();
+        return PullStream.pull(new Utf8(), new UriByte(), upstream);
     }
 
     public static int encode(int ch, Pushable pushable) {
         if (requiresEncode(ch)) {
-            return PushStream.join(pushable, new UriByte(), new Utf8()).push(ch);
+            return PushStream.push(ch, new Utf8(), new UriByte(), pushable);
         } else {
             return pushable.push(ch & 0xFF);
         }

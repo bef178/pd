@@ -3,24 +3,33 @@ package libcliff.io;
 public interface PullStream extends Pullable {
 
     /**
-     * return the last of the streams as the opening end of the pipe
+     * return the opening end of the pipe<br/>
+     * <br/>
+     * Not perfect design. The Ideal would be:<br/>
+     * PullStream join(PullStream... streams, Pullable src)<br/>
+     * which would never work in java.
      */
-    public static PullStream join(Pullable src, PullStream... streams) {
+    public static PullStream join(Pullable... streams) {
         assert streams != null && streams.length > 0;
-        for (int i = 0; i < streams.length; ++i) {
-            src = streams[i].join(src);
+        Pullable src = streams[streams.length - 1];
+        for (int i = streams.length - 2; i >= 0; --i) {
+            src = ((PullStream) streams[i]).join(src);
         }
-        return streams[streams.length - 1];
+        return (PullStream) src;
     }
+
+    public static int pull(Pullable... streams) {
+        return join(streams).pull();
+    }
+
+    /**
+     * return this stream
+     */
+    public PullStream join(Pullable upstream);
 
     /**
      * return ch as an Unicode character in [0, 0x10FFFF] or -1 iff reaches the end
      */
     @Override
     public int pull();
-
-    /**
-     * return this stream
-     */
-    public PullStream join(Pullable upstream);
 }
