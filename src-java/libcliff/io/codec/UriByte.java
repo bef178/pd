@@ -11,7 +11,7 @@ import libcliff.io.Pushable;
 class UriByte implements BytePullStream, BytePushStream {
 
     public static int fromBytes(Pullable pullable) {
-        int aByte = pullable.pull();
+        int aByte = CheckedByte.checkByte(pullable.pull());
         if (aByte == '%') {
             return Hexari.fromHexariBytes(pullable);
         } else {
@@ -20,9 +20,10 @@ class UriByte implements BytePullStream, BytePushStream {
     }
 
     public static int toBytes(int aByte, Pushable pushable) {
+        CheckedByte.checkByte(aByte);
         int size = 0;
         size += pushable.push('%');
-        size += Hexari.toHexariBytes(aByte & 0xFF, pushable);
+        size += Hexari.toHexariBytes(aByte, pushable);
         return size;
     }
 

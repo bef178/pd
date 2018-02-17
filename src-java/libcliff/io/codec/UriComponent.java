@@ -49,17 +49,11 @@ public class UriComponent implements PullStream, PushStream {
     }
 
     public static int encode(int ch, Pushable pushable) {
-        if (requiresEncode(ch)) {
-            return PushStream.push(ch, new Utf8(), new UriByte(), pushable);
+        if (ch >= 0 && ch <= 0xFF && SHOULD_NOT_ENCODE.get(ch)) {
+            return pushable.push(ch);
         } else {
-            return pushable.push(ch & 0xFF);
+            return PushStream.push(ch, new Utf8(), new UriByte(), pushable);
         }
-    }
-
-    private static boolean requiresEncode(int ch) {
-        return ch >= 0 && ch < SHOULD_NOT_ENCODE.size()
-                ? !SHOULD_NOT_ENCODE.get(ch)
-                : true;
     }
 
     private Pullable upstream = null;

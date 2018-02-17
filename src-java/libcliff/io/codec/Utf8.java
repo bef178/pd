@@ -11,7 +11,7 @@ import libcliff.io.Pushable;
 public class Utf8 implements PullStream, PushStream {
 
     public static int fromUtf8Bytes(Pullable pullable) {
-        int firstByte = pullable.pull() & 0xFF;
+        int firstByte = CheckedByte.checkByteEx(pullable.pull());
         int n = utf8LengthByFirstByte(firstByte);
         if (n < 0) {
             throw new ParsingException();
@@ -81,7 +81,7 @@ public class Utf8 implements PullStream, PushStream {
     }
 
     private static int utf8LengthByFirstByte(int i) {
-        i = i & 0xFF;
+        CheckedByte.checkByte(i);
         if ((i & 0x80) == 0) {
             return 1;
         } else if ((i & 0x20) == 0) {

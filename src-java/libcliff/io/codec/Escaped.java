@@ -10,9 +10,10 @@ import libcliff.io.Pushable;
  */
 public class Escaped implements PullStream, PushStream {
 
-    public static int fromEscaped(int first, Pullable pullable) {
-        if (first == '\\') {
-            int ch = pullable.pull() & 0xFF;
+    public static int fromEscaped(int firstByte, Pullable pullable) {
+        CheckedByte.checkByteEx(firstByte);
+        if (firstByte == '\\') {
+            int ch = CheckedByte.checkByteEx(pullable.pull());
             switch (ch) {
                 case '\\':
                     return '\\';
@@ -36,13 +37,13 @@ public class Escaped implements PullStream, PushStream {
                     return ch;
             }
         } else {
-            return first;
+            return firstByte;
         }
     }
 
     public static int fromEscaped(Pullable pullable) {
-        int first = pullable.pull() & 0xFF;
-        return fromEscaped(first, pullable);
+        int firstByte = CheckedByte.checkByteEx(pullable.pull());
+        return fromEscaped(firstByte, pullable);
     }
 
     public static int toEscaped(int ch, Pushable pushable) {

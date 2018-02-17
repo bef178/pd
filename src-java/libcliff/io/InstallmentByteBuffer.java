@@ -3,6 +3,8 @@ package libcliff.io;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import libcliff.io.codec.CheckedByte;
+
 /**
  * a byte buffer with installment savings
  */
@@ -143,8 +145,9 @@ public class InstallmentByteBuffer implements Pushable {
 
     @Override
     public int push(int aByte) {
+        CheckedByte.checkByte(aByte);
         setupCapacity(used + 1);
-        put(used++, (byte) (aByte & 0xFF));
+        put(used++, (byte) aByte);
         return 1;
     }
 

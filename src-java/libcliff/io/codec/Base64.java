@@ -22,6 +22,9 @@ public class Base64 implements BytePullStream, BytePushStream {
 
         private boolean ends = false;
 
+        /**
+         * accept byte pullable
+         */
         private Pullable upstream = null;
 
         private void fromBase64Bytes(int[] base64, int[] dst) {
@@ -33,11 +36,11 @@ public class Base64 implements BytePullStream, BytePushStream {
         private int getBase64Bytes(Pullable pullable, int[] base64) {
             assert base64 != null && base64.length >= 4;
             for (int i = 0; i < 4; ++i) {
-                int j = pullable.pull();
-                if (j == -1) {
+                int aByte = CheckedByte.checkByteEx(pullable.pull());
+                if (aByte == -1) {
                     return i;
                 }
-                base64[i] = DECODE_MAP[j & 0xFF];
+                base64[i] = DECODE_MAP[aByte];
             }
             return 4;
         }
@@ -100,10 +103,14 @@ public class Base64 implements BytePullStream, BytePushStream {
 
         @Override
         public int push(int aByte) {
+            CheckedByte.checkByteEx(aByte);
             if (ends) {
                 return -1;
             }
-            parsed[pIndex++] = aByte & 0xFF;
+            if (aByte == -1) {
+                return flush();
+            }
+            parsed[pIndex++] = aByte;
             if (pIndex == 3) {
                 pIndex = 0;
                 return toBase64Bytes(parsed, 0, 3, downstream);
@@ -125,8 +132,7 @@ public class Base64 implements BytePullStream, BytePushStream {
             return size;
         }
 
-        private int toBase64Bytes(int[] a, int i, int j,
-                Pushable pushable) {
+        private int toBase64Bytes(int[] a, int i, int j, Pushable pushable) {
             switch (j - i) {
                 case 0:
                     return 0;
@@ -177,7 +183,7 @@ public class Base64 implements BytePullStream, BytePushStream {
 
     private Pusher pusher = null;
 
-    private Base64() {
+    public Base64() {
         puller = new Puller();
         pusher = new Pusher();
     }
@@ -198,12 +204,7 @@ public class Base64 implements BytePullStream, BytePushStream {
     }
 
     @Override
-    public int push(int ch) {
-        if (ch >= 0) {
-            return pusher.push(ch);
-        } else if (ch == -1) {
-            return pusher.flush();
-        }
-        throw new ParsingException();
+    public int push(int aByte) {
+        return pusher.push(aByte);
     }
 }

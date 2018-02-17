@@ -51,7 +51,8 @@ public class Hexari implements BytePullStream, BytePushStream {
     }
 
     public static int fromHexariBytes(Pullable pullable) {
-        return (fromHexariByte(pullable.pull()) << 4) | fromHexariByte(pullable.pull());
+        return (fromHexariByte(CheckedByte.checkByte(pullable.pull())) << 4)
+                | fromHexariByte(CheckedByte.checkByte(pullable.pull()));
     }
 
     /**
@@ -59,6 +60,7 @@ public class Hexari implements BytePullStream, BytePushStream {
      * return pushed bytes size
      */
     public static int toHexariBytes(int aByte, Pushable pushable) {
+        CheckedByte.checkByte(aByte);
         int size = 0;
         size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
         size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte & 0x0F]);

@@ -13,7 +13,7 @@ public class Ucs4 implements PullStream, PushStream {
     public static int fromUcs4Bytes(Pullable upstream) {
         int ch = 0;
         for (int i = 0; i < 4; ++i) {
-            ch = (ch << 8) | (upstream.pull() & 0xFF);
+            ch = (ch << 8) | (CheckedByte.checkByte(upstream.pull()));
         }
         return ch;
     }
