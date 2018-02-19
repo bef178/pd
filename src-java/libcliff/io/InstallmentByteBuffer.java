@@ -22,12 +22,18 @@ public class InstallmentByteBuffer implements Pushable {
         }
 
         public int peek() {
-            return get(next) & 0xFF;
+            if (hasNext()) {
+                return get(next) & 0xFF;
+            }
+            return -1;
         }
 
         @Override
         public int pull() {
-            return get(next++) & 0xFF;
+            if (hasNext()) {
+                return get(next++) & 0xFF;
+            }
+            return -1;
         }
 
         public void putBack() {

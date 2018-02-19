@@ -9,7 +9,7 @@ import libcliff.io.Pullable;
 /**
  * a,"b",'c' => [a,b,c]
  */
-class Csv {
+public class Csv {
 
     private enum State {
         IDLE, REC_WIP, REC_END
