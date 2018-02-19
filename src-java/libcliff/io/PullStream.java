@@ -28,7 +28,7 @@ public interface PullStream extends Pullable {
     public PullStream join(Pullable upstream);
 
     /**
-     * return ch as an Unicode character in [0, 0x10FFFF] or -1 iff reaches the end
+     * return ch as in [0, 0x10FFFF] or -1 iff reaches the end
      */
     @Override
     public int pull();

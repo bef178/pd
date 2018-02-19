@@ -1,14 +1,14 @@
 package libcliff.io.codec;
 
-import libcliff.io.BytePullStream;
-import libcliff.io.BytePushStream;
+import libcliff.io.PullStream;
 import libcliff.io.Pullable;
+import libcliff.io.PushStream;
 import libcliff.io.Pushable;
 
 /**
  * byte 0x65 => byte[] { '%', '6', '5' } under all conditions
  */
-class UriByte implements BytePullStream, BytePushStream {
+public class UriByte implements PullStream, PushStream {
 
     public static int fromBytes(Pullable pullable) {
         int aByte = CheckedByte.checkByte(pullable.pull());

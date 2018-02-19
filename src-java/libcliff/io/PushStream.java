@@ -19,7 +19,7 @@ public interface PushStream extends Pushable {
     }
 
     /**
-     * accept ch as an Unicode character in [0, 0x10FFFF] or -1 for certain implication<br/>
+     * accept ch as in [0, 0x10FFFF] or -1 for certain implication<br/>
      * <br/>
      * return the number of bytes finally pushed
      */
