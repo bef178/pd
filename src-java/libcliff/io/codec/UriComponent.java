@@ -2,15 +2,15 @@ package libcliff.io.codec;
 
 import java.util.BitSet;
 
-import libcliff.io.PullStream;
 import libcliff.io.Pullable;
-import libcliff.io.PushStream;
+import libcliff.io.PullablePipe;
 import libcliff.io.Pushable;
+import libcliff.io.PushablePipe;
 
 /**
  * ch => byte[]
  */
-public class UriComponent implements PullStream, PushStream {
+public class UriComponent implements PullablePipe, PushablePipe {
 
     private static final BitSet SHOULD_NOT_ENCODE;
 
@@ -45,14 +45,14 @@ public class UriComponent implements PullStream, PushStream {
     }
 
     public static int decode(Pullable upstream) {
-        return PullStream.pull(new Utf8(), new UriByte(), upstream);
+        return PullablePipe.pull(new Utf8(), new UriByte(), upstream);
     }
 
     public static int encode(int ch, Pushable pushable) {
         if (ch >= 0 && ch <= 0xFF && SHOULD_NOT_ENCODE.get(ch)) {
             return pushable.push(ch);
         } else {
-            return PushStream.push(ch, new Utf8(), new UriByte(), pushable);
+            return PushablePipe.push(ch, new Utf8(), new UriByte(), pushable);
         }
     }
 
@@ -71,13 +71,13 @@ public class UriComponent implements PullStream, PushStream {
     }
 
     @Override
-    public PushStream join(Pushable downstream) {
+    public PushablePipe join(Pushable downstream) {
         this.downstream = downstream;
         return this;
     }
 
     @Override
-    public PullStream join(Pullable upstream) {
+    public PullablePipe join(Pullable upstream) {
         this.upstream = upstream;
         return this;
     }

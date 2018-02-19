@@ -2,17 +2,17 @@ package libcliff.io.codec;
 
 import java.util.Arrays;
 
-import libcliff.io.PullStream;
 import libcliff.io.Pullable;
-import libcliff.io.PushStream;
+import libcliff.io.PullablePipe;
 import libcliff.io.Pushable;
+import libcliff.io.PushablePipe;
 
 /**
  * byte[3] => byte[4]
  */
-public class Base64 implements PullStream, PushStream {
+public class Base64 implements PullablePipe, PushablePipe {
 
-    private class Puller implements PullStream {
+    private class Puller implements PullablePipe {
 
         private int[] base64 = null;
 
@@ -80,7 +80,7 @@ public class Base64 implements PullStream, PushStream {
         }
     }
 
-    private class Pusher implements PushStream {
+    private class Pusher implements PushablePipe {
 
         private int[] parsed = new int[3];
 

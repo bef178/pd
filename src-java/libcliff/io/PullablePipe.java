@@ -1,6 +1,6 @@
 package libcliff.io;
 
-public interface PullStream extends Pullable {
+public interface PullablePipe extends Pullable {
 
     /**
      * return the opening end of the pipe<br/>
@@ -9,13 +9,13 @@ public interface PullStream extends Pullable {
      * PullStream join(PullStream... streams, Pullable src)<br/>
      * which would never work in java.
      */
-    public static PullStream join(Pullable... streams) {
+    public static PullablePipe join(Pullable... streams) {
         assert streams != null && streams.length > 0;
         Pullable src = streams[streams.length - 1];
         for (int i = streams.length - 2; i >= 0; --i) {
-            src = ((PullStream) streams[i]).join(src);
+            src = ((PullablePipe) streams[i]).join(src);
         }
-        return (PullStream) src;
+        return (PullablePipe) src;
     }
 
     public static int pull(Pullable... streams) {
@@ -25,7 +25,7 @@ public interface PullStream extends Pullable {
     /**
      * return this stream
      */
-    public PullStream join(Pullable upstream);
+    public PullablePipe join(Pullable upstream);
 
     /**
      * return ch as in [0, 0x10FFFF] or -1 iff reaches the end

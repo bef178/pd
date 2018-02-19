@@ -1,14 +1,14 @@
 package libcliff.io.codec;
 
-import libcliff.io.PullStream;
 import libcliff.io.Pullable;
-import libcliff.io.PushStream;
+import libcliff.io.PullablePipe;
 import libcliff.io.Pushable;
+import libcliff.io.PushablePipe;
 
 /**
  * ch => utf8 byte[]
  */
-public class Escaped implements PullStream, PushStream {
+public class Escaped implements PullablePipe, PushablePipe {
 
     public static int fromEscaped(int firstByte, Pullable pullable) {
         CheckedByte.checkByteEx(firstByte);
@@ -32,7 +32,7 @@ public class Escaped implements PullStream, PushStream {
                 case 'b':
                     return '\b';
                 case 'u':
-                    return PullStream.pull(new Utf8(), new Hexari(), pullable);
+                    return PullablePipe.pull(new Utf8(), new Hexari(), pullable);
                 default:
                     return ch;
             }
@@ -50,7 +50,7 @@ public class Escaped implements PullStream, PushStream {
         int size = 0;
         size += pushable.push('\\');
         size += pushable.push('u');
-        return size + PushStream.push(ch, new Utf8(), new Hexari(), pushable);
+        return size + PushablePipe.push(ch, new Utf8(), new Hexari(), pushable);
     }
 
     private Pullable upstream = null;

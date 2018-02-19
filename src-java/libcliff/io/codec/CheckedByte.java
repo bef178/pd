@@ -3,7 +3,7 @@ package libcliff.io.codec;
 /**
  * byte => byte<br/>
  * <br/>
- * Could be a stream<br/>
+ * Could be a pipe<br/>
  */
 public class CheckedByte {
 

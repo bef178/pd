@@ -1,16 +1,16 @@
 package libcliff.io.codec;
 
-import libcliff.io.PullStream;
 import libcliff.io.Pullable;
-import libcliff.io.PushStream;
+import libcliff.io.PullablePipe;
 import libcliff.io.Pushable;
+import libcliff.io.PushablePipe;
 
 /**
  * A HexariByte is ASCII presentation of a hex digit, like '9', 'A' or 'e'<br/>
  * <br/>
  * byte 0x65 => byte[] { '6', '5' } under all conditions
  */
-public class Hexari implements PullStream, PushStream {
+public class Hexari implements PullablePipe, PushablePipe {
 
     private static final byte[] HEX_DIGIT_TO_LITERAL = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',

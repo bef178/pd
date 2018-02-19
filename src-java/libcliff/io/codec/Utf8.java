@@ -1,14 +1,14 @@
 package libcliff.io.codec;
 
-import libcliff.io.PullStream;
 import libcliff.io.Pullable;
-import libcliff.io.PushStream;
+import libcliff.io.PullablePipe;
 import libcliff.io.Pushable;
+import libcliff.io.PushablePipe;
 
 /**
  * ch => utf8 byte[]
  */
-public class Utf8 implements PullStream, PushStream {
+public class Utf8 implements PullablePipe, PushablePipe {
 
     public static int fromUtf8Bytes(Pullable pullable) {
         int firstByte = CheckedByte.checkByteEx(pullable.pull());

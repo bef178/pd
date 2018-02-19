@@ -1,17 +1,17 @@
 package libcliff.io;
 
-public interface PushStream extends Pushable {
+public interface PushablePipe extends Pushable {
 
     /**
      * return the opening end of the pipe<br/>
      */
-    public static PushStream join(Pushable... streams) {
+    public static PushablePipe join(Pushable... streams) {
         assert streams != null && streams.length > 0;
         Pushable dst = streams[streams.length - 1];
         for (int i = streams.length - 2; i >= 0; --i) {
-            dst = ((PushStream) streams[i]).join(dst);
+            dst = ((PushablePipe) streams[i]).join(dst);
         }
-        return (PushStream) dst;
+        return (PushablePipe) dst;
     }
 
     public static int push(int ch, Pushable... streams) {
@@ -29,5 +29,5 @@ public interface PushStream extends Pushable {
     /**
      * return this stream
      */
-    public PushStream join(Pushable downstream);
+    public PushablePipe join(Pushable downstream);
 }

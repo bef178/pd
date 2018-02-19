@@ -1,14 +1,14 @@
 package libcliff.io.codec;
 
-import libcliff.io.PullStream;
 import libcliff.io.Pullable;
-import libcliff.io.PushStream;
+import libcliff.io.PullablePipe;
 import libcliff.io.Pushable;
+import libcliff.io.PushablePipe;
 
 /**
  * ch  => byte[4]
  */
-public class Ucs4 implements PullStream, PushStream {
+public class Ucs4 implements PullablePipe, PushablePipe {
 
     public static int fromUcs4Bytes(Pullable upstream) {
         int ch = 0;
