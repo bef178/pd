@@ -86,12 +86,9 @@ public class Base64 implements PullablePipe, PushablePipe {
 
         private int pIndex = 3;
 
-        private boolean ends = false;
-
         private Pushable downstream = null;
 
         public int flush() {
-            ends = true;
             return toBase64Bytes(parsed, 0, pIndex, downstream);
         }
 
@@ -102,15 +99,12 @@ public class Base64 implements PullablePipe, PushablePipe {
         }
 
         @Override
-        public int push(int aByte) {
-            CheckedByte.checkByteEx(aByte);
-            if (ends) {
-                return -1;
-            }
-            if (aByte == -1) {
+        public int push(final int ch) {
+            CheckedByte.checkByteEx(ch);
+            if (ch == -1) {
                 return flush();
             }
-            parsed[pIndex++] = aByte;
+            parsed[pIndex++] = ch;
             if (pIndex == 3) {
                 pIndex = 0;
                 return toBase64Bytes(parsed, 0, 3, downstream);
@@ -157,12 +151,12 @@ public class Base64 implements PullablePipe, PushablePipe {
         }
     }
 
-    private static final char[] ENCODE_MAP;
+    private static final int[] ENCODE_MAP;
 
-    private static final char[] DECODE_MAP;
+    private static final int[] DECODE_MAP;
 
     static {
-        ENCODE_MAP = new char[] {
+        ENCODE_MAP = new int[] {
                 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
                 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
                 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
@@ -172,9 +166,9 @@ public class Base64 implements PullablePipe, PushablePipe {
                 '8', '9', '+', '/'
         };
 
-        DECODE_MAP = new char[127];
+        DECODE_MAP = new int[127];
         Arrays.fill(DECODE_MAP, (char) -1);
-        for (char i = 0; i < ENCODE_MAP.length; ++i) {
+        for (int i = 0; i < ENCODE_MAP.length; ++i) {
             DECODE_MAP[ENCODE_MAP[i]] = i;
         }
     }

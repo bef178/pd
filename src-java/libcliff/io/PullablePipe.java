@@ -9,17 +9,15 @@ public interface PullablePipe extends Pullable {
      * PullStream join(PullStream... streams, Pullable src)<br/>
      * which would never work in java.
      */
-    public static PullablePipe join(Pullable... streams) {
-        assert streams != null && streams.length > 0;
-        Pullable src = streams[streams.length - 1];
-        for (int i = streams.length - 2; i >= 0; --i) {
-            src = ((PullablePipe) streams[i]).join(src);
+    public static PullablePipe join(PullablePipe pipe, Pullable... streams) {
+        if (streams.length > 0) {
+            Pullable src = streams[streams.length - 1];
+            for (int i = streams.length - 2; i >= 0; --i) {
+                src = ((PullablePipe) streams[i]).join(src);
+            }
+            pipe.join(src);
         }
-        return (PullablePipe) src;
-    }
-
-    public static int pull(Pullable... streams) {
-        return join(streams).pull();
+        return pipe;
     }
 
     /**

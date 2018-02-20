@@ -32,7 +32,7 @@ public class Escaped implements PullablePipe, PushablePipe {
                 case 'b':
                     return '\b';
                 case 'u':
-                    return PullablePipe.pull(new Utf8(), new Hexari(), pullable);
+                    return PullablePipe.join(new Utf8(), new Hexari(), pullable).pull();
                 default:
                     return ch;
             }
@@ -50,7 +50,7 @@ public class Escaped implements PullablePipe, PushablePipe {
         int size = 0;
         size += pushable.push('\\');
         size += pushable.push('u');
-        return size + PushablePipe.push(ch, new Utf8(), new Hexari(), pushable);
+        return size + PushablePipe.join(new Utf8(), new Hexari(), pushable).push(ch);
     }
 
     private Pullable upstream = null;

@@ -10,12 +10,12 @@ import libcliff.io.PushablePipe;
 /**
  * ch => byte[]
  */
-public class UriComponent implements PullablePipe, PushablePipe {
+public class UriComponent extends DualPipe {
 
     private static final BitSet SHOULD_NOT_ENCODE;
 
     static {
-        SHOULD_NOT_ENCODE = new BitSet(256);
+        SHOULD_NOT_ENCODE = new BitSet(0x7F); // initially false
 
         // rfc3986 2.3 Unreserved Characters
         for (int i = 'A'; i <= 'Z'; ++i) {
@@ -44,41 +44,40 @@ public class UriComponent implements PullablePipe, PushablePipe {
         }
     }
 
-    public static int decode(Pullable upstream) {
-        return PullablePipe.pull(new Utf8(), new UriByte(), upstream);
-    }
-
-    public static int encode(int ch, Pushable pushable) {
-        if (ch >= 0 && ch <= 0xFF && SHOULD_NOT_ENCODE.get(ch)) {
-            return pushable.push(ch);
-        } else {
-            return PushablePipe.push(ch, new Utf8(), new UriByte(), pushable);
-        }
-    }
-
-    private Pullable upstream = null;
-
-    private Pushable downstream = null;
-
     @Override
-    public int pull() {
-        return decode(upstream);
-    }
+    public UriComponent join(final Pullable upstream) {
+        super.join(PullablePipe.join(new Utf8(), new Pullable() {
 
-    @Override
-    public int push(int ch) {
-        return encode(ch, downstream);
-    }
-
-    @Override
-    public PushablePipe join(Pushable downstream) {
-        this.downstream = downstream;
+            @Override
+            public int pull() {
+                int ch = CheckedByte.checkByte(upstream.pull());
+                if (ch == '%') {
+                    return Hexari.fromHexariBytes(upstream);
+                } else {
+                    return ch;
+                }
+            }
+        }));
         return this;
     }
 
     @Override
-    public PullablePipe join(Pullable upstream) {
-        this.upstream = upstream;
+    public UriComponent join(final Pushable downstream) {
+        super.join(PushablePipe.join(new Utf8(), new Pushable() {
+
+            @Override
+            public int push(int ch) {
+                ch = CheckedByte.checkByte(ch);
+                if (SHOULD_NOT_ENCODE.get(ch)) {
+                    return downstream.push(ch);
+                } else {
+                    int size = 0;
+                    size += downstream.push('%');
+                    size += Hexari.toHexariBytes(ch, downstream);
+                    return size;
+                }
+            }
+        }));
         return this;
     }
 }

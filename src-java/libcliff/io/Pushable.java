@@ -16,7 +16,7 @@ public interface Pushable {
     }
 
     /**
-     * return the length finally pushed
+     * return the number of "units" pushed into the stream
      */
     public int push(int ch);
 }
