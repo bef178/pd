@@ -90,35 +90,11 @@ public class InstallmentByteBuffer implements Pushable {
         setupCapacity(capacity);
     }
 
-    public int capacity() {
-        return savings.size() << INSTALLMENT_BITS;
+    public InstallmentByteBuffer append(byte[] a) {
+        return append(a, 0, a.length);
     }
 
-    private int get(int pos) {
-        return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
-    }
-
-    /**
-     * @return a copy of valid in bounds byte array
-     */
-    public byte[] getBytes() {
-        byte[] array = new byte[used];
-        int i = 0;
-        while (i + INSTALLMENT_BYTES <= used) {
-            System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
-                    0, array, i, INSTALLMENT_BYTES);
-            i += INSTALLMENT_BYTES;
-        }
-        System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
-                0, array, i, used - i);
-        return array;
-    }
-
-    public InstallmentByteBuffer push(byte[] a) {
-        return push(a, 0, a.length);
-    }
-
-    public InstallmentByteBuffer push(byte[] a, int i, int j) {
+    public InstallmentByteBuffer append(byte[] a, int i, int j) {
         int n = j - i;
         setupCapacity(used + n);
 
@@ -149,16 +125,40 @@ public class InstallmentByteBuffer implements Pushable {
         return this;
     }
 
+    public InstallmentByteBuffer append(String s) {
+        return append(s.getBytes());
+    }
+
+    public int capacity() {
+        return savings.size() << INSTALLMENT_BITS;
+    }
+
+    private int get(int pos) {
+        return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
+    }
+
+    /**
+     * @return a copy of valid in bounds byte array
+     */
+    public byte[] getBytes() {
+        byte[] array = new byte[used];
+        int i = 0;
+        while (i + INSTALLMENT_BYTES <= used) {
+            System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
+                    0, array, i, INSTALLMENT_BYTES);
+            i += INSTALLMENT_BYTES;
+        }
+        System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
+                0, array, i, used - i);
+        return array;
+    }
+
     @Override
     public int push(int aByte) {
         CheckedByte.checkByte(aByte);
         setupCapacity(used + 1);
         put(used++, (byte) aByte);
         return 1;
-    }
-
-    public InstallmentByteBuffer push(String s) {
-        return push(s.getBytes());
     }
 
     private void put(int pos, byte b) {
