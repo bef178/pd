@@ -29,9 +29,12 @@ public final class Blob implements Pushable {
         return Arrays.copyOfRange(a, 0, i);
     }
 
+    /**
+     * accept ch mapped into [0,0xFF]
+     */
     @Override
-    public int push(int aByte) {
-        a[i++] = (byte) (aByte & 0xFF);
+    public int push(int ch) {
+        a[i++] = (byte) (ch & 0xFF);
         return 1;
     }
 

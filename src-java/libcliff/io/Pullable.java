@@ -4,6 +4,8 @@ import java.util.PrimitiveIterator.OfInt;
 
 public interface Pullable {
 
+    static final int E_EOF = -1;
+
     public static Pullable wrap(CharSequence cs) {
 
         return new Pullable() {
@@ -20,8 +22,5 @@ public interface Pullable {
         };
     }
 
-    /**
-     * return -1 iff reaches the end
-     */
     public int pull();
 }

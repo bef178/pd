@@ -24,10 +24,4 @@ public interface PullablePipe extends Pullable {
      * return this stream
      */
     public PullablePipe join(Pullable upstream);
-
-    /**
-     * return ch as in [0, 0x10FFFF] or -1 iff reaches the end
-     */
-    @Override
-    public int pull();
 }

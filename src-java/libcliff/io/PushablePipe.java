@@ -20,12 +20,4 @@ public interface PushablePipe extends Pushable {
      * return this stream
      */
     public PushablePipe join(Pushable downstream);
-
-    /**
-     * accept ch as in [0, 0x10FFFF] or -1 for certain implication<br/>
-     * <br/>
-     * {@inheritDoc}
-     */
-    @Override
-    int push(int ch);
 }

@@ -101,7 +101,7 @@ public class Base64 implements PullablePipe, PushablePipe {
         @Override
         public int push(final int ch) {
             CheckedByte.checkByteEx(ch);
-            if (ch == -1) {
+            if (ch == P_FLUSH) {
                 return flush();
             }
             parsed[pIndex++] = ch;
@@ -172,6 +172,8 @@ public class Base64 implements PullablePipe, PushablePipe {
             DECODE_MAP[ENCODE_MAP[i]] = i;
         }
     }
+
+    public static final int P_FLUSH = -1;
 
     private Puller puller = null;
 

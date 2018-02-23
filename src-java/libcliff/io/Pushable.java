@@ -2,6 +2,9 @@ package libcliff.io;
 
 public interface Pushable {
 
+    static final int E_EOF = Pullable.E_EOF;
+    static final int E_ARG = -2;
+
     public static Pushable wrap(final StringBuilder sb) {
 
         return new Pushable() {
@@ -15,8 +18,5 @@ public interface Pushable {
         };
     }
 
-    /**
-     * return the number of "units" pushed into the stream
-     */
     public int push(int ch);
 }
