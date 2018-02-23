@@ -73,7 +73,7 @@ public class JsonParser {
     private static JsonObject parseObject(int ch, Pullable it,
             JsonFactory factory) {
         if (ch != '{') {
-            throw new ParsingException("{", ch);
+            throw new ParsingException('{', ch);
         }
 
         JsonObject o = factory.createJsonObject();
@@ -154,7 +154,7 @@ public class JsonParser {
     private static JsonVector parseVector(int ch, Pullable it,
             JsonFactory factory) {
         if (ch != '[') {
-            throw new ParsingException("[", ch);
+            throw new ParsingException('[', ch);
         }
 
         JsonVector l = factory.createJsonVector();

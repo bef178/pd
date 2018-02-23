@@ -13,24 +13,22 @@ public class ParsingException extends RuntimeException {
         super();
     }
 
-    public ParsingException(String detail) {
-        this(detail, -1);
+    public ParsingException(int expected, int actual) {
+        this(expected, actual, -1);
     }
 
-    public ParsingException(String detail, int pos) {
-        super(detail);
+    public ParsingException(int expected, int actual, int pos) {
+        this(Character.toChars(expected).toString(),
+                Character.toChars(actual).toString(), pos);
+    }
+
+    public ParsingException(String message) {
+        this(message, -1);
+    }
+
+    private ParsingException(String message, int pos) {
+        super(message);
         this.pos = pos;
-    }
-
-    public ParsingException(int expectedCodePoint, int acturalCodePoint) {
-        this(Character.toChars(expectedCodePoint).toString(),
-                Character.toChars(acturalCodePoint).toString(), -1);
-    }
-
-    public ParsingException(int expectedCodePoint, int acturalCodePoint,
-            int pos) {
-        this(Character.toChars(expectedCodePoint).toString(),
-                Character.toChars(acturalCodePoint).toString(), pos);
     }
 
     public ParsingException(String expected, String actual) {
@@ -38,7 +36,7 @@ public class ParsingException extends RuntimeException {
     }
 
     public ParsingException(String expected, String actual, int pos) {
-        this("Excepted '" + expected + "', got '" + actual + "'", pos);
+        this("Excepted '" + expected + "', actual '" + actual + "'", pos);
     }
 
     @Override
