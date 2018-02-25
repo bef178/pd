@@ -28,15 +28,15 @@ public final class Ctype {
         return getBits(self, bits) != 0;
     }
 
-    public static boolean isAlphabetic(int ch) {
-        return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
-    }
-
     /**
      * [A-Za-z0-9]
      */
-    public static boolean isAlphanum(int ch) {
+    public static boolean isAlnum(int ch) {
         return isAlphabetic(ch) || isDigit(ch);
+    }
+
+    public static boolean isAlphabetic(int ch) {
+        return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
     }
 
     public static boolean isDigit(int ch) {
@@ -55,6 +55,10 @@ public final class Ctype {
         } else {
             return false;
         }
+    }
+
+    public static boolean isGraph(int ch) {
+        return ch >= 0x21 && ch <= 0x7E;
     }
 
     public static boolean isLower(int ch) {

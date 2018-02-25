@@ -1,81 +1,97 @@
 package libcliff.io.codec;
 
+import java.util.Arrays;
+
 import libcliff.io.Pullable;
 import libcliff.io.PullablePipe;
 import libcliff.io.Pushable;
 import libcliff.io.PushablePipe;
+import libcliff.primitive.Ctype;
 
 /**
- * ch => utf8 byte[]
+ * ch => ch
  */
-public class Escaped implements PullablePipe, PushablePipe {
+public class Escaped extends DualPipe {
 
-    public static int fromEscaped(int firstByte, Pullable pullable) {
-        CheckedByte.checkByteEx(firstByte);
-        if (firstByte == '\\') {
-            int ch = CheckedByte.checkByteEx(pullable.pull());
-            switch (ch) {
-                case '\\':
-                    return '\\';
-                case 'a':
-                    return 0x07;
-                case 't':
-                    return 0x09;
-                case 'n':
-                    return 0x0A;
-                case 'v':
-                    return 0x0B;
-                case 'f':
-                    return 0x0C;
-                case 'r':
-                    return 0x0D;
-                case 'b':
-                    return '\b';
-                case 'u':
-                    return PullablePipe.join(new Utf8(), new Hexari(), pullable).pull();
-                default:
-                    return ch;
+    private static final int[] ENCODE_MAP;
+
+    private static final int[] DECODE_MAP;
+
+    static {
+        DECODE_MAP = new int[128];
+        Arrays.fill(DECODE_MAP, -1);
+        DECODE_MAP['\\'] = '\\';
+        DECODE_MAP['a'] = 0x07;
+        DECODE_MAP['t'] = '\t'; // 0x09
+        DECODE_MAP['n'] = '\n'; // 0x0A
+        DECODE_MAP['v'] = 0x0B;
+        DECODE_MAP['f'] = '\f'; // 0x0C
+        DECODE_MAP['r'] = '\r'; // 0x0D
+        DECODE_MAP['b'] = '\b';
+
+        ENCODE_MAP = new int[DECODE_MAP.length];
+        Arrays.fill(ENCODE_MAP, -1);
+        for (int ch = 0; ch < DECODE_MAP.length; ++ch) {
+            if (DECODE_MAP[ch] >= 0) {
+                ENCODE_MAP[DECODE_MAP[ch]] = ch;
             }
-        } else {
-            return firstByte;
         }
     }
 
-    public static int fromEscaped(Pullable pullable) {
-        int firstByte = CheckedByte.checkByteEx(pullable.pull());
-        return fromEscaped(firstByte, pullable);
-    }
+    private Pullable upUstream = null;
 
-    public static int toEscaped(int ch, Pushable pushable) {
-        int size = 0;
-        size += pushable.push('\\');
-        size += pushable.push('u');
-        return size + PushablePipe.join(new Utf8(), new Hexari(), pushable).push(ch);
-    }
-
-    private Pullable upstream = null;
-
-    private Pushable downstream = null;
+    private Pushable downUstream = null;
 
     @Override
-    public int pull() {
-        return fromEscaped(upstream);
-    }
-
-    @Override
-    public int push(int ch) {
-        return toEscaped(ch, downstream);
+    public Escaped join(Pullable upstream) {
+        super.join(upstream);
+        this.upUstream = PullablePipe.join(new Utf8(), new Hexari(),
+                upstream);
+        return this;
     }
 
     @Override
     public Escaped join(Pushable downstream) {
-        this.downstream = downstream;
+        super.join(downstream);
+        this.downUstream = PushablePipe.join(new Utf8(), new Hexari(),
+                downstream);
         return this;
     }
 
     @Override
-    public Escaped join(Pullable upstream) {
-        this.upstream = upstream;
-        return this;
+    public int pull() {
+        int ch = super.pull();
+        if (ch == '\\') {
+            ch = super.pull();
+            if (Ctype.isGraph(ch)) {
+                if (DECODE_MAP[ch] >= 0) {
+                    return DECODE_MAP[ch];
+                }
+                if (ch == 'u') {
+                    return upUstream.pull();
+                }
+            }
+            // unrecognized escaped sequence
+            return ch;
+        } else {
+            return ch;
+        }
+    }
+
+    @Override
+    public int push(int ch) {
+        if (Ctype.isGraph(ch)) {
+            if (ENCODE_MAP[ch] >= 0) {
+                super.push('\\');
+                super.push(ENCODE_MAP[ch]);
+                return 2;
+            } else {
+                super.push(ch);
+                return 1;
+            }
+        }
+        super.push('\\');
+        super.push('u');
+        return 2 + downUstream.push(ch);
     }
 }
