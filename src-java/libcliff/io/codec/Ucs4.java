@@ -6,7 +6,7 @@ import libcliff.io.Pushable;
 import libcliff.io.PushablePipe;
 
 /**
- * ch  => byte[4]
+ * ch => byte[4]
  */
 public class Ucs4 implements PullablePipe, PushablePipe {
 
