@@ -5,15 +5,16 @@ import java.util.Arrays;
 
 import libcliff.io.codec.CheckedByte;
 
-/**
- * a byte buffer with installment savings
- */
 public class InstallmentByteBuffer implements Pushable {
 
     /**
      * not a java.io.Reader<br/>
      */
     public class Reader implements Pullable {
+
+        public static final int SEEK_SET = 0;
+        public static final int SEEK_CUR = 1;
+        public static final int SEEK_END = 2;
 
         private int next = 0;
 
@@ -23,7 +24,7 @@ public class InstallmentByteBuffer implements Pushable {
 
         public int peek() {
             if (hasNext()) {
-                return get(next) & 0xFF;
+                return InstallmentByteBuffer.this.get(next) & 0xFF;
             }
             return -1;
         }
@@ -31,17 +32,17 @@ public class InstallmentByteBuffer implements Pushable {
         @Override
         public int pull() {
             if (hasNext()) {
-                return get(next++) & 0xFF;
+                return InstallmentByteBuffer.this.get(next++) & 0xFF;
             }
             return -1;
         }
 
         public void putBack() {
-            seek(used - 1);
+            seek(size - 1);
         }
 
         public void seek(int pos) {
-            if (pos >= 0 && pos < used) {
+            if (pos >= 0 && pos < size) {
                 next = pos;
                 return;
             }
@@ -57,7 +58,7 @@ public class InstallmentByteBuffer implements Pushable {
                     whence = next;
                     break;
                 case SEEK_END:
-                    whence = used;
+                    whence = size;
                     break;
                 default:
                     throw new IllegalArgumentException();
@@ -70,24 +71,20 @@ public class InstallmentByteBuffer implements Pushable {
         }
     }
 
-    public static final int SEEK_SET = 0;
-    public static final int SEEK_CUR = 1;
-    public static final int SEEK_END = 2;
-
     private static final int INSTALLMENT_BITS = 10;
+
     private static final int INSTALLMENT_BYTES = 1 << INSTALLMENT_BITS;
     private static final int INSTALLMENT_MASK = INSTALLMENT_BYTES - 1;
-
     private ArrayList<byte[]> savings = new ArrayList<>();
 
-    private int used = 0;
+    private int size = 0;
 
     public InstallmentByteBuffer() {
         this(INSTALLMENT_BYTES);
     }
 
-    public InstallmentByteBuffer(int capacity) {
-        setupCapacity(capacity);
+    public InstallmentByteBuffer(int initialCapacity) {
+        setupCapacity(initialCapacity);
     }
 
     public InstallmentByteBuffer append(byte[] a) {
@@ -96,68 +93,73 @@ public class InstallmentByteBuffer implements Pushable {
 
     public InstallmentByteBuffer append(byte[] a, int i, int j) {
         int n = j - i;
-        setupCapacity(used + n);
+        setupCapacity(size + n);
 
-        if ((used & INSTALLMENT_MASK) != 0) {
-            int left = INSTALLMENT_BYTES - (used & INSTALLMENT_MASK);
+        if ((size & INSTALLMENT_MASK) != 0) {
+            int left = INSTALLMENT_BYTES - (size & INSTALLMENT_MASK);
             if (left > n) {
                 left = n;
             }
-            System.arraycopy(a, i, savings.get(used >> INSTALLMENT_BITS),
-                    used & INSTALLMENT_MASK, left);
+            System.arraycopy(a, i, savings.get(size >> INSTALLMENT_BITS),
+                    size & INSTALLMENT_MASK, left);
             i += left;
-            used += left;
+            size += left;
         }
 
         while (i + INSTALLMENT_BYTES < j) {
-            System.arraycopy(a, i, savings.get(used >> INSTALLMENT_BITS),
+            System.arraycopy(a, i, savings.get(size >> INSTALLMENT_BITS),
                     0, INSTALLMENT_BYTES);
             i += INSTALLMENT_BYTES;
-            used += INSTALLMENT_BYTES;
+            size += INSTALLMENT_BYTES;
         }
 
         if (i < j) {
-            System.arraycopy(a, i, savings.get(used >> INSTALLMENT_BITS),
+            System.arraycopy(a, i, savings.get(size >> INSTALLMENT_BITS),
                     0, j - i);
-            used += j - i;
+            size += j - i;
         }
 
         return this;
     }
 
-    public InstallmentByteBuffer append(String s) {
-        return append(s.getBytes());
+    public InstallmentByteBuffer append(CharSequence cs) {
+        return append(cs.toString().getBytes());
+    }
+
+    public InstallmentByteBuffer append(int ch) {
+        CheckedByte.checkByte(ch);
+        setupCapacity(size + 1);
+        put(size++, (byte) ch);
+        return this;
     }
 
     public int capacity() {
         return savings.size() << INSTALLMENT_BITS;
     }
 
+    /**
+     * @return a copy of valid in bounds byte array
+     */
+    public byte[] copyBytes() {
+        byte[] bytes = new byte[size];
+        int i = 0;
+        while (i + INSTALLMENT_BYTES <= size) {
+            System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
+                    0, bytes, i, INSTALLMENT_BYTES);
+            i += INSTALLMENT_BYTES;
+        }
+        System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
+                0, bytes, i, size - i);
+        return bytes;
+    }
+
     private int get(int pos) {
         return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
     }
 
-    /**
-     * @return a copy of valid in bounds byte array
-     */
-    public byte[] getBytes() {
-        byte[] array = new byte[used];
-        int i = 0;
-        while (i + INSTALLMENT_BYTES <= used) {
-            System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
-                    0, array, i, INSTALLMENT_BYTES);
-            i += INSTALLMENT_BYTES;
-        }
-        System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
-                0, array, i, used - i);
-        return array;
-    }
-
     @Override
-    public int push(int aByte) {
-        CheckedByte.checkByte(aByte);
-        setupCapacity(used + 1);
-        put(used++, (byte) aByte);
+    public int push(int ch) {
+        append(ch);
         return 1;
     }
 
@@ -169,13 +171,13 @@ public class InstallmentByteBuffer implements Pushable {
         return new Reader();
     }
 
-    private void setupCapacity(int newLength) {
+    private void setupCapacity(int newCapacity) {
         if (savings == null) {
             savings = new ArrayList<>();
         }
-        if (newLength > capacity()) {
-            int n = newLength >> INSTALLMENT_BITS;
-            if ((newLength & INSTALLMENT_MASK) != 0) {
+        if (newCapacity > capacity()) {
+            int n = newCapacity >> INSTALLMENT_BITS;
+            if ((newCapacity & INSTALLMENT_MASK) != 0) {
                 ++n;
             }
             for (int i = savings.size() + 1; i <= n; ++i) {
@@ -185,12 +187,12 @@ public class InstallmentByteBuffer implements Pushable {
     }
 
     public int size() {
-        return used;
+        return size;
     }
 
     @Override
     public String toString() {
-        return new String(getBytes());
+        return new String(copyBytes());
     }
 
     /**
@@ -200,6 +202,6 @@ public class InstallmentByteBuffer implements Pushable {
         for (byte[] a : savings) {
             Arrays.fill(a, (byte) 0);
         }
-        used = 0;
+        size = 0;
     }
 }

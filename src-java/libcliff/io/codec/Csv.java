@@ -3,7 +3,7 @@ package libcliff.io.codec;
 import java.util.LinkedList;
 import java.util.List;
 
-import libcliff.io.Blob;
+import libcliff.io.InstallmentByteBuffer;
 import libcliff.io.Pullable;
 
 /**
@@ -24,7 +24,7 @@ public class Csv {
     public static List<byte[]> fromCsvLine(Pullable pullable) {
 
         List<byte[]> target = new LinkedList<>();
-        Blob record = new Blob(1024);
+        InstallmentByteBuffer record = new InstallmentByteBuffer();
         int delimiter = -1;
 
         State state = State.IDLE;
@@ -37,7 +37,7 @@ public class Csv {
                             return target;
                         case COMMA:
                             state = State.IDLE;
-                            target.add(record.getBytes());
+                            target.add(record.copyBytes());
                             record.wipe();
                             break;
                         case QUOTE:
@@ -58,7 +58,7 @@ public class Csv {
                         }
                         if (ch == delimiter) {
                             state = State.REC_END;
-                            target.add(record.getBytes());
+                            target.add(record.copyBytes());
                             record.wipe();
                             delimiter = -1;
                         } else {
@@ -69,7 +69,7 @@ public class Csv {
                             case EOL:
                             case COMMA:
                                 state = State.IDLE;
-                                target.add(record.getBytes());
+                                target.add(record.copyBytes());
                                 record.wipe();
                                 break;
                             default:
