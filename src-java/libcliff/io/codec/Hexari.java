@@ -50,9 +50,15 @@ public class Hexari implements PullablePipe, PushablePipe {
         throw new ParsingException();
     }
 
+    public static int fromHexariBytes(int i, int j) {
+        return (fromHexariByte(CheckedByte.checkByte(i)) << 4)
+                | fromHexariByte(CheckedByte.checkByte(j));
+    }
+
     public static int fromHexariBytes(Pullable pullable) {
-        return (fromHexariByte(CheckedByte.checkByte(pullable.pull())) << 4)
-                | fromHexariByte(CheckedByte.checkByte(pullable.pull()));
+        int i = pullable.pull();
+        int j = pullable.pull();
+        return fromHexariBytes(i, j);
     }
 
     /**

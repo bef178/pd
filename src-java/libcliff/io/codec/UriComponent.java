@@ -46,6 +46,7 @@ public class UriComponent extends DualPipe {
 
     @Override
     public UriComponent join(final Pullable upstream) {
+
         super.join(PullablePipe.join(new Utf8(), new Pullable() {
 
             @Override
@@ -63,6 +64,7 @@ public class UriComponent extends DualPipe {
 
     @Override
     public UriComponent join(final Pushable downstream) {
+
         super.join(PushablePipe.join(new Utf8(), new Pushable() {
 
             @Override
