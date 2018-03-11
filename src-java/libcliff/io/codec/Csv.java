@@ -15,9 +15,9 @@ public class Csv {
         IDLE, REC_WIP, REC_END
     }
 
-    private static final int EOL = -1;
+    private static final int EOF = -1;
     private static final int COMMA = ',';
-    private static final int QUOTE = '\"';
+    private static final int DOUBLE_QUOTE = '\"';
     private static final int SINGLE_QUOTE = '\'';
 
     // TODO think over the api
@@ -33,14 +33,14 @@ public class Csv {
             switch (state) {
                 case IDLE:
                     switch (ch) {
-                        case EOL:
+                        case EOF:
                             return target;
                         case COMMA:
                             state = State.IDLE;
                             target.add(record.copyBytes());
                             record.wipe();
                             break;
-                        case QUOTE:
+                        case DOUBLE_QUOTE:
                         case SINGLE_QUOTE:
                             state = State.REC_WIP;
                             delimiter = ch;
@@ -53,7 +53,7 @@ public class Csv {
                     break;
                 case REC_WIP:
                     if (delimiter >= 0) {
-                        if (ch == EOL) {
+                        if (ch == EOF) {
                             throw new ParsingException();
                         }
                         if (ch == delimiter) {
@@ -66,7 +66,7 @@ public class Csv {
                         }
                     } else {
                         switch (ch) {
-                            case EOL:
+                            case EOF:
                             case COMMA:
                                 state = State.IDLE;
                                 target.add(record.copyBytes());
@@ -80,7 +80,7 @@ public class Csv {
                     break;
                 case REC_END:
                     switch (ch) {
-                        case EOL:
+                        case EOF:
                             return target;
                         case COMMA:
                             state = State.IDLE;

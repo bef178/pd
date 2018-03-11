@@ -17,7 +17,7 @@ public interface Pullable {
                 if (it.hasNext()) {
                     return it.nextInt();
                 }
-                return -1;
+                return E_EOF;
             }
         };
     }

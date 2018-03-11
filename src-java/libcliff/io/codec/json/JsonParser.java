@@ -121,10 +121,10 @@ public class JsonParser {
             throw new ParsingException('\"', ch);
         }
         return factory.createJsonScalar()
-                .set(parseString(it).toString());
+                .set(parseString('\"', it).toString());
     }
 
-    private static CharSequence parseString(Pullable it) {
+    private static CharSequence parseString(int closingSymbol, Pullable it) {
         boolean isEscaping = false;
         StringBuilder sb = new StringBuilder();
         int ch = it.pull();
@@ -137,7 +137,7 @@ public class JsonParser {
                     sb.append('\\').appendCodePoint(ch);
                 }
             } else {
-                if (ch == '\"') {
+                if (ch == closingSymbol) {
                     // consume the end delimiter then exit
                     return sb;
                 } else if (ch == '\\') {
