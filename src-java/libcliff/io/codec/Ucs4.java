@@ -8,7 +8,45 @@ import libcliff.io.PushablePipe;
 /**
  * ch => byte[4]
  */
-public class Ucs4 implements PullablePipe, PushablePipe {
+public class Ucs4 {
+
+    public static PullablePipe asPuller() {
+
+        return new PullablePipe() {
+
+            private Pullable upstream = null;
+
+            @Override
+            public PullablePipe join(Pullable upstream) {
+                this.upstream = upstream;
+                return this;
+            }
+
+            @Override
+            public int pull() {
+                return fromUcs4Bytes(upstream);
+            }
+        };
+    }
+
+    public static PushablePipe asPusher() {
+
+        return new PushablePipe() {
+
+            private Pushable downstream = null;
+
+            @Override
+            public PushablePipe join(Pushable downstream) {
+                this.downstream = downstream;
+                return this;
+            }
+
+            @Override
+            public int push(int ch) {
+                return toUcs4Bytes(ch, downstream);
+            }
+        };
+    }
 
     public static int fromUcs4Bytes(Pullable upstream) {
         int ch = 0;
@@ -31,29 +69,4 @@ public class Ucs4 implements PullablePipe, PushablePipe {
         return size;
     }
 
-    private Pullable upstream = null;
-
-    private Pushable downstream = null;
-
-    @Override
-    public Ucs4 join(Pullable upstream) {
-        this.upstream = upstream;
-        return this;
-    }
-
-    @Override
-    public Ucs4 join(Pushable downstream) {
-        this.downstream = downstream;
-        return this;
-    }
-
-    @Override
-    public int pull() {
-        return fromUcs4Bytes(upstream);
-    }
-
-    @Override
-    public int push(int ch) {
-        return toUcs4Bytes(ch, downstream);
-    }
 }

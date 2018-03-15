@@ -8,7 +8,45 @@ import libcliff.io.PushablePipe;
 /**
  * ch => utf8 byte[]
  */
-public class Utf8 implements PullablePipe, PushablePipe {
+public class Utf8 {
+
+    public static PullablePipe asPuller() {
+
+        return new PullablePipe() {
+
+            private Pullable upstream = null;
+
+            @Override
+            public PullablePipe join(Pullable pullable) {
+                upstream = pullable;
+                return this;
+            }
+
+            @Override
+            public int pull() {
+                return fromUtf8Bytes(upstream);
+            }
+        };
+    }
+
+    public static PushablePipe asPusher() {
+
+        return new PushablePipe() {
+
+            private Pushable downstream = null;
+
+            @Override
+            public PushablePipe join(Pushable pushable) {
+                downstream = pushable;
+                return this;
+            }
+
+            @Override
+            public int push(int ch) {
+                return toUtf8Bytes(ch, downstream);
+            }
+        };
+    }
 
     public static int fromUtf8Bytes(Pullable pullable) {
         int firstByte = CheckedByte.checkByteEx(pullable.pull());
@@ -98,29 +136,4 @@ public class Utf8 implements PullablePipe, PushablePipe {
         return -1;
     }
 
-    private Pullable upstream = null;
-
-    private Pushable downstream = null;
-
-    @Override
-    public Utf8 join(Pullable pullable) {
-        upstream = pullable;
-        return this;
-    }
-
-    @Override
-    public Utf8 join(Pushable pushable) {
-        downstream = pushable;
-        return this;
-    }
-
-    @Override
-    public int pull() {
-        return fromUtf8Bytes(upstream);
-    }
-
-    @Override
-    public int push(int ch) {
-        return toUtf8Bytes(ch, downstream);
-    }
 }

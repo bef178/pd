@@ -10,9 +10,9 @@ import libcliff.io.PushablePipe;
 /**
  * byte[3] => byte[4]
  */
-public class Base64 implements PullablePipe, PushablePipe {
+public class Base64 {
 
-    private static class Puller implements PullablePipe {
+    public static class Puller implements PullablePipe {
 
         private int[] src = new int[3];
 
@@ -48,7 +48,7 @@ public class Base64 implements PullablePipe, PushablePipe {
         }
     }
 
-    private static class Pusher implements PushablePipe {
+    public static class Pusher implements PushablePipe {
 
         private int[] src = new int[3];
 
@@ -109,6 +109,14 @@ public class Base64 implements PullablePipe, PushablePipe {
 
     public static final int P_FLUSH = -1;
 
+    public static PullablePipe asPuller() {
+        return new Puller();
+    }
+
+    public static PushablePipe asPusher() {
+        return new Pusher();
+    }
+
     private static void fromBase64Bytes(int[] a, Pullable pullable) {
         int i = CheckedByte.checkByteEx(pullable.pull());
         i = i == -1 ? -1 : DECODE_MAP[i];
@@ -155,45 +163,5 @@ public class Base64 implements PullablePipe, PushablePipe {
                 throw new ParsingException();
         }
         return 4;
-    }
-
-    private Puller puller = null;
-
-    private Pusher pusher = null;
-
-    @Override
-    public PullablePipe join(Pullable upstream) {
-        promisePuller();
-        return puller.join(upstream);
-    }
-
-    @Override
-    public PushablePipe join(Pushable downstream) {
-        promisePusher();
-        return pusher.join(downstream);
-    }
-
-    private void promisePuller() {
-        if (puller == null) {
-            puller = new Puller();
-        }
-    }
-
-    private void promisePusher() {
-        if (pusher == null) {
-            pusher = new Pusher();
-        }
-    }
-
-    @Override
-    public int pull() {
-        promisePuller();
-        return puller.pull();
-    }
-
-    @Override
-    public int push(int aByte) {
-        promisePusher();
-        return pusher.push(aByte);
     }
 }

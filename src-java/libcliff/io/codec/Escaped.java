@@ -11,7 +11,80 @@ import libcliff.primitive.Ctype;
 /**
  * ch => ch
  */
-public class Escaped extends DualPipe {
+public class Escaped {
+
+    public static PullablePipe asPuller() {
+
+        return new PullablePipe() {
+
+            private Pullable upstream;
+
+            private Pullable upUstream;
+
+            @Override
+            public PullablePipe join(Pullable upstream) {
+                this.upstream = upstream;
+                this.upUstream = PullablePipe.join(Utf8.asPuller(),
+                        Hexari.asPuller(), upstream);
+                return this;
+            }
+
+            @Override
+            public int pull() {
+                int ch = upstream.pull();
+                if (ch == '\\') {
+                    ch = upstream.pull();
+                    if (Ctype.isGraph(ch)) {
+                        if (DECODE_MAP[ch] >= 0) {
+                            return DECODE_MAP[ch];
+                        }
+                        if (ch == 'u') {
+                            return upUstream.pull();
+                        }
+                    }
+                    // unrecognized escaped sequence
+                    return ch;
+                } else {
+                    return ch;
+                }
+            }
+        };
+    }
+
+    public static PushablePipe asPusher() {
+
+        return new PushablePipe() {
+
+            private Pushable downstream;
+
+            private Pushable downUstream;
+
+            @Override
+            public PushablePipe join(Pushable downstream) {
+                this.downstream = downstream;
+                this.downUstream = PushablePipe.join(Utf8.asPusher(),
+                        Hexari.asPusher(), downstream);
+                return this;
+            }
+
+            @Override
+            public int push(int ch) {
+                if (Ctype.isGraph(ch)) {
+                    if (ENCODE_MAP[ch] >= 0) {
+                        downstream.push('\\');
+                        downstream.push(ENCODE_MAP[ch]);
+                        return 2;
+                    } else {
+                        downstream.push(ch);
+                        return 1;
+                    }
+                }
+                downstream.push('\\');
+                downstream.push('u');
+                return 2 + downUstream.push(ch);
+            }
+        };
+    }
 
     private static final int[] ENCODE_MAP;
 
@@ -38,60 +111,4 @@ public class Escaped extends DualPipe {
         }
     }
 
-    private Pullable upUstream = null;
-
-    private Pushable downUstream = null;
-
-    @Override
-    public Escaped join(Pullable upstream) {
-        super.join(upstream);
-        this.upUstream = PullablePipe.join(new Utf8(), new Hexari(),
-                upstream);
-        return this;
-    }
-
-    @Override
-    public Escaped join(Pushable downstream) {
-        super.join(downstream);
-        this.downUstream = PushablePipe.join(new Utf8(), new Hexari(),
-                downstream);
-        return this;
-    }
-
-    @Override
-    public int pull() {
-        int ch = super.pull();
-        if (ch == '\\') {
-            ch = super.pull();
-            if (Ctype.isGraph(ch)) {
-                if (DECODE_MAP[ch] >= 0) {
-                    return DECODE_MAP[ch];
-                }
-                if (ch == 'u') {
-                    return upUstream.pull();
-                }
-            }
-            // unrecognized escaped sequence
-            return ch;
-        } else {
-            return ch;
-        }
-    }
-
-    @Override
-    public int push(int ch) {
-        if (Ctype.isGraph(ch)) {
-            if (ENCODE_MAP[ch] >= 0) {
-                super.push('\\');
-                super.push(ENCODE_MAP[ch]);
-                return 2;
-            } else {
-                super.push(ch);
-                return 1;
-            }
-        }
-        super.push('\\');
-        super.push('u');
-        return 2 + downUstream.push(ch);
-    }
 }

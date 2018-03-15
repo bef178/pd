@@ -10,7 +10,45 @@ import libcliff.io.PushablePipe;
  * <br/>
  * byte 0x65 => byte[] { '6', '5' } under all conditions
  */
-public class Hexari implements PullablePipe, PushablePipe {
+public class Hexari {
+
+    public static PullablePipe asPuller() {
+
+        return new PullablePipe() {
+
+            private Pullable upstream = null;
+
+            @Override
+            public PullablePipe join(Pullable upstream) {
+                this.upstream = upstream;
+                return this;
+            }
+
+            @Override
+            public int pull() {
+                return fromHexariBytes(upstream);
+            }
+        };
+    }
+
+    public static PushablePipe asPusher() {
+
+        return new PushablePipe() {
+
+            private Pushable downstream = null;
+
+            @Override
+            public PushablePipe join(Pushable downstream) {
+                this.downstream = downstream;
+                return this;
+            }
+
+            @Override
+            public int push(int aByte) {
+                return toHexariBytes(aByte, downstream);
+            }
+        };
+    }
 
     private static final byte[] HEX_DIGIT_TO_LITERAL = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -71,31 +109,5 @@ public class Hexari implements PullablePipe, PushablePipe {
         size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
         size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte & 0x0F]);
         return size;
-    }
-
-    private Pullable upstream = null;
-
-    private Pushable downstream = null;
-
-    @Override
-    public Hexari join(Pullable upstream) {
-        this.upstream = upstream;
-        return this;
-    }
-
-    @Override
-    public Hexari join(Pushable downstream) {
-        this.downstream = downstream;
-        return this;
-    }
-
-    @Override
-    public int pull() {
-        return fromHexariBytes(upstream);
-    }
-
-    @Override
-    public int push(int aByte) {
-        return toHexariBytes(aByte, downstream);
     }
 }
