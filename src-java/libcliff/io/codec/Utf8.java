@@ -1,5 +1,6 @@
 package libcliff.io.codec;
 
+import libcliff.io.ParsingException;
 import libcliff.io.Pullable;
 import libcliff.io.PullablePipe;
 import libcliff.io.Pushable;

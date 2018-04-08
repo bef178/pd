@@ -1,7 +1,5 @@
 package libcliff.io;
 
-import libcliff.io.codec.ParsingException;
-
 public interface PushablePipe extends Pushable {
 
     /**

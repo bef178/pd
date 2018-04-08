@@ -1,7 +1,9 @@
-package libcliff.io.codec;
+package libcliff.io.format;
 
+import libcliff.io.ParsingException;
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
+import libcliff.io.codec.Hexari;
 
 public class Rgb888 {
 

@@ -1,4 +1,4 @@
-package libcliff.io.codec.json;
+package libcliff.io.format.json;
 
 import java.util.HashMap;
 import java.util.Set;

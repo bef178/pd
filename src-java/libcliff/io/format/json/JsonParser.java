@@ -1,10 +1,10 @@
-package libcliff.io.codec.json;
+package libcliff.io.format.json;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 
+import libcliff.io.ParsingException;
 import libcliff.io.Pullable;
-import libcliff.io.codec.ParsingException;
 import libcliff.primitive.Ctype;
 
 public class JsonParser {

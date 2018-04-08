@@ -1,5 +1,7 @@
 package libcliff.io.codec;
 
+import libcliff.io.ParsingException;
+
 /**
  * byte => byte<br/>
  * <br/>

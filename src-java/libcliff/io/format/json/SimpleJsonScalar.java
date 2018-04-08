@@ -1,4 +1,4 @@
-package libcliff.io.codec.json;
+package libcliff.io.format.json;
 
 class SimpleJsonScalar implements JsonScalar {
 

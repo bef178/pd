@@ -1,4 +1,4 @@
-package libcliff.io.codec;
+package libcliff.io.format;
 
 import libcliff.io.Pullable;
 import libcliff.io.Pushable;
