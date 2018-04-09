@@ -237,11 +237,16 @@ public class Parser {
         return pickString(puller, Pullable.EOF);
     }
 
+    public static String pickString(Pullable puller, int closingSymbol) {
+        return pickString(puller, closingSymbol, false);
+    }
+
     /**
-     * Return when meet closing symbol, throw when meet EOF.<br/>
+     * Return when meet closing symbol, throw when meet EOF with unmuted.<br/>
      * The closing symbol will be consumed and will not be part of result.<br/>
      */
-    public static String pickString(Pullable puller, int closingSymbol) {
+    public static String pickString(Pullable puller, int closingSymbol,
+            boolean muted) {
         InstallmentByteBuffer pusher = new InstallmentByteBuffer();
         boolean escaped = false;
         while (true) { // not break on EOF
@@ -255,7 +260,12 @@ public class Parser {
             } else if (ch == closingSymbol) {
                 return new String(pusher.copyBytes(), StandardCharsets.UTF_8);
             } else if (ch == Pullable.EOF) {
-                throw new ParsingException("E: unexpected EOF");
+                if (muted) {
+                    return new String(pusher.copyBytes(),
+                            StandardCharsets.UTF_8);
+                } else {
+                    throw new ParsingException("Unexpected EOF");
+                }
             } else {
                 pusher.push(ch);
             }

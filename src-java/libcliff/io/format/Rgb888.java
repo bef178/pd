@@ -33,16 +33,16 @@ public class Rgb888 {
         return 1;
     }
 
-    public static int getB(int color) {
-        return checkRgb888(color) & 0xFF;
+    private static int getB(int color) {
+        return color & 0xFF;
     }
 
-    public static int getG(int color) {
-        return (checkRgb888(color) & 0xFF00) >>> 8;
+    private static int getG(int color) {
+        return (color >>> 8) & 0xFF;
     }
 
-    public static int getR(int color) {
-        return checkRgb888(color) >>> 16;
+    private static int getR(int color) {
+        return (color >>> 16) & 0xFF;
     }
 
     private static int pullComponent(Pullable pullable) {
