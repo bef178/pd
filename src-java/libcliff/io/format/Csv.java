@@ -3,10 +3,8 @@ package libcliff.io.format;
 import java.util.LinkedList;
 import java.util.List;
 
-import libcliff.io.InstallmentByteBuffer;
 import libcliff.io.ParsingException;
 import libcliff.io.Pullable;
-import libcliff.io.codec.Utf8;
 
 /**
  * a,"b",c => [a,b,c]
@@ -15,6 +13,7 @@ public class Csv {
 
     private static final int COMMA = ',';
     private static final int DOUBLE_QUOTE = '\"';
+    private static final int SINGLE_QUOTE = '\'';
 
     public static List<String> fromCsvLine(Feeder puller) {
         List<String> items = new LinkedList<>();
@@ -37,7 +36,19 @@ public class Csv {
                     puller.back();
                     throw new ParsingException();
                 }
+            } else if (ch == SINGLE_QUOTE) {
+                items.add(Parser.pickString(puller, SINGLE_QUOTE));
+                ch = puller.pull();
+                if (ch == Pullable.EOF) {
+                    return items;
+                } else if (ch == COMMA) {
+                    continue;
+                } else {
+                    puller.back();
+                    throw new ParsingException();
+                }
             } else {
+                puller.back();
                 items.add(Parser.pickString(puller, COMMA, true));
                 // check EOF
                 puller.back();
