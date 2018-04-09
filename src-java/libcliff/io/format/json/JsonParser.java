@@ -5,23 +5,13 @@ import java.util.Map.Entry;
 
 import libcliff.io.ParsingException;
 import libcliff.io.Pullable;
+import libcliff.io.format.Parser;
 import libcliff.primitive.Ctype;
 
 public class JsonParser {
 
     private static final int STATE_SEGMENT_BEGIN = 0x00;
     private static final int STATE_SEGMENT_END = 0x01;
-
-    private static int eatWhitespaces(Pullable pullable) {
-        int ch = pullable.pull();
-        while (ch != -1) {
-            if (!Ctype.isWhitespace(ch)) {
-                break;
-            }
-            ch = pullable.pull();
-        }
-        return ch;
-    }
 
     public static Json parse(CharSequence cs, JsonFactory factory) {
         return parse(Pullable.wrap(cs), factory);
@@ -45,7 +35,7 @@ public class JsonParser {
     }
 
     public static Json parse(Pullable it, JsonFactory factory) {
-        int ch = eatWhitespaces(it);
+        int ch = Parser.eatWhitespace(it);
         return parse(ch, it, factory);
     }
 
@@ -53,12 +43,12 @@ public class JsonParser {
             JsonFactory factory) {
         String key = parseScalar(ch, it, factory).getString();
 
-        ch = eatWhitespaces(it);
+        ch = Parser.eatWhitespace(it);
         if (ch != ':') {
             throw new ParsingException(':', ch);
         }
 
-        ch = eatWhitespaces(it);
+        ch = Parser.eatWhitespace(it);
         Json value = parse(ch, it, factory);
 
         return new SimpleImmutableEntry<String, Json>(key, value);
@@ -80,7 +70,7 @@ public class JsonParser {
         int state = STATE_SEGMENT_BEGIN;
 
         while (true) {
-            ch = eatWhitespaces(it);
+            ch = Parser.eatWhitespace(it);
             switch (state) {
                 case STATE_SEGMENT_BEGIN:
                     // accept '}' or string ':' json
@@ -98,7 +88,7 @@ public class JsonParser {
                     if (ch == '}') {
                         return o;
                     } else if (ch == ',') {
-                        ch = eatWhitespaces(it);
+                        ch = Parser.eatWhitespace(it);
                         Entry<String, Json> e = parseMapEntry(ch, it,
                                 factory);
                         o.put(e.getKey(), e.getValue());
@@ -161,7 +151,7 @@ public class JsonParser {
         int state = STATE_SEGMENT_BEGIN;
 
         while (true) {
-            ch = eatWhitespaces(it);
+            ch = Parser.eatWhitespace(it);
             switch (state) {
                 case STATE_SEGMENT_BEGIN:
                     // accept ']' or json
@@ -177,7 +167,7 @@ public class JsonParser {
                     if (ch == ']') {
                         return l;
                     } else if (ch == ',') {
-                        ch = eatWhitespaces(it);
+                        ch = Parser.eatWhitespace(it);
                         l.insert(parse(ch, it, factory));
                     } else {
                         throw new ParsingException(
