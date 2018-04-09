@@ -17,7 +17,7 @@ import libcliff.io.Pullable;
  * &emsp;- if using back(), user should be aware only one backward step could
  * succeed - it is also the C way.
  */
-class Feeder implements Pullable {
+public class Feeder implements Pullable {
 
     private boolean backed = false;
 
