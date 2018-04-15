@@ -1,8 +1,10 @@
 package libcliff.io.format;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import libcliff.io.InstallmentByteBuffer;
 import libcliff.io.ParsingException;
 import libcliff.io.Pullable;
 
@@ -64,7 +66,29 @@ public class Csv {
         }
     }
 
-    public static List<String> fromLine(String src) {
-        return fromLine(Feeder.wrap(src));
+    public static List<String> fromLine(String s) {
+        return fromLine(Feeder.wrap(s));
+    }
+
+    public static String toLine(List<String> items) {
+        return toLine(items, 0);
+    }
+
+    public static String toLine(List<String> items, int delimeter) {
+        InstallmentByteBuffer pusher = new InstallmentByteBuffer();
+        Iterator<String> it = items.iterator();
+        while (it.hasNext()) {
+            if (delimeter > 0) {
+                pusher.push(delimeter);
+            }
+            pusher.append(it.next());
+            if (delimeter > 0) {
+                pusher.push(delimeter);
+            }
+            if (it.hasNext()) {
+                pusher.push(',');
+            }
+        }
+        return new String(pusher.copyBytes());
     }
 }
