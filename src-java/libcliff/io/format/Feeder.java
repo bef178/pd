@@ -19,6 +19,10 @@ import libcliff.io.Pullable;
  */
 public class Feeder implements Pullable {
 
+    public static Feeder wrap(CharSequence cs) {
+        return new Feeder(Pullable.wrap(cs));
+    }
+
     private boolean backed = false;
 
     private int last = -1;

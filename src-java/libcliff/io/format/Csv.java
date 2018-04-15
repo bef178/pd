@@ -15,7 +15,7 @@ public class Csv {
     private static final int DOUBLE_QUOTE = '\"';
     private static final int SINGLE_QUOTE = '\'';
 
-    public static List<String> fromCsvLine(Feeder puller) {
+    public static List<String> fromLine(Feeder puller) {
         List<String> items = new LinkedList<>();
         while (true) {
             int ch = puller.pull();
@@ -62,5 +62,9 @@ public class Csv {
                 }
             }
         }
+    }
+
+    public static List<String> fromLine(String src) {
+        return fromLine(Feeder.wrap(src));
     }
 }
