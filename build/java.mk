@@ -1,6 +1,6 @@
 # java.mk
 
-PRODUCT := $(OUT)/$(PACKAGE).jar
+JAR := $(OUT)/$(JAR)
 
 OBJ := $(OUT)/obj
 
@@ -24,6 +24,15 @@ MANIFEST := ./$(shell dirname $(lastword $(MAKEFILE_LIST)))/manifest.mf
 
 ########
 
+define ls-args
+	@echo arguments:
+	@echo "  OPTIONS=[$(OPTIONS)]"
+	@echo "  JAR=[$(JAR)]"
+	@echo "  SRC_FILES=[$(SRC_FILES)]"
+	@echo "  LIB_FILES=[$(LIB_FILES)]"
+	@echo "  OUT=[$(OUT)]"
+endef
+
 define compile
 	@echo "compiling ..."
 	@mkdir -p $(OBJ)
@@ -40,24 +49,18 @@ define package
 endef
 
 .PHONY: jar
-jar: $(PRODUCT)
+jar: $(JAR)
 
-$(PRODUCT): $(SRC_FILES) $(LIB_FILES)
-	@echo "making [$@] ..."
+$(JAR): $(SRC_FILES) $(LIB_FILES)
+	$(if $(filter ls-args, $(OPTIONS)), $(call ls-args), )
+	@echo "making [$(JAR)] ..."
 	$(call compile)
 	$(call package)
 
-.PHONY: classes
-classes: $(SRC_FILES) $(LIB_FILES)
+.PHONY: class
+class: $(SRC_FILES) $(LIB_FILES)
+	$(if $(filter ls-args, $(OPTIONS)), $(call ls-args), )
 	$(call compile)
-
-.PHONY: ls-args
-ls-args:
-	@echo arguments:
-	@echo "  PACKAGE=[$(PACKAGE)]"
-	@echo "  SRC_FILES=[$(SRC_FILES)]"
-	@echo "  LIB_FILES=[$(LIB_FILES)]"
-	@echo "  OUT=[$(OUT)]"
 
 .PHONY: clean
 clean:
