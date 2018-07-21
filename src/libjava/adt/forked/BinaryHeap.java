@@ -66,9 +66,9 @@ public final class BinaryHeap<E> {
 
     /**
      * @return the index of:<br/>
-     *         &#8195;the prior one if both legal<br/>
-     *         &#8195;the legal one if either legal<br/>
-     *         &#8195;negative if neither legal<br/>
+     *  &emsp;the prior one if both legal<br/>
+     *  &emsp;the legal one if either legal<br/>
+     *  &emsp;negative if neither legal<br/>
      */
     private int getPrior(int i, int j) {
         if (isIndexInBounds(i)) {
@@ -141,5 +141,4 @@ public final class BinaryHeap<E> {
         }
         return false;
     }
-
 }

@@ -1,40 +1,26 @@
 package libjava.adt;
 
-final public class NamedTag extends KeyValue {
+public final class NamedTag extends KeyValue {
 
-    public NamedTag() {
-        this(null);
+    public NamedTag(String tag) {
+        this(null, tag);
     }
 
-    public NamedTag(String name) {
-        setName(name);
+    public NamedTag(String cti, String tag) {
+        super(cti == null || cti.isEmpty() ? null : cti, tag);
+        if (tag == null || tag.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
     }
 
     /**
-     * the concept/category of this tag<br/>
-     * @return a non-null String
+     * cti: the concept and/or scope of the tag
      */
-    public String getName() {
+    public String getCti() {
         return key;
     }
 
-    /**
-     * @return a non-null String
-     */
     public String getTag() {
         return value;
-    }
-
-    @Override
-    public boolean isValid() {
-        return !getTag().isEmpty();
-    }
-
-    private void setName(String name) {
-        key = (name == null) ? "" : name;
-    }
-
-    public void setTag(String tag) {
-        value = (tag == null) ? "" : tag;
     }
 }
