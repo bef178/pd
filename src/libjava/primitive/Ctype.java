@@ -2,32 +2,6 @@ package libjava.primitive;
 
 public final class Ctype {
 
-    public static void clearBit(int self, int offset) {
-        assert offset >= 0;
-        clearBits(self, 1 << offset);
-    }
-
-    public static void clearBits(int self, int bits) {
-        self &= ~bits;
-    }
-
-    public static int getBit(int self, int offset) {
-        assert offset >= 0;
-        return getBits(self, 1 << offset);
-    }
-
-    public static int getBits(int self, int bits) {
-        return self & bits;
-    }
-
-    public static boolean hasAllBits(int self, int bits) {
-        return getBits(self, bits) == bits;
-    }
-
-    public static boolean hasAnyBits(int self, int bits) {
-        return getBits(self, bits) != 0;
-    }
-
     /**
      * [A-Za-z0-9]
      */
@@ -123,15 +97,6 @@ public final class Ctype {
             default:
                 return false;
         }
-    }
-
-    public static void setBit(int self, int offset) {
-        assert offset >= 0;
-        setBits(self, 1 << offset);
-    }
-
-    public static void setBits(int self, int bits) {
-        self |= bits;
     }
 
     public static int toLower(int ch) {
