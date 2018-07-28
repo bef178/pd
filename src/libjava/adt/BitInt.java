@@ -3,6 +3,8 @@ package libjava.adt;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import libjava.primitive.Cmemory.Cbit8;
+
 /**
  * - wrap continues bits into a big integer<br/>
  * - will not implicitly change capacity<br/>
@@ -11,6 +13,21 @@ import java.util.Arrays;
 public class BitInt implements Comparable<BitInt> {
 
     private static final int BITS = 8;
+
+    private static int bitSize(byte[] segs) {
+        boolean topBit = segs[0] < 0;
+        byte impliedValue = (byte) (topBit ? -1 : 0);
+        for (int i = 0; i < segs.length; ++i) {
+            if (segs[i] != impliedValue) {
+                for (int j = 0; j < BITS; ++j) {
+                    if (Cbit8.getBit(segs[i], j) != topBit) {
+                        return (segs.length - i) * BITS - j + 1;
+                    }
+                }
+            }
+        }
+        return 2;
+    }
 
     private static int compareTo(byte[] iSegs, byte[] jSegs) {
         boolean iLt0 = iSegs[0] < 0;
@@ -47,6 +64,28 @@ public class BitInt implements Comparable<BitInt> {
         return ByteBuffer.allocate(bytes).putInt(value).array();
     }
 
+    public static BitInt imul(BitInt multiplicand, BitInt multiplier) {
+        boolean topBit = multiplicand.segs[0] < 0 ^ multiplier.segs[0] < 0;
+
+        BitInt i = multiplicand;
+        if (multiplicand.segs[0] < 0) {
+            i = multiplicand.copy();
+            i.neg();
+        }
+
+        BitInt j = multiplier;
+        if (multiplier.segs[0] < 0) {
+            j = multiplier.copy();
+            j.neg();
+        }
+
+        BitInt product = mul(i, j);
+        if (!topBit) {
+            product.neg();
+        }
+        return product;
+    }
+
     private static void mov(byte[] dst, byte[] src) {
         int n = Math.min(dst.length, src.length);
 
@@ -62,13 +101,29 @@ public class BitInt implements Comparable<BitInt> {
         }
     }
 
+    public static BitInt mul(BitInt multiplicand, BitInt multiplier) {
+        assert multiplicand != null;
+        assert multiplier != null;
+        BitInt product = multiplicand.copySize();
+        int start = multiplier.segs.length - size(multiplier.segs);
+        for (int j = multiplier.segs.length - 1; j >= start; --j) {
+            if (Cbit8.getBit(multiplier.segs, j)) {
+                int i = multiplier.segs.length * BITS - 1 - j;
+                BitInt a = multiplicand.copy();
+                a.shiftL(i);
+                product.add(a);
+            }
+        }
+        return product;
+    }
+
     /**
      * find the min number of segments that this BigInt costs
      */
     private static int size(byte[] segs) {
-        int sign = segs[0] < 0 ? -1 : 0;
+        byte impliedValue = (byte) (segs[0] < 0 ? -1 : 0);
         for (int i = 0; i < segs.length; ++i) {
-            if (segs[i] != sign) {
+            if (segs[i] != impliedValue) {
                 return segs.length - i;
             }
         }
@@ -80,6 +135,8 @@ public class BitInt implements Comparable<BitInt> {
     }
 
     private boolean CF;
+
+    private BitInt RV;
 
     private final byte[] segs;
 
@@ -169,8 +226,71 @@ public class BitInt implements Comparable<BitInt> {
         return new BitInt(this);
     }
 
+    public BitInt copySize() {
+        final int size = segs.length * BITS;
+        byte[] segs = new byte[size];
+        Arrays.fill(segs, (byte) 0);
+        return new BitInt(segs);
+    }
+
+    public BitInt div(final BitInt divisor) {
+        BitInt dividend = this;
+        BitInt quotient = dividend.copySize();
+        BitInt remainder = dividend.copySize();
+        int jBitSize = bitSize(divisor.segs);
+        int offset = bitSize(remainder.segs) - jBitSize;
+        while (offset >= 0) {
+            BitInt j = remainder.copySize();
+            j.mov(divisor);
+            j.shiftL(offset);
+            if (remainder.compareTo(j) > 0) {
+                remainder.sub(j);
+                BitInt i = quotient.copySize();
+                i.mov(1);
+                i.shiftL(offset);
+                quotient.add(i);
+                offset = bitSize(remainder.segs) - jBitSize;
+            } else {
+                offset--;
+            }
+        }
+        RV = remainder;
+        return quotient;
+    }
+
+    public BitInt idiv(BitInt divisor) {
+        BitInt dividend = this;
+        boolean topBit = dividend.segs[0] < 0 ^ divisor.segs[0] < 0;
+        if (dividend.segs[0] < 0) {
+            dividend = dividend.copy();
+            dividend.neg();
+        }
+        if (divisor.segs[0] < 0) {
+            divisor = divisor.copy();
+            divisor.neg();
+        }
+        BitInt quotient = dividend.div(divisor);
+        if (topBit) {
+            quotient.neg();
+        }
+        return quotient;
+    }
+
+    public BitInt imod(BitInt divisor) {
+        BitInt remainder = mod(divisor);
+        if (segs[0] < 0) {
+            remainder.neg();
+        }
+        return remainder;
+    }
+
     public void inc() {
         add((byte) 1);
+    }
+
+    public BitInt mod(BitInt divisor) {
+        div(divisor);
+        return RV.copy();
     }
 
     public void mov(BitInt o) {
@@ -196,6 +316,10 @@ public class BitInt implements Comparable<BitInt> {
         for (int i = 0; i < segs.length; ++i) {
             segs[i] = (byte) ~segs[i];
         }
+    }
+
+    private void shiftL(int offset) {
+        Cbit8.shiftL(segs, offset);
     }
 
     // BigInt sub(BigInt minuend, BigInt subtrahend)
