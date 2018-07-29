@@ -14,76 +14,57 @@ public class BitInt implements Comparable<BitInt> {
 
     private static final int BITS = 8;
 
-    private static int bitSize(byte[] segs) {
-        boolean topBit = segs[0] < 0;
-        byte impliedValue = (byte) (topBit ? -1 : 0);
-        for (int i = 0; i < segs.length; ++i) {
-            if (segs[i] != impliedValue) {
-                for (int j = 0; j < BITS; ++j) {
-                    if (Cbit8.getBit(segs[i], j) != topBit) {
-                        return (segs.length - i) * BITS - j + 1;
-                    }
-                }
+    private static int compareTo(byte[] iBytes, byte[] jBytes) {
+        assert iBytes != null;
+        assert jBytes != null;
+
+        if ((iBytes[0] < 0) != (jBytes[0] < 0)) {
+            // different sign
+            return iBytes[0] - jBytes[0] < 0 ? -1 : 1;
+        }
+
+        int iOffset = getFirstBitOffset(iBytes);
+        int iLength = iBytes.length - iOffset;
+
+        int jOffset = getFirstBitOffset(jBytes);
+        int jLength = jBytes.length - jOffset;
+
+        if (iLength != jLength) {
+            return (iLength > jLength) == (iBytes[0] < 0) ? -1 : 1;
+        }
+
+        final int BITS = 8;
+        for (int i = iOffset / BITS, j = jOffset
+                / BITS; i < iBytes.length; ++i, ++j) {
+            if (iBytes[i] != jBytes[j]) {
+                return iBytes[i] - jBytes[j];
             }
-        }
-        return 2;
-    }
-
-    private static int compareTo(byte[] iSegs, byte[] jSegs) {
-        boolean iLt0 = iSegs[0] < 0;
-        boolean jLt0 = jSegs[0] < 0;
-        if (iLt0 && !jLt0) {
-            return -1;
-        }
-        if (!iLt0 && jLt0) {
-            return 1;
-        }
-
-        int iSize = size(iSegs);
-        int jSize = size(jSegs);
-
-        if (iSize != jSize) {
-            return (iSize > jSize == iLt0) ? -1 : 1;
-        }
-
-        int iStart = iSegs.length - iSize;
-        int jStart = jSegs.length - jSize;
-        while (iStart < iSegs.length && jStart < jSegs.length) {
-            if (iSegs[iStart] != jSegs[jStart]) {
-                return (iSegs[iStart] > jSegs[jStart] == iLt0)
-                        ? -1 : 1;
-            }
-            ++iStart;
-            ++jStart;
         }
         return 0;
     }
 
     private static byte[] getBytes(int value) {
-        final int bytes = Math.max(32 / BITS, 1);
-        return ByteBuffer.allocate(bytes).putInt(value).array();
+        return ByteBuffer.allocate(32 / 8).putInt(value).array();
     }
 
-    public static BitInt imul(BitInt multiplicand, BitInt multiplier) {
-        boolean topBit = multiplicand.segs[0] < 0 ^ multiplier.segs[0] < 0;
-
-        BitInt i = multiplicand;
-        if (multiplicand.segs[0] < 0) {
-            i = multiplicand.copy();
-            i.neg();
+    /**
+     * return the first bit that different from the sign bit, in (0, length].<br/>
+     * assume big-endian and signed value
+     */
+    private static int getFirstBitOffset(byte[] bytes) {
+        final int BITS = 8;
+        boolean signBit = bytes[0] < 0;
+        byte impliedByte = (byte) (signBit ? -1 : 0);
+        for (int i = 0; i < bytes.length; ++i) {
+            if (bytes[i] != impliedByte) {
+                for (int j = 0; j < BITS; ++j) {
+                    if (Cbit8.getBit(bytes[i], j) != signBit) {
+                        return i * BITS + j;
+                    }
+                }
+            }
         }
-
-        BitInt j = multiplier;
-        if (multiplier.segs[0] < 0) {
-            j = multiplier.copy();
-            j.neg();
-        }
-
-        BitInt product = mul(i, j);
-        if (!topBit) {
-            product.neg();
-        }
-        return product;
+        return bytes.length * BITS;
     }
 
     private static void mov(byte[] dst, byte[] src) {
@@ -101,37 +82,23 @@ public class BitInt implements Comparable<BitInt> {
         }
     }
 
-    public static BitInt mul(BitInt multiplicand, BitInt multiplier) {
-        assert multiplicand != null;
-        assert multiplier != null;
-        BitInt product = multiplicand.copySize();
-        int start = multiplier.segs.length - size(multiplier.segs);
-        for (int j = multiplier.segs.length - 1; j >= start; --j) {
-            if (Cbit8.getBit(multiplier.segs, j)) {
-                int i = multiplier.segs.length * BITS - 1 - j;
-                BitInt a = multiplicand.copy();
-                a.shiftL(i);
-                product.add(a);
-            }
-        }
-        return product;
+    public static BitInt wrap(byte[] bytes) {
+        return new BitInt(bytes);
     }
 
-    /**
-     * find the min number of segments that this BigInt costs
-     */
-    private static int size(byte[] segs) {
-        byte impliedValue = (byte) (segs[0] < 0 ? -1 : 0);
-        for (int i = 0; i < segs.length; ++i) {
-            if (segs[i] != impliedValue) {
-                return segs.length - i;
-            }
-        }
-        return 1;
+    public static BitInt wrap(int value) {
+        return wrap(getBytes(value));
     }
 
-    public static BitInt wrap(byte[] segs) {
-        return new BitInt(segs);
+    public static BitInt wrapLength(int numBits) {
+        assert numBits > 0;
+        if (numBits < BITS) {
+            numBits = BITS;
+        }
+        int size = (numBits + BITS - 1) / BITS;
+        byte[] bytes = new byte[size];
+        Arrays.fill(bytes, (byte) 0);
+        return wrap(bytes);
     }
 
     private boolean CF;
@@ -144,31 +111,8 @@ public class BitInt implements Comparable<BitInt> {
         this.segs = Arrays.copyOf(o.segs, o.segs.length);
     }
 
-    private BitInt(byte[] segs) {
-        this.segs = segs;
-    }
-
-    public BitInt(int numBits) {
-        assert numBits > 0;
-        if (numBits < BITS) {
-            numBits = BITS;
-        }
-        int size = (numBits + BITS - 1) / BITS;
-        segs = new byte[size];
-    }
-
-    private void adc(byte value) {
-        final byte impliedValue = (byte) (value < 0 ? -1 : 0);
-        for (int i = segs.length - 1; i >= 0; i--) {
-            segs[i] = adc(segs[i], value);
-            // accelerate
-            if (impliedValue == -1 && CF) {
-                break;
-            } else if (impliedValue == 0 && !CF) {
-                break;
-            }
-            value = impliedValue;
-        }
+    private BitInt(byte[] bytes) {
+        this.segs = bytes;
     }
 
     private byte adc(byte augend, byte addend) {
@@ -189,26 +133,46 @@ public class BitInt implements Comparable<BitInt> {
         return sum;
     }
 
-    public void add(BitInt o) {
-        add(o.segs);
-    }
-
-    public void add(byte value) {
-        adc(value);
-    }
-
-    private void add(byte[] src) {
-        CF = false;
-        byte[] dst = segs;
-        byte impliedValue = (byte) (src[0] < 0 ? -1 : 0);
-        for (int i = dst.length - 1; i >= 0; i--) {
-            int j = src.length - dst.length + i;
-            dst[i] = adc(dst[i], j >= 0 ? src[j] : impliedValue);
+    private void adc(byte[] augend, byte addend) {
+        final byte impliedValue = (byte) (addend < 0 ? -1 : 0);
+        int i = augend.length - 1;
+        augend[i] = adc(augend[i], addend);
+        while (--i >= 0) {
+            // accelerate
+            if (impliedValue == -1 && CF) {
+                break;
+            } else if (impliedValue == 0 && !CF) {
+                break;
+            }
+            augend[i] = adc(augend[i], impliedValue);
         }
     }
 
+    private void adc(byte[] augend, byte[] addend) {
+        adc(augend, augend.length, addend);
+    }
+
+    private void adc(byte[] augend, int augendEnd, byte[] addend) {
+        final byte impliedValue = (byte) (addend[0] < 0 ? -1 : 0);
+        for (int i = augendEnd - 1; i >= 0; i--) {
+            int j = augendEnd - augend.length + i;
+            augend[i] = adc(augend[i], j >= 0 ? addend[j] : impliedValue);
+        }
+    }
+
+    public void add(BitInt o) {
+        CF = false;
+        adc(segs, o.segs);
+    }
+
+    public void add(byte value) {
+        CF = false;
+        adc(segs, value);
+    }
+
     public void add(int value) {
-        add(getBytes(value));
+        CF = false;
+        adc(segs, getBytes(value));
     }
 
     @Override
@@ -220,30 +184,27 @@ public class BitInt implements Comparable<BitInt> {
         return new BitInt(this);
     }
 
-    public BitInt copySize() {
-        final int size = segs.length * BITS;
-        byte[] segs = new byte[size];
-        Arrays.fill(segs, (byte) 0);
-        return new BitInt(segs);
+    public BitInt copyLength() {
+        return wrapLength(segs.length * BITS);
     }
 
     public BitInt div(final BitInt divisor) {
         BitInt dividend = this;
-        BitInt quotient = dividend.copySize();
-        BitInt remainder = dividend.copySize();
-        int jBitSize = bitSize(divisor.segs);
-        int offset = bitSize(remainder.segs) - jBitSize;
+        BitInt quotient = dividend.copyLength();
+        BitInt remainder = dividend.copyLength();
+        int jOffset = getFirstBitOffset(divisor.segs);
+        int offset = jOffset - getFirstBitOffset(remainder.segs);
         while (offset >= 0) {
-            BitInt j = remainder.copySize();
+            BitInt j = remainder.copyLength();
             j.mov(divisor);
-            j.shiftL(offset);
+            Cbit8.shiftL(j.segs, offset);
             if (remainder.compareTo(j) > 0) {
                 remainder.sub(j);
-                BitInt i = quotient.copySize();
+                BitInt i = quotient.copyLength();
                 i.mov(1);
-                i.shiftL(offset);
+                Cbit8.shiftL(i.segs, offset);
                 quotient.add(i);
-                offset = bitSize(remainder.segs) - jBitSize;
+                offset = jOffset - getFirstBitOffset(remainder.segs);
             } else {
                 offset--;
             }
@@ -278,6 +239,28 @@ public class BitInt implements Comparable<BitInt> {
         return remainder;
     }
 
+    public BitInt imul(BitInt multiplicand, BitInt multiplier) {
+        boolean topBit = multiplicand.segs[0] < 0 ^ multiplier.segs[0] < 0;
+
+        BitInt i = multiplicand;
+        if (multiplicand.segs[0] < 0) {
+            i = multiplicand.copy();
+            i.neg();
+        }
+
+        BitInt j = multiplier;
+        if (multiplier.segs[0] < 0) {
+            j = multiplier.copy();
+            j.neg();
+        }
+
+        BitInt product = mul(i, j);
+        if (!topBit) {
+            product.neg();
+        }
+        return product;
+    }
+
     public void inc() {
         add((byte) 1);
     }
@@ -295,6 +278,39 @@ public class BitInt implements Comparable<BitInt> {
         mov(segs, getBytes(value));
     }
 
+    public BitInt mul(BitInt multiplicand, BitInt multiplier) {
+        BitInt product = BitInt.wrapLength(multiplicand.segs.length * BITS);
+        mul(multiplicand.segs, multiplier.segs, product.segs);
+        return product;
+    }
+
+    private void mul(byte[] multiplicand, byte[] multiplier, byte[] product) {
+        assert multiplicand != null;
+        assert multiplier != null;
+
+        for (int i = 0; i < multiplicand.length; ++i) {
+            int iv = multiplicand[multiplicand.length - 1 - i];
+            if (iv == 0) {
+                continue;
+            }
+            for (int j = 0; j < multiplier.length; ++i) {
+                if (i + j >= multiplicand.length) {
+                    continue;
+                }
+
+                int jv = multiplier[multiplier.length - 1 - j];
+                if (jv == 0) {
+                    continue;
+                }
+
+                int pv = (iv < 0 ? (256 - iv) : iv)
+                        * (jv < 0 ? (256 - jv) : jv);
+                CF = false;
+                adc(product, i + j, getBytes(pv));
+            }
+        }
+    }
+
     /**
      * additive inverse
      */
@@ -310,10 +326,6 @@ public class BitInt implements Comparable<BitInt> {
         for (int i = 0; i < segs.length; ++i) {
             segs[i] = (byte) ~segs[i];
         }
-    }
-
-    private void shiftL(int offset) {
-        Cbit8.shiftL(segs, offset);
     }
 
     // BigInt sub(BigInt minuend, BigInt subtrahend)
