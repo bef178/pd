@@ -200,16 +200,10 @@ public class BitInt implements Comparable<BitInt> {
     private void add(byte[] src) {
         CF = false;
         byte[] dst = segs;
-        int impliedValue = src[0] < 0 ? -1 : 0;
+        byte impliedValue = (byte) (src[0] < 0 ? -1 : 0);
         for (int i = dst.length - 1; i >= 0; i--) {
             int j = src.length - dst.length + i;
-            int value = j >= 0 ? src[j] : impliedValue;
-            if (value == -1 && CF) {
-                return;
-            } else if (value == 0 && !CF) {
-                return;
-            }
-            dst[i] = adc(src[i], (byte) value);
+            dst[i] = adc(dst[i], j >= 0 ? src[j] : impliedValue);
         }
     }
 
