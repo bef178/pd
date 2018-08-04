@@ -1,11 +1,11 @@
 #-----------------------------------------------------------
 # makefile for java
 
-PACKAGE := libcliff
+PACKAGE := libjava
 
 TOP ?= .
 
-SRC := $(TOP)/src-java
+SRC := $(TOP)/src
 SRC_FILES := $(shell find -L $(SRC) -name "*.java")
 
 LIB := $(TOP)/lib
