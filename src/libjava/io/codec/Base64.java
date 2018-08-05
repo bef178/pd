@@ -66,23 +66,24 @@ public class Base64 {
         }
 
         @Override
-        public int push(final int ch) {
+        public void push(final int ch) {
             CheckedByte.checkByteEx(ch);
             if (eof) {
-                return E_EOF;
+                return;
             }
             if (ch == P_FLUSH) {
                 eof = true;
                 int j = srcIndex;
                 srcIndex = 0;
-                return toBase64Bytes(src, 0, j, downstream);
+                toBase64Bytes(src, 0, j, downstream);
+                return;
             }
             src[srcIndex++] = ch;
             if (srcIndex == 3) {
                 srcIndex = 0;
-                return toBase64Bytes(src, 0, 3, downstream);
+                toBase64Bytes(src, 0, 3, downstream);
+                return;
             }
-            return 0;
         }
     }
 
@@ -147,7 +148,7 @@ public class Base64 {
             case 2: {
                 pushable.push(ENCODE_MAP[(a[i] & 0xFF) >>> 2]);
                 pushable.push(ENCODE_MAP[((a[i] & 0x03) << 4)
-                                         | ((a[i + 1] & 0xFF) >>> 4)]);
+                        | ((a[i + 1] & 0xFF) >>> 4)]);
                 pushable.push(ENCODE_MAP[((a[i + 1] & 0x0F) << 2)]);
                 pushable.push('=');
                 break;
@@ -155,9 +156,9 @@ public class Base64 {
             case 3:
                 pushable.push(ENCODE_MAP[(a[i] & 0xFF) >>> 2]);
                 pushable.push(ENCODE_MAP[((a[i] & 0x03) << 4)
-                                         | ((a[i + 1] & 0xFF) >>> 4)]);
+                        | ((a[i + 1] & 0xFF) >>> 4)]);
                 pushable.push(ENCODE_MAP[((a[i + 1] & 0x0F) << 2)
-                                         | ((a[i + 2] & 0xFF) >>> 6)]);
+                        | ((a[i + 2] & 0xFF) >>> 6)]);
                 pushable.push(ENCODE_MAP[a[i + 2] & 0x3F]);
                 break;
             default:

@@ -45,8 +45,8 @@ public class Hexari {
             }
 
             @Override
-            public int push(int aByte) {
-                return toHexariBytes(aByte, downstream);
+            public void push(int aByte) {
+                toHexariBytes(aByte, downstream);
             }
         };
     }
@@ -104,11 +104,9 @@ public class Hexari {
      * accept an int in [0, 255]<br/>
      * return pushed bytes size
      */
-    public static int toHexariBytes(int aByte, Pushable pushable) {
+    public static void toHexariBytes(int aByte, Pushable pushable) {
         CheckedByte.checkByte(aByte);
-        int size = 0;
-        size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
-        size += pushable.push(HEX_DIGIT_TO_LITERAL[aByte & 0x0F]);
-        return size;
+        pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
+        pushable.push(HEX_DIGIT_TO_LITERAL[aByte & 0x0F]);
     }
 }

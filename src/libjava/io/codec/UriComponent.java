@@ -50,15 +50,13 @@ public class UriComponent {
             this.downstream = PushablePipe.join(Utf8.asPusher(), new Pushable() {
 
                 @Override
-                public int push(int ch) {
+                public void push(int ch) {
                     ch = CheckedByte.checkByte(ch);
                     if (SHOULD_NOT_ENCODE.get(ch)) {
-                        return downstream.push(ch);
+                        downstream.push(ch);
                     } else {
-                        int size = 0;
-                        size += downstream.push('%');
-                        size += Hexari.toHexariBytes(ch, downstream);
-                        return size;
+                        downstream.push('%');
+                        Hexari.toHexariBytes(ch, downstream);
                     }
                 }
             });
@@ -66,8 +64,8 @@ public class UriComponent {
         }
 
         @Override
-        public int push(int ch) {
-            return this.downstream.push(ch);
+        public void push(int ch) {
+            this.downstream.push(ch);
         }
     }
 

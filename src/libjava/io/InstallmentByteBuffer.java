@@ -158,9 +158,8 @@ public class InstallmentByteBuffer implements Pushable {
     }
 
     @Override
-    public int push(int ch) {
+    public void push(int ch) {
         append(ch);
-        return 1;
     }
 
     private void put(int pos, byte b) {

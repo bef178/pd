@@ -43,8 +43,8 @@ public class Utf8 {
             }
 
             @Override
-            public int push(int ch) {
-                return toUtf8Bytes(ch, downstream);
+            public void push(int ch) {
+                toUtf8Bytes(ch, downstream);
             }
         };
     }
@@ -71,13 +71,12 @@ public class Utf8 {
      * <br/>
      * returns the size of utf8 bytes
      */
-    public static int toUtf8Bytes(int ch, Pushable pushable) {
+    public static void toUtf8Bytes(int ch, Pushable pushable) {
         final int n = utf8Length(ch);
         if (n == 1) {
             // ASCII
-            return pushable.push(ch);
+            pushable.push(ch);
         } else {
-            int size = 0;
             for (int i = 0; i < n; ++i) {
                 int c = ch;
                 int j = n - 1 - i;
@@ -89,9 +88,8 @@ public class Utf8 {
                 } else {
                     c = c & 0x3F | 0x80;
                 }
-                size += pushable.push(c);
+                pushable.push(c);
             }
-            return size;
         }
     }
 

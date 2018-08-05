@@ -68,20 +68,20 @@ public class Escaped {
             }
 
             @Override
-            public int push(int ch) {
+            public void push(int ch) {
                 if (Ctype.isGraph(ch)) {
                     if (ENCODE_MAP[ch] >= 0) {
                         downstream.push('\\');
                         downstream.push(ENCODE_MAP[ch]);
-                        return 2;
+                        return;
                     } else {
                         downstream.push(ch);
-                        return 1;
+                        return;
                     }
                 }
                 downstream.push('\\');
                 downstream.push('u');
-                return 2 + downUstream.push(ch);
+                downUstream.push(ch);
             }
         };
     }

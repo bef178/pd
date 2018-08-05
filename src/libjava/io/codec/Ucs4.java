@@ -42,8 +42,8 @@ public class Ucs4 {
             }
 
             @Override
-            public int push(int ch) {
-                return toUcs4Bytes(ch, downstream);
+            public void push(int ch) {
+                toUcs4Bytes(ch, downstream);
             }
         };
     }
@@ -56,17 +56,15 @@ public class Ucs4 {
         return ch;
     }
 
-    public static int toUcs4Bytes(int ch, Pushable downstream) {
-        int size = 0;
+    public static void toUcs4Bytes(int ch, Pushable downstream) {
         for (int i = 0; i < 4; ++i) {
             int c = ch;
             int j = 4 - 1 - i;
             while (j-- > 0) {
                 c >>>= 8;
             }
-            size += downstream.push(c & 0xFF);
+            downstream.push(c & 0xFF);
         }
-        return size;
     }
 
 }

@@ -24,17 +24,15 @@ public class JsonSerializer {
             return config;
         }
 
-        private static int pushCharSequence(CharSequence cs,
+        private static void pushCharSequence(CharSequence cs,
                 Pushable pushable) {
             if (cs == null || cs.length() == 0) {
-                return 0;
+                return;
             }
-            int size = 0;
             OfInt it = cs.codePoints().iterator();
             while (it.hasNext()) {
-                size += pushable.push(it.nextInt());
+                pushable.push(it.nextInt());
             }
-            return size;
         }
 
         public String EOL = null;
@@ -49,29 +47,27 @@ public class JsonSerializer {
             // dummy
         }
 
-        public int pushEol(Pushable pushable) {
-            return pushCharSequence(EOL, pushable);
+        public void pushEol(Pushable pushable) {
+            pushCharSequence(EOL, pushable);
         }
 
-        public int pushIndent(Pushable pushable) {
+        public void pushIndent(Pushable pushable) {
             if (numIndents == 0 || numSpacesPerIndent == 0) {
-                return 0;
+                return;
             }
-            int size = 0;
             for (int i = 0; i < numIndents; ++i) {
                 if (numSpacesPerIndent >= 0) {
                     for (int j = 0; j < numSpacesPerIndent; ++j) {
-                        size += pushable.push(' ');
+                        pushable.push(' ');
                     }
                 } else {
-                    size += pushable.push('\t');
+                    pushable.push('\t');
                 }
             }
-            return size;
         }
 
-        public int pushMargin(Pushable pushable) {
-            return pushCharSequence(margin, pushable);
+        public void pushMargin(Pushable pushable) {
+            pushCharSequence(margin, pushable);
         }
     }
 
@@ -87,51 +83,53 @@ public class JsonSerializer {
         return sb;
     }
 
-    public static int serialize(Json json, Config config, Pushable it) {
+    public static void serialize(Json json, Config config, Pushable it) {
         switch (json.type()) {
             case SCALAR:
-                return serializeScalar((JsonScalar) json, it);
-            case VECTOR:
-                return serializeVector((JsonVector) json, config, it);
-            case OBJECT:
-                return serializeObject((JsonObject) json, config, it);
-            default:
+                serializeScalar((JsonScalar) json, it);
                 break;
+            case VECTOR:
+                serializeVector((JsonVector) json, config, it);
+                break;
+            case OBJECT:
+                serializeObject((JsonObject) json, config, it);
+                break;
+            default:
+                throw new IllegalJsonTypeException();
         }
-        throw new IllegalJsonTypeException();
     }
 
     /**
      * cheat sheet style
      */
-    public static int serialize(Json json, Pushable it) {
-        return serialize(json, Config.getCheatSheet(), it);
+    public static void serialize(Json json, Pushable it) {
+        serialize(json, Config.getCheatSheet(), it);
     }
 
-    private static int serializeCharSequence(CharSequence cs, Pushable it) {
-        int size = it.push('\"');
+    private static void serializeCharSequence(CharSequence cs, Pushable it) {
+        it.push('\"');
 
         OfInt it1 = cs.codePoints().iterator();
         while (it1.hasNext()) {
             int ch = it1.nextInt();
             if (ch == '\"') {
-                size += it.push('\\');
-                size += it.push('\"');
+                it.push('\\');
+                it.push('\"');
             } else {
-                size += it.push(ch);
+                it.push(ch);
             }
         }
 
-        return size + it.push('\"');
+        it.push('\"');
     }
 
-    private static int serializeObject(JsonObject json, Config config, Pushable it) {
+    private static void serializeObject(JsonObject json, Config config, Pushable it) {
 
         boolean isEmpty = json.isEmpty();
 
-        int size = it.push('{');
+        it.push('{');
         if (!isEmpty) {
-            size += config.pushEol(it);
+            config.pushEol(it);
         }
 
         config.numIndents++;
@@ -143,64 +141,64 @@ public class JsonSerializer {
             String key = keysIt.next();
             Json value = json.getJson(key);
 
-            size += config.pushMargin(it);
-            size += config.pushIndent(it);
+            config.pushMargin(it);
+            config.pushIndent(it);
 
-            size += serializeCharSequence(key, it);
-            size += it.push(':');
-            size += serialize(value, config, it);
+            serializeCharSequence(key, it);
+            it.push(':');
+            serialize(value, config, it);
 
             if (keysIt.hasNext()) {
-                size += it.push(',');
+                it.push(',');
             }
-            size += config.pushEol(it);
+            config.pushEol(it);
         }
 
         config.numIndents--;
 
         if (!isEmpty) {
-            size += config.pushMargin(it);
-            size += config.pushIndent(it);
+            config.pushMargin(it);
+            config.pushIndent(it);
         }
 
-        return size + it.push('}');
+        it.push('}');
     }
 
-    private static int serializeScalar(JsonScalar json, Pushable it) {
-        return serializeCharSequence(json.getString(), it);
+    private static void serializeScalar(JsonScalar json, Pushable it) {
+        serializeCharSequence(json.getString(), it);
     }
 
-    private static int serializeVector(JsonVector json, Config config, Pushable it) {
+    private static void serializeVector(JsonVector json, Config config, Pushable it) {
 
         boolean isEmpty = json.isEmpty();
 
-        int size = it.push('[');
+        it.push('[');
         if (!isEmpty) {
-            size += config.pushEol(it);
+            config.pushEol(it);
         }
 
         config.numIndents++;
 
         for (int i = 0; i < json.size(); ++i) {
-            size += config.pushMargin(it);
-            size += config.pushIndent(it);
+            config.pushMargin(it);
+            config.pushIndent(it);
 
-            size += serialize(json.getJson(i), config, it);
+            serialize(json.getJson(i), config, it);
 
             if (i < json.size() - 1) {
-                size += it.push(',');
+                it.push(',');
             }
-            size += config.pushEol(it);
+            config.pushEol(it);
         }
 
         config.numIndents--;
 
         if (!isEmpty) {
-            size += config.pushMargin(it);
-            size += config.pushIndent(it);
+            config.pushMargin(it);
+            config.pushIndent(it);
         }
 
-        return size + it.push(']');
+        it.push(']');
     }
 
     private JsonSerializer() {

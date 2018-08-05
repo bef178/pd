@@ -5,48 +5,43 @@ import libjava.io.Pushable;
 
 public class Typeset {
 
-    private static int pushBytes(byte[] a, Pushable pushable) {
-        int size = 0;
+    private static void pushBytes(byte[] a, Pushable pushable) {
         for (int i : a) {
-            size += pushable.push(i & 0xFF);
+            pushable.push(i & 0xFF);
         }
-        return size;
     }
 
-    public static int pushBytes(Pullable src, int bytesPerLine,
+    public static void pushBytes(Pullable src, int bytesPerLine,
             int startingOffset, byte[] prefix, byte[] suffix,
-            Pushable pushable) {
-        int rest = bytesPerLine - startingOffset - suffix.length;
-        int size = pushBytes(src.pull(), src, rest, pushable);
+            Pushable dst) {
+        int room = bytesPerLine - startingOffset - suffix.length;
+        pushBytes(src.pull(), src, room, dst);
 
-        int pulled = src.pull();
-        while (pulled != -1) {
-            size += pushBytes(suffix, pushable);
-            size += pushable.push('\n');
-            size += pushBytes(prefix, pushable);
+        int last = src.pull();
+        while (last != -1) {
+            pushBytes(suffix, dst);
+            dst.push('\n');
+            pushBytes(prefix, dst);
 
-            rest = bytesPerLine - prefix.length - suffix.length;
-            size += pushBytes(pulled, src, rest, pushable);
+            room = bytesPerLine - prefix.length - suffix.length;
+            pushBytes(last, src, room, dst);
         }
-        return size;
     }
 
     /**
      * @return the size of bytes sent to pusher
      */
-    private static int pushBytes(int prepulled, Pullable src, int rest,
-            Pushable pushable) {
-        if (prepulled == -1) {
-            return 0;
+    private static void pushBytes(int last, Pullable src, int room, Pushable dst) {
+        if (last == -1) {
+            return;
         }
-        int size = pushable.push(prepulled);
-        for (int i = 0; i < rest; ++i) {
+        dst.push(last);
+        for (int i = 0; i < room; ++i) {
             int j = src.pull();
             if (j == -1) {
-                return size;
+                return;
             }
-            size += pushable.push(j);
+            dst.push(j);
         }
-        return size;
     }
 }
