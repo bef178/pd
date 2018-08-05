@@ -26,13 +26,13 @@ public class Config {
         if (ch == '\"') {
             String value = Parser.pickString(puller, '\"');
             ch = Parser.eatWhitespace(puller);
-            if (ch != Pullable.EOF) {
+            if (ch != Pullable.E_EOF) {
                 throw new ParsingException();
             } else {
                 return new SimpleImmutableEntry<String, String>(id, value);
             }
         } else {
-            String value = Parser.pickString(puller, Pullable.EOF);
+            String value = Parser.pickString(puller, Pullable.E_EOF);
             return new SimpleImmutableEntry<String, String>(id, value);
         }
     }

@@ -2,7 +2,7 @@ package libjava.io;
 
 public interface Pushable {
 
-    static final int E_EOF = Pullable.EOF;
+    static final int E_EOF = Pullable.E_EOF;
     static final int E_ARG = -2;
 
     public static Pushable wrap(final StringBuilder sb) {

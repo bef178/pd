@@ -11,7 +11,7 @@ public class Parser {
 
     public static int eatWhitespace(Pullable pullable) {
         int ch = pullable.pull();
-        while (ch != Pullable.EOF) {
+        while (ch != Pullable.E_EOF) {
             if (!Ctype.isWhitespace(ch)) {
                 break;
             }
@@ -234,7 +234,7 @@ public class Parser {
     }
 
     public static String pickString(Feeder puller) {
-        return pickString(puller, Pullable.EOF);
+        return pickString(puller, Pullable.E_EOF);
     }
 
     public static String pickString(Pullable puller, int closingSymbol) {
@@ -259,7 +259,7 @@ public class Parser {
                 escaped = true;
             } else if (ch == closingSymbol) {
                 return new String(pusher.copyBytes(), StandardCharsets.UTF_8);
-            } else if (ch == Pullable.EOF) {
+            } else if (ch == Pullable.E_EOF) {
                 if (muted) {
                     return new String(pusher.copyBytes(),
                             StandardCharsets.UTF_8);

@@ -4,7 +4,7 @@ import java.util.PrimitiveIterator.OfInt;
 
 public interface Pullable {
 
-    static final int EOF = -1;
+    public static final int E_EOF = -1;
 
     public static Pullable wrap(CharSequence cs) {
 
@@ -17,15 +17,14 @@ public interface Pullable {
                 if (it.hasNext()) {
                     return it.nextInt();
                 }
-                return EOF;
+                return E_EOF;
             }
         };
     }
 
     /**
-     * Return non-negative as code point or binary byte, or negative as status code<br/>
-     * Especially, will always return EOF when reaches the end of stream.<br/>
-     * Wont throw exception.
+     * Return non-negative as value, or negative as status.<br/>
+     * Especially, will return E_EOF when reaches the end of stream.<br/>
      */
     public int pull();
 }

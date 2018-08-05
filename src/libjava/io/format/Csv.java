@@ -21,7 +21,7 @@ public class Csv {
         List<String> items = new LinkedList<>();
         while (true) {
             int ch = puller.pull();
-            if (ch == Pullable.EOF) {
+            if (ch == Pullable.E_EOF) {
                 items.add("");
                 return items;
             } else if (ch == COMMA) {
@@ -30,7 +30,7 @@ public class Csv {
             } else if (ch == DOUBLE_QUOTE) {
                 items.add(Parser.pickString(puller, DOUBLE_QUOTE));
                 ch = puller.pull();
-                if (ch == Pullable.EOF) {
+                if (ch == Pullable.E_EOF) {
                     return items;
                 } else if (ch == COMMA) {
                     continue;
@@ -41,7 +41,7 @@ public class Csv {
             } else if (ch == SINGLE_QUOTE) {
                 items.add(Parser.pickString(puller, SINGLE_QUOTE));
                 ch = puller.pull();
-                if (ch == Pullable.EOF) {
+                if (ch == Pullable.E_EOF) {
                     return items;
                 } else if (ch == COMMA) {
                     continue;
