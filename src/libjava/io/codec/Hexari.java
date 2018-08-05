@@ -9,9 +9,7 @@ import libjava.io.Pushable;
 import libjava.io.PushablePipe;
 
 /**
- * A HexariByte is ASCII presentation of a hex digit, like '9', 'A' or 'e'<br/>
- * <br/>
- * byte 0x65 => byte[] { '6', '5' } under all conditions
+ * 0x65 => '6' '5'
  */
 public class Hexari {
 
@@ -22,9 +20,9 @@ public class Hexari {
             private Pullable upstream = null;
 
             @Override
-            public PullablePipe join(Pullable upstream) {
+            public <T extends Pullable> T join(T upstream) {
                 this.upstream = upstream;
-                return this;
+                return upstream;
             }
 
             @Override
@@ -41,9 +39,9 @@ public class Hexari {
             private Pushable downstream = null;
 
             @Override
-            public PushablePipe join(Pushable downstream) {
+            public <T extends Pushable> T join(T downstream) {
                 this.downstream = downstream;
-                return this;
+                return downstream;
             }
 
             @Override
@@ -53,13 +51,8 @@ public class Hexari {
         };
     }
 
-    private static final byte[] HEX_DIGIT_TO_LITERAL = {
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'A', 'B', 'C', 'D', 'E', 'F'
-    };
-
-    private static int fromHexariByte(int hexari) {
-        switch (hexari) {
+    private static int fromHexariByte(int ch) {
+        switch (ch) {
             case '0':
             case '1':
             case '2':
@@ -70,35 +63,55 @@ public class Hexari {
             case '7':
             case '8':
             case '9':
-                return hexari - '0';
+                return ch - '0';
             case 'A':
             case 'B':
             case 'C':
             case 'D':
             case 'E':
             case 'F':
-                return hexari - 'A' + 10;
+                return ch - 'A' + 10;
             case 'a':
             case 'b':
             case 'c':
             case 'd':
             case 'e':
             case 'f':
-                return hexari - 'a' + 10;
+                return ch - 'a' + 10;
             default:
-                break;
+                throw new ParsingException();
         }
-        throw new ParsingException();
-    }
-
-    public static int fromHexariBytes(int i, int j) {
-        return (fromHexariByte(checkByte(i)) << 4) | fromHexariByte(checkByte(j));
     }
 
     public static int fromHexariBytes(Pullable pullable) {
-        int i = pullable.pull();
-        int j = pullable.pull();
-        return fromHexariBytes(i, j);
+        int i = checkByte(pullable.pull());
+        int j = checkByte(pullable.pull());
+        return (fromHexariByte(i) << 4) | fromHexariByte(j);
+    }
+
+    private static byte toHexariByte(int value) {
+        switch (value) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                return (byte) (value + '0');
+            case 0x0A:
+            case 0x0B:
+            case 0x0C:
+            case 0x0D:
+            case 0x0E:
+            case 0x0F:
+                return (byte) (value - 10 + 'A');
+            default:
+                throw new ParsingException();
+        }
     }
 
     /**
@@ -107,7 +120,7 @@ public class Hexari {
      */
     public static void toHexariBytes(int aByte, Pushable pushable) {
         checkByte(aByte);
-        pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
-        pushable.push(HEX_DIGIT_TO_LITERAL[aByte & 0x0F]);
+        pushable.push(toHexariByte(aByte >>> 4));
+        pushable.push(toHexariByte(aByte & 0x0F));
     }
 }

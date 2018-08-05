@@ -21,9 +21,9 @@ public class Utf8 {
             private Pullable upstream = null;
 
             @Override
-            public PullablePipe join(Pullable pullable) {
-                upstream = pullable;
-                return this;
+            public <T extends Pullable> T join(T upstream) {
+                this.upstream = upstream;
+                return upstream;
             }
 
             @Override
@@ -40,9 +40,9 @@ public class Utf8 {
             private Pushable downstream = null;
 
             @Override
-            public PushablePipe join(Pushable pushable) {
-                downstream = pushable;
-                return this;
+            public <T extends Pushable> T join(T downstream) {
+                this.downstream = downstream;
+                return downstream;
             }
 
             @Override
@@ -120,19 +120,19 @@ public class Utf8 {
         return -1;
     }
 
-    private static int utf8LengthByFirstByte(int i) {
-        checkByte(i);
-        if ((i & 0x80) == 0) {
+    private static int utf8LengthByFirstByte(int aByte) {
+        checkByte(aByte);
+        if ((aByte & 0x80) == 0) {
             return 1;
-        } else if ((i & 0x20) == 0) {
+        } else if ((aByte & 0x20) == 0) {
             return 2;
-        } else if ((i & 0x10) == 0) {
+        } else if ((aByte & 0x10) == 0) {
             return 3;
-        } else if ((i & 0x08) == 0) {
+        } else if ((aByte & 0x08) == 0) {
             return 4;
-        } else if ((i & 0x04) == 0) {
+        } else if ((aByte & 0x04) == 0) {
             return 5;
-        } else if ((i & 0x02) == 0) {
+        } else if ((aByte & 0x02) == 0) {
             return 6;
         }
         return -1;

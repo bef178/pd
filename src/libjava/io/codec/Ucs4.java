@@ -19,9 +19,9 @@ public class Ucs4 {
             private Pullable upstream = null;
 
             @Override
-            public PullablePipe join(Pullable upstream) {
+            public <T extends Pullable> T join(T upstream) {
                 this.upstream = upstream;
-                return this;
+                return upstream;
             }
 
             @Override
@@ -38,9 +38,9 @@ public class Ucs4 {
             private Pushable downstream = null;
 
             @Override
-            public PushablePipe join(Pushable downstream) {
+            public <T extends Pushable> T join(T downstream) {
                 this.downstream = downstream;
-                return this;
+                return downstream;
             }
 
             @Override
@@ -68,5 +68,4 @@ public class Ucs4 {
             downstream.push(c & 0xFF);
         }
     }
-
 }

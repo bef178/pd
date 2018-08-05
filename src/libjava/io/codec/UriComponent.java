@@ -50,12 +50,12 @@ public class UriComponent {
 
         return new PullablePipe() {
 
-            private Pullable upstream;
+            private PullablePipe upstream;
 
             @Override
-            public PullablePipe join(final Pullable upstream) {
-
-                this.upstream = PullablePipe.join(Utf8.asPullablePipe(), new Pullable() {
+            public <T extends Pullable> T join(final T upstream) {
+                this.upstream = Utf8.asPullablePipe();
+                this.upstream.join(new Pullable() {
 
                     @Override
                     public int pull() {
@@ -67,7 +67,7 @@ public class UriComponent {
                         }
                     }
                 });
-                return this;
+                return upstream;
             }
 
             @Override
@@ -81,16 +81,16 @@ public class UriComponent {
 
         return new PushablePipe() {
 
-            private Pushable downstream;
+            private PushablePipe downstream;
 
             @Override
-            public PushablePipe join(final Pushable downstream) {
-
-                this.downstream = PushablePipe.join(Utf8.asPushablePipe(), new Pushable() {
+            public <T extends Pushable> T join(final T downstream) {
+                this.downstream = Utf8.asPushablePipe();
+                this.downstream.join(new Pushable() {
 
                     @Override
                     public void push(int ch) {
-                        ch = checkByte(ch);
+                        checkByte(ch);
                         if (SHOULD_NOT_ENCODE.get(ch)) {
                             downstream.push(ch);
                         } else {
@@ -99,7 +99,7 @@ public class UriComponent {
                         }
                     }
                 });
-                return this;
+                return downstream;
             }
 
             @Override
@@ -108,5 +108,4 @@ public class UriComponent {
             }
         };
     }
-
 }

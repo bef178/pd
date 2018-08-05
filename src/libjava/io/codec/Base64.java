@@ -30,7 +30,7 @@ public class Base64 {
                 '8', '9', '+', '/'
         };
 
-        DECODE_MAP = new int[127];
+        DECODE_MAP = new int[128];
         Arrays.fill(DECODE_MAP, -1);
         for (int i = 0; i < ENCODE_MAP.length; ++i) {
             DECODE_MAP[ENCODE_MAP[i]] = i;
@@ -55,9 +55,9 @@ public class Base64 {
             private Pullable upstream = null;
 
             @Override
-            public PullablePipe join(Pullable upstream) {
+            public <T extends Pullable> T join(T upstream) {
                 this.upstream = upstream;
-                return this;
+                return upstream;
             }
 
             @Override
@@ -91,17 +91,19 @@ public class Base64 {
             private boolean eof = false;
 
             @Override
-            public PushablePipe join(Pushable downstream) {
+            public <T extends Pushable> T join(T downstream) {
                 this.downstream = downstream;
-                return this;
+                return downstream;
             }
 
             @Override
             public void push(final int ch) {
                 checkByteEx(ch);
+
                 if (eof) {
-                    return;
+                    throw new ParsingException();
                 }
+
                 if (ch == P_FLUSH) {
                     eof = true;
                     int j = srcIndex;
@@ -109,6 +111,7 @@ public class Base64 {
                     toBase64Bytes(src, 0, j, downstream);
                     return;
                 }
+
                 src[srcIndex++] = ch;
                 if (srcIndex == 3) {
                     srcIndex = 0;
@@ -119,51 +122,46 @@ public class Base64 {
         };
     }
 
-    private static void fromBase64Bytes(int[] a, Pullable pullable) {
-        int i = checkByteEx(pullable.pull());
+    private static void fromBase64Bytes(int[] src, Pullable base64) {
+        int i = checkByteEx(base64.pull());
         i = i == -1 ? -1 : DECODE_MAP[i];
-        int j = checkByteEx(pullable.pull());
+        int j = checkByteEx(base64.pull());
         j = j == -1 ? -1 : DECODE_MAP[j];
-        int k = checkByteEx(pullable.pull());
+        int k = checkByteEx(base64.pull());
         k = k == -1 ? -1 : DECODE_MAP[k]; // '=' => -1
-        int l = checkByteEx(pullable.pull());
+        int l = checkByteEx(base64.pull());
         l = l == -1 ? -1 : DECODE_MAP[l];
-        a[0] = (i << 2) | (j >> 4);
-        a[1] = k != -1 ? (j << 4) & 0xFF | (k >> 2) : -1;
-        a[2] = l != -1 ? (k << 6) & 0xFF | l : -1;
+        src[0] = (i << 2) | (j >> 4);
+        src[1] = k != -1 ? (j << 4) & 0xFF | (k >> 2) : -1;
+        src[2] = l != -1 ? (k << 6) & 0xFF | l : -1;
     }
 
-    private static int toBase64Bytes(int[] a, int i, int j,
-            Pushable pushable) {
+    private static void toBase64Bytes(int[] src, int i, int j, Pushable base64) {
         switch (j - i) {
             case 0:
-                return 0;
+                break;
             case 1: {
-                pushable.push(ENCODE_MAP[(a[i] & 0xFF) >>> 2]);
-                pushable.push(ENCODE_MAP[(a[i] & 0x03) << 4]);
-                pushable.push('=');
-                pushable.push('=');
+                base64.push(ENCODE_MAP[(src[i] & 0xFF) >>> 2]);
+                base64.push(ENCODE_MAP[(src[i] & 0x03) << 4]);
+                base64.push('=');
+                base64.push('=');
                 break;
             }
             case 2: {
-                pushable.push(ENCODE_MAP[(a[i] & 0xFF) >>> 2]);
-                pushable.push(ENCODE_MAP[((a[i] & 0x03) << 4)
-                        | ((a[i + 1] & 0xFF) >>> 4)]);
-                pushable.push(ENCODE_MAP[((a[i + 1] & 0x0F) << 2)]);
-                pushable.push('=');
+                base64.push(ENCODE_MAP[(src[i] & 0xFF) >>> 2]);
+                base64.push(ENCODE_MAP[((src[i] & 0x03) << 4) | ((src[i + 1] & 0xFF) >>> 4)]);
+                base64.push(ENCODE_MAP[((src[i + 1] & 0x0F) << 2)]);
+                base64.push('=');
                 break;
             }
             case 3:
-                pushable.push(ENCODE_MAP[(a[i] & 0xFF) >>> 2]);
-                pushable.push(ENCODE_MAP[((a[i] & 0x03) << 4)
-                        | ((a[i + 1] & 0xFF) >>> 4)]);
-                pushable.push(ENCODE_MAP[((a[i + 1] & 0x0F) << 2)
-                        | ((a[i + 2] & 0xFF) >>> 6)]);
-                pushable.push(ENCODE_MAP[a[i + 2] & 0x3F]);
+                base64.push(ENCODE_MAP[(src[i] & 0xFF) >>> 2]);
+                base64.push(ENCODE_MAP[((src[i] & 0x03) << 4) | ((src[i + 1] & 0xFF) >>> 4)]);
+                base64.push(ENCODE_MAP[((src[i + 1] & 0x0F) << 2) | ((src[i + 2] & 0xFF) >>> 6)]);
+                base64.push(ENCODE_MAP[src[i + 2] & 0x3F]);
                 break;
             default:
                 throw new ParsingException();
         }
-        return 4;
     }
 }

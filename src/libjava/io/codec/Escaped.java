@@ -9,7 +9,7 @@ import libjava.io.PushablePipe;
 import libjava.primitive.Ctype;
 
 /**
- * ch => ch
+ * ch => ch or "\\X" or "\\uXX"
  */
 public class Escaped {
 
@@ -44,34 +44,34 @@ public class Escaped {
 
             private Pullable upstream;
 
-            private Pullable upUstream;
+            private PullablePipe upUstream;
 
             @Override
-            public PullablePipe join(Pullable upstream) {
+            public <T extends Pullable> T join(T upstream) {
                 this.upstream = upstream;
-                this.upUstream = PullablePipe.join(Utf8.asPullablePipe(),
-                        Hexari.asPullablePipe(), upstream);
-                return this;
+                this.upUstream = Utf8.asPullablePipe();
+                this.upUstream.join(Hexari.asPullablePipe()).join(upstream);
+                return upstream;
             }
 
             @Override
             public int pull() {
                 int ch = upstream.pull();
-                if (ch == '\\') {
-                    ch = upstream.pull();
-                    if (Ctype.isGraph(ch)) {
-                        if (DECODE_MAP[ch] >= 0) {
-                            return DECODE_MAP[ch];
-                        }
-                        if (ch == 'u') {
-                            return upUstream.pull();
-                        }
-                    }
-                    // unrecognized escaped sequence
-                    return ch;
-                } else {
+                if (ch != '\\') {
                     return ch;
                 }
+
+                ch = upstream.pull();
+                if (Ctype.isGraph(ch)) {
+                    if (DECODE_MAP[ch] >= 0) {
+                        return DECODE_MAP[ch];
+                    }
+                    if (ch == 'u') {
+                        return upUstream.pull();
+                    }
+                }
+                // unrecognized escaped sequence
+                return ch;
             }
         };
     }
@@ -82,14 +82,14 @@ public class Escaped {
 
             private Pushable downstream;
 
-            private Pushable downUstream;
+            private PushablePipe downUstream;
 
             @Override
-            public PushablePipe join(Pushable downstream) {
+            public <T extends Pushable> T join(T downstream) {
                 this.downstream = downstream;
-                this.downUstream = PushablePipe.join(Utf8.asPushablePipe(),
-                        Hexari.asPushablePipe(), downstream);
-                return this;
+                this.downUstream = Utf8.asPushablePipe();
+                this.downUstream.join(Hexari.asPushablePipe()).join(downstream);
+                return downstream;
             }
 
             @Override
@@ -98,17 +98,16 @@ public class Escaped {
                     if (ENCODE_MAP[ch] >= 0) {
                         downstream.push('\\');
                         downstream.push(ENCODE_MAP[ch]);
-                        return;
                     } else {
                         downstream.push(ch);
-                        return;
                     }
+                    return;
                 }
+
                 downstream.push('\\');
                 downstream.push('u');
                 downUstream.push(ch);
             }
         };
     }
-
 }

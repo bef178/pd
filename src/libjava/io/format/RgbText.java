@@ -57,8 +57,6 @@ public class RgbText {
     }
 
     private static int pullComponent(Pullable pullable) {
-        int i = pullable.pull();
-        int j = pullable.pull();
-        return Hexari.fromHexariBytes(i, j);
+        return Hexari.fromHexariBytes(pullable);
     }
 }
