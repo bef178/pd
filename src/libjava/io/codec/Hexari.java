@@ -1,5 +1,7 @@
 package libjava.io.codec;
 
+import static libjava.io.Util.checkByte;
+
 import libjava.io.ParsingException;
 import libjava.io.Pullable;
 import libjava.io.PullablePipe;
@@ -90,8 +92,7 @@ public class Hexari {
     }
 
     public static int fromHexariBytes(int i, int j) {
-        return (fromHexariByte(CheckedByte.checkByte(i)) << 4)
-                | fromHexariByte(CheckedByte.checkByte(j));
+        return (fromHexariByte(checkByte(i)) << 4) | fromHexariByte(checkByte(j));
     }
 
     public static int fromHexariBytes(Pullable pullable) {
@@ -105,7 +106,7 @@ public class Hexari {
      * return pushed bytes size
      */
     public static void toHexariBytes(int aByte, Pushable pushable) {
-        CheckedByte.checkByte(aByte);
+        checkByte(aByte);
         pushable.push(HEX_DIGIT_TO_LITERAL[aByte >>> 4]);
         pushable.push(HEX_DIGIT_TO_LITERAL[aByte & 0x0F]);
     }

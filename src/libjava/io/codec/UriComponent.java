@@ -1,5 +1,7 @@
 package libjava.io.codec;
 
+import static libjava.io.Util.checkByte;
+
 import java.util.BitSet;
 
 import libjava.io.Pullable;
@@ -57,7 +59,7 @@ public class UriComponent {
 
                     @Override
                     public int pull() {
-                        int ch = CheckedByte.checkByte(upstream.pull());
+                        int ch = checkByte(upstream.pull());
                         if (ch == '%') {
                             return Hexari.fromHexariBytes(upstream);
                         } else {
@@ -88,7 +90,7 @@ public class UriComponent {
 
                     @Override
                     public void push(int ch) {
-                        ch = CheckedByte.checkByte(ch);
+                        ch = checkByte(ch);
                         if (SHOULD_NOT_ENCODE.get(ch)) {
                             downstream.push(ch);
                         } else {

@@ -1,5 +1,7 @@
 package libjava.io.codec;
 
+import static libjava.io.Util.checkByte;
+
 import libjava.io.Pullable;
 import libjava.io.PullablePipe;
 import libjava.io.Pushable;
@@ -51,7 +53,7 @@ public class Ucs4 {
     public static int fromUcs4Bytes(Pullable upstream) {
         int ch = 0;
         for (int i = 0; i < 4; ++i) {
-            ch = (ch << 8) | (CheckedByte.checkByte(upstream.pull()));
+            ch = (ch << 8) | checkByte(upstream.pull());
         }
         return ch;
     }

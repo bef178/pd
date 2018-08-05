@@ -1,5 +1,7 @@
 package libjava.io.codec;
 
+import static libjava.io.Util.checkByteEx;
+
 import java.util.Arrays;
 
 import libjava.io.ParsingException;
@@ -96,7 +98,7 @@ public class Base64 {
 
             @Override
             public void push(final int ch) {
-                CheckedByte.checkByteEx(ch);
+                checkByteEx(ch);
                 if (eof) {
                     return;
                 }
@@ -118,13 +120,13 @@ public class Base64 {
     }
 
     private static void fromBase64Bytes(int[] a, Pullable pullable) {
-        int i = CheckedByte.checkByteEx(pullable.pull());
+        int i = checkByteEx(pullable.pull());
         i = i == -1 ? -1 : DECODE_MAP[i];
-        int j = CheckedByte.checkByteEx(pullable.pull());
+        int j = checkByteEx(pullable.pull());
         j = j == -1 ? -1 : DECODE_MAP[j];
-        int k = CheckedByte.checkByteEx(pullable.pull());
+        int k = checkByteEx(pullable.pull());
         k = k == -1 ? -1 : DECODE_MAP[k]; // '=' => -1
-        int l = CheckedByte.checkByteEx(pullable.pull());
+        int l = checkByteEx(pullable.pull());
         l = l == -1 ? -1 : DECODE_MAP[l];
         a[0] = (i << 2) | (j >> 4);
         a[1] = k != -1 ? (j << 4) & 0xFF | (k >> 2) : -1;

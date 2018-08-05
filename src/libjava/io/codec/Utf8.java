@@ -1,5 +1,8 @@
 package libjava.io.codec;
 
+import static libjava.io.Util.checkByte;
+import static libjava.io.Util.checkByteEx;
+
 import libjava.io.ParsingException;
 import libjava.io.Pullable;
 import libjava.io.PullablePipe;
@@ -50,7 +53,7 @@ public class Utf8 {
     }
 
     public static int fromUtf8Bytes(Pullable pullable) {
-        int firstByte = CheckedByte.checkByteEx(pullable.pull());
+        int firstByte = checkByteEx(pullable.pull());
         int n = utf8LengthByFirstByte(firstByte);
         if (n < 0) {
             throw new ParsingException();
@@ -118,7 +121,7 @@ public class Utf8 {
     }
 
     private static int utf8LengthByFirstByte(int i) {
-        CheckedByte.checkByte(i);
+        checkByte(i);
         if ((i & 0x80) == 0) {
             return 1;
         } else if ((i & 0x20) == 0) {

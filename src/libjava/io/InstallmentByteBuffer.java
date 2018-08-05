@@ -1,9 +1,9 @@
 package libjava.io;
 
+import static libjava.io.Util.checkByte;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import libjava.io.codec.CheckedByte;
 
 public class InstallmentByteBuffer implements Pushable {
 
@@ -127,7 +127,7 @@ public class InstallmentByteBuffer implements Pushable {
     }
 
     public InstallmentByteBuffer append(int ch) {
-        CheckedByte.checkByte(ch);
+        checkByte(ch);
         setupCapacity(size + 1);
         put(size++, (byte) ch);
         return this;
