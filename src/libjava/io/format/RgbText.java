@@ -15,7 +15,7 @@ public class RgbText {
         throw new ParsingException();
     }
 
-    public static int decode(Feeder puller) {
+    public static int decode(IntScanner puller) {
         if (puller.next() != '#') {
             puller.back();
             throw new ParsingException();
@@ -27,7 +27,7 @@ public class RgbText {
     }
 
     public static int decode(String rgbText) {
-        return decode(Feeder.wrap(rgbText));
+        return decode(IntScanner.wrap(rgbText));
     }
 
     public static String encode(int rgb) {

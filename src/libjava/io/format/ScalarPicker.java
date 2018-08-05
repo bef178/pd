@@ -7,7 +7,7 @@ import libjava.io.ParsingException;
 import libjava.io.Pullable;
 import libjava.primitive.Ctype;
 
-public class Parser {
+public class ScalarPicker {
 
     public static int eatWhitespace(Pullable pullable) {
         int ch = pullable.pull();
@@ -20,18 +20,18 @@ public class Parser {
         return ch;
     }
 
-    public static String pickDottedIdentifier(Feeder puller) {
-        InstallmentByteBuffer pusher = new InstallmentByteBuffer();
+    public static String pickDottedIdentifier(IntScanner scanner) {
+        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         while (true) {
-            pickIdentifier(puller, pusher);
-            if (pusher.size() == 0) {
+            pickIdentifier(scanner, buffer);
+            if (buffer.size() == 0) {
                 throw new ParsingException();
             }
-            if (puller.pull() != '.') {
-                return new String(pusher.copyBytes());
+            if (scanner.pull() != '.') {
+                return new String(buffer.copyBytes());
             }
-            pusher.push('.');
-            puller.pull();
+            buffer.push('.');
+            scanner.pull();
         }
     }
 
@@ -39,129 +39,123 @@ public class Parser {
      * ok: 0, 1, -1, 1.01, -1.1
      * not ok: 00, -0, 0., .1, -0.0, 0.0
      */
-    public static float pickFloat(Feeder puller) {
-        InstallmentByteBuffer pusher = new InstallmentByteBuffer();
+    public static float pickFloat(IntScanner scanner) {
+        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         int stat = 0;
         while (true) {
-            int ch = puller.pull();
+            int ch = scanner.pull();
             switch (stat) {
                 case 0:
                     if (ch == '-') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 1;
                     } else if (ch == '0') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 2;
                     } else if (Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 3;
                     } else {
-                        puller.back();
-                        throw new ParsingException(
-                                String.format("Unexpected %s at %d",
-                                        (char) ch, puller.position()));
+                        scanner.back();
+                        throw new ParsingException(String.format("Unexpected %s", (char) ch));
                     }
                     break;
                 case 1:
                     if (ch == '0') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 4;
                     }
                     if (Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 3;
                     } else {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     }
                     break;
                 case 2:
                     if (ch == '.') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 5;
                     } else if (Ctype.isDigit(ch)) {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     } else {
-                        puller.back();
-                        return Float.parseFloat(
-                                new String(pusher.copyBytes()));
+                        scanner.back();
+                        return Float.parseFloat(new String(buffer.copyBytes()));
                     }
                     break;
                 case 3:
                     if (Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                     } else if (ch == '.') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 5;
                     } else {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     }
                     break;
                 case 4:
                     if (ch == '.') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 5;
                     } else {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     }
                     break;
                 case 5:
                     if (ch == '0') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                     } else if (Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 6;
                     } else {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     }
                     break;
                 case 6:
                     if (ch == '0') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 5;
                     } else if (Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                     } else {
-                        puller.back();
-                        return Float.parseFloat(
-                                new String(pusher.copyBytes()));
+                        scanner.back();
+                        return Float.parseFloat(new String(buffer.copyBytes()));
                     }
                     break;
             }
         }
     }
 
-    public static String pickIdentifier(Feeder puller) {
-        InstallmentByteBuffer pusher = new InstallmentByteBuffer();
-        pickIdentifier(puller, pusher);
-        return new String(pusher.copyBytes());
+    public static String pickIdentifier(IntScanner scanner) {
+        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
+        pickIdentifier(scanner, buffer);
+        return new String(buffer.copyBytes());
     }
 
-    private static void pickIdentifier(Feeder puller,
-            InstallmentByteBuffer pusher) {
+    private static void pickIdentifier(IntScanner scanner, InstallmentByteBuffer pusher) {
         int stat = 0;
         while (true) {
-            int ch = puller.pull();
+            int ch = scanner.pull();
             switch (stat) {
                 case 0:
-                    if (Ctype.isUpper(ch) || Ctype.isLower(ch) || ch == '_') {
+                    if (Ctype.isAlphabetic(ch) || ch == '_') {
                         pusher.push(ch);
                         stat = 1;
                     } else {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     }
                     break;
                 case 1:
-                    if (Ctype.isUpper(ch) || Ctype.isLower(ch) || ch == '_'
-                            || Ctype.isDigit(ch)) {
+                    if (Ctype.isAlphabetic(ch) || ch == '_' || Ctype.isDigit(ch)) {
                         pusher.push(ch);
                     } else {
-                        puller.back();
+                        scanner.back();
                         return;
                     }
                     break;
@@ -181,102 +175,99 @@ public class Parser {
      * ok: 0, -1, 1
      * not ok: 00, -0
      */
-    public static int pickInt(Feeder puller) {
-        InstallmentByteBuffer pusher = new InstallmentByteBuffer();
+    public static int pickInt(IntScanner scanner) {
+        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         int stat = 0;
         while (true) {
-            int ch = puller.pull();
+            int ch = scanner.pull();
             switch (stat) {
                 case 0:
                     if (ch == '-') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 1;
                     } else if (ch == '0') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 2;
                     } else if (Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 3;
                     } else {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     }
                     break;
                 case 1:
                     if (ch != '0' && Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 3;
                     } else {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     }
                     break;
                 case 2:
                     if (Ctype.isDigit(ch)) {
-                        puller.back();
+                        scanner.back();
                         throw new ParsingException();
                     } else {
-                        puller.back();
+                        scanner.back();
                         return Integer.parseInt(
-                                new String(pusher.copyBytes()));
+                                new String(buffer.copyBytes()));
                     }
                 case 3:
                     if (Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                     } else {
-                        puller.back();
+                        scanner.back();
                         return Integer.parseInt(
-                                new String(pusher.copyBytes()));
+                                new String(buffer.copyBytes()));
                     }
                     break;
             }
         }
     }
 
-    public static String pickString(Feeder puller) {
-        return pickString(puller, Pullable.E_EOF);
+    public static String pickString(Pullable pullable) {
+        return pickString(pullable, Pullable.E_EOF);
     }
 
-    public static String pickString(Pullable puller, int closingSymbol) {
-        return pickString(puller, closingSymbol, false);
+    public static String pickString(Pullable pullable, int closingSymbol) {
+        return pickString(pullable, closingSymbol, false);
     }
 
     /**
-     * Return when meet closing symbol, throw when meet EOF with unmuted.<br/>
+     * Return when meet closing symbol, throw when meet EOF if not silent.<br/>
      * The closing symbol will be consumed and will not be part of result.<br/>
      */
-    public static String pickString(Pullable puller, int closingSymbol,
-            boolean muted) {
-        InstallmentByteBuffer pusher = new InstallmentByteBuffer();
+    public static String pickString(Pullable pullable, int closingSymbol, boolean silent) {
+        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         boolean escaped = false;
         while (true) { // not break on EOF
-            int ch = puller.pull();
+            int ch = pullable.pull();
             if (escaped) {
-                pusher.push(ch);
+                buffer.push(ch);
                 escaped = false;
             } else if (ch == '\\') {
-                pusher.push(ch);
+                buffer.push(ch);
                 escaped = true;
             } else if (ch == closingSymbol) {
-                return new String(pusher.copyBytes(), StandardCharsets.UTF_8);
+                return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
             } else if (ch == Pullable.E_EOF) {
-                if (muted) {
-                    return new String(pusher.copyBytes(),
-                            StandardCharsets.UTF_8);
+                if (silent) {
+                    return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
                 } else {
                     throw new ParsingException("Unexpected EOF");
                 }
             } else {
-                pusher.push(ch);
+                buffer.push(ch);
             }
         }
     }
 
-    public static String pickString(Pullable puller, int openingSymbol,
-            int closingSymbol) {
-        if (puller.pull() != openingSymbol) {
+    public static String pickString(Pullable pullable, int openingSymbol, int closingSymbol) {
+        if (pullable.pull() != openingSymbol) {
             throw new ParsingException();
         }
-        return pickString(puller, closingSymbol);
+        return pickString(pullable, closingSymbol);
     }
 }

@@ -8,31 +8,31 @@ import libjava.io.Pullable;
 
 public class Config {
 
-    public static Entry<String, String> fromConfigLine(Feeder puller) {
-        int ch = Parser.eatWhitespace(puller);
+    public static Entry<String, String> fromConfigLine(IntScanner puller) {
+        int ch = ScalarPicker.eatWhitespace(puller);
         if (ch == '#') {
             // comment line
             return new SimpleImmutableEntry<String, String>(null, null);
         }
 
-        String id = Parser.pickDottedIdentifier(puller);
+        String id = ScalarPicker.pickDottedIdentifier(puller);
 
-        ch = Parser.eatWhitespace(puller);
+        ch = ScalarPicker.eatWhitespace(puller);
         if (ch != '=') {
             throw new ParsingException();
         }
 
-        ch = Parser.eatWhitespace(puller);
+        ch = ScalarPicker.eatWhitespace(puller);
         if (ch == '\"') {
-            String value = Parser.pickString(puller, '\"');
-            ch = Parser.eatWhitespace(puller);
+            String value = ScalarPicker.pickString(puller, '\"');
+            ch = ScalarPicker.eatWhitespace(puller);
             if (ch != Pullable.E_EOF) {
                 throw new ParsingException();
             } else {
                 return new SimpleImmutableEntry<String, String>(id, value);
             }
         } else {
-            String value = Parser.pickString(puller, Pullable.E_EOF);
+            String value = ScalarPicker.pickString(puller, Pullable.E_EOF);
             return new SimpleImmutableEntry<String, String>(id, value);
         }
     }

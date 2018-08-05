@@ -17,7 +17,7 @@ public class Csv {
     private static final int DOUBLE_QUOTE = '\"';
     private static final int SINGLE_QUOTE = '\'';
 
-    public static List<String> fromLine(Feeder puller) {
+    public static List<String> fromLine(IntScanner puller) {
         List<String> items = new LinkedList<>();
         while (true) {
             int ch = puller.pull();
@@ -28,7 +28,7 @@ public class Csv {
                 items.add("");
                 continue;
             } else if (ch == DOUBLE_QUOTE) {
-                items.add(Parser.pickString(puller, DOUBLE_QUOTE));
+                items.add(ScalarPicker.pickString(puller, DOUBLE_QUOTE));
                 ch = puller.pull();
                 if (ch == Pullable.E_EOF) {
                     return items;
@@ -39,7 +39,7 @@ public class Csv {
                     throw new ParsingException();
                 }
             } else if (ch == SINGLE_QUOTE) {
-                items.add(Parser.pickString(puller, SINGLE_QUOTE));
+                items.add(ScalarPicker.pickString(puller, SINGLE_QUOTE));
                 ch = puller.pull();
                 if (ch == Pullable.E_EOF) {
                     return items;
@@ -51,7 +51,7 @@ public class Csv {
                 }
             } else {
                 puller.back();
-                items.add(Parser.pickString(puller, COMMA, true));
+                items.add(ScalarPicker.pickString(puller, COMMA, true));
                 // check EOF
                 puller.back();
                 int last = puller.pull();
@@ -67,7 +67,7 @@ public class Csv {
     }
 
     public static List<String> fromLine(String s) {
-        return fromLine(Feeder.wrap(s));
+        return fromLine(IntScanner.wrap(s));
     }
 
     public static String toLine(List<String> items) {
