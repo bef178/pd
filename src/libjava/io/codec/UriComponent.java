@@ -12,63 +12,6 @@ import libjava.io.PushablePipe;
  */
 public class UriComponent {
 
-    private static class Puller implements PullablePipe {
-
-        private Pullable upstream;
-
-        @Override
-        public Puller join(final Pullable upstream) {
-
-            this.upstream = PullablePipe.join(Utf8.asPuller(), new Pullable() {
-
-                @Override
-                public int pull() {
-                    int ch = CheckedByte.checkByte(upstream.pull());
-                    if (ch == '%') {
-                        return Hexari.fromHexariBytes(upstream);
-                    } else {
-                        return ch;
-                    }
-                }
-            });
-            return this;
-        }
-
-        @Override
-        public int pull() {
-            return this.upstream.pull();
-        }
-    }
-
-    private static class Pusher implements PushablePipe {
-
-        private Pushable downstream;
-
-        @Override
-        public Pusher join(final Pushable downstream) {
-
-            this.downstream = PushablePipe.join(Utf8.asPusher(), new Pushable() {
-
-                @Override
-                public void push(int ch) {
-                    ch = CheckedByte.checkByte(ch);
-                    if (SHOULD_NOT_ENCODE.get(ch)) {
-                        downstream.push(ch);
-                    } else {
-                        downstream.push('%');
-                        Hexari.toHexariBytes(ch, downstream);
-                    }
-                }
-            });
-            return this;
-        }
-
-        @Override
-        public void push(int ch) {
-            this.downstream.push(ch);
-        }
-    }
-
     private static final BitSet SHOULD_NOT_ENCODE;
 
     static {
@@ -101,12 +44,67 @@ public class UriComponent {
         }
     }
 
-    public static PullablePipe asPuller() {
-        return new Puller();
+    public static PullablePipe asPullablePipe() {
+
+        return new PullablePipe() {
+
+            private Pullable upstream;
+
+            @Override
+            public PullablePipe join(final Pullable upstream) {
+
+                this.upstream = PullablePipe.join(Utf8.asPullablePipe(), new Pullable() {
+
+                    @Override
+                    public int pull() {
+                        int ch = CheckedByte.checkByte(upstream.pull());
+                        if (ch == '%') {
+                            return Hexari.fromHexariBytes(upstream);
+                        } else {
+                            return ch;
+                        }
+                    }
+                });
+                return this;
+            }
+
+            @Override
+            public int pull() {
+                return this.upstream.pull();
+            }
+        };
     }
 
-    public static PushablePipe asPusher() {
-        return new Pusher();
+    public static PushablePipe asPushablePipe() {
+
+        return new PushablePipe() {
+
+            private Pushable downstream;
+
+            @Override
+            public PushablePipe join(final Pushable downstream) {
+
+                this.downstream = PushablePipe.join(Utf8.asPushablePipe(), new Pushable() {
+
+                    @Override
+                    public void push(int ch) {
+                        ch = CheckedByte.checkByte(ch);
+                        if (SHOULD_NOT_ENCODE.get(ch)) {
+                            downstream.push(ch);
+                        } else {
+                            downstream.push('%');
+                            Hexari.toHexariBytes(ch, downstream);
+                        }
+                    }
+                });
+                return this;
+            }
+
+            @Override
+            public void push(int ch) {
+                this.downstream.push(ch);
+            }
+        };
     }
 
 }

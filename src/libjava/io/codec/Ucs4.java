@@ -10,7 +10,7 @@ import libjava.io.PushablePipe;
  */
 public class Ucs4 {
 
-    public static PullablePipe asPuller() {
+    public static PullablePipe asPullablePipe() {
 
         return new PullablePipe() {
 
@@ -29,7 +29,7 @@ public class Ucs4 {
         };
     }
 
-    public static PushablePipe asPusher() {
+    public static PushablePipe asPushablePipe() {
 
         return new PushablePipe() {
 

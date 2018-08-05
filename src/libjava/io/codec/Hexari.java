@@ -13,7 +13,7 @@ import libjava.io.PushablePipe;
  */
 public class Hexari {
 
-    public static PullablePipe asPuller() {
+    public static PullablePipe asPullablePipe() {
 
         return new PullablePipe() {
 
@@ -32,7 +32,7 @@ public class Hexari {
         };
     }
 
-    public static PushablePipe asPusher() {
+    public static PushablePipe asPushablePipe() {
 
         return new PushablePipe() {
 

@@ -13,80 +13,6 @@ import libjava.io.PushablePipe;
  */
 public class Base64 {
 
-    public static class Puller implements PullablePipe {
-
-        private int[] src = new int[3];
-
-        private int srcIndex = 3;
-
-        private boolean eof = false;
-
-        /**
-         * accept byte pullable
-         */
-        private Pullable upstream = null;
-
-        @Override
-        public Puller join(Pullable upstream) {
-            this.upstream = upstream;
-            return this;
-        }
-
-        @Override
-        public int pull() {
-            if (eof) {
-                return -1;
-            }
-            if (srcIndex == 3) {
-                fromBase64Bytes(src, upstream);
-                srcIndex = 0;
-            }
-            int ch = src[srcIndex++];
-            if (ch == -1) {
-                eof = true;
-            }
-            return ch;
-        }
-    }
-
-    public static class Pusher implements PushablePipe {
-
-        private int[] src = new int[3];
-
-        private int srcIndex = 0;
-
-        private Pushable downstream = null;
-
-        private boolean eof = false;
-
-        @Override
-        public Pusher join(Pushable downstream) {
-            this.downstream = downstream;
-            return this;
-        }
-
-        @Override
-        public void push(final int ch) {
-            CheckedByte.checkByteEx(ch);
-            if (eof) {
-                return;
-            }
-            if (ch == P_FLUSH) {
-                eof = true;
-                int j = srcIndex;
-                srcIndex = 0;
-                toBase64Bytes(src, 0, j, downstream);
-                return;
-            }
-            src[srcIndex++] = ch;
-            if (srcIndex == 3) {
-                srcIndex = 0;
-                toBase64Bytes(src, 0, 3, downstream);
-                return;
-            }
-        }
-    }
-
     private static final int[] ENCODE_MAP;
 
     private static final int[] DECODE_MAP;
@@ -111,12 +37,84 @@ public class Base64 {
 
     public static final int P_FLUSH = -1;
 
-    public static PullablePipe asPuller() {
-        return new Puller();
+    public static PullablePipe asPullablePipe() {
+
+        return new PullablePipe() {
+
+            private int[] src = new int[3];
+
+            private int srcIndex = 3;
+
+            private boolean eof = false;
+
+            /**
+             * accept byte pullable
+             */
+            private Pullable upstream = null;
+
+            @Override
+            public PullablePipe join(Pullable upstream) {
+                this.upstream = upstream;
+                return this;
+            }
+
+            @Override
+            public int pull() {
+                if (eof) {
+                    return -1;
+                }
+                if (srcIndex == 3) {
+                    fromBase64Bytes(src, upstream);
+                    srcIndex = 0;
+                }
+                int ch = src[srcIndex++];
+                if (ch == -1) {
+                    eof = true;
+                }
+                return ch;
+            }
+        };
     }
 
-    public static PushablePipe asPusher() {
-        return new Pusher();
+    public static PushablePipe asPushablePipe() {
+
+        return new PushablePipe() {
+
+            private int[] src = new int[3];
+
+            private int srcIndex = 0;
+
+            private Pushable downstream = null;
+
+            private boolean eof = false;
+
+            @Override
+            public PushablePipe join(Pushable downstream) {
+                this.downstream = downstream;
+                return this;
+            }
+
+            @Override
+            public void push(final int ch) {
+                CheckedByte.checkByteEx(ch);
+                if (eof) {
+                    return;
+                }
+                if (ch == P_FLUSH) {
+                    eof = true;
+                    int j = srcIndex;
+                    srcIndex = 0;
+                    toBase64Bytes(src, 0, j, downstream);
+                    return;
+                }
+                src[srcIndex++] = ch;
+                if (srcIndex == 3) {
+                    srcIndex = 0;
+                    toBase64Bytes(src, 0, 3, downstream);
+                    return;
+                }
+            }
+        };
     }
 
     private static void fromBase64Bytes(int[] a, Pullable pullable) {
