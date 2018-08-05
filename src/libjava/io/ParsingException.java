@@ -36,7 +36,7 @@ public class ParsingException extends RuntimeException {
     }
 
     public ParsingException(String expected, String actual, int pos) {
-        this("Excepted '" + expected + "', actual '" + actual + "'", pos);
+        this(String.format("expected [%s] while actual [%s]", expected, actual), pos);
     }
 
     @Override
