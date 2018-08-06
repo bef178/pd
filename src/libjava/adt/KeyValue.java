@@ -53,7 +53,7 @@ public class KeyValue {
 
     @Override
     public int hashCode() {
-        return Cstring.hashCode(this.key) * 31 + Cstring.hashCode(this.value);
+        return Cstring.hashCode(this.key, this.value);
     }
 
     @Override

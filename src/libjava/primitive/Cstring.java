@@ -13,8 +13,12 @@ public final class Cstring {
         }
     }
 
-    public static int hashCode(String s) {
-        return s == null ? 0 : s.hashCode();
+    public static int hashCode(String... a) {
+        int hashCode = 0;
+        for (String s : a) {
+            hashCode = hashCode * 31 + s == null ? 0 : s.hashCode();
+        }
+        return hashCode;
     }
 
     public static String[] split(String s, final int delimeter) {
