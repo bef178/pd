@@ -2,7 +2,6 @@ package libjava.io.format;
 
 import libjava.io.InstallmentByteBuffer;
 import libjava.io.ParsingException;
-import libjava.io.Pullable;
 import libjava.io.Pushable;
 import libjava.io.codec.Hexari;
 
@@ -15,25 +14,25 @@ public class RgbText {
         throw new ParsingException();
     }
 
-    public static int decode(IntScanner puller) {
-        if (puller.next() != '#') {
-            puller.back();
+    public static int decode(IntScanner scanner) {
+        if (scanner.next() != '#') {
+            scanner.back();
             throw new ParsingException();
         }
-        int r = pullComponent(puller);
-        int g = pullComponent(puller);
-        int b = pullComponent(puller);
+        int r = Hexari.fromHexariBytes(scanner);
+        int g = Hexari.fromHexariBytes(scanner);
+        int b = Hexari.fromHexariBytes(scanner);
         return (r << 16) | (g << 8) | b;
     }
 
-    public static int decode(String rgbText) {
+    public static int decode(CharSequence rgbText) {
         return decode(IntScanner.wrap(rgbText));
     }
 
     public static String encode(int rgb) {
-        InstallmentByteBuffer pusher = new InstallmentByteBuffer();
-        encode(rgb, pusher);
-        return new String(pusher.copyBytes());
+        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
+        encode(rgb, buffer);
+        return new String(buffer.copyBytes());
     }
 
     public static void encode(int rgb, Pushable pusher) {
@@ -54,9 +53,5 @@ public class RgbText {
 
     public static int getR(int rgb) {
         return (checkRgb(rgb) >>> 16) & 0xFF;
-    }
-
-    private static int pullComponent(Pullable pullable) {
-        return Hexari.fromHexariBytes(pullable);
     }
 }

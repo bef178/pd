@@ -1,16 +1,18 @@
 package libjava.io.format.json;
 
+import static libjava.io.format.ScalarPicker.eatWhitespace;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 
 import libjava.io.ParsingException;
 import libjava.io.Pullable;
-import libjava.io.format.ScalarPicker;
 import libjava.primitive.Ctype;
 
 public class JsonParser {
 
     private static final int STATE_SEGMENT_BEGIN = 0x00;
+
     private static final int STATE_SEGMENT_END = 0x01;
 
     public static Json parse(CharSequence cs, JsonFactory factory) {
@@ -35,7 +37,7 @@ public class JsonParser {
     }
 
     public static Json parse(Pullable it, JsonFactory factory) {
-        int ch = ScalarPicker.eatWhitespace(it);
+        int ch = eatWhitespace(it);
         return parse(ch, it, factory);
     }
 
@@ -43,12 +45,12 @@ public class JsonParser {
             JsonFactory factory) {
         String key = parseScalar(ch, it, factory).getString();
 
-        ch = ScalarPicker.eatWhitespace(it);
+        ch = eatWhitespace(it);
         if (ch != ':') {
             throw new ParsingException(':', ch);
         }
 
-        ch = ScalarPicker.eatWhitespace(it);
+        ch = eatWhitespace(it);
         Json value = parse(ch, it, factory);
 
         return new SimpleImmutableEntry<String, Json>(key, value);
@@ -70,7 +72,7 @@ public class JsonParser {
         int state = STATE_SEGMENT_BEGIN;
 
         while (true) {
-            ch = ScalarPicker.eatWhitespace(it);
+            ch = eatWhitespace(it);
             switch (state) {
                 case STATE_SEGMENT_BEGIN:
                     // accept '}' or string ':' json
@@ -88,7 +90,7 @@ public class JsonParser {
                     if (ch == '}') {
                         return o;
                     } else if (ch == ',') {
-                        ch = ScalarPicker.eatWhitespace(it);
+                        ch = eatWhitespace(it);
                         Entry<String, Json> e = parseMapEntry(ch, it,
                                 factory);
                         o.put(e.getKey(), e.getValue());
@@ -151,7 +153,7 @@ public class JsonParser {
         int state = STATE_SEGMENT_BEGIN;
 
         while (true) {
-            ch = ScalarPicker.eatWhitespace(it);
+            ch = eatWhitespace(it);
             switch (state) {
                 case STATE_SEGMENT_BEGIN:
                     // accept ']' or json
@@ -167,7 +169,7 @@ public class JsonParser {
                     if (ch == ']') {
                         return l;
                     } else if (ch == ',') {
-                        ch = ScalarPicker.eatWhitespace(it);
+                        ch = eatWhitespace(it);
                         l.insert(parse(ch, it, factory));
                     } else {
                         throw new ParsingException(

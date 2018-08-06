@@ -1,5 +1,6 @@
 package libjava.io.format;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,10 +18,10 @@ public class Csv {
     private static final int DOUBLE_QUOTE = '\"';
     private static final int SINGLE_QUOTE = '\'';
 
-    public static List<String> fromLine(IntScanner puller) {
-        List<String> items = new LinkedList<>();
+    public static List<String> fromString(IntScanner scanner) {
+        List<String> items = new LinkedList<String>();
         while (true) {
-            int ch = puller.pull();
+            int ch = scanner.pull();
             if (ch == Pullable.E_EOF) {
                 items.add("");
                 return items;
@@ -28,33 +29,33 @@ public class Csv {
                 items.add("");
                 continue;
             } else if (ch == DOUBLE_QUOTE) {
-                items.add(ScalarPicker.pickString(puller, DOUBLE_QUOTE));
-                ch = puller.pull();
+                items.add(ScalarPicker.pickString(scanner, DOUBLE_QUOTE));
+                ch = scanner.pull();
                 if (ch == Pullable.E_EOF) {
                     return items;
                 } else if (ch == COMMA) {
                     continue;
                 } else {
-                    puller.back();
+                    scanner.back();
                     throw new ParsingException();
                 }
             } else if (ch == SINGLE_QUOTE) {
-                items.add(ScalarPicker.pickString(puller, SINGLE_QUOTE));
-                ch = puller.pull();
+                items.add(ScalarPicker.pickString(scanner, SINGLE_QUOTE));
+                ch = scanner.pull();
                 if (ch == Pullable.E_EOF) {
                     return items;
                 } else if (ch == COMMA) {
                     continue;
                 } else {
-                    puller.back();
+                    scanner.back();
                     throw new ParsingException();
                 }
             } else {
-                puller.back();
-                items.add(ScalarPicker.pickString(puller, COMMA, true));
+                scanner.back();
+                items.add(ScalarPicker.pickString(scanner, COMMA, true));
                 // check EOF
-                puller.back();
-                int last = puller.pull();
+                scanner.back();
+                int last = scanner.pull();
                 if (last == COMMA) {
                     // comma is consumed
                     continue;
@@ -66,29 +67,33 @@ public class Csv {
         }
     }
 
-    public static List<String> fromLine(String s) {
-        return fromLine(IntScanner.wrap(s));
+    public static List<String> fromString(String s) {
+        return fromString(IntScanner.wrap(s));
     }
 
-    public static String toLine(List<String> items) {
-        return toLine(items, 0);
+    public static String toString(List<String> items) {
+        return toString(items, 0);
     }
 
-    public static String toLine(List<String> items, int delimeter) {
-        InstallmentByteBuffer pusher = new InstallmentByteBuffer();
+    public static String toString(List<String> items, int delimeter) {
         Iterator<String> it = items.iterator();
+        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         while (it.hasNext()) {
             if (delimeter > 0) {
-                pusher.push(delimeter);
+                buffer.push(delimeter);
             }
-            pusher.append(it.next());
+            buffer.append(it.next());
             if (delimeter > 0) {
-                pusher.push(delimeter);
+                buffer.push(delimeter);
             }
             if (it.hasNext()) {
-                pusher.push(',');
+                buffer.push(',');
             }
         }
-        return new String(pusher.copyBytes());
+        return new String(buffer.copyBytes());
+    }
+
+    public static String toString(String... items) {
+        return toString(Arrays.asList(items));
     }
 }

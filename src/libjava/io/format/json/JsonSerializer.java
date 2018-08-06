@@ -24,8 +24,7 @@ public class JsonSerializer {
             return config;
         }
 
-        private static void pushCharSequence(CharSequence cs,
-                Pushable pushable) {
+        private static void pushCharSequence(CharSequence cs, Pushable pushable) {
             if (cs == null || cs.length() == 0) {
                 return;
             }
@@ -202,6 +201,6 @@ public class JsonSerializer {
     }
 
     private JsonSerializer() {
-        // dummy
+        // private dummy
     }
 }

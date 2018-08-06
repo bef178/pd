@@ -12,8 +12,7 @@ public class Typeset {
     }
 
     public static void pushBytes(Pullable src, int bytesPerLine,
-            int startingOffset, byte[] prefix, byte[] suffix,
-            Pushable dst) {
+            int startingOffset, byte[] prefix, byte[] suffix, Pushable dst) {
         int room = bytesPerLine - startingOffset - suffix.length;
         pushBytes(src.pull(), src, room, dst);
 
@@ -28,11 +27,8 @@ public class Typeset {
         }
     }
 
-    /**
-     * @return the size of bytes sent to pusher
-     */
     private static void pushBytes(int last, Pullable src, int room, Pushable dst) {
-        if (last == -1) {
+        if (last == Pullable.E_EOF) {
             return;
         }
         dst.push(last);
