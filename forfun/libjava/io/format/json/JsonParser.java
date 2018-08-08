@@ -15,13 +15,9 @@ public class JsonParser {
 
     private static final int STATE_SEGMENT_END = 0x01;
 
-    public static Json parse(CharSequence cs, JsonFactory factory) {
-        return parse(Pullable.wrap(cs), factory);
-    }
-
     private static Json parse(int ch, Pullable it, JsonFactory factory) {
         if (Ctype.isWhitespace(ch)) {
-            return parse(it, factory);
+            ch = eatWhitespace(it);
         }
         switch (ch) {
             case '\"':
@@ -37,8 +33,16 @@ public class JsonParser {
     }
 
     public static Json parse(Pullable it, JsonFactory factory) {
+        return parse(it, factory, Json.class);
+    }
+
+    public static <T extends Json> T parse(Pullable it, JsonFactory factory, Class<T> type) {
         int ch = eatWhitespace(it);
-        return parse(ch, it, factory);
+        Json json = parse(ch, it, factory);
+        if (type.isInstance(json)) {
+            return type.cast(json);
+        }
+        throw new ParsingException();
     }
 
     private static Entry<String, Json> parseMapEntry(int ch, Pullable it,
@@ -56,14 +60,7 @@ public class JsonParser {
         return new SimpleImmutableEntry<String, Json>(key, value);
     }
 
-    public static JsonObject parseObject(CharSequence cs,
-            JsonFactory factory) {
-        return (JsonObject) Json.checkType(parse(Pullable.wrap(cs), factory),
-                JsonType.OBJECT);
-    }
-
-    private static JsonObject parseObject(int ch, Pullable it,
-            JsonFactory factory) {
+    private static JsonObject parseObject(int ch, Pullable it, JsonFactory factory) {
         if (ch != '{') {
             throw new ParsingException('{', ch);
         }
@@ -103,12 +100,7 @@ public class JsonParser {
         }
     }
 
-    public static JsonObject parseObject(Pullable it, JsonFactory factory) {
-        return (JsonObject) Json.checkType(parse(it, factory), JsonType.OBJECT);
-    }
-
-    private static JsonScalar parseScalar(int ch, Pullable it,
-            JsonFactory factory) {
+    private static JsonScalar parseScalar(int ch, Pullable it, JsonFactory factory) {
         if (ch != '\"') {
             throw new ParsingException('\"', ch);
         }

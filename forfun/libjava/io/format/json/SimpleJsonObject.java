@@ -3,7 +3,17 @@ package libjava.io.format.json;
 import java.util.HashMap;
 import java.util.Set;
 
+import libjava.io.Pushable;
+import libjava.io.format.json.JsonSerializer.Config;
+
 class SimpleJsonObject implements JsonObject {
+
+    public static <T extends Json> T checkType(Json json, Class<T> expected) {
+        if (json == null || !expected.isInstance(json)) {
+            throw new IllegalJsonTypeException();
+        }
+        return expected.cast(json);
+    }
 
     private HashMap<String, Json> m = new HashMap<>();
 
@@ -22,23 +32,19 @@ class SimpleJsonObject implements JsonObject {
         return m.get(key);
     }
 
-    private Json getJson(String key, JsonType valueType) {
-        return Json.checkType(m.get(key), valueType);
-    }
-
     @Override
     public JsonObject getJsonObject(String key) {
-        return (JsonObject) getJson(key, JsonType.OBJECT);
+        return checkType(m.get(key), JsonObject.class);
     }
 
     @Override
     public JsonScalar getJsonScalar(String key) {
-        return (JsonScalar) getJson(key, JsonType.SCALAR);
+        return checkType(m.get(key), JsonScalar.class);
     }
 
     @Override
     public JsonVector getJsonVector(String key) {
-        return (JsonVector) getJson(key, JsonType.VECTOR);
+        return checkType(m.get(key), JsonVector.class);
     }
 
     @Override
@@ -64,12 +70,12 @@ class SimpleJsonObject implements JsonObject {
     }
 
     @Override
-    public int size() {
-        return m.size();
+    public void serialize(Config config, Pushable it) {
+        JsonSerializer.serializeObject(this, config, it);
     }
 
     @Override
-    public JsonType type() {
-        return JsonType.OBJECT;
+    public int size() {
+        return m.size();
     }
 }

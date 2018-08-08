@@ -70,9 +70,12 @@ public class JsonSerializer {
         }
     }
 
+    /**
+     * cheat sheet style
+     */
     public static CharSequence serialize(Json json) {
         StringBuilder sb = new StringBuilder();
-        serialize(json, Pushable.wrap(sb));
+        serialize(json, Config.getCheatSheet(), Pushable.wrap(sb));
         return sb;
     }
 
@@ -83,26 +86,7 @@ public class JsonSerializer {
     }
 
     public static void serialize(Json json, Config config, Pushable it) {
-        switch (json.type()) {
-            case SCALAR:
-                serializeScalar((JsonScalar) json, it);
-                break;
-            case VECTOR:
-                serializeVector((JsonVector) json, config, it);
-                break;
-            case OBJECT:
-                serializeObject((JsonObject) json, config, it);
-                break;
-            default:
-                throw new IllegalJsonTypeException();
-        }
-    }
-
-    /**
-     * cheat sheet style
-     */
-    public static void serialize(Json json, Pushable it) {
-        serialize(json, Config.getCheatSheet(), it);
+        json.serialize(config, it);
     }
 
     private static void serializeCharSequence(CharSequence cs, Pushable it) {
@@ -122,7 +106,7 @@ public class JsonSerializer {
         it.push('\"');
     }
 
-    private static void serializeObject(JsonObject json, Config config, Pushable it) {
+    static void serializeObject(JsonObject json, Config config, Pushable it) {
 
         boolean isEmpty = json.isEmpty();
 
@@ -163,11 +147,11 @@ public class JsonSerializer {
         it.push('}');
     }
 
-    private static void serializeScalar(JsonScalar json, Pushable it) {
+    static void serializeScalar(JsonScalar json, Pushable it) {
         serializeCharSequence(json.getString(), it);
     }
 
-    private static void serializeVector(JsonVector json, Config config, Pushable it) {
+    static void serializeVector(JsonVector json, Config config, Pushable it) {
 
         boolean isEmpty = json.isEmpty();
 

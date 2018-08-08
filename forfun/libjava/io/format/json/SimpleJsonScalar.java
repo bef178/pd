@@ -1,5 +1,8 @@
 package libjava.io.format.json;
 
+import libjava.io.Pushable;
+import libjava.io.format.json.JsonSerializer.Config;
+
 class SimpleJsonScalar implements JsonScalar {
 
     private String s = null;
@@ -29,6 +32,11 @@ class SimpleJsonScalar implements JsonScalar {
     }
 
     @Override
+    public void serialize(Config ignored, Pushable it) {
+        JsonSerializer.serializeScalar(this, it);
+    }
+
+    @Override
     public JsonScalar set(Boolean value) {
         return set(value.toString());
     }
@@ -47,10 +55,5 @@ class SimpleJsonScalar implements JsonScalar {
     public JsonScalar set(String s) {
         this.s = s;
         return this;
-    }
-
-    @Override
-    public JsonType type() {
-        return JsonType.SCALAR;
     }
 }

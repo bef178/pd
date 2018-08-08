@@ -1,6 +1,11 @@
 package libjava.io.format.json;
 
+import static libjava.io.format.json.SimpleJsonObject.checkType;
+
 import java.util.ArrayList;
+
+import libjava.io.Pushable;
+import libjava.io.format.json.JsonSerializer.Config;
 
 class SimpleJsonVector implements JsonVector {
 
@@ -21,23 +26,19 @@ class SimpleJsonVector implements JsonVector {
         return l.get(index);
     }
 
-    private Json getJson(int index, JsonType valueType) {
-        return Json.checkType(l.get(index), valueType);
-    }
-
     @Override
     public JsonObject getJsonObject(int index) {
-        return (JsonObject) getJson(index, JsonType.OBJECT);
+        return checkType(l.get(index), JsonObject.class);
     }
 
     @Override
     public JsonScalar getJsonScalar(int index) {
-        return (JsonScalar) getJson(index, JsonType.SCALAR);
+        return checkType(l.get(index), JsonScalar.class);
     }
 
     @Override
     public JsonVector getJsonVector(int index) {
-        return (JsonVector) getJson(index, JsonType.VECTOR);
+        return checkType(l.get(index), JsonVector.class);
     }
 
     @Override
@@ -75,7 +76,7 @@ class SimpleJsonVector implements JsonVector {
     }
 
     @Override
-    public JsonType type() {
-        return JsonType.VECTOR;
+    public void serialize(Config config, Pushable it) {
+        JsonSerializer.serializeVector(this, config, it);
     }
 }

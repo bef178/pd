@@ -1,10 +1,19 @@
 package libjava.io.format.json;
 
+import static libjava.io.format.json.SimpleJsonObject.checkType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
-class MonoJson implements JsonScalar, JsonVector, JsonObject {
+import libjava.io.Pushable;
+import libjava.io.format.json.JsonSerializer.Config;
+
+class MonoJson implements JsonScalar, JsonVector, JsonObject, Json {
+
+    static enum JsonType {
+        SCALAR, VECTOR, OBJECT;
+    }
 
     private String s;
 
@@ -30,9 +39,11 @@ class MonoJson implements JsonScalar, JsonVector, JsonObject {
         }
     }
 
-    private Json checkType(JsonType expected) {
-        return Json.checkType(this, expected);
-    };
+    private void checkOwnType(JsonType type) {
+        if (this.type != type) {
+            throw new IllegalJsonTypeException();
+        }
+    }
 
     @Override
     public MonoJson clear() {
@@ -65,70 +76,63 @@ class MonoJson implements JsonScalar, JsonVector, JsonObject {
 
     @Override
     public Json getJson(int index) {
-        checkType(JsonType.VECTOR);
+        checkOwnType(JsonType.VECTOR);
         return l.get(index);
-    }
-
-    private Json getJson(int index, JsonType expected) {
-        return Json.checkType(getJson(index), expected);
     }
 
     @Override
     public Json getJson(String key) {
-        checkType(JsonType.OBJECT);
+        checkOwnType(JsonType.OBJECT);
         return m.get(key);
-    }
-
-    private Json getJson(String key, JsonType valueType) {
-        return Json.checkType(getJson(key), valueType);
     }
 
     @Override
     public JsonObject getJsonObject(int index) {
-        return (JsonObject) getJson(index, JsonType.OBJECT);
+        assert this.type == JsonType.VECTOR;
+        return checkType(getJson(index), JsonObject.class);
     }
 
     @Override
     public JsonObject getJsonObject(String key) {
-        return (JsonObject) getJson(key, JsonType.OBJECT);
+        return checkType(getJson(key), JsonObject.class);
     }
 
     @Override
     public JsonScalar getJsonScalar(int index) {
-        return (JsonScalar) getJson(index, JsonType.SCALAR);
+        return checkType(getJson(index), JsonScalar.class);
     }
 
     @Override
     public JsonScalar getJsonScalar(String key) {
-        return (JsonScalar) getJson(key, JsonType.SCALAR);
+        return checkType(getJson(key), JsonScalar.class);
     }
 
     @Override
     public JsonVector getJsonVector(int index) {
-        return (JsonVector) getJson(index, JsonType.VECTOR);
+        return checkType(getJson(index), JsonVector.class);
     }
 
     @Override
     public JsonVector getJsonVector(String key) {
-        return (JsonVector) getJson(key, JsonType.VECTOR);
+        return checkType(getJson(key), JsonVector.class);
     }
 
     @Override
     public String getString() {
-        checkType(JsonType.SCALAR);
+        checkOwnType(JsonType.SCALAR);
         return s;
     }
 
     @Override
     public JsonVector insert(int index, Json value) {
-        checkType(JsonType.VECTOR);
+        checkOwnType(JsonType.VECTOR);
         l.add(index, value);
         return this;
     }
 
     @Override
     public JsonVector insert(Json value) {
-        checkType(JsonType.VECTOR);
+        checkOwnType(JsonType.VECTOR);
         l.add(value);
         return this;
     }
@@ -140,29 +144,46 @@ class MonoJson implements JsonScalar, JsonVector, JsonObject {
 
     @Override
     public Set<String> keys() {
-        checkType(JsonType.OBJECT);
+        checkOwnType(JsonType.OBJECT);
         return m.keySet();
     }
 
     @Override
     public JsonObject put(String key, Json value) {
-        checkType(JsonType.OBJECT);
+        checkOwnType(JsonType.OBJECT);
         m.put(key, value);
         return this;
     }
 
     @Override
     public JsonVector remove(int index) {
-        checkType(JsonType.VECTOR);
+        checkOwnType(JsonType.VECTOR);
         l.remove(index);
         return this;
     }
 
     @Override
     public MonoJson remove(String key) {
-        checkType(JsonType.OBJECT);
+        checkOwnType(JsonType.OBJECT);
         m.remove(key);
         return this;
+    }
+
+    @Override
+    public void serialize(Config config, Pushable it) {
+        switch (type) {
+            case SCALAR:
+                JsonSerializer.serializeScalar(this, it);
+                break;
+            case VECTOR:
+                JsonSerializer.serializeVector(this, config, it);
+                break;
+            case OBJECT:
+                JsonSerializer.serializeObject(this, config, it);
+                break;
+            default:
+                throw new IllegalJsonTypeException();
+        }
     }
 
     @Override
@@ -177,7 +198,7 @@ class MonoJson implements JsonScalar, JsonVector, JsonObject {
 
     @Override
     public JsonVector set(int index, Json value) {
-        checkType(JsonType.VECTOR);
+        checkOwnType(JsonType.VECTOR);
         l.set(index, value);
         return this;
     }
@@ -189,14 +210,14 @@ class MonoJson implements JsonScalar, JsonVector, JsonObject {
 
     @Override
     public JsonScalar set(String s) {
-        checkType(JsonType.SCALAR);
+        checkOwnType(JsonType.SCALAR);
         this.s = s;
         return this;
     }
 
     @Override
     public int size() {
-        switch (type()) {
+        switch (type) {
             case VECTOR:
                 return l.size();
             case OBJECT:
@@ -204,10 +225,5 @@ class MonoJson implements JsonScalar, JsonVector, JsonObject {
             default:
                 throw new IllegalJsonTypeException();
         }
-    }
-
-    @Override
-    public JsonType type() {
-        return this.type;
     }
 }

@@ -1,16 +1,9 @@
 package libjava.io.format.json;
 
+import libjava.io.Pushable;
+import libjava.io.format.json.JsonSerializer.Config;
+
 public interface Json {
 
-    /**
-     * assert type equals or throw {@link IllegalJsonTypeException}
-     */
-    public static <T extends Json> T checkType(T json, JsonType expected) {
-        if (json == null || json.type() != expected) {
-            throw new IllegalJsonTypeException();
-        }
-        return json;
-    }
-
-    public JsonType type();
+    public void serialize(Config config, Pushable it);
 }
