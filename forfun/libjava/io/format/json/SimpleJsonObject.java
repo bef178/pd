@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Set;
 
 import libjava.io.Pushable;
-import libjava.io.format.json.JsonSerializer.Config;
+import libjava.io.format.json.JsonFactory.Config;
+import libjava.io.format.json.JsonFactory.JsonSerializer;
 
 class SimpleJsonObject implements JsonObject {
 

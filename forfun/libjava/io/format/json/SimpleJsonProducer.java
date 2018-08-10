@@ -1,6 +1,6 @@
 package libjava.io.format.json;
 
-public class SimpleJsonFactory implements JsonFactory {
+public class SimpleJsonProducer implements JsonProducer {
 
     @Override
     public JsonObject createJsonObject() {

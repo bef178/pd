@@ -2,7 +2,7 @@ package libjava.io.format.json;
 
 import libjava.io.format.json.MonoJson.JsonType;
 
-public class MonoJsonFactory implements JsonFactory {
+public class MonoJsonProducer implements JsonProducer {
 
     @Override
     public JsonObject createJsonObject() {

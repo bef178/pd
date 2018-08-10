@@ -1,7 +1,8 @@
 package libjava.io.format.json;
 
 import libjava.io.Pushable;
-import libjava.io.format.json.JsonSerializer.Config;
+import libjava.io.format.json.JsonFactory.Config;
+import libjava.io.format.json.JsonFactory.JsonSerializer;
 
 class SimpleJsonScalar implements JsonScalar {
 

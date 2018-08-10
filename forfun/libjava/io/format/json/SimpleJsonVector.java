@@ -5,7 +5,8 @@ import static libjava.io.format.json.SimpleJsonObject.checkType;
 import java.util.ArrayList;
 
 import libjava.io.Pushable;
-import libjava.io.format.json.JsonSerializer.Config;
+import libjava.io.format.json.JsonFactory.Config;
+import libjava.io.format.json.JsonFactory.JsonSerializer;
 
 class SimpleJsonVector implements JsonVector {
 
