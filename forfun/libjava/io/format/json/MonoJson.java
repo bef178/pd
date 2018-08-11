@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import libjava.io.Pushable;
+import libjava.io.format.FormattingConfig;
 
 class MonoJson implements JsonScalar, JsonVector, JsonObject, Json {
 

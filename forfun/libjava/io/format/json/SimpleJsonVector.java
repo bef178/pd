@@ -5,6 +5,7 @@ import static libjava.io.format.json.SimpleJsonObject.checkType;
 import java.util.ArrayList;
 
 import libjava.io.Pushable;
+import libjava.io.format.FormattingConfig;
 
 class SimpleJsonVector implements JsonVector {
 

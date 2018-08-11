@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.PrimitiveIterator.OfInt;
 
 import libjava.io.Pushable;
+import libjava.io.format.FormattingConfig;
 
 class JsonSerializer {
 
@@ -24,8 +25,8 @@ class JsonSerializer {
         pushCharSequence(config.EOL, pushable);
     }
 
-    private static void pushMargin(FormattingConfig config, Pushable pushable) {
-        pushCharSequence(config.prefix, pushable);
+    private static void pushMarginAndIndents(FormattingConfig config, Pushable pushable) {
+        pushCharSequence(config.margin, pushable);
         if (config.usesSpacesInsteadOfTabs) {
             for (int i = 0; i < config.numIndents; ++i) {
                 for (int j = 0; j < config.numSpacesPerIndent; ++j) {
@@ -80,7 +81,7 @@ class JsonSerializer {
             String key = keysIt.next();
             Json value = json.getJson(key);
 
-            pushMargin(config, it);
+            pushMarginAndIndents(config, it);
 
             serializeCharSequence(key, it);
             it.push(':');
@@ -95,7 +96,7 @@ class JsonSerializer {
         config.numIndents--;
 
         if (!isEmpty) {
-            pushMargin(config, it);
+            pushMarginAndIndents(config, it);
         }
 
         it.push('}');
@@ -117,7 +118,7 @@ class JsonSerializer {
         config.numIndents++;
 
         for (int i = 0; i < json.size(); ++i) {
-            pushMargin(config, it);
+            pushMarginAndIndents(config, it);
 
             serialize(json.getJson(i), config, it);
 
@@ -130,7 +131,7 @@ class JsonSerializer {
         config.numIndents--;
 
         if (!isEmpty) {
-            pushMargin(config, it);
+            pushMarginAndIndents(config, it);
         }
 
         it.push(']');

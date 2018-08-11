@@ -2,6 +2,7 @@ package libjava.io.format.json;
 
 import libjava.io.Pullable;
 import libjava.io.Pushable;
+import libjava.io.format.FormattingConfig;
 
 public class JsonFactory {
 

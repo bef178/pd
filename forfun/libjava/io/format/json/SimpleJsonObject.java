@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import libjava.io.Pushable;
+import libjava.io.format.FormattingConfig;
 
 class SimpleJsonObject implements JsonObject {
 

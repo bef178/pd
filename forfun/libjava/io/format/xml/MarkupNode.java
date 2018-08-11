@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import libjava.io.format.FormattingConfig;
+
 public class MarkupNode extends Node {
 
     private Attribute tagName = null;
@@ -42,7 +44,7 @@ public class MarkupNode extends Node {
     }
 
     @Override
-    public StringBuilder toString(StringBuilder o, Config c) {
+    public StringBuilder toString(StringBuilder o, FormattingConfig c) {
         assert o != null;
 
         if (!isValid()) {
@@ -63,7 +65,7 @@ public class MarkupNode extends Node {
         }
         o.append('\n');
 
-        c.tabsPerIndent += 2;
+        c.numIndents += 2;
         for (Attribute ns : namespaces) {
             if (ns.getNamespace().equals("xmlns")
                     && !ns.getName().isEmpty()
@@ -80,18 +82,18 @@ public class MarkupNode extends Node {
             attr.toString(o);
             o.append('\n');
         }
-        c.tabsPerIndent -= 2;
+        c.numIndents -= 2;
 
         if (children.isEmpty()) {
             o.append("/>").append('\n');
         } else {
             o.append('>').append('\n');
 
-            c.tabsPerIndent++;
+            c.numIndents++;
             for (Node child : children) {
                 child.toString(o, c);
             }
-            c.tabsPerIndent--;
+            c.numIndents--;
 
             appendIndent(o, c);
             o.append("</");

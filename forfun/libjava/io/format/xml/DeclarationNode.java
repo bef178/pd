@@ -1,5 +1,7 @@
 package libjava.io.format.xml;
 
+import libjava.io.format.FormattingConfig;
+
 public class DeclarationNode extends Node {
 
     public Attribute VERSION = new Attribute()
@@ -10,7 +12,7 @@ public class DeclarationNode extends Node {
             .setName("standalone").setValue("yes");
 
     @Override
-    public StringBuilder toString(StringBuilder o, Config c) {
+    public StringBuilder toString(StringBuilder o, FormattingConfig c) {
         assert o != null;
         if (VERSION != null) {
             o.append("<?xml");

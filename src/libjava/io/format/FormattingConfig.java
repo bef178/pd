@@ -1,4 +1,4 @@
-package libjava.io.format.json;
+package libjava.io.format;
 
 public class FormattingConfig {
 
@@ -18,9 +18,9 @@ public class FormattingConfig {
     public String EOL = null;
 
     /**
-     * the former part of margin
+     * the fixed part
      */
-    public String prefix = null;
+    public String margin = null;
 
     public boolean usesSpacesInsteadOfTabs = true;
 
@@ -29,7 +29,7 @@ public class FormattingConfig {
     public int numTabsPerIndent = 1;
 
     /**
-     * the latter part of margin
+     * the changeable part
      */
     public transient int numIndents = 0;
 

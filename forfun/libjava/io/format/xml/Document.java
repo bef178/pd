@@ -1,17 +1,16 @@
 package libjava.io.format.xml;
 
-public class DotXml {
+import libjava.io.format.FormattingConfig;
 
-    Config config;
+public class Document {
 
     DeclarationNode header;
 
     MarkupNode root;
 
-    public StringBuilder toString(StringBuilder o) {
+    public StringBuilder toString(StringBuilder o, FormattingConfig c) {
         assert o != null;
         if (root != null) {
-            Config c = config.copy();
             if (header != null) {
                 header.toString(o, c);
             }
