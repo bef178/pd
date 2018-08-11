@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import libjava.io.ParsingException;
 import libjava.io.Pullable;
 
-public class Config {
+public class Conf {
 
     public static Entry<String, String> fromString(IntScanner scanner) {
         int ch = ScalarPicker.eatWhitespace(scanner);
