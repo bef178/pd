@@ -1,8 +1,6 @@
 package libjava.io.format.json;
 
 import libjava.io.Pushable;
-import libjava.io.format.json.JsonFactory.Config;
-import libjava.io.format.json.JsonFactory.JsonSerializer;
 
 class SimpleJsonScalar implements JsonScalar {
 
@@ -33,7 +31,7 @@ class SimpleJsonScalar implements JsonScalar {
     }
 
     @Override
-    public void serialize(Config ignored, Pushable it) {
+    public void serialize(FormattingConfig ignored, Pushable it) {
         JsonSerializer.serializeScalar(this, it);
     }
 

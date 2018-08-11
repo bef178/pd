@@ -5,8 +5,6 @@ import static libjava.io.format.json.SimpleJsonObject.checkType;
 import java.util.ArrayList;
 
 import libjava.io.Pushable;
-import libjava.io.format.json.JsonFactory.Config;
-import libjava.io.format.json.JsonFactory.JsonSerializer;
 
 class SimpleJsonVector implements JsonVector {
 
@@ -77,7 +75,7 @@ class SimpleJsonVector implements JsonVector {
     }
 
     @Override
-    public void serialize(Config config, Pushable it) {
+    public void serialize(FormattingConfig config, Pushable it) {
         JsonSerializer.serializeVector(this, config, it);
     }
 }

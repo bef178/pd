@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.Set;
 
 import libjava.io.Pushable;
-import libjava.io.format.json.JsonFactory.Config;
-import libjava.io.format.json.JsonFactory.JsonSerializer;
 
 class MonoJson implements JsonScalar, JsonVector, JsonObject, Json {
 
@@ -171,7 +169,7 @@ class MonoJson implements JsonScalar, JsonVector, JsonObject, Json {
     }
 
     @Override
-    public void serialize(Config config, Pushable it) {
+    public void serialize(FormattingConfig config, Pushable it) {
         switch (type) {
             case SCALAR:
                 JsonSerializer.serializeScalar(this, it);
