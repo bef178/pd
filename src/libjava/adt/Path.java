@@ -49,8 +49,7 @@ public class Path {
                 break;
         }
 
-        int i = 1;
-        while (i < segments.size()) {
+        for (int i = 1; i < segments.size(); ) {
             switch (segments.get(i)) {
                 case "":
                     segments.remove(i);
@@ -84,7 +83,7 @@ public class Path {
         return Path.wrap(segments.toArray(new String[0]));
     }
 
-    public Path relativiveFrom(Path from) {
+    public Path relativizeFrom(Path from) {
         return from.relativizeTo(this);
     }
 
