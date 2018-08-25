@@ -25,6 +25,7 @@ public class Conf {
         ch = ScalarPicker.eatWhitespace(scanner);
         if (ch == '\"') {
             String value = ScalarPicker.pickString(scanner, '\"');
+            scanner.next();
             ch = ScalarPicker.eatWhitespace(scanner);
             if (ch != Pullable.E_EOF) {
                 throw new ParsingException();

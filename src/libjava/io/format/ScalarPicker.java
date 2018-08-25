@@ -20,30 +20,25 @@ public class ScalarPicker {
         return ch;
     }
 
-    public static String pickDottedIdentifier(IntScanner scanner) {
+    public static String pickDottedIdentifier(IntScanner it) {
         InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         while (true) {
-            pickIdentifier(scanner, buffer);
+            pickIdentifier(it, buffer);
             if (buffer.size() == 0) {
                 throw new ParsingException();
             }
-            if (scanner.pull() != '.') {
+            if (it.pull() != '.') {
                 return new String(buffer.copyBytes());
             }
             buffer.push('.');
-            scanner.pull();
         }
     }
 
-    /**
-     * ok: 0, 1, -1, 1.01, -1.1
-     * not ok: 00, -0, 0., .1, -0.0, 0.0
-     */
-    public static float pickFloat(IntScanner scanner) {
+    public static float pickFloat(IntScanner it) {
         InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         int stat = 0;
         while (true) {
-            int ch = scanner.pull();
+            int ch = it.pull();
             switch (stat) {
                 case 0:
                     if (ch == '-') {
@@ -56,7 +51,7 @@ public class ScalarPicker {
                         buffer.push(ch);
                         stat = 3;
                     } else {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException(String.format("Unexpected %s", (char) ch));
                     }
                     break;
@@ -64,12 +59,11 @@ public class ScalarPicker {
                     if (ch == '0') {
                         buffer.push(ch);
                         stat = 4;
-                    }
-                    if (Ctype.isDigit(ch)) {
+                    } else if (Ctype.isDigit(ch)) {
                         buffer.push(ch);
                         stat = 3;
                     } else {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException();
                     }
                     break;
@@ -78,10 +72,10 @@ public class ScalarPicker {
                         buffer.push(ch);
                         stat = 5;
                     } else if (Ctype.isDigit(ch)) {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException();
                     } else {
-                        scanner.back();
+                        it.back();
                         return Float.parseFloat(new String(buffer.copyBytes()));
                     }
                     break;
@@ -92,8 +86,8 @@ public class ScalarPicker {
                         buffer.push(ch);
                         stat = 5;
                     } else {
-                        scanner.back();
-                        throw new ParsingException();
+                        it.back();
+                        return Float.parseFloat(new String(buffer.copyBytes()));
                     }
                     break;
                 case 4:
@@ -101,7 +95,7 @@ public class ScalarPicker {
                         buffer.push(ch);
                         stat = 5;
                     } else {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException();
                     }
                     break;
@@ -112,7 +106,7 @@ public class ScalarPicker {
                         buffer.push(ch);
                         stat = 6;
                     } else {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException();
                     }
                     break;
@@ -123,7 +117,7 @@ public class ScalarPicker {
                     } else if (Ctype.isDigit(ch)) {
                         buffer.push(ch);
                     } else {
-                        scanner.back();
+                        it.back();
                         return Float.parseFloat(new String(buffer.copyBytes()));
                     }
                     break;
@@ -131,31 +125,31 @@ public class ScalarPicker {
         }
     }
 
-    public static String pickIdentifier(IntScanner scanner) {
+    public static String pickIdentifier(IntScanner it) {
         InstallmentByteBuffer buffer = new InstallmentByteBuffer();
-        pickIdentifier(scanner, buffer);
+        pickIdentifier(it, buffer);
         return new String(buffer.copyBytes());
     }
 
-    private static void pickIdentifier(IntScanner scanner, InstallmentByteBuffer pusher) {
+    private static void pickIdentifier(IntScanner it, InstallmentByteBuffer buffer) {
         int stat = 0;
         while (true) {
-            int ch = scanner.pull();
+            int ch = it.pull();
             switch (stat) {
                 case 0:
                     if (Ctype.isAlphabetic(ch) || ch == '_') {
-                        pusher.push(ch);
+                        buffer.push(ch);
                         stat = 1;
                     } else {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException();
                     }
                     break;
                 case 1:
                     if (Ctype.isAlphabetic(ch) || ch == '_' || Ctype.isDigit(ch)) {
-                        pusher.push(ch);
+                        buffer.push(ch);
                     } else {
-                        scanner.back();
+                        it.back();
                         return;
                     }
                     break;
@@ -175,11 +169,11 @@ public class ScalarPicker {
      * ok: 0, -1, 1
      * not ok: 00, -0
      */
-    public static int pickInt(IntScanner scanner) {
+    public static int pickInt(IntScanner it) {
         InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         int stat = 0;
         while (true) {
-            int ch = scanner.pull();
+            int ch = it.pull();
             switch (stat) {
                 case 0:
                     if (ch == '-') {
@@ -192,7 +186,7 @@ public class ScalarPicker {
                         buffer.push(ch);
                         stat = 3;
                     } else {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException();
                     }
                     break;
@@ -201,16 +195,16 @@ public class ScalarPicker {
                         buffer.push(ch);
                         stat = 3;
                     } else {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException();
                     }
                     break;
                 case 2:
                     if (Ctype.isDigit(ch)) {
-                        scanner.back();
+                        it.back();
                         throw new ParsingException();
                     } else {
-                        scanner.back();
+                        it.back();
                         return Integer.parseInt(
                                 new String(buffer.copyBytes()));
                     }
@@ -218,7 +212,7 @@ public class ScalarPicker {
                     if (Ctype.isDigit(ch)) {
                         buffer.push(ch);
                     } else {
-                        scanner.back();
+                        it.back();
                         return Integer.parseInt(
                                 new String(buffer.copyBytes()));
                     }
@@ -227,23 +221,23 @@ public class ScalarPicker {
         }
     }
 
-    public static String pickString(Pullable pullable) {
-        return pickString(pullable, Pullable.E_EOF);
+    public static String pickString(IntScanner it) {
+        return pickString(it, Pullable.E_EOF);
     }
 
-    public static String pickString(Pullable pullable, int closingSymbol) {
-        return pickString(pullable, closingSymbol, false);
+    public static String pickString(IntScanner it, int closingSymbol) {
+        return pickString(it, closingSymbol, false);
     }
 
     /**
-     * Return when meet closing symbol, throw when meet EOF if not silent.<br/>
-     * The closing symbol will be consumed and will not be part of result.<br/>
+     * Return when meet closing symbol; throw when meet EOF if not silent.<br/>
+     * The closing symbol will be reached but not consumed and not part of result.<br/>
      */
-    public static String pickString(Pullable pullable, int closingSymbol, boolean silent) {
+    public static String pickString(IntScanner it, int closingSymbol, boolean silent) {
         InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         boolean escaped = false;
         while (true) { // not break on EOF
-            int ch = pullable.pull();
+            int ch = it.pull();
             if (escaped) {
                 buffer.push(ch);
                 escaped = false;
@@ -251,9 +245,11 @@ public class ScalarPicker {
                 buffer.push(ch);
                 escaped = true;
             } else if (ch == closingSymbol) {
+                it.back();
                 return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
             } else if (ch == Pullable.E_EOF) {
                 if (silent) {
+                    it.back();
                     return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
                 } else {
                     throw new ParsingException("Unexpected EOF");
@@ -264,10 +260,10 @@ public class ScalarPicker {
         }
     }
 
-    public static String pickString(Pullable pullable, int openingSymbol, int closingSymbol) {
-        if (pullable.pull() != openingSymbol) {
+    public static String pickString(IntScanner it, int openingSymbol, int closingSymbol) {
+        if (it.pull() != openingSymbol) {
             throw new ParsingException();
         }
-        return pickString(pullable, closingSymbol);
+        return pickString(it, closingSymbol);
     }
 }

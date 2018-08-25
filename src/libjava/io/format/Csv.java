@@ -30,6 +30,7 @@ public class Csv {
                 continue;
             } else if (ch == DOUBLE_QUOTE) {
                 items.add(ScalarPicker.pickString(scanner, DOUBLE_QUOTE));
+                scanner.pull();
                 ch = scanner.pull();
                 if (ch == Pullable.E_EOF) {
                     return items;
@@ -53,8 +54,6 @@ public class Csv {
             } else {
                 scanner.back();
                 items.add(ScalarPicker.pickString(scanner, COMMA, true));
-                // check EOF
-                scanner.back();
                 int last = scanner.pull();
                 if (last == COMMA) {
                     // comma is consumed
