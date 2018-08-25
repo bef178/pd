@@ -1,5 +1,6 @@
 package libjava.io.format;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -8,6 +9,7 @@ import java.util.List;
 import libjava.io.InstallmentByteBuffer;
 import libjava.io.ParsingException;
 import libjava.io.Pullable;
+import libjava.io.Pushable;
 
 /**
  * a,"b",c => [a,b,c]
@@ -15,48 +17,42 @@ import libjava.io.Pullable;
 public class Csv {
 
     private static final int COMMA = ',';
+    private static final int BACKSLASH = '\\';
+
     private static final int DOUBLE_QUOTE = '\"';
     private static final int SINGLE_QUOTE = '\'';
 
-    public static List<String> fromString(IntScanner scanner) {
+    public static List<String> fromString(IntScanner it) {
+        return fromString(it, COMMA);
+    }
+
+    public static List<String> fromString(IntScanner it, final int separator) {
         List<String> items = new LinkedList<String>();
         while (true) {
-            int ch = scanner.pull();
+            int ch = it.pull();
             if (ch == Pullable.E_EOF) {
                 items.add("");
                 return items;
-            } else if (ch == COMMA) {
+            } else if (ch == separator) {
                 items.add("");
                 continue;
-            } else if (ch == DOUBLE_QUOTE) {
-                items.add(ScalarPicker.pickString(scanner, DOUBLE_QUOTE));
-                scanner.pull();
-                ch = scanner.pull();
+            } else if (ch == DOUBLE_QUOTE || ch == SINGLE_QUOTE) {
+                items.add(fromString(it, ch, false));
+                it.pull();
+                ch = it.pull();
                 if (ch == Pullable.E_EOF) {
                     return items;
-                } else if (ch == COMMA) {
+                } else if (ch == separator) {
                     continue;
                 } else {
-                    scanner.back();
-                    throw new ParsingException();
-                }
-            } else if (ch == SINGLE_QUOTE) {
-                items.add(ScalarPicker.pickString(scanner, SINGLE_QUOTE));
-                ch = scanner.pull();
-                if (ch == Pullable.E_EOF) {
-                    return items;
-                } else if (ch == COMMA) {
-                    continue;
-                } else {
-                    scanner.back();
+                    it.back();
                     throw new ParsingException();
                 }
             } else {
-                scanner.back();
-                items.add(ScalarPicker.pickString(scanner, COMMA, true));
-                int last = scanner.pull();
-                if (last == COMMA) {
-                    // comma is consumed
+                it.back();
+                items.add(fromString(it, separator, true));
+                int last = it.pull();
+                if (last == separator) {
                     continue;
                 } else {
                     // meet EOF
@@ -66,27 +62,61 @@ public class Csv {
         }
     }
 
+    private static String fromString(IntScanner it, int closingSymbol, boolean silent) {
+        boolean escaped = false;
+        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
+        Pullable p = ScalarPicker.pickStringAsPullablePipe(it, closingSymbol, silent);
+        for (int ch = p.pull(); ch != Pullable.E_EOF; ch = p.pull()) {
+            if (escaped) {
+                escaped = false;
+                if (ch != DOUBLE_QUOTE && ch != SINGLE_QUOTE) {
+                    buffer.push(BACKSLASH);
+                }
+                buffer.push(ch);
+            } else if (ch == BACKSLASH) {
+                escaped = true;
+            } else {
+                buffer.push(ch);
+            }
+        }
+        return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
+    }
+
     public static List<String> fromString(String s) {
         return fromString(IntScanner.wrap(s));
     }
 
-    public static String toString(List<String> items) {
-        return toString(items, 0);
+    private static void toString(CharSequence cs, Pushable ostream) {
+        assert cs != null;
+        assert ostream != null;
+        Pullable p = Pullable.wrap(cs);
+        for (int ch = p.pull(); ch != Pullable.E_EOF; ch = p.pull()) {
+            if (ch == DOUBLE_QUOTE || ch == SINGLE_QUOTE) {
+                ostream.push(BACKSLASH);
+            }
+            ostream.push(ch);
+        }
     }
 
-    public static String toString(List<String> items, int delimeter) {
+    public static String toString(List<String> items) {
+        return toString(items, COMMA, DOUBLE_QUOTE);
+    }
+
+    public static String toString(List<String> items, int separator, int delimeter) {
+        assert separator > 0;
+        assert delimeter >= 0;
         Iterator<String> it = items.iterator();
         InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         while (it.hasNext()) {
             if (delimeter > 0) {
                 buffer.push(delimeter);
             }
-            buffer.append(it.next());
+            toString(it.next(), buffer);
             if (delimeter > 0) {
                 buffer.push(delimeter);
             }
             if (it.hasNext()) {
-                buffer.push(',');
+                buffer.push(separator);
             }
         }
         return new String(buffer.copyBytes());

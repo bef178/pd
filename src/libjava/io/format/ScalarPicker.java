@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import libjava.io.InstallmentByteBuffer;
 import libjava.io.ParsingException;
 import libjava.io.Pullable;
+import libjava.io.PullablePipe;
 import libjava.primitive.Ctype;
 
 public class ScalarPicker {
@@ -235,29 +236,11 @@ public class ScalarPicker {
      */
     public static String pickString(IntScanner it, int closingSymbol, boolean silent) {
         InstallmentByteBuffer buffer = new InstallmentByteBuffer();
-        boolean escaped = false;
-        while (true) { // not break on EOF
-            int ch = it.pull();
-            if (escaped) {
-                buffer.push(ch);
-                escaped = false;
-            } else if (ch == '\\') {
-                buffer.push(ch);
-                escaped = true;
-            } else if (ch == closingSymbol) {
-                it.back();
-                return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
-            } else if (ch == Pullable.E_EOF) {
-                if (silent) {
-                    it.back();
-                    return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
-                } else {
-                    throw new ParsingException("Unexpected EOF");
-                }
-            } else {
-                buffer.push(ch);
-            }
+        PullablePipe p = pickStringAsPullablePipe(it, closingSymbol, silent);
+        for (int ch = p.pull(); ch != Pullable.E_EOF; ch = p.pull()) {
+            buffer.append(ch);
         }
+        return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
     }
 
     public static String pickString(IntScanner it, int openingSymbol, int closingSymbol) {
@@ -265,5 +248,46 @@ public class ScalarPicker {
             throw new ParsingException();
         }
         return pickString(it, closingSymbol);
+    }
+
+    public static PullablePipe pickStringAsPullablePipe(IntScanner it, int closingSymbol,
+            boolean silent) {
+
+        return new PullablePipe() {
+
+            private IntScanner upstream = it;
+
+            private boolean escaped = false;
+
+            @Override
+            public <T extends Pullable> T join(T upstream) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int pull() {
+                int ch = it.pull();
+                if (escaped) {
+                    escaped = false;
+                    return ch;
+                } else if (ch == '\\') {
+                    escaped = true;
+                    return ch;
+                } else if (ch == closingSymbol) {
+                    upstream.back();
+                    return Pullable.E_EOF;
+                } else if (ch == Pullable.E_EOF) {
+                    if (silent) {
+                        it.back();
+                        return Pullable.E_EOF;
+                    } else {
+                        throw new ParsingException("Unexpected EOF");
+                    }
+                } else {
+                    return ch;
+                }
+
+            }
+        };
     }
 }
