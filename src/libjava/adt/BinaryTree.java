@@ -1,4 +1,4 @@
-package libjava.adt.forked;
+package libjava.adt;
 
 import java.util.Collection;
 import java.util.LinkedList;

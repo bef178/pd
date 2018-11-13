@@ -1,4 +1,4 @@
-package libjava.adt.linear;
+package libjava.adt;
 
 import java.util.Random;
 
