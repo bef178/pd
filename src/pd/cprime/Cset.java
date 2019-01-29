@@ -21,16 +21,14 @@ public class Cset<E> {
     /**
      * one -= another
      */
-    public static <E> void toComplement(Collection<E> one,
-            Collection<E> another) {
+    public static <E> void toComplement(Collection<E> one, Collection<E> another) {
         one.removeAll(another);
     }
 
     /**
      * one &= another
      */
-    public static <E> void toIntersection(Collection<E> one,
-            Collection<E> another) {
+    public static <E> void toIntersection(Collection<E> one, Collection<E> another) {
         Iterator<E> it = one.iterator();
         while (it.hasNext()) {
             if (!another.contains(it.next())) {
