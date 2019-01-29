@@ -3,10 +3,8 @@ package libjava.geography;
 /**
  * immutable point on the surface of a sphere<br/>
  * using double elements as lat, lon<br/>
- *
- * @author tanghao
  */
-public class Point {
+public class LatLon {
 
     public static boolean isValidLat(double lat) {
         return lat >= -90.0 && lat <= 90.0;
@@ -19,7 +17,7 @@ public class Point {
     public final double lat;
     public final double lon;
 
-    public Point(double lat, double lon) {
+    public LatLon(double lat, double lon) {
         if (!isValidLat(lat)) {
             throw new IllegalArgumentException("INVALID DOUBLE LAT");
         }
@@ -31,7 +29,7 @@ public class Point {
     }
 
     public boolean isValid() {
-        return Point.isValidLat(lat) && Point.isValidLon(lon);
+        return LatLon.isValidLat(lat) && LatLon.isValidLon(lon);
     }
 
     public String toStandardString() {

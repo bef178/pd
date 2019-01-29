@@ -36,7 +36,7 @@ public final class Util {
      * using rectangular coordinates instead of spherical<br/>
      * (assuming close enough)<br/>
      */
-    public static double findAzimuthDegrees(Point s, Point t) {
+    public static double findAzimuthDegrees(LatLon s, LatLon t) {
         assert s != null;
         assert s.isValid();
         assert t != null;
@@ -64,7 +64,7 @@ public final class Util {
     // should calculate the angle between h1 and h2,
     // i.e., the angle between flat OsN and flat Ost
     @Deprecated
-    public static double findAzimuthDegreesAccurate(Point s, Point t) {
+    public static double findAzimuthDegreesAccurate(LatLon s, LatLon t) {
         assert s != null && s.isValid();
         assert t != null && t.isValid();
 
@@ -93,7 +93,7 @@ public final class Util {
         return Math.asin(rad) * 2;
     }
 
-    public static double findDistanceOnTheEarth(Point s, Point t) {
+    public static double findDistanceOnTheEarth(LatLon s, LatLon t) {
         assert s != null;
         assert s.isValid();
         assert t != null;
