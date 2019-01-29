@@ -27,21 +27,21 @@ public class Csv {
     }
 
     public static List<String> fromString(IntScanner it, final int separator) {
-        List<String> items = new LinkedList<String>();
+        List<String> values = new LinkedList<String>();
         while (true) {
             int ch = it.pull();
             if (ch == Pullable.E_EOF) {
-                items.add("");
-                return items;
+                values.add("");
+                return values;
             } else if (ch == separator) {
-                items.add("");
+                values.add("");
                 continue;
             } else if (ch == DOUBLE_QUOTE || ch == SINGLE_QUOTE) {
-                items.add(fromString(it, ch, false));
+                values.add(fromString(it, ch, false));
                 it.pull();
                 ch = it.pull();
                 if (ch == Pullable.E_EOF) {
-                    return items;
+                    return values;
                 } else if (ch == separator) {
                     continue;
                 } else {
@@ -50,13 +50,13 @@ public class Csv {
                 }
             } else {
                 it.back();
-                items.add(fromString(it, separator, true));
+                values.add(fromString(it, separator, true));
                 int last = it.pull();
                 if (last == separator) {
                     continue;
                 } else {
                     // meet EOF
-                    return items;
+                    return values;
                 }
             }
         }
@@ -104,7 +104,7 @@ public class Csv {
 
     public static String toString(List<String> items, int separator, int delimeter) {
         assert separator > 0;
-        assert delimeter >= 0;
+        assert delimeter == 0 || delimeter == DOUBLE_QUOTE || delimeter == SINGLE_QUOTE;
         Iterator<String> it = items.iterator();
         InstallmentByteBuffer buffer = new InstallmentByteBuffer();
         while (it.hasNext()) {
