@@ -12,13 +12,13 @@ define find-java-files
 $(call find-files, "*.java", $1)
 endef
 
-PACKAGE := libjava
+PACKAGE := pd
 
 LIB_FILES := $(call find-jar-files, ./lib)
 
 OUT := ./out
 
-TARGETS := primitive geography geometry
+TARGETS := cprime geography geometry
 SPECIAL_TARGETS := adt io
 
 ####
@@ -51,8 +51,8 @@ $(TARGETS): ls-args
 	$(call compile)
 
 .PHONY: adt io
-adt io: ls-args primitive
-	$(call compile, $(call get-jar, primitive))
+adt io: ls-args cprime
+	$(call compile, $(call get-jar, cprime))
 
 .PHONY: ls-args
 ls-args:
