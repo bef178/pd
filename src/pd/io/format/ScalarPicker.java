@@ -138,7 +138,7 @@ public class ScalarPicker {
             int ch = it.pull();
             switch (stat) {
                 case 0:
-                    if (Ctype.isAlphabetic(ch) || ch == '_') {
+                    if (Ctype.isAlpha(ch) || ch == '_') {
                         buffer.push(ch);
                         stat = 1;
                     } else {
@@ -147,7 +147,7 @@ public class ScalarPicker {
                     }
                     break;
                 case 1:
-                    if (Ctype.isAlphabetic(ch) || ch == '_' || Ctype.isDigit(ch)) {
+                    if (Ctype.isAlpha(ch) || ch == '_' || Ctype.isDigit(ch)) {
                         buffer.push(ch);
                     } else {
                         it.back();

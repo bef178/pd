@@ -6,10 +6,10 @@ public final class Ctype {
      * [A-Za-z0-9]
      */
     public static boolean isAlnum(int ch) {
-        return isAlphabetic(ch) || isDigit(ch);
+        return isAlpha(ch) || isDigit(ch);
     }
 
-    public static boolean isAlphabetic(int ch) {
+    public static boolean isAlpha(int ch) {
         return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
     }
 
@@ -24,23 +24,18 @@ public final class Ctype {
         } else if (radix <= 10) {
             return ch >= '0' && ch < '0' + radix;
         } else if (radix < 36) {
-            return (ch >= '0' && ch < '9')
-                    || (ch >= 'a' && ch < 'a' + radix - 10);
+            return (ch >= '0' && ch < '9') || (ch >= 'a' && ch < 'a' + radix - 10);
         } else {
             return false;
         }
     }
 
     public static boolean isGraph(int ch) {
-        return ch >= 0x21 && ch <= 0x7E;
+        return ch > 0x20 && ch < 0x7F; // exclude SP and DEL
     }
 
     public static boolean isLower(int ch) {
         return ch >= 'a' && ch <= 'z';
-    }
-
-    public static boolean isPrintable(int ch) {
-        return ch == ' ' || isAlphabetic(ch) || isDigit(ch) || isPunct(ch);
     }
 
     public static boolean isPunct(int ch) {
