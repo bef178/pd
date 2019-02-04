@@ -7,7 +7,7 @@ import java.util.Iterator;
 /**
  * 二叉堆。必须传入与元素匹配的比较器。数值越小的元素越优先。
  */
-public final class MinHeap<E> {
+public final class Heap<E> {
 
     private static final int STEP = 256;
     private final Comparator<? super E> cmpr;
@@ -15,7 +15,7 @@ public final class MinHeap<E> {
     private int size = 0; // next position/index
 
     @SuppressWarnings("unchecked")
-    public MinHeap(Comparator<? super E> c) {
+    public Heap(Comparator<? super E> c) {
         assert c != null;
         cmpr = c;
         array = (E[]) new Object[STEP];

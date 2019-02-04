@@ -5,7 +5,7 @@ import java.util.Iterator;
 /**
  * doubly linked list with head node
  */
-public class LinkList<T extends Object> implements Iterable<T> {
+public class LinkedList<T extends Object> implements Iterable<T> {
 
     /**
      * Ideally, an iterator should subscribe the modification message of its
@@ -19,13 +19,13 @@ public class LinkList<T extends Object> implements Iterable<T> {
      *
      * @author tanghao
      */
-    private class LinkIterator implements Iterator<T> {
+    private class InternalIterator implements Iterator<T> {
 
         private boolean readyToRemove = false;
 
         private Node current;
 
-        private LinkIterator(Node node) {
+        private InternalIterator(Node node) {
             assert node != null;
             current = node;
         }
@@ -144,7 +144,7 @@ public class LinkList<T extends Object> implements Iterable<T> {
 
     private int size;
 
-    public LinkList() {
+    public LinkedList() {
         head = new Node();
         head.enlinkNext(head);
         size = 0;
@@ -211,7 +211,7 @@ public class LinkList<T extends Object> implements Iterable<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return new LinkIterator(head);
+        return new InternalIterator(head);
     }
 
     public T remove(int index) {
