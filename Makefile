@@ -1,70 +1,25 @@
 # Makefile
 
-define find-files
-$(shell find -L $2 -type f -iname $1 -and -not -name ".*" 2>/dev/null)
+clean-build: clean class jar
+
+.PHONY: class
+class:
+	@make -f ./build/java8.mk class
+
+define make-jar
+	PKG_SUBDIR="$1" \
+	TARGET_FILE=./out/pd.$@.jar \
+	make -f ./build/jar.mk
 endef
 
-define find-jar-files
-$(call find-files, "*.jar", $1)
-endef
+.PHONY: jar adt cprime geography geometry io
 
-define find-java-files
-$(call find-files, "*.java", $1)
-endef
+jar: adt cprime geography geometry io
 
-PACKAGE := pd
-
-LIB_FILES := $(call find-jar-files, ./lib)
-
-OUT := ./out
-
-TARGETS := cprime geography geometry
-SPECIAL_TARGETS := adt io
-
-####
-
-define usage
-	@echo "usage:"
-	@echo "  make [GOALS]"
-	@echo "  make [OPTIONS] <GOALS>"
-	@echo "  OPTIONS: ls-args"
-	@echo "  GOALS: jar class clean"
-endef
-
-define compile
-	@ JAR=$(PACKAGE).$@.jar OPTIONS="$(strip $(OPTIONS))" \
-		OUT=$(OUT)/$@ \
-		LIB_FILES="$(strip $(LIB_FILES) $1)" \
-		SRC_FILES="$(call find-java-files, ./src/$(PACKAGE)/$@)" \
-		make -f ./build/java.mk $(GOALS)
-endef
-
-define get-jar
-	$(OUT)/$(strip $1)/$(PACKAGE).$(strip $1).jar
-endef
-
-.PHONY: jar class
-jar class: $(TARGETS) $(SPECIAL_TARGETS)
-
-.PHONY: $(TARGETS)
-$(TARGETS): ls-args
-	$(call compile)
-
-.PHONY: adt io
-adt io: ls-args cprime
-	$(call compile, $(call get-jar, cprime))
-
-.PHONY: ls-args
-ls-args:
-	@echo >/dev/null
-	$(eval OPTIONS :=)
-	$(if $(findstring ls-args, $(MAKECMDGOALS)), $(eval OPTIONS += ls-args), )
-	$(eval GOALS :=)
-	$(if $(findstring class, $(MAKECMDGOALS)), $(eval GOALS += class), )
-	$(if $(findstring jar, $(MAKECMDGOALS)), $(eval GOALS := $(filter-out class, $(GOALS)) jar), )
-	$(if $(OPTIONS), $(if $(filter-out ls-args, $(MAKECMDGOALS)), , $(call usage)), )
+adt cprime geography geometry io:
+	@$(call make-jar,pd/$@)
 
 .PHONY: clean
 clean:
 	@echo "cleaning ..."
-	@rm -rf $(OUT)/*
+	@rm -rf ./out/*
