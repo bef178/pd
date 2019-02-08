@@ -30,10 +30,6 @@ public final class Ctype {
         }
     }
 
-    public static boolean isGraph(int ch) {
-        return ch > 0x20 && ch < 0x7F; // exclude SP and DEL
-    }
-
     public static boolean isLower(int ch) {
         return ch >= 'a' && ch <= 'z';
     }
@@ -78,6 +74,10 @@ public final class Ctype {
 
     public static boolean isUpper(int ch) {
         return ch >= 'A' && ch <= 'Z';
+    }
+
+    public static boolean isVisible(int ch) {
+        return ch > 0x20 && ch < 0x7F; // exclude SP and DEL
     }
 
     public static boolean isWhitespace(int ch) {

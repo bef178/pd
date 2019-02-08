@@ -62,7 +62,7 @@ public class Escaped {
                 }
 
                 ch = upstream.pull();
-                if (Ctype.isGraph(ch)) {
+                if (Ctype.isVisible(ch)) {
                     if (DECODE_MAP[ch] >= 0) {
                         return DECODE_MAP[ch];
                     }
@@ -94,7 +94,7 @@ public class Escaped {
 
             @Override
             public void push(int ch) {
-                if (Ctype.isGraph(ch)) {
+                if (Ctype.isVisible(ch)) {
                     if (ENCODE_MAP[ch] >= 0) {
                         downstream.push('\\');
                         downstream.push(ENCODE_MAP[ch]);
