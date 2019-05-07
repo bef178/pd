@@ -67,6 +67,6 @@ public final class TimeZone implements Serializable {
     @Override
     public String toString() {
         int offset = getMilliseconds() / MILLISECONDS_PER_MINUTE;
-        return String.format("%+4d", offset / 60 * 100 + offset % 60);
+        return String.format("%+05d", offset / 60 * 100 + offset % 60);
     }
 }
