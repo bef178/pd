@@ -1,13 +1,15 @@
 package pd.time.calendar.gregorian;
 
 import pd.time.FastTime;
+import pd.time.calendar.gregorian.TimeUtil.DateField;
+import pd.time.calendar.gregorian.TimeUtil.TimeField;
 
-public abstract class EasyDate {
+public abstract class EasyTime {
 
     private final FastTime fastTime;
     private final TimeZone timeZone;
 
-    EasyDate(final FastTime fastTime, TimeZone timeZone) {
+    EasyTime(final FastTime fastTime, TimeZone timeZone) {
         if (fastTime == null) {
             throw new IllegalArgumentException();
         }
@@ -28,7 +30,7 @@ public abstract class EasyDate {
             return true;
         }
         if (obj != null && obj.getClass() == this.getClass()) {
-            EasyDate a = (EasyDate) obj;
+            EasyTime a = (EasyTime) obj;
             return this.getFastTime().equals(a.getFastTime())
                     && this.getTimeZone().equals(a.getTimeZone());
         }
@@ -60,7 +62,7 @@ public abstract class EasyDate {
         return getFastTime().hashCode() * 31 + getTimeZone().hashCode();
     }
 
-    public abstract EasyDate rebase(TimeZone timeZone);
+    public abstract EasyTime rebase(TimeZone timeZone);
 
     @Override
     public final String toString() {

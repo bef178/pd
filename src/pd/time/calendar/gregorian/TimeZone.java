@@ -1,11 +1,15 @@
 package pd.time.calendar.gregorian;
 
-import static pd.time.calendar.gregorian.Util.MILLISECONDS_PER_MINUTE;
+import static pd.time.calendar.gregorian.TimeUtil.MILLISECONDS_PER_MINUTE;
 
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;;
 
+/**
+ * offset between timestamp and local easy-to-read time
+ * TODO daylight saving time should be handled here
+ */
 public final class TimeZone implements Serializable {
 
     /**
