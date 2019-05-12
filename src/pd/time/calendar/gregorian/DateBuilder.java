@@ -1,20 +1,48 @@
 package pd.time.calendar.gregorian;
 
+import static pd.time.calendar.gregorian.TimeUtil.MILLISECONDS_PER_MINUTE;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import pd.time.FastTime;
 
 public final class DateBuilder {
+
+    private static final Pattern P = Pattern.compile(
+            "^(\\d+)-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{3}) ((\\+|-)\\d{4})$");
 
     public static DateBuilder newInstance() {
         return new DateBuilder();
     }
 
-    public static EasyTime toDate2(FastTime fastTime, TimeZone timezone) {
-        return new DateAndTimeAndZone2(fastTime, timezone);
+    public static EasyTime toDate2(FastTime fastTime, TimeZone timeZone) {
+        return new DateAndTimeAndZone2(fastTime, timeZone);
     }
 
-    public static EasyTime toDate2(long millisecondsSinceUnixEpoch,
-            TimeZone timezone) {
-        return toDate2(new FastTime(millisecondsSinceUnixEpoch), timezone);
+    public static EasyTime toDate2(String s) {
+        Matcher matcher = P.matcher(s);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException();
+        }
+
+        int year = Integer.parseInt(matcher.group(1));
+        int monthOfYear = Integer.parseInt(matcher.group(2)) - 1;
+        int dayOfMonth = Integer.parseInt(matcher.group(3)) - 1;
+        int hh = Integer.parseInt(matcher.group(4));
+        int mm = Integer.parseInt(matcher.group(5));
+        int ss = Integer.parseInt(matcher.group(6));
+        int sss = Integer.parseInt(matcher.group(7));
+        int offset = Integer.parseInt(matcher.group(8));
+
+        long days = TimeUtil.toDays(year, TimeUtil.toDayOfYear(year, monthOfYear, dayOfMonth));
+        int millisecondOfDay = TimeUtil.toMillisecondOfDay(hh, mm, ss, sss);
+        long milliseconds = TimeUtil.toMilliseconds(days, millisecondOfDay);
+
+        int offsetMilliseconds = (offset / 100 * 60 + offset % 100) * MILLISECONDS_PER_MINUTE;
+
+        return DateBuilder.toDate2(FastTime.fromMilliseconds(milliseconds - offsetMilliseconds),
+                TimeZone.fromMilliseconds(offsetMilliseconds));
     }
 
     private int year = 1970;
@@ -28,7 +56,8 @@ public final class DateBuilder {
     }
 
     public EasyTime build2() {
-        return toDate2(toMilliseconds() - timeZone.getMilliseconds(), timeZone);
+        return toDate2(FastTime.fromMilliseconds(toMilliseconds() - timeZone.getMilliseconds()),
+                timeZone);
     }
 
     public DateBuilder setTimeFields(int hour, int minute, int second, int millisecond) {

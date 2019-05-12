@@ -31,6 +31,10 @@ public final class FastTime implements Comparable<FastTime>, Serializable {
         return (int) (one.getMilliseconds() - another.getMilliseconds());
     }
 
+    public static FastTime fromMilliseconds(long milliseconds) {
+        return new FastTime(milliseconds);
+    }
+
     public static FastTime now() {
         return new FastTime(System.currentTimeMillis());
     }
@@ -40,8 +44,8 @@ public final class FastTime implements Comparable<FastTime>, Serializable {
      */
     private final long s3;
 
-    public FastTime(long offsetMilliseconds) {
-        this.s3 = offsetMilliseconds;
+    private FastTime(long milliseconds) {
+        this.s3 = milliseconds;
     }
 
     @Override

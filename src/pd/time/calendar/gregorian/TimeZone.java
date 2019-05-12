@@ -37,9 +37,13 @@ public final class TimeZone implements Serializable {
         return one.getMilliseconds() - another.getMilliseconds();
     }
 
+    public static TimeZone fromMilliseconds(int offsetMilliseconds) {
+        return new TimeZone(offsetMilliseconds);
+    }
+
     // "+0800" => 480
-    public static TimeZone from(String timezone) {
-        Matcher matcher = P.matcher(timezone);
+    public static TimeZone fromString(String s) {
+        Matcher matcher = P.matcher(s);
         if (!matcher.matches()) {
             throw new IllegalArgumentException();
         }
