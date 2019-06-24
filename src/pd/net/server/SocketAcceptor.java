@@ -1,4 +1,4 @@
-package pd.server;
+package pd.net.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;

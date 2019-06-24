@@ -1,4 +1,4 @@
-package pd.server.http;
+package pd.net.server.http;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,8 +8,8 @@ import java.io.PrintWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import pd.server.RequestContext;
-import pd.server.Server;
+import pd.net.server.RequestContext;
+import pd.net.server.Server;
 
 public class EchoServer extends Server {
 
