@@ -7,12 +7,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RequestContext implements Closeable {
-
-    static final Logger LOGGER = LoggerFactory.getLogger(RequestContext.class);
 
     private final Socket socket;
 
