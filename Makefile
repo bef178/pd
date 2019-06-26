@@ -12,11 +12,11 @@ define make-jar
 	make -f ./build/jar.mk
 endef
 
-.PHONY: jar adt cprime geography geometry io
+.PHONY: jar adt cprime geography geometry io net encoding
 
-jar: adt cprime geography geometry io
+jar: adt cprime geography geometry io net encoding
 
-adt cprime geography geometry io:
+adt cprime geography geometry io net encoding:
 	@$(call make-jar,pd/$@)
 
 .PHONY: clean
