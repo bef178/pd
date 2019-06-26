@@ -11,6 +11,7 @@ import pd.io.PushablePipe;
 /**
  * 0x65 => '6' '5'
  */
+@Deprecated
 public class Hexari {
 
     public static PullablePipe asPullablePipe() {

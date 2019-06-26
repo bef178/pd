@@ -12,6 +12,7 @@ import pd.io.PushablePipe;
 /**
  * ch => byte[]
  */
+@Deprecated
 public class UriComponent {
 
     private static final BitSet SHOULD_NOT_ENCODE;
