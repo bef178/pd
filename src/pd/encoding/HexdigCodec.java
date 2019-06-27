@@ -21,9 +21,9 @@ public final class HexdigCodec {
         if (ch >= '0' && ch <= '9') {
             return ch - '0';
         } else if (ch >= 'A' && ch <= 'F') {
-            return ch - 'A';
+            return ch - 'A' + 10;
         } else if (ch >= 'a' && ch <= 'f') {
-            return ch - 'a';
+            return ch - 'a' + 10;
         }
         // XXX or throw?
         return -1;
