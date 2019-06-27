@@ -1,23 +1,27 @@
 # Makefile
 
-clean-build: clean class jar
+.PHONY: clean-build
+clean-build: clean classes jars
 
-.PHONY: class
-class:
-	@make -f ./build/java8.mk class
+.PHONY: classes
+classes:
+	@ OUT=./out/classes \
+		make -f ./build/java8.mk classes
 
-define make-jar
-	PKG_SUBDIR="$1" \
-	TARGET_FILE=./out/pd.$@.jar \
-	make -f ./build/jar.mk
-endef
+.PHONY: jars
+jars: ./out/pd.core.jar ./out/pd.oldfashion.jar
 
-.PHONY: jar adt cprime geography geometry io net encoding
+./out/pd.core.jar: classes
+	@ JAR_FILE=$@ \
+	JAR_ROOT=./out/classes \
+	JAVA_PACKAGES=pd.cprime,pd.encoding,pd.io,pd.net \
+		make -f ./build/jar.mk
 
-jar: adt cprime geography geometry io net encoding
-
-adt cprime geography geometry io net encoding:
-	@$(call make-jar,pd/$@)
+./out/pd.oldfashion.jar: classes
+	@ JAR_FILE=$@ \
+	JAR_ROOT=./out/classes \
+	JAVA_PACKAGES=pd.adt,pd.geography,pd.geometry \
+		make -f ./build/jar.mk
 
 .PHONY: clean
 clean:

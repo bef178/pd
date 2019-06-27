@@ -3,27 +3,23 @@
 #
 
 BUILD := $(shell dirname $(lastword $(MAKEFILE_LIST)))
-BUILD := $(patsubst ./%,%,$(BUILD))
-
 include $(BUILD)/utility.mk
-
-########
-
-ifndef SRC
-SRC := ./src
-endif
-SRC := $(patsubst ./%,%,$(SRC))
-SRC := $(patsubst %/,%,$(SRC))
-
-SRC_FILES := $(foreach D,$(SRC),$(call find-java-files,$(D)))
 
 ifndef OUT
 OUT := ./out
 endif
-OUT := $(patsubst ./%,%,$(OUT))
-OUT := $(patsubst %/,%,$(OUT))
 
-LIB_FILES := $(foreach D,"./lib",$(call find-jar-files,$(D)))
+ifndef SRC
+SRC := ./src
+endif
+
+SRC_FILES := $(foreach D,$(SRC),$(call find-java-files,$(D)))
+
+ifndef LIB
+LIB := ./lib
+endif
+
+LIB_FILES := $(foreach D,$(LIB),$(call find-jar-files,$(D)))
 ifeq ($(LIB_FILES),)
   ifeq ($(CLASSPATH),)
     CLASSPATH := ""
@@ -37,12 +33,18 @@ else
   CLASSPATH := $(shell echo $(CLASSPATH)| sed "s/ \+/:/g")
 endif
 
+########
+
+ifeq ($(MAKECMDGOALS),)
+$(info * goal [(default)])
+else
 $(info * goal [$(MAKECMDGOALS)])
+endif
 
 ########
 
-.PHONY: class
-class: $(SRC_FILES)
+.PHONY: classes
+classes: $(SRC_FILES)
 	@echo "compiling ..."
 	@mkdir -p $(OUT)
 	@javac -source 1.8 -target 1.8 \
