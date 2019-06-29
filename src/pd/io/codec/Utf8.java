@@ -12,6 +12,7 @@ import pd.io.PushablePipe;
 /**
  * ch => utf8 byte[]
  */
+@Deprecated
 public class Utf8 {
 
     public static PullablePipe asPullablePipe() {
