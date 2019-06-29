@@ -4,9 +4,6 @@ import pd.time.FastTime;
 import pd.time.calendar.gregorian.TimeUtil.DateField;
 import pd.time.calendar.gregorian.TimeUtil.TimeField;
 
-/**
- * A "local" date and time with time zone on Gregorian calendar.
- */
 final class DateAndTimeAndZone2 extends EasyTime {
 
     private transient int[] dateFields;
