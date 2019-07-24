@@ -3,17 +3,18 @@ package pd.io.format;
 import pd.io.Pullable;
 
 /**
- * Often, a parser requires at least one symbol to speculate which token
- * could be expected. The underlying scanner must takes both the symbol and
- * the rest of stream to produce a legal token. To merge those two, the
- * stream ought to provide last(), peek() or back().<br/>
+ * Often, a parser requires at least one symbol to speculate which token could
+ * be expected and then forward the symbol together with the rest stream to the
+ * corresponding token parser. For an uniform API, the stream is ought to
+ * provide last(), peek() or back() besides next().<br/>
  * <br/>
- * These 3 are almost equivalent with a one-slot cache - please don't suppose
- * a stream being able to go backward physically. The difference is subtle:<br/>
- * &emsp;- last() and peek() are similar: hide movement and give the value or
- * throw error state<br/>
- * &emsp;- back() the C way is just movement: a boolean shows the state
- * without exception<br/>
+ * A general stream never moves backward, so the difference is subtle:<br/>
+ * &emsp;- last(): dual read method; no cursor move; may throw; but parsers
+ *      may doubt of starting from last() or next()<br/>
+ * &emsp;- peek(): dual read method; appears no cursor move but actually is;
+ *      may throw<br/>
+ * &emsp;- back(): unique read method; appears cursor move but actually not; no
+ *      throw; just the C way<br/>
  */
 public class IntScanner implements Pullable {
 
