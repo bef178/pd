@@ -3,7 +3,7 @@ package pd.encoding;
 import java.io.UnsupportedEncodingException;
 import java.util.PrimitiveIterator.OfInt;
 
-import pd.cprime.Ctype;
+import pd.ctype.Ctype;
 
 /**
  * use percent-encoding if not safe<br/>

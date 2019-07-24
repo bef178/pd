@@ -2,7 +2,7 @@ package pd.io.format;
 
 import java.nio.charset.StandardCharsets;
 
-import pd.cprime.Ctype;
+import pd.ctype.Ctype;
 import pd.io.InstallmentByteBuffer;
 import pd.io.ParsingException;
 import pd.io.Pullable;

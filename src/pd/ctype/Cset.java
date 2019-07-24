@@ -1,4 +1,4 @@
-package pd.cprime;
+package pd.ctype;
 
 import java.util.Collection;
 import java.util.Iterator;

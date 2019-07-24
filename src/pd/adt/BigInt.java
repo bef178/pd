@@ -3,7 +3,7 @@ package pd.adt;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import pd.cprime.Cbit8;
+import pd.ctype.Cbit8;
 
 /**
  * - wrap continues bits into a big integer<br/>

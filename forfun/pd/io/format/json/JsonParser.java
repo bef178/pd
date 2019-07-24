@@ -5,7 +5,7 @@ import static pd.io.format.ScalarPicker.eatWhitespace;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 
-import pd.cprime.Ctype;
+import pd.ctype.Ctype;
 import pd.io.ParsingException;
 import pd.io.Pullable;
 

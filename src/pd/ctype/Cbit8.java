@@ -1,4 +1,4 @@
-package pd.cprime;
+package pd.ctype;
 
 public final class Cbit8 {
 

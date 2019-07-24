@@ -1,4 +1,4 @@
-package pd.cprime;
+package pd.ctype;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -2,7 +2,7 @@ package pd.io.codec;
 
 import java.util.Arrays;
 
-import pd.cprime.Ctype;
+import pd.ctype.Ctype;
 import pd.io.Pullable;
 import pd.io.PullablePipe;
 import pd.io.Pushable;
