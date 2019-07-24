@@ -1,6 +1,6 @@
 package pd.encoding;
 
-public final class HexdigCodec {
+public final class Hexdig {
 
     /**
      * toHexDigitLiteral

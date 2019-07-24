@@ -9,7 +9,7 @@ import pd.ctype.Ctype;
  * use percent-encoding if not safe<br/>
  * https://tools.ietf.org/html/rfc3986<br/>
  */
-public final class UriCodec {
+public final class UriComponent {
 
     public static CharSequence decode(CharSequence cs) {
         StringBuilder sb = new StringBuilder();
@@ -17,8 +17,8 @@ public final class UriCodec {
         while (it.hasNext()) {
             int ch = it.nextInt();
             if (ch == '%') {
-                int v0 = HexdigCodec.decode(it.nextInt());
-                int v1 = HexdigCodec.decode(it.nextInt());
+                int v0 = Hexdig.decode(it.nextInt());
+                int v1 = Hexdig.decode(it.nextInt());
                 sb.appendCodePoint((v0 << 4) | v1);
             } else {
                 sb.appendCodePoint(ch);
@@ -40,8 +40,8 @@ public final class UriCodec {
                 sb.appendCodePoint(aByte);
             } else {
                 sb.append('%');
-                sb.appendCodePoint(HexdigCodec.encode(aByte >>> 4));
-                sb.appendCodePoint(HexdigCodec.encode(aByte & 0x0F));
+                sb.appendCodePoint(Hexdig.encode(aByte >>> 4));
+                sb.appendCodePoint(Hexdig.encode(aByte & 0x0F));
             }
         }
         return sb;
@@ -65,7 +65,7 @@ public final class UriCodec {
         throw new IllegalArgumentException();
     }
 
-    private UriCodec() {
+    private UriComponent() {
         // dummy
     }
 }

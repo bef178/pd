@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import pd.encoding.UriCodec;
+import pd.encoding.UriComponent;
 
 /**
  * query is a string<br/>
@@ -30,8 +30,8 @@ public final class Query {
                 key = entryString.substring(0, i);
                 value = entryString.substring(i + 1);
             }
-            queries.put(UriCodec.decode(key).toString(),
-                    UriCodec.decode(value).toString());
+            queries.put(UriComponent.decode(key).toString(),
+                    UriComponent.decode(value).toString());
         }
         return queries;
     }
@@ -40,9 +40,9 @@ public final class Query {
         StringBuilder sb = new StringBuilder();
         while (it.hasNext()) {
             Map.Entry<String, String> entry = it.next();
-            sb.append(UriCodec.encode(entry.getKey()));
+            sb.append(UriComponent.encode(entry.getKey()));
             sb.append("=");
-            sb.append(UriCodec.encode(entry.getValue()));
+            sb.append(UriComponent.encode(entry.getValue()));
             sb.append("&");
         }
         if (sb.length() > 0) {
