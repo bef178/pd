@@ -14,7 +14,7 @@ jars: ./out/pd.core.jar ./out/pd.oldfashion.jar
 ./out/pd.core.jar: classes
 	@ JAR_FILE=$@ \
 	JAR_ROOT=./out/classes \
-	JAVA_PACKAGES=pd.cprime,pd.encoding,pd.io,pd.net \
+	JAVA_PACKAGES=pd.ctype,pd.encoding,pd.io,pd.net \
 		make -f ./build/jar.mk
 
 ./out/pd.oldfashion.jar: classes
