@@ -43,11 +43,13 @@ endif
 
 ########
 
+JAVAC := /usr/lib/jvm/java-8-openjdk-amd64/bin/javac
+
 .PHONY: classes
 classes: $(SRC_FILES)
 	@echo "compiling ..."
 	@mkdir -p $(OUT)
-	@javac -source 1.8 -target 1.8 \
+	@$(JAVAC) -source 1.8 -target 1.8 \
 		-deprecation \
 		-classpath $(CLASSPATH) \
 		-d $(OUT) $(SRC_FILES)
