@@ -28,9 +28,9 @@ final class DateAndTimeAndZone2 extends EasyTime {
                 case DAY_OF_MONTH:
                     return dateFields[3] + 1;
                 case WEEK_OF_YEAR:
-                    return dateFields[4] + 1;
+                    return dateFields[4];
                 case DAY_OF_WEEK:
-                    return dateFields[5] + 1;
+                    return dateFields[5];
                 default:
                     break;
             }

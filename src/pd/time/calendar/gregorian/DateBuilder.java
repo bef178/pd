@@ -81,8 +81,8 @@ final class DateBuilder implements EasyTime.Builder {
 
     @Override
     public DateBuilder setLocalDateFields(int year, int week, DayOfWeek day) {
-        assert week >= 1 && week <= 53;
-        int weekOfYear = week - 1;
+        assert week >= 0 && week <= 52;
+        int weekOfYear = week;
         int dayOfWeek = day.ordinal();
 
         int dayOfFirstYearDay = TimeUtil.daysToDayOfWeek(TimeUtil.toDays(year, 0));

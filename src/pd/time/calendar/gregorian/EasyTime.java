@@ -23,7 +23,7 @@ public abstract class EasyTime {
         public Builder setLocalDateFields(int year, MonthOfYear month, int day);
 
         /**
-         * week in [1, 53]<br/>
+         * week in [0, 52]<br/>
          */
         public Builder setLocalDateFields(int year, int week, DayOfWeek day);
     }
@@ -89,9 +89,8 @@ public abstract class EasyTime {
     @Override
     public final String toString() {
         return String.format("%04d-%02d-%02d %02d:%02d:%02d.%03d %s",
-                getField(DateField.YEAR), getField(DateField.MONTH_OF_YEAR),
-                getField(DateField.DAY_OF_MONTH), getField(TimeField.HOUR),
-                getField(TimeField.MINUTE), getField(TimeField.SECOND),
-                getField(TimeField.MILLISECOND), getTimeZone().toString());
+                getField(DateField.YEAR), getField(DateField.MONTH_OF_YEAR), getField(DateField.DAY_OF_MONTH),
+                getField(TimeField.HOUR), getField(TimeField.MINUTE), getField(TimeField.SECOND), getField(TimeField.MILLISECOND),
+                getTimeZone().toString());
     }
 }
