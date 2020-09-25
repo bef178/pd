@@ -3,8 +3,8 @@ package pd.time;
 import java.io.Serializable;
 
 /**
- * Represents a time point, started from Unix Epoch (1970-01-01 00:00 +0000).
- * After {@link TimeSpan}.
+ * Essentially a time span, resolution of 1 millisecond.
+ * Also able to represent a time point started from Unix Epoch (1970-01-01 00:00 +0000).
  */
 public final class FastTime implements Comparable<FastTime>, Serializable {
 
@@ -12,6 +12,8 @@ public final class FastTime implements Comparable<FastTime>, Serializable {
      *
      */
     private static final long serialVersionUID = 1L;
+
+    private static final int MILLISECONDS_PER_SECOND = 1000;
 
     public static final FastTime UnixEpoch = new FastTime(0);
 
@@ -35,38 +37,47 @@ public final class FastTime implements Comparable<FastTime>, Serializable {
         return new FastTime(milliseconds);
     }
 
+    public static FastTime fromSeconds(long seconds) {
+        // FIXME overflow
+        return new FastTime(MILLISECONDS_PER_SECOND * seconds);
+    }
+
     public static FastTime now() {
         return new FastTime(System.currentTimeMillis());
     }
 
-    /**
-     * in milliseconds
-     */
+    // 2^63ms = 9.22e18ms = 9.22e15s = 1.06e11d = 2.92e8y
     private final long s3;
 
     private FastTime(long milliseconds) {
         this.s3 = milliseconds;
     }
 
-    @Override
-    public int compareTo(FastTime o) {
-        return FastTime.compare(this, o);
+    public FastTime addMilliseconds(long milliseconds) {
+        return new FastTime(this.s3 + milliseconds);
+    }
+
+    public FastTime addSeconds(long seconds) {
+        return addMilliseconds(MILLISECONDS_PER_SECOND * seconds);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
+    public int compareTo(FastTime another) {
+        return FastTime.compare(this, another);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
             return true;
         }
-        if (obj != null && obj.getClass() == this.getClass()) {
-            return ((FastTime) obj).s3 == this.s3;
+        if (o != null && o.getClass() == this.getClass()) {
+            FastTime another = (FastTime) o;
+            return another.s3 == this.s3;
         }
         return false;
     }
 
-    /**
-     * milliseconds since Unix Epoch
-     */
     public long getMilliseconds() {
         return s3;
     }
@@ -78,7 +89,18 @@ public final class FastTime implements Comparable<FastTime>, Serializable {
 
     @Override
     public String toString() {
-        double seconds = 1.0d * s3 / TimeSpan.MILLISECONDS_PER_SECOND;
-        return String.format("%.03f", seconds);
+        return toDateString();
+    }
+
+    public String toDateString() {
+        long seconds = s3 / MILLISECONDS_PER_SECOND;
+        int millisecondOfSecond = (int) (s3 % MILLISECONDS_PER_SECOND);
+        return String.format("%ld.%03d", seconds, millisecondOfSecond);
+    }
+
+    public String toSpanString() {
+        long seconds = s3 / MILLISECONDS_PER_SECOND;
+        int millisecondOfSecond = (int) (s3 % MILLISECONDS_PER_SECOND);
+        return String.format("P%ld.%03d", seconds, millisecondOfSecond);
     }
 }

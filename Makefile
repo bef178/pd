@@ -14,7 +14,7 @@ jars: ./out/pd.core.jar
 ./out/pd.core.jar: classes
 	@ JAR_FILE=$@ \
 	JAR_ROOT=./out/classes \
-	JAVA_PACKAGES=pd.ctype,pd.encoding,pd.io,pd.net \
+	JAVA_PACKAGES=pd.ctype,pd.encoding,pd.io,pd.net,pd.time \
 		make -f ./build/jar.mk
 
 .PHONY: clean

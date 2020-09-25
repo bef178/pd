@@ -9,6 +9,25 @@ import pd.time.calendar.gregorian.TimeUtil.TimeField;
  */
 public abstract class EasyTime {
 
+    public static interface Builder {
+
+        public EasyTime build();
+
+        public Builder setLocalTimeFields(int hour, int minute, int second, int millisecond);
+
+        public Builder setTimeZone(TimeZone timeZone);
+
+        /**
+         * day in [1, 31]<br/>
+         */
+        public Builder setLocalDateFields(int year, MonthOfYear month, int day);
+
+        /**
+         * week in [1, 53]<br/>
+         */
+        public Builder setLocalDateFields(int year, int week, DayOfWeek day);
+    }
+
     private final FastTime fastTime;
     private final TimeZone timeZone;
 
@@ -23,17 +42,17 @@ public abstract class EasyTime {
         this.timeZone = timeZone;
     }
 
-    public DateBuilder builder() {
-        return DateBuilder.newInstance();
+    public static Builder builder() {
+        return new DateBuilder();
     }
 
     @Override
-    public final boolean equals(Object obj) {
-        if (obj == this) {
+    public final boolean equals(Object o) {
+        if (o == this) {
             return true;
         }
-        if (obj != null && obj.getClass() == this.getClass()) {
-            EasyTime a = (EasyTime) obj;
+        if (o != null && o.getClass() == this.getClass()) {
+            EasyTime a = (EasyTime) o;
             return this.getFastTime().equals(a.getFastTime())
                     && this.getTimeZone().equals(a.getTimeZone());
         }

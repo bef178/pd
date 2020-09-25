@@ -11,26 +11,13 @@ final class DateAndTimeAndZone2 extends EasyTime {
 
     DateAndTimeAndZone2(final FastTime fastTime, TimeZone timeZone) {
         super(fastTime, timeZone);
-    }
-
-    private void checkFields() {
-        if (dateFields != null && timeFields != null) {
-            return;
-        }
-
-        long milliseconds = getFastTime().getMilliseconds() + getTimeZone().getMilliseconds();
-
-        int millisecondOfDay = TimeUtil.millisecondsToMillisecondOfDay(milliseconds);
-        timeFields = TimeUtil.millisecondOfDayToFields(millisecondOfDay);
-
-        long days = TimeUtil.millisecondsToDays(milliseconds, millisecondOfDay);
-        dateFields = TimeUtil.daysToFields(days);
+        updateFields();
     }
 
     @Override
     public int getField(DateField field) {
         if (field != null) {
-            checkFields();
+            updateFields();
             switch (field) {
                 case YEAR:
                     return dateFields[0];
@@ -41,9 +28,9 @@ final class DateAndTimeAndZone2 extends EasyTime {
                 case DAY_OF_MONTH:
                     return dateFields[3] + 1;
                 case WEEK_OF_YEAR:
-                    return dateFields[4];
+                    return dateFields[4] + 1;
                 case DAY_OF_WEEK:
-                    return dateFields[5];
+                    return dateFields[5] + 1;
                 default:
                     break;
             }
@@ -54,7 +41,7 @@ final class DateAndTimeAndZone2 extends EasyTime {
     @Override
     public int getField(TimeField field) {
         if (field != null) {
-            checkFields();
+            updateFields();
             switch (field) {
                 case HOUR:
                     return timeFields[0];
@@ -78,5 +65,19 @@ final class DateAndTimeAndZone2 extends EasyTime {
             return this;
         }
         return new DateAndTimeAndZone2(getFastTime(), timeZone);
+    }
+
+    private void updateFields() {
+        if (dateFields != null && timeFields != null) {
+            return;
+        }
+
+        long milliseconds = getFastTime().getMilliseconds() + getTimeZone().getMilliseconds();
+
+        int millisecondOfDay = TimeUtil.millisecondsToMillisecondOfDay(milliseconds);
+        timeFields = TimeUtil.millisecondOfDayToFields(millisecondOfDay);
+
+        long days = TimeUtil.millisecondsToDays(milliseconds, millisecondOfDay);
+        dateFields = TimeUtil.daysToFields(days);
     }
 }

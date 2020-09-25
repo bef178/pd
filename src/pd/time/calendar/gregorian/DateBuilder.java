@@ -7,42 +7,34 @@ import java.util.regex.Pattern;
 
 import pd.time.FastTime;
 
-public final class DateBuilder {
+final class DateBuilder implements EasyTime.Builder {
 
     private static final Pattern P = Pattern.compile(
             "^(\\d+)-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{3}) ((\\+|-)\\d{4})$");
 
-    public static DateBuilder newInstance() {
-        return new DateBuilder();
-    }
-
-    public static EasyTime toDate2(FastTime fastTime, TimeZone timeZone) {
-        return new DateAndTimeAndZone2(fastTime, timeZone);
-    }
-
-    public static EasyTime toDate2(String s) {
+    public static DateBuilder fromString(String s) {
         Matcher matcher = P.matcher(s);
         if (!matcher.matches()) {
             throw new IllegalArgumentException();
         }
 
         int year = Integer.parseInt(matcher.group(1));
-        int monthOfYear = Integer.parseInt(matcher.group(2)) - 1;
-        int dayOfMonth = Integer.parseInt(matcher.group(3)) - 1;
+        int month = Integer.parseInt(matcher.group(2));
+        int day = Integer.parseInt(matcher.group(3));
         int hh = Integer.parseInt(matcher.group(4));
         int mm = Integer.parseInt(matcher.group(5));
         int ss = Integer.parseInt(matcher.group(6));
         int sss = Integer.parseInt(matcher.group(7));
         int offset = Integer.parseInt(matcher.group(8));
 
-        long days = TimeUtil.toDays(year, TimeUtil.toDayOfYear(year, monthOfYear, dayOfMonth));
-        int millisecondOfDay = TimeUtil.toMillisecondOfDay(hh, mm, ss, sss);
-        long milliseconds = TimeUtil.toMilliseconds(days, millisecondOfDay);
+        DateBuilder builder = new DateBuilder();
+        builder.setLocalDateFields(year, MonthOfYear.fromInt(month), day);
+        builder.setLocalTimeFields(hh, mm, ss, sss);
 
         int offsetMilliseconds = (offset / 100 * 60 + offset % 100) * MILLISECONDS_PER_MINUTE;
+        builder.setTimeZone(TimeZone.fromMilliseconds(offsetMilliseconds));
 
-        return DateBuilder.toDate2(FastTime.fromMilliseconds(milliseconds - offsetMilliseconds),
-                TimeZone.fromMilliseconds(offsetMilliseconds));
+        return builder;
     }
 
     private int year = 1970;
@@ -51,16 +43,20 @@ public final class DateBuilder {
 
     private TimeZone timeZone = TimeZone.UTC;
 
-    private DateBuilder() {
-        // private dummy
+    @Override
+    public EasyTime build() {
+        // couple with certain implementation
+        long milliseconds = getLocalMilliseconds() - timeZone.getMilliseconds();
+        return new DateAndTimeAndZone2(FastTime.fromMilliseconds(milliseconds), timeZone);
     }
 
-    public EasyTime build2() {
-        return toDate2(FastTime.fromMilliseconds(toMilliseconds() - timeZone.getMilliseconds()),
-                timeZone);
+    private long getLocalMilliseconds() {
+        long days = TimeUtil.toDays(year, dayOfYear);
+        return TimeUtil.toMilliseconds(days, millisecondOfDay);
     }
 
-    public DateBuilder setTimeFields(int hour, int minute, int second, int millisecond) {
+    @Override
+    public DateBuilder setLocalTimeFields(int hour, int minute, int second, int millisecond) {
         assert hour >= 0 && hour < 24;
         assert minute >= 0 && minute < 60;
         assert second >= 0 && second <= 60;
@@ -69,29 +65,26 @@ public final class DateBuilder {
         return this;
     }
 
-    public DateBuilder setTimeZone(TimeZone timeZone) {
-        assert timeZone != null;
-        this.timeZone = timeZone;
-        return this;
-    }
-
     /**
-     * month in [1, 12]<br/>
      * day in [1, 31]<br/>
      */
-    public DateBuilder setYearAndMonthAndDay(int year, int month, int day) {
+    @Override
+    public DateBuilder setLocalDateFields(int year, MonthOfYear month, int day) {
+        assert day >= 1 && day <= 31;
+        int monthOfYear = month.ordinal();
+        int dayOfMonth = day - 1;
+
         this.year = year;
-        this.dayOfYear = TimeUtil.toDayOfYear(year, month - 1, day - 1);
+        this.dayOfYear = TimeUtil.toDayOfYear(year, monthOfYear, dayOfMonth);
         return this;
     }
 
-    /**
-     * week in [0, 52]<br/>
-     * day in [0, 6]<br/>
-     */
-    public DateBuilder setYearAndWeekAndDay(int year, int weekOfYear, int dayOfWeek) {
-        assert weekOfYear >= 0 && weekOfYear < 53;
-        assert dayOfWeek >= 0 && dayOfWeek < 7;
+    @Override
+    public DateBuilder setLocalDateFields(int year, int week, DayOfWeek day) {
+        assert week >= 1 && week <= 53;
+        int weekOfYear = week - 1;
+        int dayOfWeek = day.ordinal();
+
         int dayOfFirstYearDay = TimeUtil.daysToDayOfWeek(TimeUtil.toDays(year, 0));
         int dayOfYear = weekOfYear * 7 + dayOfWeek - dayOfFirstYearDay;
         assert dayOfYear >= 0 && dayOfYear < TimeUtil.daysPerYear(year);
@@ -100,8 +93,10 @@ public final class DateBuilder {
         return this;
     }
 
-    private long toMilliseconds() {
-        long days = TimeUtil.toDays(year, dayOfYear);
-        return TimeUtil.toMilliseconds(days, millisecondOfDay);
+    @Override
+    public DateBuilder setTimeZone(TimeZone timeZone) {
+        assert timeZone != null;
+        this.timeZone = timeZone;
+        return this;
     }
 }
