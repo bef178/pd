@@ -10,7 +10,7 @@ import java.util.regex.Pattern;;
  * offset between timestamp and local easy-to-read time
  * TODO daylight saving time should be handled here
  */
-public final class TimeZone implements Serializable {
+public final class TimeZone implements Comparable<TimeZone>, Serializable {
 
     /**
      *
@@ -55,6 +55,11 @@ public final class TimeZone implements Serializable {
 
     private TimeZone(long offsetMilliseconds) {
         this.offsetMilliseconds = offsetMilliseconds;
+    }
+
+    @Override
+    public int compareTo(TimeZone o) {
+        return compare(this, o);
     }
 
     @Override
