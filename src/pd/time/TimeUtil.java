@@ -1,16 +1,24 @@
 package pd.time;
 
 /**
- * transformation between timestamp and local easy-to-read time, on Gregorian calendar
+ * transformation between timestamp and local easy-to-read time
  */
 public final class TimeUtil {
 
-    public enum DateField {
-        YEAR, DAY_OF_YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, WEEK_OF_YEAR, DAY_OF_WEEK;
-    }
-
     public enum TimeField {
-        HOUR, MINUTE, SECOND, MILLISECOND;
+
+        YEAR, DAY_OF_YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, WEEK_OF_YEAR, DAY_OF_WEEK,
+        MILLISECONDS_OF_DAY, HH, MM, SS, SSS;
+
+        private static final TimeField[] values = TimeField.values();
+
+        public static final TimeField fromOrdinal(int ordinal) {
+            return values[ordinal];
+        }
+
+        static int size() {
+            return values.length;
+        }
     }
 
     public static final int MILLISECONDS_PER_SECOND = 1000;
@@ -58,7 +66,24 @@ public final class TimeUtil {
         return from;
     }
 
-    static int[] daysToFields(final long daysSinceEpoch) {
+    public static int[] getTimeFieldValues(long millisecondsSinceEpoch) {
+
+        int[] fieldValues = new int[TimeField.size()];
+
+        int millisecondOfDay = (int) (millisecondsSinceEpoch % MILLISECONDS_PER_DAY);
+        if (millisecondOfDay < 0) {
+            millisecondOfDay += MILLISECONDS_PER_DAY;
+        }
+        fieldValues[TimeField.MILLISECONDS_OF_DAY.ordinal()] = millisecondOfDay;
+        breakMillisecondOfDay(millisecondOfDay, fieldValues);
+
+        long daysSinceEpoch = (millisecondsSinceEpoch - millisecondOfDay) / MILLISECONDS_PER_DAY;
+        breakDays(daysSinceEpoch, fieldValues);
+
+        return fieldValues;
+    }
+
+    private static void breakDays(final long daysSinceEpoch, int[] fieldValues) {
         // ensure year in range of int32
         assert daysSinceEpoch >= -784353015833L && daysSinceEpoch < 784351576777L;
 
@@ -97,6 +122,7 @@ public final class TimeUtil {
             year--;
             j += isLeapYear(year) ? 366 : 365;
         }
+
         final int dayOfYear = j;
 
         final int weekOfYear = (daysToDayOfWeek(daysSinceEpoch - dayOfYear) + dayOfYear) / 7;
@@ -113,9 +139,12 @@ public final class TimeUtil {
         final int monthOfYear = m;
         final int dayOfMonth = j;
 
-        return new int[] {
-                year, dayOfYear, monthOfYear, dayOfMonth, weekOfYear, dayOfWeek
-        };
+        fieldValues[TimeField.YEAR.ordinal()] = year;
+        fieldValues[TimeField.DAY_OF_YEAR.ordinal()] = dayOfYear;
+        fieldValues[TimeField.MONTH_OF_YEAR.ordinal()] = monthOfYear;
+        fieldValues[TimeField.DAY_OF_MONTH.ordinal()] = dayOfMonth;
+        fieldValues[TimeField.WEEK_OF_YEAR.ordinal()] = weekOfYear;
+        fieldValues[TimeField.DAY_OF_WEEK.ordinal()] = dayOfWeek;
     }
 
     private static boolean isLeapYear(int year) {
@@ -125,21 +154,23 @@ public final class TimeUtil {
         return year % 4 == 0;
     }
 
-    static int[] millisecondOfDayToFields(int millisecondOfDay) {
+    private static void breakMillisecondOfDay(int millisecondOfDay, int[] fieldValues) {
         assert millisecondOfDay >= 0 && millisecondOfDay <= MILLISECONDS_PER_DAY;
+        assert fieldValues.length == TimeField.size();
 
         if (millisecondOfDay == MILLISECONDS_PER_DAY) {
             // troublesome leap second
-            return new int[] {
-                    23, 59, 60, 0
-            };
+            fieldValues[TimeField.HH.ordinal()] = 23;
+            fieldValues[TimeField.MM.ordinal()] = 59;
+            fieldValues[TimeField.SS.ordinal()] = 60;
+            fieldValues[TimeField.SSS.ordinal()] = 0;
+            return;
         }
-        return new int[] {
-                (millisecondOfDay / MILLISECONDS_PER_HOUR) % 24,
-                (millisecondOfDay / MILLISECONDS_PER_MINUTE) % 60,
-                (millisecondOfDay / MILLISECONDS_PER_SECOND) % 60,
-                millisecondOfDay % MILLISECONDS_PER_SECOND
-        };
+
+        fieldValues[TimeField.HH.ordinal()] = (millisecondOfDay / MILLISECONDS_PER_HOUR) % 24;
+        fieldValues[TimeField.MM.ordinal()] = (millisecondOfDay / MILLISECONDS_PER_MINUTE) % 60;
+        fieldValues[TimeField.SS.ordinal()] = (millisecondOfDay / MILLISECONDS_PER_SECOND) % 60;
+        fieldValues[TimeField.SSS.ordinal()] = millisecondOfDay % MILLISECONDS_PER_SECOND;
     }
 
     static long millisecondsToDays(long milliseconds) {

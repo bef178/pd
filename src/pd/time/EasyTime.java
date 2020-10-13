@@ -1,6 +1,5 @@
 package pd.time;
 
-import pd.time.TimeUtil.DateField;
 import pd.time.TimeUtil.TimeField;
 
 /**
@@ -30,8 +29,7 @@ public class EasyTime {
     private final FastTime fastTime;
     private final TimeZone timeZone;
 
-    private transient int[] dateFields;
-    private transient int[] timeFields;
+    private transient int[] fieldValues;
 
     EasyTime(final FastTime fastTime, TimeZone timeZone) {
         if (fastTime == null) {
@@ -42,8 +40,6 @@ public class EasyTime {
         }
         this.fastTime = fastTime;
         this.timeZone = timeZone;
-
-        updateFields();
     }
 
     public static Builder builder() {
@@ -75,46 +71,24 @@ public class EasyTime {
      * week_of_year in [0, 52], week 0 covers the first day through the first Saturday<br/>
      * day_of_week in [0, 6], 0 for Sunday<br/>
      */
-    public int getField(DateField field) {
-        if (field != null) {
-            updateFields();
-            switch (field) {
-            case YEAR:
-                return dateFields[0];
-            case DAY_OF_YEAR:
-                return dateFields[1] + 1;
-            case MONTH_OF_YEAR:
-                return dateFields[2] + 1;
-            case DAY_OF_MONTH:
-                return dateFields[3] + 1;
-            case WEEK_OF_YEAR:
-                return dateFields[4];
-            case DAY_OF_WEEK:
-                return dateFields[5];
-            default:
-                break;
-            }
+    public int getFieldValue(TimeField field) {
+        if (field == null) {
+            throw new IllegalArgumentException();
         }
-        throw new IllegalArgumentException();
-    }
 
-    public int getField(TimeField field) {
-        if (field != null) {
-            updateFields();
-            switch (field) {
-            case HOUR:
-                return timeFields[0];
-            case MINUTE:
-                return timeFields[1];
-            case SECOND:
-                return timeFields[2];
-            case MILLISECOND:
-                return timeFields[3];
-            default:
-                break;
-            }
+        if (fieldValues == null) {
+            long localMilliseconds = getFastTime().getMilliseconds() + getTimeZone().getMilliseconds();
+            fieldValues = TimeUtil.getTimeFieldValues(localMilliseconds);
         }
-        throw new IllegalArgumentException();
+
+        switch (field) {
+            case DAY_OF_YEAR:
+            case MONTH_OF_YEAR:
+            case DAY_OF_MONTH:
+                return fieldValues[field.ordinal()] + 1;
+            default:
+                return fieldValues[field.ordinal()];
+        }
     }
 
     public final TimeZone getTimeZone() {
@@ -137,23 +111,13 @@ public class EasyTime {
     @Override
     public final String toString() {
         return String.format("%04d-%02d-%02d %02d:%02d:%02d.%03d %s",
-                getField(DateField.YEAR), getField(DateField.MONTH_OF_YEAR), getField(DateField.DAY_OF_MONTH),
-                getField(TimeField.HOUR), getField(TimeField.MINUTE), getField(TimeField.SECOND),
-                getField(TimeField.MILLISECOND),
+                getFieldValue(TimeField.YEAR),
+                getFieldValue(TimeField.MONTH_OF_YEAR),
+                getFieldValue(TimeField.DAY_OF_MONTH),
+                getFieldValue(TimeField.HH),
+                getFieldValue(TimeField.MM),
+                getFieldValue(TimeField.SS),
+                getFieldValue(TimeField.SSS),
                 getTimeZone().toString());
-    }
-
-    private void updateFields() {
-        if (dateFields != null && timeFields != null) {
-            return;
-        }
-
-        long milliseconds = getFastTime().getMilliseconds() + getTimeZone().getMilliseconds();
-
-        int millisecondOfDay = TimeUtil.millisecondsToMillisecondOfDay(milliseconds);
-        timeFields = TimeUtil.millisecondOfDayToFields(millisecondOfDay);
-
-        long days = TimeUtil.millisecondsToDays(milliseconds, millisecondOfDay);
-        dateFields = TimeUtil.daysToFields(days);
     }
 }
