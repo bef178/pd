@@ -45,7 +45,7 @@ final class DateBuilder implements EasyTime.Builder {
     public EasyTime build() {
         // couple with certain implementation
         long milliseconds = getLocalMilliseconds() - timeZone.getMilliseconds();
-        return new DateAndTimeAndZone2(FastTime.fromMilliseconds(milliseconds), timeZone);
+        return new EasyTime(FastTime.fromMilliseconds(milliseconds), timeZone);
     }
 
     private long getLocalMilliseconds() {
