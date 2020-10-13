@@ -26,8 +26,8 @@ final class DateBuilder implements EasyTime.Builder {
         int offset = Integer.parseInt(matcher.group(8));
 
         DateBuilder builder = new DateBuilder();
-        builder.setLocalDateFields(year, MonthOfYear.fromInt(month), day);
-        builder.setLocalTimeFields(hh, mm, ss, sss);
+        builder.setLocalDatePart(year, MonthOfYear.fromOrdinal(month - 1), day);
+        builder.setLocalTimePart(hh, mm, ss, sss);
 
         int offsetMilliseconds = (offset / 100 * 60 + offset % 100) * MILLISECONDS_PER_MINUTE;
         builder.setTimeZone(TimeZone.fromMilliseconds(offsetMilliseconds));
@@ -39,35 +39,20 @@ final class DateBuilder implements EasyTime.Builder {
     private int dayOfYear = 0;
     private int millisecondOfDay = 0;
 
-    private TimeZone timeZone = TimeZone.UTC;
+    private TimeZone timeZone = null;
 
     @Override
     public EasyTime build() {
-        // couple with certain implementation
-        long milliseconds = getLocalMilliseconds() - timeZone.getMilliseconds();
-        return new EasyTime(FastTime.fromMilliseconds(milliseconds), timeZone);
-    }
-
-    private long getLocalMilliseconds() {
-        long days = TimeUtil.toDays(year, dayOfYear);
-        return TimeUtil.toMilliseconds(days, millisecondOfDay);
-    }
-
-    @Override
-    public DateBuilder setLocalTimeFields(int hour, int minute, int second, int millisecond) {
-        assert hour >= 0 && hour < 24;
-        assert minute >= 0 && minute < 60;
-        assert second >= 0 && second <= 60;
-        assert millisecond >= 0 && millisecond < 1000;
-        this.millisecondOfDay = TimeUtil.toMillisecondOfDay(hour, minute, second, millisecond);
-        return this;
+        long daysSinceLocalEpoch = TimeUtil.toDays(year, dayOfYear);
+        long millisecondsSinceLocalEpoch = TimeUtil.toMilliseconds(daysSinceLocalEpoch, millisecondOfDay);
+        return new EasyTime(millisecondsSinceLocalEpoch, timeZone);
     }
 
     /**
      * day in [1, 31]<br/>
      */
     @Override
-    public DateBuilder setLocalDateFields(int year, MonthOfYear month, int day) {
+    public DateBuilder setLocalDatePart(int year, MonthOfYear month, int day) {
         assert day >= 1 && day <= 31;
         int monthOfYear = month.ordinal();
         int dayOfMonth = day - 1;
@@ -78,7 +63,7 @@ final class DateBuilder implements EasyTime.Builder {
     }
 
     @Override
-    public DateBuilder setLocalDateFields(int year, int week, DayOfWeek day) {
+    public DateBuilder setLocalDatePart(int year, int week, DayOfWeek day) {
         assert week >= 0 && week <= 52;
         int weekOfYear = week;
         int dayOfWeek = day.ordinal();
@@ -92,8 +77,17 @@ final class DateBuilder implements EasyTime.Builder {
     }
 
     @Override
+    public DateBuilder setLocalTimePart(int hh, int mm, int ss, int sss) {
+        assert hh >= 0 && hh < 24;
+        assert mm >= 0 && mm < 60;
+        assert ss >= 0 && ss <= 60;
+        assert sss >= 0 && sss < 1000;
+        this.millisecondOfDay = TimeUtil.toMillisecondOfDay(hh, mm, ss, sss);
+        return this;
+    }
+
+    @Override
     public DateBuilder setTimeZone(TimeZone timeZone) {
-        assert timeZone != null;
         this.timeZone = timeZone;
         return this;
     }

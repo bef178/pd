@@ -34,10 +34,10 @@ public final class TimeZone implements Serializable {
         if (another == null) {
             return 1;
         }
-        return one.getMilliseconds() - another.getMilliseconds();
+        return (int) (one.offsetMilliseconds - another.offsetMilliseconds);
     }
 
-    public static TimeZone fromMilliseconds(int offsetMilliseconds) {
+    public static TimeZone fromMilliseconds(long offsetMilliseconds) {
         return new TimeZone(offsetMilliseconds);
     }
 
@@ -51,10 +51,10 @@ public final class TimeZone implements Serializable {
         return new TimeZone((i / 100 * 60 + i % 100) * MILLISECONDS_PER_MINUTE);
     }
 
-    private final int s3;
+    private final long offsetMilliseconds;
 
-    private TimeZone(int offsetMilliseconds) {
-        s3 = offsetMilliseconds;
+    private TimeZone(long offsetMilliseconds) {
+        this.offsetMilliseconds = offsetMilliseconds;
     }
 
     @Override
@@ -63,18 +63,18 @@ public final class TimeZone implements Serializable {
             return true;
         }
         if (obj != null && obj.getClass() == this.getClass()) {
-            return ((TimeZone) obj).s3 == this.s3;
+            return ((TimeZone) obj).offsetMilliseconds == this.offsetMilliseconds;
         }
         return false;
     }
 
-    public int getMilliseconds() {
-        return s3;
+    public long getOffsetMilliseconds() {
+        return offsetMilliseconds;
     }
 
     @Override
     public String toString() {
-        int offset = getMilliseconds() / MILLISECONDS_PER_MINUTE;
+        int offset = (int) (offsetMilliseconds / MILLISECONDS_PER_MINUTE);
         return String.format("%+05d", offset / 60 * 100 + offset % 60);
     }
 }

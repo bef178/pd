@@ -120,7 +120,7 @@ public final class TimeUtil {
         int year = 2000 + 400 * n400 + 100 * n100 + 4 * n4 + 1 * n1;
         if (j < 0) {
             year--;
-            j += isLeapYear(year) ? 366 : 365;
+            j += daysPerYear(year);
         }
 
         final int dayOfYear = j;

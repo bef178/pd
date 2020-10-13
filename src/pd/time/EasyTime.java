@@ -1,5 +1,7 @@
 package pd.time;
 
+import static pd.time.TimeUtil.MILLISECONDS_PER_SECOND;
+
 import pd.time.TimeUtil.TimeField;
 
 /**
@@ -11,35 +13,47 @@ public class EasyTime {
 
         public EasyTime build();
 
-        public Builder setLocalTimeFields(int hour, int minute, int second, int millisecond);
-
-        public Builder setTimeZone(TimeZone timeZone);
-
         /**
          * day in [1, 31]<br/>
          */
-        public Builder setLocalDateFields(int year, MonthOfYear month, int day);
+        public Builder setLocalDatePart(int year, MonthOfYear month, int day);
 
         /**
          * week in [0, 52]<br/>
          */
-        public Builder setLocalDateFields(int year, int week, DayOfWeek day);
+        public Builder setLocalDatePart(int year, int week, DayOfWeek day);
+
+        public Builder setLocalTimePart(int hour, int minute, int second, int millisecond);
+
+        public Builder setTimeZone(TimeZone timeZone);
     }
 
-    private final FastTime fastTime;
+    public static EasyTime now() {
+        long millisecondsSinceLocalEpoch = System.currentTimeMillis();
+        long offsetMilliseconds = java.util.TimeZone.getDefault().getRawOffset();
+        return new EasyTime(millisecondsSinceLocalEpoch, offsetMilliseconds);
+    }
+
+    private final long millisecondsSinceLocalEpoch;
     private final TimeZone timeZone;
 
     private transient int[] fieldValues;
 
-    EasyTime(final FastTime fastTime, TimeZone timeZone) {
-        if (fastTime == null) {
-            throw new IllegalArgumentException();
-        }
-        if (timeZone == null) {
-            throw new IllegalArgumentException();
-        }
-        this.fastTime = fastTime;
+    private EasyTime(long millisecondsSinceLocalEpoch, long offsetMilliseconds) {
+        this(millisecondsSinceLocalEpoch, TimeZone.fromMilliseconds(offsetMilliseconds));
+    }
+
+    EasyTime(long millisecondsSinceLocalEpoch, TimeZone timeZone) {
+        this.millisecondsSinceLocalEpoch = millisecondsSinceLocalEpoch;
         this.timeZone = timeZone;
+    }
+
+    public EasyTime addMilliseconds(long milliseconds) {
+        return new EasyTime(millisecondsSinceLocalEpoch + milliseconds, timeZone);
+    }
+
+    public EasyTime addSeconds(long seconds) {
+        return addMilliseconds(seconds * MILLISECONDS_PER_SECOND);
     }
 
     public static Builder builder() {
@@ -53,14 +67,10 @@ public class EasyTime {
         }
         if (o != null && o.getClass() == this.getClass()) {
             EasyTime a = (EasyTime) o;
-            return this.getFastTime().equals(a.getFastTime())
-                    && this.getTimeZone().equals(a.getTimeZone());
+            return this.millisecondsSinceLocalEpoch == a.millisecondsSinceLocalEpoch
+                    && TimeZone.compare(timeZone, a.timeZone) == 0;
         }
         return false;
-    }
-
-    public final FastTime getFastTime() {
-        return fastTime;
     }
 
     /**
@@ -77,8 +87,7 @@ public class EasyTime {
         }
 
         if (fieldValues == null) {
-            long localMilliseconds = getFastTime().getMilliseconds() + getTimeZone().getMilliseconds();
-            fieldValues = TimeUtil.getTimeFieldValues(localMilliseconds);
+            fieldValues = TimeUtil.getTimeFieldValues(millisecondsSinceLocalEpoch);
         }
 
         switch (field) {
@@ -91,33 +100,71 @@ public class EasyTime {
         }
     }
 
+    public final long getMillisecondsSinceEpoch() {
+        if (getTimeZone() == null) {
+            throw new UnsupportedOperationException();
+        }
+        return millisecondsSinceLocalEpoch - getTimeZone().getOffsetMilliseconds();
+    }
+
+    public final long getMillisecondsSinceLocalEpoch() {
+        return millisecondsSinceLocalEpoch;
+    }
+
     public final TimeZone getTimeZone() {
         return timeZone;
     }
 
     @Override
     public final int hashCode() {
-        return getFastTime().hashCode() * 31 + getTimeZone().hashCode();
+        return Long.hashCode(millisecondsSinceLocalEpoch) * 31 + (timeZone == null ? 0 : timeZone.hashCode());
     }
 
-    public EasyTime rebase(TimeZone timeZone) {
-        assert timeZone != null;
-        if (this.getTimeZone().equals(timeZone)) {
+    /**
+     * the timestamp will probably change
+     */
+    public EasyTime assign(TimeZone timeZone) {
+        if (TimeZone.compare(this.getTimeZone(), timeZone) == 0) {
             return this;
         }
-        return new EasyTime(getFastTime(), timeZone);
+        return new EasyTime(millisecondsSinceLocalEpoch, timeZone);
+    }
+
+    /**
+     * the timestamp will not change
+     */
+    public EasyTime rebase(TimeZone timeZone) {
+        if (TimeZone.compare(this.timeZone, timeZone) == 0) {
+            return this;
+        }
+        if (this.timeZone == null) {
+            throw new UnsupportedOperationException();
+        }
+        if (timeZone == null) {
+            throw new IllegalArgumentException();
+        }
+        return new EasyTime(millisecondsSinceLocalEpoch, timeZone);
     }
 
     @Override
     public final String toString() {
-        return String.format("%04d-%02d-%02d %02d:%02d:%02d.%03d %s",
-                getFieldValue(TimeField.YEAR),
-                getFieldValue(TimeField.MONTH_OF_YEAR),
-                getFieldValue(TimeField.DAY_OF_MONTH),
-                getFieldValue(TimeField.HH),
-                getFieldValue(TimeField.MM),
-                getFieldValue(TimeField.SS),
-                getFieldValue(TimeField.SSS),
-                getTimeZone().toString());
+        return timeZone == null
+                ? String.format("%04d-%02d-%02d %02d:%02d:%02d.%03d",
+                        getFieldValue(TimeField.YEAR),
+                        getFieldValue(TimeField.MONTH_OF_YEAR),
+                        getFieldValue(TimeField.DAY_OF_MONTH),
+                        getFieldValue(TimeField.HH),
+                        getFieldValue(TimeField.MM),
+                        getFieldValue(TimeField.SS),
+                        getFieldValue(TimeField.SSS))
+                : String.format("%04d-%02d-%02d %02d:%02d:%02d.%03d %s",
+                        getFieldValue(TimeField.YEAR),
+                        getFieldValue(TimeField.MONTH_OF_YEAR),
+                        getFieldValue(TimeField.DAY_OF_MONTH),
+                        getFieldValue(TimeField.HH),
+                        getFieldValue(TimeField.MM),
+                        getFieldValue(TimeField.SS),
+                        getFieldValue(TimeField.SSS),
+                        getTimeZone().toString());
     }
 }

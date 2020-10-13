@@ -6,7 +6,7 @@ public enum DayOfWeek {
 
     private static final DayOfWeek[] values = DayOfWeek.values();
 
-    public static final DayOfWeek from(int ordinal) {
+    public static final DayOfWeek fromOrdinal(int ordinal) {
         if (ordinal >= 0 && ordinal < 7) {
             return values[ordinal];
         }
@@ -18,10 +18,6 @@ public enum DayOfWeek {
         if (n < 0) {
             n += 7;
         }
-        return from((int) n);
-    }
-
-    public int toInt() {
-        return ordinal();
+        return fromOrdinal((int) n);
     }
 }
