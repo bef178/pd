@@ -1,4 +1,4 @@
-package pd.time.calendar.gregorian;
+package pd.time;
 
 public enum DayOfWeek {
 

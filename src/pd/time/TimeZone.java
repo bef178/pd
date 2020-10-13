@@ -1,6 +1,6 @@
-package pd.time.calendar.gregorian;
+package pd.time;
 
-import static pd.time.calendar.gregorian.TimeUtil.MILLISECONDS_PER_MINUTE;
+import static pd.time.TimeUtil.MILLISECONDS_PER_MINUTE;
 
 import java.io.Serializable;
 import java.util.regex.Matcher;

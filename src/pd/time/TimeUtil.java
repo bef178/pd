@@ -1,4 +1,4 @@
-package pd.time.calendar.gregorian;
+package pd.time;
 
 /**
  * transformation between timestamp and local easy-to-read time, on Gregorian calendar

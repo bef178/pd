@@ -1,8 +1,7 @@
-package pd.time.calendar.gregorian;
+package pd.time;
 
-import pd.time.FastTime;
-import pd.time.calendar.gregorian.TimeUtil.DateField;
-import pd.time.calendar.gregorian.TimeUtil.TimeField;
+import pd.time.TimeUtil.DateField;
+import pd.time.TimeUtil.TimeField;
 
 final class DateAndTimeAndZone2 extends EasyTime {
 
