@@ -30,7 +30,7 @@ final class DateBuilder implements EasyTime.Builder {
         builder.setLocalTimePart(hh, mm, ss, sss);
 
         int offsetMilliseconds = (offset / 100 * 60 + offset % 100) * MILLISECONDS_PER_MINUTE;
-        builder.setTimeZone(TimeZone.fromMilliseconds(offsetMilliseconds));
+        builder.setTimeZone(new ZoneTimeOffset(offsetMilliseconds));
 
         return builder;
     }
@@ -39,7 +39,7 @@ final class DateBuilder implements EasyTime.Builder {
     private int dayOfYear = 0;
     private int millisecondOfDay = 0;
 
-    private TimeZone timeZone = null;
+    private ZoneTimeOffset timeZone = null;
 
     @Override
     public EasyTime build() {
@@ -87,7 +87,7 @@ final class DateBuilder implements EasyTime.Builder {
     }
 
     @Override
-    public DateBuilder setTimeZone(TimeZone timeZone) {
+    public DateBuilder setTimeZone(ZoneTimeOffset timeZone) {
         this.timeZone = timeZone;
         return this;
     }

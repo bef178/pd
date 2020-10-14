@@ -25,7 +25,7 @@ public class EasyTime {
 
         public Builder setLocalTimePart(int hour, int minute, int second, int millisecond);
 
-        public Builder setTimeZone(TimeZone timeZone);
+        public Builder setTimeZone(ZoneTimeOffset timeZone);
     }
 
     public static EasyTime now() {
@@ -35,21 +35,21 @@ public class EasyTime {
     }
 
     private final long millisecondsSinceLocalEpoch;
-    private final TimeZone timeZone;
+    private final ZoneTimeOffset zoneTimeOffset;
 
     private transient int[] fieldValues;
 
     private EasyTime(long millisecondsSinceLocalEpoch, long offsetMilliseconds) {
-        this(millisecondsSinceLocalEpoch, TimeZone.fromMilliseconds(offsetMilliseconds));
+        this(millisecondsSinceLocalEpoch, new ZoneTimeOffset(offsetMilliseconds));
     }
 
-    EasyTime(long millisecondsSinceLocalEpoch, TimeZone timeZone) {
+    EasyTime(long millisecondsSinceLocalEpoch, ZoneTimeOffset timeZone) {
         this.millisecondsSinceLocalEpoch = millisecondsSinceLocalEpoch;
-        this.timeZone = timeZone;
+        this.zoneTimeOffset = timeZone;
     }
 
     public EasyTime addMilliseconds(long milliseconds) {
-        return new EasyTime(millisecondsSinceLocalEpoch + milliseconds, timeZone);
+        return new EasyTime(millisecondsSinceLocalEpoch + milliseconds, zoneTimeOffset);
     }
 
     public EasyTime addSeconds(long seconds) {
@@ -68,7 +68,7 @@ public class EasyTime {
         if (o != null && o.getClass() == this.getClass()) {
             EasyTime a = (EasyTime) o;
             return this.millisecondsSinceLocalEpoch == a.millisecondsSinceLocalEpoch
-                    && TimeZone.compare(timeZone, a.timeZone) == 0;
+                    && ZoneTimeOffset.compare(zoneTimeOffset, a.zoneTimeOffset) == 0;
         }
         return false;
     }
@@ -111,20 +111,21 @@ public class EasyTime {
         return millisecondsSinceLocalEpoch;
     }
 
-    public final TimeZone getTimeZone() {
-        return timeZone;
+    public final ZoneTimeOffset getTimeZone() {
+        return zoneTimeOffset;
     }
 
     @Override
     public final int hashCode() {
-        return Long.hashCode(millisecondsSinceLocalEpoch) * 31 + (timeZone == null ? 0 : timeZone.hashCode());
+        return Long.hashCode(millisecondsSinceLocalEpoch) * 31
+                + (zoneTimeOffset == null ? 0 : zoneTimeOffset.hashCode());
     }
 
     /**
      * the timestamp will probably change
      */
-    public EasyTime assign(TimeZone timeZone) {
-        if (TimeZone.compare(this.getTimeZone(), timeZone) == 0) {
+    public EasyTime assign(ZoneTimeOffset timeZone) {
+        if (ZoneTimeOffset.compare(this.getTimeZone(), timeZone) == 0) {
             return this;
         }
         return new EasyTime(millisecondsSinceLocalEpoch, timeZone);
@@ -133,11 +134,11 @@ public class EasyTime {
     /**
      * the timestamp will not change
      */
-    public EasyTime rebase(TimeZone timeZone) {
-        if (TimeZone.compare(this.timeZone, timeZone) == 0) {
+    public EasyTime rebase(ZoneTimeOffset timeZone) {
+        if (ZoneTimeOffset.compare(this.zoneTimeOffset, timeZone) == 0) {
             return this;
         }
-        if (this.timeZone == null) {
+        if (this.zoneTimeOffset == null) {
             throw new UnsupportedOperationException();
         }
         if (timeZone == null) {
@@ -148,7 +149,7 @@ public class EasyTime {
 
     @Override
     public final String toString() {
-        return timeZone == null
+        return zoneTimeOffset == null
                 ? String.format("%04d-%02d-%02d %02d:%02d:%02d.%03d",
                         getFieldValue(TimeField.YEAR),
                         getFieldValue(TimeField.MONTH_OF_YEAR),

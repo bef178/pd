@@ -8,9 +8,8 @@ import java.util.regex.Pattern;;
 
 /**
  * offset between timestamp and local easy-to-read time
- * TODO daylight saving time should be handled here
  */
-public final class TimeZone implements Comparable<TimeZone>, Serializable {
+public final class ZoneTimeOffset implements Comparable<ZoneTimeOffset>, Serializable {
 
     /**
      *
@@ -19,12 +18,10 @@ public final class TimeZone implements Comparable<TimeZone>, Serializable {
 
     private static final Pattern P = Pattern.compile("^(\\+|-)\\d{4}$");
 
-    public static final TimeZone UTC = new TimeZone(0);
-
     /**
      * null is less
      */
-    public static int compare(TimeZone one, TimeZone another) {
+    public static int compare(ZoneTimeOffset one, ZoneTimeOffset another) {
         if (one == another) {
             return 0;
         }
@@ -34,31 +31,27 @@ public final class TimeZone implements Comparable<TimeZone>, Serializable {
         if (another == null) {
             return 1;
         }
-        return (int) (one.offsetMilliseconds - another.offsetMilliseconds);
-    }
-
-    public static TimeZone fromMilliseconds(long offsetMilliseconds) {
-        return new TimeZone(offsetMilliseconds);
+        return TimeOffset.compare(one.timeOffset, another.timeOffset);
     }
 
     // "+0800" => 480
-    public static TimeZone fromString(String s) {
+    public static ZoneTimeOffset fromString(String s) {
         Matcher matcher = P.matcher(s);
         if (!matcher.matches()) {
             throw new IllegalArgumentException();
         }
         int i = Integer.parseInt(matcher.group(0));
-        return new TimeZone((i / 100 * 60 + i % 100) * MILLISECONDS_PER_MINUTE);
+        return new ZoneTimeOffset((i / 100 * 60 + i % 100) * MILLISECONDS_PER_MINUTE);
     }
 
-    private final long offsetMilliseconds;
+    private final TimeOffset timeOffset;
 
-    private TimeZone(long offsetMilliseconds) {
-        this.offsetMilliseconds = offsetMilliseconds;
+    public ZoneTimeOffset(long offsetMilliseconds) {
+        timeOffset = new TimeOffset(offsetMilliseconds);
     }
 
     @Override
-    public int compareTo(TimeZone o) {
+    public int compareTo(ZoneTimeOffset o) {
         return compare(this, o);
     }
 
@@ -68,18 +61,19 @@ public final class TimeZone implements Comparable<TimeZone>, Serializable {
             return true;
         }
         if (obj != null && obj.getClass() == this.getClass()) {
-            return ((TimeZone) obj).offsetMilliseconds == this.offsetMilliseconds;
+            ZoneTimeOffset o = (ZoneTimeOffset) obj;
+            return TimeOffset.compare(o.timeOffset, this.timeOffset) == 0;
         }
         return false;
     }
 
     public long getOffsetMilliseconds() {
-        return offsetMilliseconds;
+        return timeOffset.getOffsetMilliseconds();
     }
 
     @Override
     public String toString() {
-        int offset = (int) (offsetMilliseconds / MILLISECONDS_PER_MINUTE);
+        int offset = (int) (getOffsetMilliseconds() / MILLISECONDS_PER_MINUTE);
         return String.format("%+05d", offset / 60 * 100 + offset % 60);
     }
 }
