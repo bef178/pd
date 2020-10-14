@@ -43,8 +43,8 @@ final class DateBuilder implements EasyTime.Builder {
 
     @Override
     public EasyTime build() {
-        long daysSinceLocalEpoch = TimeUtil.toDays(year, dayOfYear);
-        long millisecondsSinceLocalEpoch = TimeUtil.toMilliseconds(daysSinceLocalEpoch, millisecondOfDay);
+        long daysSinceLocalEpoch = TimeUtil.totalDays(year, dayOfYear);
+        long millisecondsSinceLocalEpoch = TimeUtil.totalMilliseconds(daysSinceLocalEpoch, millisecondOfDay);
         return new EasyTime(millisecondsSinceLocalEpoch, timeZone);
     }
 
@@ -68,9 +68,9 @@ final class DateBuilder implements EasyTime.Builder {
         int weekOfYear = week;
         int dayOfWeek = day.ordinal();
 
-        int dayOfFirstYearDay = TimeUtil.daysToDayOfWeek(TimeUtil.toDays(year, 0));
+        int dayOfFirstYearDay = TimeUtil.daysToDayOfWeek(TimeUtil.totalDays(year, 0));
         int dayOfYear = weekOfYear * 7 + dayOfWeek - dayOfFirstYearDay;
-        assert dayOfYear >= 0 && dayOfYear < TimeUtil.daysPerYear(year);
+        assert dayOfYear >= 0 && dayOfYear < TimeUtil.getNumDaysByYear(year);
         this.year = year;
         this.dayOfYear = dayOfYear;
         return this;

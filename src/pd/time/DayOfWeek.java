@@ -13,11 +13,8 @@ public enum DayOfWeek {
         return null;
     }
 
-    public DayOfWeek addDays(long n) {
-        n = (n + this.ordinal()) % 7;
-        if (n < 0) {
-            n += 7;
-        }
-        return fromOrdinal((int) n);
+    public DayOfWeek addDays(long days) {
+        int dayOfWeek = TimeUtil.daysToDayOfWeek(days);
+        return fromOrdinal(dayOfWeek);
     }
 }

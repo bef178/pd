@@ -41,7 +41,7 @@ public final class TimeUtil {
     private static final int Y100 = Y4 * 25 - 1; // 36524
     private static final int Y400 = Y100 * 4 + 1; // 146097
 
-    private static final int[] MONTH_DAYS = {
+    private static final int[] MONTH_DAYS_365 = {
             31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
     };
 
@@ -49,15 +49,22 @@ public final class TimeUtil {
             31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
     };
 
-    static int[] daysPerMonth(int year) {
-        return isLeapYear(year) ? MONTH_DAYS_366 : MONTH_DAYS;
+    private static boolean isLeapYear(int year) {
+        if (year % 100 == 0) {
+            return year % 400 == 0;
+        }
+        return year % 4 == 0;
     }
 
-    static int daysPerYear(int year) {
+    public static int getNumDaysByYear(int year) {
         return isLeapYear(year) ? 366 : 365;
     }
 
-    static int daysToDayOfWeek(long days) {
+    private static int[] getNumDaysPerEachMonthByYear(int year) {
+        return isLeapYear(year) ? MONTH_DAYS_366 : MONTH_DAYS_365;
+    }
+
+    public static int daysToDayOfWeek(long days) {
         int from = 4; // 1970-01-01 is Thursday
         from = (int) ((from + days) % 7);
         if (from < 0) {
@@ -74,7 +81,7 @@ public final class TimeUtil {
         if (millisecondOfDay < 0) {
             millisecondOfDay += MILLISECONDS_PER_DAY;
         }
-        fieldValues[TimeField.MILLISECONDS_OF_DAY.ordinal()] = millisecondOfDay;
+
         breakMillisecondOfDay(millisecondOfDay, fieldValues);
 
         long daysSinceEpoch = (millisecondsSinceEpoch - millisecondOfDay) / MILLISECONDS_PER_DAY;
@@ -120,7 +127,7 @@ public final class TimeUtil {
         int year = 2000 + 400 * n400 + 100 * n100 + 4 * n4 + 1 * n1;
         if (j < 0) {
             year--;
-            j += daysPerYear(year);
+            j += getNumDaysByYear(year);
         }
 
         final int dayOfYear = j;
@@ -128,7 +135,7 @@ public final class TimeUtil {
         final int weekOfYear = (daysToDayOfWeek(daysSinceEpoch - dayOfYear) + dayOfYear) / 7;
         final int dayOfWeek = daysToDayOfWeek(daysSinceEpoch);
 
-        int[] monthDays = daysPerMonth(year);
+        int[] monthDays = getNumDaysPerEachMonthByYear(year);
 
         int m = 0;
         while (j >= monthDays[m]) {
@@ -147,16 +154,32 @@ public final class TimeUtil {
         fieldValues[TimeField.DAY_OF_WEEK.ordinal()] = dayOfWeek;
     }
 
-    private static boolean isLeapYear(int year) {
-        if (year % 100 == 0) {
-            return year % 400 == 0;
+    public static int toDayOfYear(final int year, final int monthOfYear, final int dayOfMonth) {
+        assert monthOfYear >= 0 && monthOfYear < 12;
+        assert dayOfMonth >= 0 && dayOfMonth < getNumDaysPerEachMonthByYear(year)[monthOfYear];
+
+        int[] monthDays = getNumDaysPerEachMonthByYear(year);
+        int dayOfYear = dayOfMonth;
+        for (int i = 0; i < monthOfYear; i++) {
+            dayOfYear += monthDays[i];
         }
-        return year % 4 == 0;
+        return dayOfYear;
+    }
+
+    public static long totalDays(final int year, final int dayOfYear) {
+        assert dayOfYear >= 0 && dayOfYear < getNumDaysByYear(year);
+        // align to year 0 to avoid overflow
+        int numLeapYears = year > 0
+                ? (1 + (year - 1) / 4 - (year - 1) / 100 + (year - 1) / 400)
+                : (year / 4 - year / 100 + year / 400);
+        return -719528 + 1L * 365 * year + numLeapYears + dayOfYear;
     }
 
     private static void breakMillisecondOfDay(int millisecondOfDay, int[] fieldValues) {
         assert millisecondOfDay >= 0 && millisecondOfDay <= MILLISECONDS_PER_DAY;
         assert fieldValues.length == TimeField.size();
+
+        fieldValues[TimeField.MILLISECONDS_OF_DAY.ordinal()] = millisecondOfDay;
 
         if (millisecondOfDay == MILLISECONDS_PER_DAY) {
             // troublesome leap second
@@ -173,48 +196,7 @@ public final class TimeUtil {
         fieldValues[TimeField.SSS.ordinal()] = millisecondOfDay % MILLISECONDS_PER_SECOND;
     }
 
-    static long millisecondsToDays(long milliseconds) {
-        int millisecondOfDay = millisecondsToMillisecondOfDay(milliseconds);
-        return (milliseconds - millisecondOfDay) / MILLISECONDS_PER_DAY;
-    }
-
-    static long millisecondsToDays(long milliseconds, int millisecondOfDay) {
-        return (milliseconds - millisecondOfDay) / MILLISECONDS_PER_DAY;
-    }
-
-    /**
-     * must be positive or 0
-     */
-    static int millisecondsToMillisecondOfDay(long milliseconds) {
-        milliseconds = milliseconds % MILLISECONDS_PER_DAY;
-        if (milliseconds < 0) {
-            milliseconds += MILLISECONDS_PER_DAY;
-        }
-        return (int) milliseconds;
-    }
-
-    static int toDayOfYear(final int year, final int monthOfYear, final int dayOfMonth) {
-        assert monthOfYear >= 0 && monthOfYear < 12;
-        assert dayOfMonth >= 0 && dayOfMonth < daysPerMonth(year)[monthOfYear];
-
-        int[] monthDays = daysPerMonth(year);
-        int dayOfYear = dayOfMonth;
-        for (int i = 0; i < monthOfYear; i++) {
-            dayOfYear += monthDays[i];
-        }
-        return dayOfYear;
-    }
-
-    static long toDays(final int year, final int dayOfYear) {
-        assert dayOfYear >= 0 && dayOfYear < daysPerYear(year);
-        // align to year 0 to avoid overflow
-        int numLeapYears = year > 0
-                ? (1 + (year - 1) / 4 - (year - 1) / 100 + (year - 1) / 400)
-                : (year / 4 - year / 100 + year / 400);
-        return -719528 + 1L * 365 * year + numLeapYears + dayOfYear;
-    }
-
-    static int toMillisecondOfDay(int hh, int mm, int ss, int sss) {
+    public static int toMillisecondOfDay(int hh, int mm, int ss, int sss) {
         assert hh >= 0 && hh < 60;
         assert mm >= 0 && mm < 60;
         assert ss >= 0 && ss < 60;
@@ -223,7 +205,7 @@ public final class TimeUtil {
                 + MILLISECONDS_PER_SECOND * ss + sss;
     }
 
-    static long toMilliseconds(long days, int millisecondOfDay) {
+    public static long totalMilliseconds(long days, int millisecondOfDay) {
         assert millisecondOfDay >= 0 && millisecondOfDay < MILLISECONDS_PER_DAY;
         return MILLISECONDS_PER_DAY * days + millisecondOfDay;
     }
