@@ -1,5 +1,8 @@
 package pd.time;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * transformation between timestamp and local easy-to-read time
  */
@@ -25,6 +28,11 @@ public final class TimeUtil {
     public static final int MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * 60;
     public static final int MILLISECONDS_PER_HOUR = MILLISECONDS_PER_MINUTE * 60;
     public static final int MILLISECONDS_PER_DAY = MILLISECONDS_PER_HOUR * 24;
+
+    private static final String UTC_TIME_FORMAT = "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ";
+
+    private static final Pattern UTC_TIME_REGEXP = Pattern.compile(
+            "^(\\d+)-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{3})Z$");
 
     /**
      * included
@@ -208,6 +216,44 @@ public final class TimeUtil {
     public static long totalMilliseconds(long days, int millisecondOfDay) {
         assert millisecondOfDay >= 0 && millisecondOfDay < MILLISECONDS_PER_DAY;
         return MILLISECONDS_PER_DAY * days + millisecondOfDay;
+    }
+
+    public static long fromUtcString(String utcString) {
+        Matcher matcher = UTC_TIME_REGEXP.matcher(utcString);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException();
+        }
+
+        int year = Integer.parseInt(matcher.group(1));
+        int monthOfYear = Integer.parseInt(matcher.group(2)) - 1;
+        int dayOfMonth = Integer.parseInt(matcher.group(3)) - 1;
+        int hh = Integer.parseInt(matcher.group(4));
+        int mm = Integer.parseInt(matcher.group(5));
+        int ss = Integer.parseInt(matcher.group(6));
+        int sss = Integer.parseInt(matcher.group(7));
+
+        int dayOfYear = toDayOfYear(year, monthOfYear, dayOfMonth);
+        return totalMilliseconds(totalDays(year, dayOfYear), toMillisecondOfDay(hh, mm, ss, sss));
+    }
+
+    public static String toUtcString(long millisecondsSinceEpoch) {
+        return toUtcString(UTC_TIME_FORMAT, millisecondsSinceEpoch);
+    }
+
+    public static String toUtcString(String format, long millisecondsSinceEpoch) {
+        int[] fieldValues = getTimeFieldValues(millisecondsSinceEpoch);
+        return String.format(format,
+                fieldValues[TimeField.YEAR.ordinal()],
+                fieldValues[TimeField.MONTH_OF_YEAR.ordinal()] + 1,
+                fieldValues[TimeField.DAY_OF_MONTH.ordinal()] + 1,
+                fieldValues[TimeField.HH.ordinal()],
+                fieldValues[TimeField.MM.ordinal()],
+                fieldValues[TimeField.SS.ordinal()],
+                fieldValues[TimeField.SSS.ordinal()]);
+    }
+
+    public static long now() {
+        return System.currentTimeMillis();
     }
 
     private TimeUtil() {
