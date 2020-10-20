@@ -12,11 +12,17 @@ public class LogManager {
 
     private static ILogger logger = null;
 
+    private static LogLevel maxLogLevel = LogLevel.ALL;
+
     public static ILogger getLogger() {
         if (logger == null) {
             throw new RuntimeException("E: LogManager is not initialized");
         }
         return logger;
+    }
+
+    public static LogLevel getMaxLogLevel() {
+        return maxLogLevel;
     }
 
     /**
@@ -26,23 +32,30 @@ public class LogManager {
         LogManager.logger = logger;
     }
 
+    public static void setMaxLogLevel(LogLevel maxLogLevel) {
+        LogManager.maxLogLevel = maxLogLevel != null ? maxLogLevel : LogLevel.ALL;
+    }
+
     public static void useConsoleLogger() {
         setLogger(ConsoleLogger.defaultInstance);
     }
 
     public static void useFileLogger(String fileParent, String filePrefix, long numIntervalMilliseconds) {
-        setLogger(new FileLogger(LogLevel.ALL, fileParent, filePrefix, numIntervalMilliseconds));
+        setLogger(new FileLogger(fileParent, filePrefix, numIntervalMilliseconds));
     }
 
     public static void useQueuedFileLogger(String fileParent, String filePrefix, long numIntervalMilliseconds) {
-        setLogger(new QueuedLogger(new FileLogger(LogLevel.ALL, fileParent, filePrefix, numIntervalMilliseconds)));
+        setLogger(new QueuedLogger(new FileLogger(fileParent, filePrefix, numIntervalMilliseconds)));
     }
 
     /**
-     * every logger calls this to write
+     * every actual logger calls this to write
      */
     public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
             String message, Object... messageArguments) throws IOException {
+        if (level.priority() > maxLogLevel.priority()) {
+            return;
+        }
 
         if (messageArguments != null && messageArguments.length > 0) {
             message = String.format(message, messageArguments);

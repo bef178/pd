@@ -10,14 +10,11 @@ import pd.time.TimeUtil;
 
 public class FileLogger implements ILogger {
 
-    private final LogLevel maxLevel;
-
     private String fileParent;
     private String filePrefix;
     private long numIntervalMilliseconds;
 
-    public FileLogger(LogLevel maxLevel, String fileParent, String filePrefix, long numIntervalMilliseconds) {
-        this.maxLevel = maxLevel;
+    public FileLogger(String fileParent, String filePrefix, long numIntervalMilliseconds) {
         this.fileParent = fileParent;
         this.filePrefix = filePrefix;
         this.numIntervalMilliseconds = numIntervalMilliseconds;
@@ -31,17 +28,14 @@ public class FileLogger implements ILogger {
     private File getDstFile(long timestamp, LogLevel level) {
         timestamp -= timestamp % numIntervalMilliseconds;
         String timePart = TimeUtil.toUtcString("%04d%02d%02d%02d%02d%02dZ", timestamp);
+        String logLevelPart = level.priority() <= LogLevel.WARNING.priority() ? "error" : "trace";
         String basename = String.format("%s_%s_%s.%s.log", filePrefix, timePart, getHostname(),
-                level.toString().toLowerCase());
+                logLevelPart);
         return new File(fileParent, basename);
     }
 
     @Override
     public void log(long timestamp, LogLevel level, String message, Object... messageArguments) {
-        if (level.ordinal() > maxLevel.ordinal()) {
-            return;
-        }
-
         File parent = new File(fileParent);
         if (!parent.exists()) {
             parent.mkdirs();
