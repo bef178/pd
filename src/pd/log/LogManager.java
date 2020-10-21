@@ -10,9 +10,13 @@ import pd.time.TimeUtil;
  */
 public class LogManager {
 
-    private static ILogger logger = null;
+    private static ILogger logger;
 
-    private static LogLevel maxLogLevel = LogLevel.ALL;
+    private static LogLevel maxLogLevel;
+
+    static {
+        setMaxLogLevel(LogLevel.TRACE);
+    }
 
     public static ILogger getLogger() {
         if (logger == null) {
@@ -33,7 +37,7 @@ public class LogManager {
     }
 
     public static void setMaxLogLevel(LogLevel maxLogLevel) {
-        LogManager.maxLogLevel = maxLogLevel != null ? maxLogLevel : LogLevel.ALL;
+        LogManager.maxLogLevel = maxLogLevel;
     }
 
     public static void useConsoleLogger() {
@@ -53,6 +57,11 @@ public class LogManager {
      */
     public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
             String message, Object... messageArguments) throws IOException {
+        if (maxLogLevel == null) {
+            // log is off
+            return;
+        }
+
         if (level.priority() > maxLogLevel.priority()) {
             return;
         }
