@@ -1,11 +1,18 @@
 package pd.log;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import pd.time.TimeUtil;
 
-public interface ILogger {
+public interface ILogger extends Closeable {
+
+    @Override
+    public default void close() throws IOException {
+        flush();
+    }
 
     public void flush();
 

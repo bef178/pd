@@ -30,6 +30,7 @@ public class ConsoleLogger implements ILogger {
         Writer w = level.priority() <= LogLevel.WARNING.priority() ? errWriter : outWriter;
         try {
             writeLine(w, ",", TimeUtil.now(), getHostname(), level, message, messageArguments);
+            w.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }

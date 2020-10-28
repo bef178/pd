@@ -1,12 +1,11 @@
 package pd.log;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class QueuedLogger implements Closeable, ILogger {
+public class QueuedLogger implements ILogger {
 
     // message from this logger itself has to be copied to console
     static class CcConsoleLogger implements ILogger {
@@ -47,12 +46,21 @@ public class QueuedLogger implements Closeable, ILogger {
 
     private final BlockingQueue<QueuedEntry> queue = new LinkedBlockingQueue<QueuedEntry>();
 
-    private Thread worker = new Thread(new Runnable() {
+    private AtomicBoolean running = new AtomicBoolean(false);
+    private AtomicBoolean stopped = new AtomicBoolean(true);
+
+    private Thread workerThread = new Thread(new Runnable() {
 
         @Override
         public void run() {
             running.set(true);
             stopped.set(false);
+
+            logger.logCcConsole("%s: logger thread started", LOG_TAG);
+
+            synchronized (running) {
+                running.notify();
+            }
 
             while (running.get() || !queue.isEmpty()) {
                 if (stopped.get()) {
@@ -63,24 +71,29 @@ public class QueuedLogger implements Closeable, ILogger {
                 try {
                     entry = queue.take();
                 } catch (InterruptedException e) {
-                    logger.logCcConsole("%s: log thread interrupted, %d remaining", LOG_TAG, queue.size());
+                    logger.logCcConsole("%s: logger thread interrupted, %d remaining", LOG_TAG, queue.size());
                     running.set(false);
                     continue;
                 }
                 logger.log(entry.timestamp, entry.level, entry.message, entry.messageArguments);
             }
             stopped.set(true);
-            logger.logCcConsole("%s: log thread stopped, %d remaining", LOG_TAG, queue.size());
+            logger.logCcConsole("%s: logger thread stopped, %d remaining", LOG_TAG, queue.size());
             logger.flush();
         }
     });
 
-    private AtomicBoolean running = new AtomicBoolean(false);
-    private AtomicBoolean stopped = new AtomicBoolean(true);
-
     public QueuedLogger(ILogger logger) {
         this.logger = new CcConsoleLogger(logger);
-        worker.start();
+        workerThread.start();
+
+        synchronized (running) {
+            try {
+                running.wait(50);
+            } catch (InterruptedException e) {
+                // dummy
+            }
+        }
     }
 
     private void add(long timestamp, LogLevel logLevel, String message, Object... messageArguments) {
@@ -106,9 +119,9 @@ public class QueuedLogger implements Closeable, ILogger {
             return;
         }
 
-        worker.interrupt();
+        workerThread.interrupt();
         try {
-            worker.join(2000);
+            workerThread.join(2000);
         } catch (InterruptedException e) {
             // dummy
         }
