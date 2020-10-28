@@ -3,6 +3,8 @@ package pd.log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
 
 import pd.time.TimeUtil;
@@ -96,6 +98,16 @@ public class LogManager {
 
     static {
         setMaxLogLevel(LogLevel.TRACE);
+    }
+
+    public static String getHostname() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "UnknownHostExceptionHostname";
+        } catch (Exception e) {
+            return "ExceptionHostname";
+        }
     }
 
     /**

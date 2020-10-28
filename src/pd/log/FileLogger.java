@@ -1,5 +1,6 @@
 package pd.log;
 
+import static pd.log.LogManager.getHostname;
 import static pd.log.LogManager.writeLine;
 
 import java.io.File;

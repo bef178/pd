@@ -2,8 +2,6 @@ package pd.log;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import pd.time.TimeUtil;
 
@@ -15,16 +13,6 @@ public interface ILogger extends Closeable {
     }
 
     public void flush();
-
-    public default String getHostname() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            return "UnknownHostExceptionHostname";
-        } catch (Exception e) {
-            return "ExceptionHostname";
-        }
-    }
 
     public default void log(LogLevel level, String message, Object... messageArguments) {
         log(TimeUtil.now(), level, message, messageArguments);
