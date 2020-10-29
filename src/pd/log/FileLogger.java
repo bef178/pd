@@ -26,7 +26,7 @@ public class FileLogger implements ILogger {
         // dummy
     }
 
-    private File getDstFile(long timestamp, LogLevel level) {
+    protected File getLogFile(long timestamp, LogLevel level) {
         timestamp -= timestamp % numIntervalMilliseconds;
         String timePart = TimeUtil.toUtcString("%04d%02d%02d%02d%02d%02dZ", timestamp);
         String logLevelPart = level.priority() <= LogLevel.WARNING.priority() ? "error" : "trace";
@@ -44,9 +44,9 @@ public class FileLogger implements ILogger {
             throw new RuntimeException("NotDirectoryException: " + fileParent);
         }
 
-        File dstFile = getDstFile(timestamp, level);
+        File logFile = getLogFile(timestamp, level);
 
-        try (FileWriter w = new FileWriter(dstFile, true)) {
+        try (FileWriter w = new FileWriter(logFile, true)) {
             writeLine(w, ",", timestamp, getHostname(), level, message);
             w.flush();
         } catch (IOException e) {
