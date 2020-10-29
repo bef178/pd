@@ -16,6 +16,8 @@ public interface ILogger extends Closeable {
 
     public void flush();
 
+    public LogLevel getMaxAcceptableLogLevel();
+
     public default void log(LogLevel level, String message, Object... messageArguments) {
         log(TimeUtil.now(), level, message, messageArguments);
     }

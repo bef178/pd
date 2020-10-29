@@ -1,5 +1,7 @@
 package pd.log;
 
+import static pd.log.LogManager.Util.isAcceptable;
+
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -29,9 +31,14 @@ public class QueuedLogger implements ILogger {
             logger.log(timestamp, level, message);
         }
 
-        public void logCcConsole(String message, Object... messageArguments) {
-            consoleLogger.log(LogLevel.INFO, message, messageArguments);
-            logger.log(LogLevel.INFO, message, messageArguments);
+        public void logInfoCcConsole(String message, Object... messageArguments) {
+            consoleLogger.logInfo(message, messageArguments);
+            logger.logInfo(message, messageArguments);
+        }
+
+        @Override
+        public LogLevel getMaxAcceptableLogLevel() {
+            return logger == null ? null : logger.getMaxAcceptableLogLevel();
         }
     }
 
@@ -57,7 +64,7 @@ public class QueuedLogger implements ILogger {
             running.set(true);
             stopped.set(false);
 
-            logger.logCcConsole("%s: logger thread started", logTag);
+            logger.logInfoCcConsole("%s: logger thread started", logTag);
 
             synchronized (running) {
                 running.notify();
@@ -72,14 +79,14 @@ public class QueuedLogger implements ILogger {
                 try {
                     entry = queue.take();
                 } catch (InterruptedException e) {
-                    logger.logCcConsole("%s: logger thread interrupted, %d remaining", logTag, queue.size());
+                    logger.logInfoCcConsole("%s: logger thread interrupted, %d remaining", logTag, queue.size());
                     running.set(false);
                     continue;
                 }
                 logger.log(entry.timestamp, entry.level, entry.message);
             }
             stopped.set(true);
-            logger.logCcConsole("%s: logger thread stopped, %d remaining", logTag, queue.size());
+            logger.logInfoCcConsole("%s: logger thread stopped, %d remaining", logTag, queue.size());
             logger.flush();
         }
     });
@@ -99,7 +106,7 @@ public class QueuedLogger implements ILogger {
 
     private void add(long timestamp, LogLevel logLevel, String message) {
         if (!running.get()) {
-            logger.logCcConsole("%s: logger is not running", logTag);
+            logger.logInfoCcConsole("%s: logger is not running", logTag);
             return;
         }
 
@@ -109,7 +116,7 @@ public class QueuedLogger implements ILogger {
         entry.message = message;
 
         if (!queue.offer(entry)) {
-            logger.logCcConsole("%s: fail to add log message", logTag);
+            logger.logInfoCcConsole("%s: fail to add log message", logTag);
         }
     }
 
@@ -139,12 +146,20 @@ public class QueuedLogger implements ILogger {
         }
     }
 
+    @Override
+    public LogLevel getMaxAcceptableLogLevel() {
+        return logger == null ? null : logger.getMaxAcceptableLogLevel();
+    }
+
     public boolean isStopped() {
         return stopped.get();
     }
 
     @Override
     public void log(long timestamp, LogLevel level, String message) {
+        if (!isAcceptable(level, getMaxAcceptableLogLevel())) {
+            return;
+        }
         add(timestamp, level, message);
     }
 }

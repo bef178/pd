@@ -1,6 +1,7 @@
 package pd.log;
 
 import static pd.log.LogManager.Util.getHostname;
+import static pd.log.LogManager.Util.isAcceptable;
 import static pd.log.LogManager.Util.writeLine;
 
 import java.io.File;
@@ -15,10 +16,18 @@ public class FileLogger implements ILogger {
     private final String filePrefix;
     private final long numIntervalMilliseconds;
 
+    private final LogLevel maxAcceptableLogLevel;
+
     public FileLogger(String fileParent, String filePrefix, long numIntervalMilliseconds) {
+        this(fileParent, filePrefix, numIntervalMilliseconds, LogLevel.getMaxLogLevel());
+    }
+
+    public FileLogger(String fileParent, String filePrefix, long numIntervalMilliseconds,
+            LogLevel maxAcceptableLogLevel) {
         this.fileParent = fileParent;
         this.filePrefix = filePrefix;
         this.numIntervalMilliseconds = numIntervalMilliseconds;
+        this.maxAcceptableLogLevel = maxAcceptableLogLevel;
     }
 
     @Override
@@ -36,7 +45,15 @@ public class FileLogger implements ILogger {
     }
 
     @Override
+    public LogLevel getMaxAcceptableLogLevel() {
+        return maxAcceptableLogLevel;
+    }
+
+    @Override
     public void log(long timestamp, LogLevel level, String message) {
+        if (!isAcceptable(level, maxAcceptableLogLevel)) {
+            return;
+        }
         File parent = new File(fileParent);
         if (!parent.exists()) {
             parent.mkdirs();
