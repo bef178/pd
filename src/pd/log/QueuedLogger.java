@@ -10,25 +10,27 @@ public class QueuedLogger implements ILogger {
     // message from this logger itself has to be copied to console
     static class CcConsoleLogger implements ILogger {
 
+        private final ILogger consoleLogger;
         private final ILogger logger;
 
         public CcConsoleLogger(ILogger logger) {
+            this.consoleLogger = ConsoleLogger.defaultInstance;
             this.logger = logger;
         }
 
         @Override
         public void flush() {
-            ConsoleLogger.defaultInstance.flush();
+            consoleLogger.flush();
             logger.flush();
         }
 
         @Override
-        public void log(long timestamp, LogLevel level, String message, Object... messageArguments) {
-            logger.log(level, message, messageArguments);
+        public void log(long timestamp, LogLevel level, String message) {
+            logger.log(timestamp, level, message);
         }
 
         public void logCcConsole(String message, Object... messageArguments) {
-            ConsoleLogger.defaultInstance.log(LogLevel.INFO, message, messageArguments);
+            consoleLogger.log(LogLevel.INFO, message, messageArguments);
             logger.log(LogLevel.INFO, message, messageArguments);
         }
     }
@@ -37,10 +39,9 @@ public class QueuedLogger implements ILogger {
         long timestamp;
         LogLevel level;
         String message;
-        Object[] messageArguments;
     }
 
-    private static final String LOG_TAG = QueuedLogger.class.getSimpleName();
+    private static final String logTag = QueuedLogger.class.getSimpleName();
 
     private final CcConsoleLogger logger;
 
@@ -56,7 +57,7 @@ public class QueuedLogger implements ILogger {
             running.set(true);
             stopped.set(false);
 
-            logger.logCcConsole("%s: logger thread started", LOG_TAG);
+            logger.logCcConsole("%s: logger thread started", logTag);
 
             synchronized (running) {
                 running.notify();
@@ -71,14 +72,14 @@ public class QueuedLogger implements ILogger {
                 try {
                     entry = queue.take();
                 } catch (InterruptedException e) {
-                    logger.logCcConsole("%s: logger thread interrupted, %d remaining", LOG_TAG, queue.size());
+                    logger.logCcConsole("%s: logger thread interrupted, %d remaining", logTag, queue.size());
                     running.set(false);
                     continue;
                 }
-                logger.log(entry.timestamp, entry.level, entry.message, entry.messageArguments);
+                logger.log(entry.timestamp, entry.level, entry.message);
             }
             stopped.set(true);
-            logger.logCcConsole("%s: logger thread stopped, %d remaining", LOG_TAG, queue.size());
+            logger.logCcConsole("%s: logger thread stopped, %d remaining", logTag, queue.size());
             logger.flush();
         }
     });
@@ -96,9 +97,9 @@ public class QueuedLogger implements ILogger {
         }
     }
 
-    private void add(long timestamp, LogLevel logLevel, String message, Object... messageArguments) {
+    private void add(long timestamp, LogLevel logLevel, String message) {
         if (!running.get()) {
-            logger.logCcConsole("%s: logger is not running", LOG_TAG);
+            logger.logCcConsole("%s: logger is not running", logTag);
             return;
         }
 
@@ -106,10 +107,9 @@ public class QueuedLogger implements ILogger {
         entry.timestamp = timestamp;
         entry.level = logLevel;
         entry.message = message;
-        entry.messageArguments = messageArguments;
 
         if (!queue.offer(entry)) {
-            logger.logCcConsole("%s: fail to add log message", LOG_TAG);
+            logger.logCcConsole("%s: fail to add log message", logTag);
         }
     }
 
@@ -144,7 +144,7 @@ public class QueuedLogger implements ILogger {
     }
 
     @Override
-    public void log(long timestamp, LogLevel level, String message, Object... messageArguments) {
-        add(timestamp, level, message, messageArguments);
+    public void log(long timestamp, LogLevel level, String message) {
+        add(timestamp, level, message);
     }
 }

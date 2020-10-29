@@ -11,9 +11,9 @@ import pd.time.TimeUtil;
 
 public class FileLogger implements ILogger {
 
-    private String fileParent;
-    private String filePrefix;
-    private long numIntervalMilliseconds;
+    private final String fileParent;
+    private final String filePrefix;
+    private final long numIntervalMilliseconds;
 
     public FileLogger(String fileParent, String filePrefix, long numIntervalMilliseconds) {
         this.fileParent = fileParent;
@@ -36,7 +36,7 @@ public class FileLogger implements ILogger {
     }
 
     @Override
-    public void log(long timestamp, LogLevel level, String message, Object... messageArguments) {
+    public void log(long timestamp, LogLevel level, String message) {
         File parent = new File(fileParent);
         if (!parent.exists()) {
             parent.mkdirs();
@@ -47,7 +47,8 @@ public class FileLogger implements ILogger {
         File dstFile = getDstFile(timestamp, level);
 
         try (FileWriter w = new FileWriter(dstFile, true)) {
-            writeLine(w, ",", timestamp, getHostname(), level, message, messageArguments);
+            writeLine(w, ",", timestamp, getHostname(), level, message);
+            w.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -27,10 +27,10 @@ public class ConsoleLogger implements ILogger {
     }
 
     @Override
-    public void log(long timestamp, LogLevel level, String message, Object... messageArguments) {
+    public void log(long timestamp, LogLevel level, String message) {
         Writer w = level.priority() <= LogLevel.WARNING.priority() ? errWriter : outWriter;
         try {
-            writeLine(w, ",", TimeUtil.now(), getHostname(), level, message, messageArguments);
+            writeLine(w, ",", TimeUtil.now(), getHostname(), level, message);
             w.flush();
         } catch (IOException e) {
             e.printStackTrace();

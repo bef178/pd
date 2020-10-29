@@ -18,9 +18,9 @@ public class LogManager {
 
         private static final String KEY_PREFIX = LogManager.class.getCanonicalName();
         private static final String KEY_LOGGER_CLASS = KEY_PREFIX + ".loggerClass";
-        private static final String KEY_FILE_PARENT = KEY_PREFIX + ".fileLogger.fileParent";
-        private static final String KEY_FILE_PREFIX = KEY_PREFIX + ".fileLogger.filePrefix";
-        private static final String KEY_FILE_INTERVAL = KEY_PREFIX + ".fileLogger.fileInterval";
+        private static final String KEY_FILELOGGER_FILEPARENT = KEY_PREFIX + ".fileLogger.fileParent";
+        private static final String KEY_FILELOGGER_FILEPREFIX = KEY_PREFIX + ".fileLogger.filePrefix";
+        private static final String KEY_FILELOGGER_FILEINTERVAL = KEY_PREFIX + ".fileLogger.fileInterval";
 
         private static final String CONFIG_FILE = KEY_PREFIX + ".properties";
 
@@ -49,9 +49,9 @@ public class LogManager {
                 ILogger logger = ConsoleLogger.defaultInstance;
                 return hasWrapper ? new QueuedLogger(logger) : logger;
             } else if (loggerClass.equals(FileLogger.class.getSimpleName())) {
-                String fileParent = props.getProperty(KEY_FILE_PARENT);
-                String filePrefix = props.getProperty(KEY_FILE_PREFIX);
-                String fileInterval = props.getProperty(KEY_FILE_INTERVAL);
+                String fileParent = props.getProperty(KEY_FILELOGGER_FILEPARENT);
+                String filePrefix = props.getProperty(KEY_FILELOGGER_FILEPREFIX);
+                String fileInterval = props.getProperty(KEY_FILELOGGER_FILEINTERVAL);
                 if (fileParent == null || fileParent.isEmpty()
                         || filePrefix == null || filePrefix.isEmpty()
                         || fileInterval == null || fileInterval.isEmpty()) {
@@ -158,7 +158,7 @@ public class LogManager {
      * actual logger would call this to write
      */
     public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
-            String message, Object... messageArguments) throws IOException {
+            String message) throws IOException {
         if (maxLogLevel == null) {
             // log is off
             return;
@@ -168,19 +168,17 @@ public class LogManager {
             return;
         }
 
-        if (messageArguments != null && messageArguments.length > 0) {
-            message = String.format(message, messageArguments);
+        synchronized (lock) {
+            // TODO csv
+            w.write(TimeUtil.toUtcString(timestamp));
+            w.write(fieldSeparator);
+            w.write(hostname);
+            w.write(fieldSeparator);
+            w.write(level.toString());
+            w.write(fieldSeparator);
+            w.write(message);
+            w.write('\n');
         }
-
-        // TODO csv
-        w.write(TimeUtil.toUtcString(timestamp));
-        w.write(fieldSeparator);
-        w.write(hostname);
-        w.write(fieldSeparator);
-        w.write(level.toString());
-        w.write(fieldSeparator);
-        w.write(message);
-        w.write('\n');
     }
 
     private LogManager() {

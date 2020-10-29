@@ -18,7 +18,14 @@ public interface ILogger extends Closeable {
         log(TimeUtil.now(), level, message, messageArguments);
     }
 
-    public void log(long timestamp, LogLevel level, String message, Object... messageArguments);
+    public void log(long timestamp, LogLevel level, String message);
+
+    public default void log(long timestamp, LogLevel level, String message, Object... messageArguments) {
+        if (messageArguments != null && messageArguments.length > 0) {
+            message = String.format(message, messageArguments);
+        }
+        log(timestamp, level, message);
+    }
 
     public default void logError(String message, Object... messageArguments) {
         log(LogLevel.ERROR, message, messageArguments);
