@@ -34,4 +34,8 @@ public interface ILogger extends Closeable {
     public default void logInfo(String message, Object... messageArguments) {
         log(LogLevel.INFO, message, messageArguments);
     }
+
+    public default void logWarning(String message, Object... messageArguments) {
+        log(LogLevel.WARNING, message, messageArguments);
+    }
 }

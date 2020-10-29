@@ -28,7 +28,7 @@ public class ConsoleLogger implements ILogger {
 
     @Override
     public void log(long timestamp, LogLevel level, String message) {
-        Writer w = level.priority() <= LogLevel.WARNING.priority() ? errWriter : outWriter;
+        Writer w = level.isPriorTo(LogLevel.INFO) ? errWriter : outWriter;
         try {
             writeLine(w, ",", TimeUtil.now(), getHostname(), level, message);
             w.flush();

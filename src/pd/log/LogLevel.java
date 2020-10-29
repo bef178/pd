@@ -1,15 +1,13 @@
 package pd.log;
 
 public enum LogLevel {
-    FATAL, // application aborts
-    ERROR, // throws exception but recoverable
+    ERROR, // recoverable unexpected exception and unrecoverable fatal error
     WARNING, // panic, potentially harmful
     INFO,
     PERFORMANCE,
-    DEBUG,
     TRACE;
 
-    public int priority() {
-        return ordinal();
+    public boolean isPriorTo(LogLevel level) {
+        return ordinal() < level.ordinal();
     }
 }

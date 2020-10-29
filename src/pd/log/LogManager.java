@@ -114,12 +114,8 @@ public class LogManager {
          */
         public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
                 String message) throws IOException {
-            if (maxLogLevel == null) {
-                // log is off
-                return;
-            }
-
-            if (level.priority() > maxLogLevel.priority()) {
+            if (maxAcceptableLogLevel == null || maxAcceptableLogLevel.isPriorTo(level)) {
+                // log is off or log level is rejected
                 return;
             }
 
@@ -141,7 +137,7 @@ public class LogManager {
 
     private static ILogger logger;
 
-    private static LogLevel maxLogLevel;
+    private static LogLevel maxAcceptableLogLevel;
 
     static {
         setMaxLogLevel(LogLevel.TRACE);
@@ -164,8 +160,8 @@ public class LogManager {
         return logger;
     }
 
-    public static LogLevel getMaxLogLevel() {
-        return maxLogLevel;
+    public static LogLevel getMaxAcceptableLogLevel() {
+        return maxAcceptableLogLevel;
     }
 
     /**
@@ -175,8 +171,8 @@ public class LogManager {
         LogManager.logger = logger;
     }
 
-    public static void setMaxLogLevel(LogLevel maxLogLevel) {
-        LogManager.maxLogLevel = maxLogLevel;
+    public static void setMaxLogLevel(LogLevel maxAcceptableLogLevel) {
+        LogManager.maxAcceptableLogLevel = maxAcceptableLogLevel;
     }
 
     public static void useConsoleLogger() {

@@ -29,7 +29,7 @@ public class FileLogger implements ILogger {
     protected File getLogFile(long timestamp, LogLevel level) {
         timestamp -= timestamp % numIntervalMilliseconds;
         String timePart = TimeUtil.toUtcString("%04d%02d%02d%02d%02d%02dZ", timestamp);
-        String logLevelPart = level.priority() <= LogLevel.WARNING.priority() ? "error" : "trace";
+        String logLevelPart = level.isPriorTo(LogLevel.INFO) ? "error" : "trace";
         String basename = String.format("%s_%s_%s.%s.log", filePrefix, timePart, getHostname(),
                 logLevelPart);
         return new File(fileParent, basename);
