@@ -22,14 +22,14 @@ public class LogManager {
         private static final String KEY_FILELOGGER_FILEPREFIX = KEY_PREFIX + ".fileLogger.filePrefix";
         private static final String KEY_FILELOGGER_FILEINTERVAL = KEY_PREFIX + ".fileLogger.fileInterval";
 
-        private static final String CONFIG_FILE = KEY_PREFIX + ".properties";
+        public static final String CONFIG_FILE = KEY_PREFIX + ".properties";
 
         public static ILogger createDefaultLogger() {
-            return createLoggerFromConfig(CONFIG_FILE);
+            Properties props = Util.loadProperties(CONFIG_FILE);
+            return createLogger(props);
         }
 
-        public static ILogger createLoggerFromConfig(String file) {
-            Properties props = loadProperties(file);
+        public static ILogger createLogger(Properties props) {
             if (props == null) {
                 return null;
             }
@@ -68,6 +68,26 @@ public class LogManager {
             }
             return null;
         }
+    }
+
+    public static class Util {
+
+        public static String evaluateMessage(String message, Object... messageArguments) {
+            if (messageArguments != null && messageArguments.length > 0) {
+                message = String.format(message, messageArguments);
+            }
+            return message;
+        }
+
+        public static String getHostname() {
+            try {
+                return InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                return "UnknownHostExceptionHostname";
+            } catch (Exception e) {
+                return "ExceptionHostname";
+            }
+        }
 
         private static InputStream getInputStream(String file) {
             ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
@@ -76,7 +96,7 @@ public class LogManager {
                     : ClassLoader.getSystemResourceAsStream(file);
         }
 
-        private static Properties loadProperties(String file) {
+        public static Properties loadProperties(String file) {
             try (InputStream stream = getInputStream(file)) {
                 if (stream != null) {
                     Properties props = new Properties();
@@ -88,6 +108,33 @@ public class LogManager {
             }
             return null;
         }
+
+        /**
+         * actual logger would call this to write
+         */
+        public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
+                String message) throws IOException {
+            if (maxLogLevel == null) {
+                // log is off
+                return;
+            }
+
+            if (level.priority() > maxLogLevel.priority()) {
+                return;
+            }
+
+            synchronized (lock) {
+                // TODO csv
+                w.write(TimeUtil.toUtcString(timestamp));
+                w.write(fieldSeparator);
+                w.write(hostname);
+                w.write(fieldSeparator);
+                w.write(level.toString());
+                w.write(fieldSeparator);
+                w.write(message);
+                w.write('\n');
+            }
+        }
     }
 
     private static final Object lock = new Object();
@@ -98,16 +145,6 @@ public class LogManager {
 
     static {
         setMaxLogLevel(LogLevel.TRACE);
-    }
-
-    public static String getHostname() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            return "UnknownHostExceptionHostname";
-        } catch (Exception e) {
-            return "ExceptionHostname";
-        }
     }
 
     /**
@@ -152,33 +189,6 @@ public class LogManager {
 
     public static void useQueuedFileLogger(String fileParent, String filePrefix, long numIntervalMilliseconds) {
         setLogger(new QueuedLogger(new FileLogger(fileParent, filePrefix, numIntervalMilliseconds)));
-    }
-
-    /**
-     * actual logger would call this to write
-     */
-    public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
-            String message) throws IOException {
-        if (maxLogLevel == null) {
-            // log is off
-            return;
-        }
-
-        if (level.priority() > maxLogLevel.priority()) {
-            return;
-        }
-
-        synchronized (lock) {
-            // TODO csv
-            w.write(TimeUtil.toUtcString(timestamp));
-            w.write(fieldSeparator);
-            w.write(hostname);
-            w.write(fieldSeparator);
-            w.write(level.toString());
-            w.write(fieldSeparator);
-            w.write(message);
-            w.write('\n');
-        }
     }
 
     private LogManager() {

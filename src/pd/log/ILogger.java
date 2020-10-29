@@ -1,5 +1,7 @@
 package pd.log;
 
+import static pd.log.LogManager.Util.evaluateMessage;
+
 import java.io.Closeable;
 import java.io.IOException;
 
@@ -21,9 +23,7 @@ public interface ILogger extends Closeable {
     public void log(long timestamp, LogLevel level, String message);
 
     public default void log(long timestamp, LogLevel level, String message, Object... messageArguments) {
-        if (messageArguments != null && messageArguments.length > 0) {
-            message = String.format(message, messageArguments);
-        }
+        message = evaluateMessage(message, messageArguments);
         log(timestamp, level, message);
     }
 
