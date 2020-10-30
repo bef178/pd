@@ -161,17 +161,13 @@ public class LogManager {
          */
         public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
                 String message) throws IOException {
-            synchronized (lock) {
-                // TODO csv
-                w.write(TimeUtil.toUtcString(timestamp));
-                w.write(fieldSeparator);
-                w.write(hostname);
-                w.write(fieldSeparator);
-                w.write(level.toString());
-                w.write(fieldSeparator);
-                w.write(message);
-                w.write('\n');
-            }
+            // TODO csv
+            StringBuilder sb = new StringBuilder();
+            sb.append(TimeUtil.toUtcString(timestamp)).append(fieldSeparator)
+                    .append(hostname).append(fieldSeparator)
+                    .append(level.toString()).append(fieldSeparator)
+                    .append(message).append('\n');
+            w.write(sb.toString());
         }
     }
 
