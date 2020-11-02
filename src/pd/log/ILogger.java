@@ -24,7 +24,8 @@ public interface ILogger extends Closeable {
 
     public void log(long timestamp, LogLevel level, String message);
 
-    public default void log(long timestamp, LogLevel level, String message, Object... messageArguments) {
+    public default void log(long timestamp, LogLevel level, String message,
+            Object... messageArguments) {
         message = evaluateMessage(message, messageArguments);
         log(timestamp, level, message);
     }
@@ -35,6 +36,10 @@ public interface ILogger extends Closeable {
 
     public default void logInfo(String message, Object... messageArguments) {
         log(LogLevel.INFO, message, messageArguments);
+    }
+
+    public default void logTrace(String message, Object... messageArguments) {
+        log(LogLevel.TRACE, message, messageArguments);
     }
 
     public default void logWarning(String message, Object... messageArguments) {
