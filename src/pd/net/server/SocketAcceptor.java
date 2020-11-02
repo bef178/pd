@@ -5,19 +5,19 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import pd.log.ILogger;
+import pd.log.LogManager;
 
 public class SocketAcceptor {
 
-    static final Logger LOGGER = LoggerFactory.getLogger(SocketAcceptor.class);
+    static final ILogger logger = LogManager.getLogger();
 
     protected static void closeSocket(Socket socket) {
         if (socket != null) {
             try {
                 socket.close();
             } catch (Exception e) {
-                LOGGER.error("exception when close socket: {}", e.getMessage());
+                logger.logError("E: exception when close socket: {}", e.getMessage());
             }
         }
     }
@@ -50,27 +50,17 @@ public class SocketAcceptor {
     }
 
     /**
-     * runs in server socket thread<br/>
-     * should close socket at last<br/>
-     * override me<br/>
+     * run in server socket thread<br/>
      */
-    protected void onSocket(Socket socket) {
-        LOGGER.info("socket handled");
-        closeSocket(socket);
-    }
-
-    /**
-     * should run in server socket thread
-     */
-    public void start(Object notifier) throws IOException {
+    public void doStart(Object notifier) throws IOException {
         if (serverSocket != null && !serverSocket.isClosed()) {
-            LOGGER.warn("server socket already at port {}", port);
+            logger.logWarning("server socket already started at port {}", port);
             return;
         }
 
         try {
             serverSocket = createServerSocket(port);
-            LOGGER.info("server socket started at port {}", port);
+            logger.logInfo("server socket started at port {}", port);
         } catch (Exception e) {
             serverSocket = null;
             throw e;
@@ -99,7 +89,7 @@ public class SocketAcceptor {
                 try {
                     onSocket(socket);
                 } catch (Exception e) {
-                    LOGGER.error("exception when onSocket(): {}", e.getMessage());
+                    logger.logError("E: exception when onSocket(): {}", e.getMessage());
                 }
             }
         } finally {
@@ -109,16 +99,25 @@ public class SocketAcceptor {
             }
         }
 
-        LOGGER.info("server socket stopped");
+        logger.logInfo("server socket stopped");
     }
 
     /**
-     * blocked until server socket thread fully started or failed<br/>
-     * threadName null as "ServerSocketThread"<br/>
+     * run in server socket thread<br/>
+     * should close socket at last<br/>
      */
-    public Thread startInNewThread(String threadName) {
+    protected void onSocket(Socket socket) {
+        logger.logTrace("onSocket");
+        closeSocket(socket);
+    }
+
+    /**
+     * create a thread to start server socket<br/>
+     * blocked until server socket thread fully started or failed<br/>
+     */
+    public Thread start(String threadName) {
         if (threadName == null) {
-            threadName = "ServerSocketThread";
+            threadName = SocketAcceptor.class.getSimpleName() + ".ServerSocketThread";
         }
 
         Object notifier = new Object();
@@ -127,18 +126,18 @@ public class SocketAcceptor {
 
             @Override
             public void run() {
-                LOGGER.info("runnable starting");
+                logger.logTrace("runnable starting");
                 try {
-                    SocketAcceptor.this.start(notifier);
+                    SocketAcceptor.this.doStart(notifier);
                 } catch (IOException e) {
-                    LOGGER.error("exception: {}", e.getMessage());
+                    logger.logError("E: exception: {}", e.getMessage());
                 }
-                LOGGER.info("runnable ending");
+                logger.logTrace("runnable ending");
             }
         });
-        thread.setName(String.format("%s-%d", threadName, thread.getId()));
+        thread.setName(threadName + "-" + thread.getId());
 
-        LOGGER.info("thread [{}] created", thread.getName());
+        logger.logInfo("thread [{}] created", thread.getName());
 
         thread.start();
 
@@ -146,18 +145,15 @@ public class SocketAcceptor {
             try {
                 notifier.wait();
             } catch (Exception e) {
-                LOGGER.info("notifier exception: {}", e.getMessage());
+                logger.logError("E: notifier exception: {}", e.getMessage());
             }
         }
 
         return thread;
     }
 
-    /**
-     * manually stop
-     */
     public void stop() {
-        LOGGER.info("stopping");
+        logger.logInfo("stopping");
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
                 serverSocket.close();

@@ -5,12 +5,12 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import pd.log.ILogger;
+import pd.log.LogManager;
 
 public class Server extends SocketAcceptor {
 
-    static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
+    static final ILogger logger = LogManager.getLogger();
 
     private ExecutorService executor;
 
@@ -33,7 +33,7 @@ public class Server extends SocketAcceptor {
      * override me<br/>
      */
     protected void onRequest(RequestContext request) throws IOException {
-        LOGGER.info("request handled");
+        logger.logTrace("onRequest");
     }
 
     @Override
@@ -47,13 +47,13 @@ public class Server extends SocketAcceptor {
                 try {
                     request = new RequestContext(socket);
                 } catch (IOException e) {
-                    LOGGER.error("exception when make request: {}", e.getMessage());
+                    logger.logError("E: exception when make request: {}", e.getMessage());
                 }
 
                 try {
                     onRequest(request);
                 } catch (Exception e) {
-                    LOGGER.error("exception when handle request: {}", e.getMessage());
+                    logger.logError("E: exception when handle request: {}", e.getMessage());
                 } finally {
                     closeSocket(socket);
                 }
@@ -63,22 +63,22 @@ public class Server extends SocketAcceptor {
     }
 
     @Override
-    public void start(Object notifier) throws IOException {
+    public void doStart(Object notifier) throws IOException {
         if (executor != null && !executor.isShutdown()) {
-            LOGGER.error("executor already running");
+            logger.logError("E: executor already running");
             return;
         }
 
         executor = Executors.newFixedThreadPool(numThreads);
-        LOGGER.info("executor created with {} threads", numThreads);
+        logger.logInfo("executor created with {} threads", numThreads);
 
         try {
-            super.start(notifier);
+            super.doStart(notifier);
         } finally {
             if (executor != null) {
                 executor.shutdown();
                 executor = null;
-                LOGGER.info("executor shutdown");
+                logger.logInfo("executor shutdown");
             }
         }
     }

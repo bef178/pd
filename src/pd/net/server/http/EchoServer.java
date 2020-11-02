@@ -17,7 +17,7 @@ public class EchoServer extends Server {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         EchoServer server = new EchoServer(8881);
-        server.startInNewThread(null).join();
+        server.start(null).join();
     }
 
     public EchoServer(int port) {
