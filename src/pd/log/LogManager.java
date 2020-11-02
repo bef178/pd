@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.PrimitiveIterator.OfInt;
 import java.util.Properties;
 
 import pd.time.TimeUtil;
@@ -115,11 +116,79 @@ public class LogManager {
 
     public static class Util {
 
+        /**
+         * use '{}' as formatting anchor
+         */
         public static String evaluateMessage(String message, Object... messageArguments) {
-            if (messageArguments != null && messageArguments.length > 0) {
-                message = String.format(message, messageArguments);
+            if (messageArguments == null || messageArguments.length == 0) {
+                return message;
             }
-            return message;
+
+            // state machine
+            StringBuilder sb = new StringBuilder();
+            OfInt it = message.codePoints().iterator();
+            int nextArgumentIndex = 0;
+            int state = 0;
+            while (state != 3) {
+                switch (state) {
+                    case 0: {
+                        int ch = it.hasNext() ? it.nextInt() : -1;
+                        switch (ch) {
+                            case '\\':
+                                state = 1;
+                                break;
+                            case '{':
+                                state = 2;
+                                break;
+                            case -1:
+                                state = 3;
+                                break;
+                            default:
+                                state = 0;
+                                sb.appendCodePoint(ch);
+                                break;
+                        }
+                        break;
+                    }
+                    case 1: {
+                        int ch = it.hasNext() ? it.nextInt() : -1;
+                        switch (ch) {
+                            case '\\':
+                                state = 0;
+                                sb.append('\\');
+                                break;
+                            case '{':
+                                state = 0;
+                                sb.append('{');
+                                break;
+                            default:
+                                throw new IllegalArgumentException(
+                                        "E: unrecognized \"\\" + new String(Character.toChars(ch)) + "\"");
+                        }
+                        break;
+                    }
+                    case 2: {
+                        int ch = it.hasNext() ? it.nextInt() : -1;
+                        switch (ch) {
+                            case '}':
+                                state = 0;
+                                if (nextArgumentIndex < messageArguments.length) {
+                                    sb.append(messageArguments[nextArgumentIndex++]);
+                                } else {
+                                    sb.append("{}");
+                                }
+                                break;
+                            default:
+                                state = 0;
+                                sb.append('{');
+                                sb.appendCodePoint(ch);
+                                break;
+                        }
+                        break;
+                    }
+                }
+            }
+            return sb.toString();
         }
 
         public static String getHostname() {
