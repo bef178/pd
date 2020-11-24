@@ -1,4 +1,4 @@
-package pd.net.server;
+package pd.net.serv;
 
 import java.io.Closeable;
 import java.io.IOException;
