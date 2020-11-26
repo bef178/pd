@@ -2,7 +2,6 @@ package pd.net.uri;
 
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * path is a string<br/>
@@ -68,115 +67,111 @@ public final class Path {
     }
 
     public static boolean isAbsolute(String path) {
-        return isAbsolute(path2segs(path));
-    }
-
-    private static boolean isAbsolute(String[] segs) {
-        return segs[0].equals("");
+        assert path != null;
+        return path.length() > 0 && path.charAt(0) == '/';
     }
 
     /**
      * return e.g. "/a/b/c" or "./a/b/c" or "../a/b/c"
      */
     public static String normalize(String path) {
-        String[] a = path2segs(path);
-        LinkedList<String> segs = new LinkedList<String>();
-        for (String seg : a) {
-            segs.add(seg);
-        }
+        assert path != null;
+        return String.join("/", normalize(path.split("/")));
+    }
 
-        switch (segs.get(0)) {
+    private static String[] normalize(String[] a) {
+        assert a != null;
+
+        LinkedList<String> segs = new LinkedList<String>();
+
+        int i = 0;
+        switch (a[i]) {
             case "":
-                break;
             case ".":
-                break;
             case "..":
+                segs.add(a[i++]);
                 break;
             default:
-                segs.add(0, ".");
+                segs.add(".");
                 break;
         }
 
-        int i = 1;
-        while (i < segs.size()) {
-            switch (segs.get(i)) {
+        while (i < a.length) {
+            switch (a[i]) {
                 case "":
-                    // align to bash cd
-                    segs.remove(i);
-                    continue;
+                    i++;
+                    break;
                 case ".":
-                    segs.remove(i);
-                    continue;
+                    i++;
+                    break;
                 case "..":
-                    switch (segs.get(i - 1)) {
+                    switch (segs.getLast()) {
                         case "":
-                            return null;
+                            i++;
+                            break;
                         case ".":
-                            segs.remove(i - 1);
-                            continue;
+                            segs.removeLast();
+                            segs.add(a[i++]);
+                            break;
                         case "..":
-                            // dummy
+                            segs.add(a[i++]);
                             break;
                         default:
-                            --i;
-                            segs.remove(i);
-                            segs.remove(i);
-                            continue;
+                            segs.removeLast();
+                            i++;
+                            break;
                     }
                     break;
                 default:
+                    segs.add(a[i++]);
                     break;
             }
-            ++i;
         }
 
-        return segs2path(segs);
+        return segs.toArray(new String[segs.size()]);
     }
 
-    private static String[] path2segs(String path) {
-        return path.split("/");
+    /**
+     * "/a/b/c", "/d" => "../../../d"
+     */
+    public static String relativize(String from, String to) {
+        assert from != null;
+        assert to != null;
+        assert isAbsolute(from) == isAbsolute(to);
+        return String.join("/", relativize(from.split("/"), to.split("/")));
     }
 
-    public static String relativize(String base, String resolved) {
-        if (!isAbsolute(base) && isAbsolute(resolved)) {
-            return null;
-        }
+    private static String[] relativize(String[] from, String[] to) {
+        assert from != null;
+        assert to != null;
 
-        String[] dst = path2segs(resolved);
-        String[] src = path2segs(base);
+        from = normalize(from);
+        to = normalize(to);
 
         int start = 0;
-        while (start < dst.length && start < src.length) {
-            if (!dst[start].equals(src[start])) {
+        while (start < to.length && start < from.length) {
+            if (!to[start].equals(from[start])) {
                 break;
             }
             ++start;
         }
 
-        String[] a = new String[src.length - start + dst.length - start];
-        Arrays.fill(a, 0, src.length - start, "..");
-        System.arraycopy(dst, start, a, src.length - start, dst.length - start);
+        String[] a = new String[from.length - start + to.length - start];
+        Arrays.fill(a, 0, from.length - start, "..");
+        System.arraycopy(to, start, a, from.length - start, to.length - start);
 
-        return segs2path(a);
+        return a;
     }
 
-    public static String resolve(String base, String relative) {
-        if (isAbsolute(relative)) {
-            return null;
+    /**
+     * "a", "b" => "a/b"
+     */
+    public static String resolve(String path, String another) {
+        if (isAbsolute(another)) {
+            return another;
+        } else {
+            return path + "/" + another;
         }
-        return segs2path(base, relative);
-    }
-
-    public static String resolveParent(String base, String relative) {
-        return resolve(getParent(base), relative);
-    }
-
-    private static String segs2path(List<String> segs) {
-        return String.join("/", segs);
-    }
-
-    private static String segs2path(String... segs) {
-        return String.join("/", segs);
     }
 
     private Path() {
