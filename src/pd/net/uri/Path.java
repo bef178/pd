@@ -11,17 +11,60 @@ import java.util.List;
 public final class Path {
 
     /**
-     * get last segment
+     * get last component of a path; trailing '/'(s) will be ignored<br/>
      */
     public static String getBasename(String path) {
-        String[] a = path2segs(path);
-        return a[a.length - 1];
+        assert path != null;
+        int startIndex = -1;
+        int endIndex = -1;
+        for (int i = 0; i < path.length(); i++) {
+            if (path.charAt(i) == '/') {
+                if (startIndex == -1) {
+                    startIndex = i;
+                } else if (endIndex == -1) {
+                    endIndex = i;
+                }
+            } else if (startIndex == -1 || endIndex != -1) {
+                startIndex = i;
+                endIndex = -1;
+            }
+        }
+        if (startIndex == -1) {
+            startIndex = 0;
+        }
+        if (endIndex == -1) {
+            endIndex = path.length();
+        }
+        return path.substring(startIndex, endIndex);
     }
 
+    /**
+     * strip last component of a path; trailing '/'(s) will be ignored<br/>
+     */
     public static String getParent(String path) {
-        String[] a = path2segs(path);
-        a = Arrays.copyOfRange(a, 0, a.length - 1);
-        return segs2path(a);
+        assert path != null;
+        int endIndex = -1;
+        int candidateIndex = -1;
+        for (int i = 0; i < path.length(); i++) {
+            if (path.charAt(i) == '/') {
+                if (candidateIndex == -1) {
+                    candidateIndex = i;
+                }
+            } else if (candidateIndex != -1) {
+                endIndex = candidateIndex;
+                candidateIndex = -1;
+            }
+        }
+        if (endIndex == -1) {
+            if (candidateIndex == 0) {
+                return "/";
+            } else {
+                return ".";
+            }
+        } else if (endIndex == 0) {
+            return "/";
+        }
+        return path.substring(0, endIndex);
     }
 
     public static boolean isAbsolute(String path) {
