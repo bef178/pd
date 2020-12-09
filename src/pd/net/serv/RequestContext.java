@@ -19,7 +19,7 @@ public class RequestContext implements Closeable {
 
     public final OutputStream ackStream;
 
-    RequestContext(Socket socket) throws IOException {
+    public RequestContext(Socket socket) throws IOException {
         if (socket == null) {
             throw new NullPointerException();
         }

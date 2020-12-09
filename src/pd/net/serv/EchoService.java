@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.Socket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,10 +61,17 @@ public class EchoService {
     }
 
     public void start(int port) throws IOException {
-        SomeServer server = new SomeServer(port) {
+
+        SomeServer<RequestContext> server = new SomeServer<RequestContext>(port) {
+
             @Override
             protected void onRequest(RequestContext request) throws IOException {
                 EchoService.this.onRequest(request);
+            }
+
+            @Override
+            protected RequestContext createRequest(Socket socket) throws IOException {
+                return new RequestContext(socket);
             }
         };
         server.start();

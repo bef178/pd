@@ -12,7 +12,7 @@ import pd.log.ILogger;
 import pd.log.LogManager;
 import pd.time.TimeUtil;
 
-public abstract class SomeServer {
+public abstract class SomeServer<T extends RequestContext> {
 
     static final ILogger logger = LogManager.getLogger();
 
@@ -60,10 +60,12 @@ public abstract class SomeServer {
         this.numExecutorThreads = numThreads;
     }
 
+    protected abstract T createRequest(Socket socket) throws IOException;
+
     /**
      * unnecessary to close socket<br/>
      */
-    protected abstract void onRequest(RequestContext request) throws IOException;
+    protected abstract void onRequest(T request) throws IOException;
 
     private void onSocket(Socket socket) {
         executor.execute(new Runnable() {
@@ -72,9 +74,9 @@ public abstract class SomeServer {
                 long startTimestamp = TimeUtil.now();
                 logger.logInfo("{} runnable start: {}", socket, startTimestamp);
 
-                RequestContext request = null;
+                T request = null;
                 try {
-                    request = new RequestContext(socket);
+                    request = createRequest(socket);
                 } catch (IOException e) {
                     logger.logError("E: exception when make request: {}", e.getMessage());
                     closeSocket(socket, logger);
@@ -90,7 +92,8 @@ public abstract class SomeServer {
                 }
 
                 long endTimestamp = TimeUtil.now();
-                logger.logInfo("{} runnable end: {}, duration: {}", socket, endTimestamp, endTimestamp - startTimestamp);
+                logger.logInfo("{} runnable end: {}, duration: {}", socket, endTimestamp,
+                        endTimestamp - startTimestamp);
             }
         });
     }
