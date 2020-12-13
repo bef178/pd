@@ -3,9 +3,9 @@ package blackbox;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import pd.net.uri.Path;
+import pd.fenc.UriPath;
 
-public class Test_Path {
+public class Test_UriPath {
 
     // vm arguments: -ea
     public static void main(String[] args) {
@@ -29,8 +29,9 @@ public class Test_Path {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = Path.getBasename(input);
-            assert actual.equals(expected) : String.format("E: check %s: input[%s], expected[%s], actual[%s]",
+            String actual = UriPath.getBasename(input);
+            assert actual.equals(expected) : String.format(
+                    "E: check %s: input[%s], expected[%s], actual[%s]",
                     "Path.getBasename", input, expected, actual);
         }
     }
@@ -48,8 +49,9 @@ public class Test_Path {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = Path.getParent(input);
-            assert actual.equals(expected) : String.format("E: check %s: input[%s], expected[%s], actual[%s]",
+            String actual = UriPath.getParent(input);
+            assert actual.equals(expected) : String.format(
+                    "E: check %s: input[%s], expected[%s], actual[%s]",
                     "Path.getParent", input, expected, actual);
         }
     }
@@ -65,8 +67,9 @@ public class Test_Path {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = Path.normalize(input);
-            assert actual.equals(expected) : String.format("E: check %s: input[%s], expected[%s], actual[%s]",
+            String actual = UriPath.normalize(input);
+            assert actual.equals(expected) : String.format(
+                    "E: check %s: input[%s], expected[%s], actual[%s]",
                     "Path.normalize", input, expected, actual);
         }
     }

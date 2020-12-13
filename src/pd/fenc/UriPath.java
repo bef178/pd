@@ -1,4 +1,4 @@
-package pd.net.uri;
+package pd.fenc;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -7,7 +7,7 @@ import java.util.LinkedList;
  * path is a string<br/>
  * https://tools.ietf.org/rfc/rfc3986.txt<br/>
  */
-public final class Path {
+public class UriPath {
 
     /**
      * get last component of a path; trailing '/'(s) will be ignored<br/>
@@ -172,9 +172,5 @@ public final class Path {
         } else {
             return path + "/" + another;
         }
-    }
-
-    private Path() {
-        // private dummy
     }
 }
