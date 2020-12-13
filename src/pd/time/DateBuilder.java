@@ -5,12 +5,14 @@ import static pd.time.TimeUtil.MILLISECONDS_PER_MINUTE;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import pd.time.TimeUtil.TimeField;
+
 final class DateBuilder implements EasyTime.Builder {
 
     private static final Pattern P = Pattern.compile(
             "^(\\d+)-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{3}) ((\\+|-)\\d{4})$");
 
-    public static DateBuilder fromString(String s) {
+    public static DateBuilder fromString(String s, DateBuilder builder) {
         Matcher matcher = P.matcher(s);
         if (!matcher.matches()) {
             throw new IllegalArgumentException();
@@ -25,7 +27,6 @@ final class DateBuilder implements EasyTime.Builder {
         int sss = Integer.parseInt(matcher.group(7));
         int offset = Integer.parseInt(matcher.group(8));
 
-        DateBuilder builder = new DateBuilder();
         builder.setLocalDatePart(year, MonthOfYear.fromOrdinal(month - 1), day);
         builder.setLocalTimePart(hh, mm, ss, sss);
 
@@ -43,9 +44,29 @@ final class DateBuilder implements EasyTime.Builder {
 
     @Override
     public EasyTime build() {
-        long daysSinceLocalEpoch = TimeUtil.totalDays(year, dayOfYear);
-        long millisecondsSinceLocalEpoch = TimeUtil.totalMilliseconds(daysSinceLocalEpoch, millisecondOfDay);
-        return new EasyTime(millisecondsSinceLocalEpoch, timeZone);
+        long localTotalDays = TimeUtil.totalDays(year, dayOfYear);
+        long localTotalMilliseconds = TimeUtil.totalMilliseconds(localTotalDays,
+                millisecondOfDay);
+        return new EasyTime(localTotalMilliseconds, timeZone);
+    }
+
+    @Override
+    public DateBuilder fillByString(String s) {
+        return fromString(s, this);
+    }
+
+    @Override
+    public DateBuilder setLocalDatePart(int year, int week, DayOfWeek day) {
+        assert week >= 0 && week <= 52;
+        int weekOfYear = week;
+        int dayOfWeek = day.ordinal();
+
+        int dayOfFirstYearDay = TimeUtil.daysToDayOfWeek(TimeUtil.totalDays(year, 0));
+        int dayOfYear = weekOfYear * 7 + dayOfWeek - dayOfFirstYearDay;
+        assert dayOfYear >= 0 && dayOfYear < TimeUtil.getNumDaysByYear(year);
+        this.year = year;
+        this.dayOfYear = dayOfYear;
+        return this;
     }
 
     /**
@@ -63,26 +84,21 @@ final class DateBuilder implements EasyTime.Builder {
     }
 
     @Override
-    public DateBuilder setLocalDatePart(int year, int week, DayOfWeek day) {
-        assert week >= 0 && week <= 52;
-        int weekOfYear = week;
-        int dayOfWeek = day.ordinal();
-
-        int dayOfFirstYearDay = TimeUtil.daysToDayOfWeek(TimeUtil.totalDays(year, 0));
-        int dayOfYear = weekOfYear * 7 + dayOfWeek - dayOfFirstYearDay;
-        assert dayOfYear >= 0 && dayOfYear < TimeUtil.getNumDaysByYear(year);
-        this.year = year;
-        this.dayOfYear = dayOfYear;
-        return this;
-    }
-
-    @Override
     public DateBuilder setLocalTimePart(int hh, int mm, int ss, int sss) {
         assert hh >= 0 && hh < 24;
         assert mm >= 0 && mm < 60;
         assert ss >= 0 && ss <= 60;
         assert sss >= 0 && sss < 1000;
         this.millisecondOfDay = TimeUtil.toMillisecondOfDay(hh, mm, ss, sss);
+        return this;
+    }
+
+    @Override
+    public DateBuilder setLocalTotalMilliseconds(long localTotalMilliseconds) {
+        int[] values = TimeUtil.getTimeFieldValues(localTotalMilliseconds);
+        year = values[TimeField.YEAR.ordinal()];
+        dayOfYear = values[TimeField.DAY_OF_YEAR.ordinal()];
+        millisecondOfDay = values[TimeField.MILLISECONDS_OF_DAY.ordinal()];
         return this;
     }
 

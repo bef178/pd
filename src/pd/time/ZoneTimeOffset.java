@@ -18,6 +18,8 @@ public final class ZoneTimeOffset implements Comparable<ZoneTimeOffset>, Seriali
 
     private static final Pattern P = Pattern.compile("^(\\+|-)\\d{4}$");
 
+    public static final ZoneTimeOffset UTC = new ZoneTimeOffset(0);
+
     /**
      * null is less
      */

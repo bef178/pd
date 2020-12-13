@@ -13,19 +13,27 @@ public class EasyTime {
 
         public EasyTime build();
 
-        /**
-         * day in [1, 31]<br/>
-         */
-        public Builder setLocalDatePart(int year, MonthOfYear month, int day);
+        public Builder fillByString(String s);
 
         /**
          * week in [0, 52]<br/>
          */
         public Builder setLocalDatePart(int year, int week, DayOfWeek day);
 
+        /**
+         * day in [1, 31]<br/>
+         */
+        public Builder setLocalDatePart(int year, MonthOfYear month, int day);
+
         public Builder setLocalTimePart(int hour, int minute, int second, int millisecond);
 
+        public Builder setLocalTotalMilliseconds(long localTotalMilliseconds);
+
         public Builder setTimeZone(ZoneTimeOffset timeZone);
+    }
+
+    public static Builder builder() {
+        return new DateBuilder();
     }
 
     public static EasyTime now() {
@@ -34,30 +42,37 @@ public class EasyTime {
         return new EasyTime(millisecondsSinceLocalEpoch, offsetMilliseconds);
     }
 
-    private final long millisecondsSinceLocalEpoch;
+    private final long localTotalMilliseconds;
+
     private final ZoneTimeOffset zoneTimeOffset;
 
     private transient int[] fieldValues;
 
-    private EasyTime(long millisecondsSinceLocalEpoch, long offsetMilliseconds) {
-        this(millisecondsSinceLocalEpoch, new ZoneTimeOffset(offsetMilliseconds));
+    private EasyTime(long localTotalMilliseconds, long offsetMilliseconds) {
+        this(localTotalMilliseconds, new ZoneTimeOffset(offsetMilliseconds));
     }
 
-    EasyTime(long millisecondsSinceLocalEpoch, ZoneTimeOffset timeZone) {
-        this.millisecondsSinceLocalEpoch = millisecondsSinceLocalEpoch;
+    EasyTime(long localTotalMilliseconds, ZoneTimeOffset timeZone) {
+        this.localTotalMilliseconds = localTotalMilliseconds;
         this.zoneTimeOffset = timeZone;
     }
 
     public EasyTime addMilliseconds(long milliseconds) {
-        return new EasyTime(millisecondsSinceLocalEpoch + milliseconds, zoneTimeOffset);
+        return new EasyTime(localTotalMilliseconds + milliseconds, zoneTimeOffset);
     }
 
     public EasyTime addSeconds(long seconds) {
         return addMilliseconds(seconds * MILLISECONDS_PER_SECOND);
     }
 
-    public static Builder builder() {
-        return new DateBuilder();
+    /**
+     * the timestamp will probably change
+     */
+    public EasyTime assign(ZoneTimeOffset timeZone) {
+        if (ZoneTimeOffset.compare(this.getTimeZone(), timeZone) == 0) {
+            return this;
+        }
+        return new EasyTime(localTotalMilliseconds, timeZone);
     }
 
     @Override
@@ -67,7 +82,7 @@ public class EasyTime {
         }
         if (o != null && o.getClass() == this.getClass()) {
             EasyTime a = (EasyTime) o;
-            return this.millisecondsSinceLocalEpoch == a.millisecondsSinceLocalEpoch
+            return this.localTotalMilliseconds == a.localTotalMilliseconds
                     && ZoneTimeOffset.compare(zoneTimeOffset, a.zoneTimeOffset) == 0;
         }
         return false;
@@ -87,7 +102,7 @@ public class EasyTime {
         }
 
         if (fieldValues == null) {
-            fieldValues = TimeUtil.getTimeFieldValues(millisecondsSinceLocalEpoch);
+            fieldValues = TimeUtil.getTimeFieldValues(localTotalMilliseconds);
         }
 
         switch (field) {
@@ -104,11 +119,11 @@ public class EasyTime {
         if (getTimeZone() == null) {
             throw new UnsupportedOperationException();
         }
-        return millisecondsSinceLocalEpoch - getTimeZone().getOffsetMilliseconds();
+        return localTotalMilliseconds - getTimeZone().getOffsetMilliseconds();
     }
 
     public final long getMillisecondsSinceLocalEpoch() {
-        return millisecondsSinceLocalEpoch;
+        return localTotalMilliseconds;
     }
 
     public final ZoneTimeOffset getTimeZone() {
@@ -117,18 +132,8 @@ public class EasyTime {
 
     @Override
     public final int hashCode() {
-        return Long.hashCode(millisecondsSinceLocalEpoch) * 31
+        return Long.hashCode(localTotalMilliseconds) * 31
                 + (zoneTimeOffset == null ? 0 : zoneTimeOffset.hashCode());
-    }
-
-    /**
-     * the timestamp will probably change
-     */
-    public EasyTime assign(ZoneTimeOffset timeZone) {
-        if (ZoneTimeOffset.compare(this.getTimeZone(), timeZone) == 0) {
-            return this;
-        }
-        return new EasyTime(millisecondsSinceLocalEpoch, timeZone);
     }
 
     /**
@@ -144,7 +149,8 @@ public class EasyTime {
         if (timeZone == null) {
             throw new IllegalArgumentException();
         }
-        return new EasyTime(millisecondsSinceLocalEpoch, timeZone);
+        return new EasyTime(getMillisecondsSinceEpoch() + timeZone.getOffsetMilliseconds(),
+                timeZone);
     }
 
     @Override
