@@ -60,7 +60,7 @@ public abstract class SomeServer<T extends RequestContext> {
         this.numExecutorThreads = numThreads;
     }
 
-    protected abstract T createRequest(Socket socket) throws IOException;
+    protected abstract T buildRequest(Socket socket) throws IOException;
 
     /**
      * unnecessary to close socket<br/>
@@ -76,7 +76,7 @@ public abstract class SomeServer<T extends RequestContext> {
 
                 T request = null;
                 try {
-                    request = createRequest(socket);
+                    request = buildRequest(socket);
                 } catch (IOException e) {
                     logger.logError("E: exception when make request: {}", e.getMessage());
                     closeSocket(socket, logger);

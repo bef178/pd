@@ -65,13 +65,13 @@ public class EchoService {
         SomeServer<RequestContext> server = new SomeServer<RequestContext>(port) {
 
             @Override
-            protected void onRequest(RequestContext request) throws IOException {
-                EchoService.this.onRequest(request);
+            protected RequestContext buildRequest(Socket socket) throws IOException {
+                return new RequestContext(socket);
             }
 
             @Override
-            protected RequestContext createRequest(Socket socket) throws IOException {
-                return new RequestContext(socket);
+            protected void onRequest(RequestContext request) throws IOException {
+                EchoService.this.onRequest(request);
             }
         };
         server.start();
