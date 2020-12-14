@@ -1,25 +1,29 @@
 package blackbox;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+
 import pd.fenc.Hexdig;
 
 public class Test_Hexdig {
 
+    // vm arguments: -ea
     public static void main(String[] args) {
-        test_encode1byte();
-        test_decode1byte();
-        System.out.println("all done");
     }
 
-    private static void test_decode1byte() {
-        byte[] src = { '9', '7' };
+    @Test
+    public void test_decode1byte() {
+        byte[] src = { '6', '1' };
         int dstByte = Hexdig.decode1byte(src, 0);
-        assert (dstByte == 'a');
+        assertEquals('a', dstByte);
     }
 
-    private static void test_encode1byte() {
+    @Test
+    public void test_encode1byte() {
         byte[] dst = new byte[2];
         Hexdig.encode1byte('a', dst, 0);
-        assert (dst[0] == '9');
-        assert (dst[1] == '7');
+        assertEquals('6', dst[0]);
+        assertEquals('1', dst[1]);
     }
 }

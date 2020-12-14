@@ -1,13 +1,13 @@
 package pd.time;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static pd.time.TimeUtil.totalDays;
 import static pd.time.TimeUtil.toDayOfYear;
+import static pd.time.TimeUtil.totalDays;
 
 import java.time.LocalDate;
 import java.util.Random;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class Test_TimeUtil {
 

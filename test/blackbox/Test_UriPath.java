@@ -1,7 +1,11 @@
 package blackbox;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.junit.jupiter.api.Test;
 
 import pd.fenc.UriPath;
 
@@ -9,14 +13,10 @@ public class Test_UriPath {
 
     // vm arguments: -ea
     public static void main(String[] args) {
-        test_getBasename();
-        test_getParent();
-        test_normalize();
-
-        System.out.println("all done");
     }
 
-    private static void test_getBasename() {
+    @Test
+    public void test_getBasename() {
         LinkedHashMap<String, String> testcases = new LinkedHashMap<>();
         testcases.put("abc", "abc");
         testcases.put("abc/def", "def");
@@ -30,13 +30,14 @@ public class Test_UriPath {
             String input = testcase.getKey();
             String expected = testcase.getValue();
             String actual = UriPath.getBasename(input);
-            assert actual.equals(expected) : String.format(
+            assertEquals(expected, actual, String.format(
                     "E: check %s: input[%s], expected[%s], actual[%s]",
-                    "Path.getBasename", input, expected, actual);
+                    "Path.getBasename", input, expected, actual));
         }
     }
 
-    private static void test_getParent() {
+    @Test
+    public void test_getParent() {
         LinkedHashMap<String, String> testcases = new LinkedHashMap<>();
         testcases.put("abc", ".");
         testcases.put("abc//", ".");
@@ -50,13 +51,14 @@ public class Test_UriPath {
             String input = testcase.getKey();
             String expected = testcase.getValue();
             String actual = UriPath.getParent(input);
-            assert actual.equals(expected) : String.format(
+            assertEquals(expected, actual, String.format(
                     "E: check %s: input[%s], expected[%s], actual[%s]",
-                    "Path.getParent", input, expected, actual);
+                    "Path.getParent", input, expected, actual));
         }
     }
 
-    private static void test_normalize() {
+    @Test
+    public void test_normalize() {
         LinkedHashMap<String, String> testcases = new LinkedHashMap<>();
         testcases.put("abc", "./abc");
         testcases.put("././abc", "./abc");
@@ -68,9 +70,9 @@ public class Test_UriPath {
             String input = testcase.getKey();
             String expected = testcase.getValue();
             String actual = UriPath.normalize(input);
-            assert actual.equals(expected) : String.format(
+            assertEquals(expected, actual, String.format(
                     "E: check %s: input[%s], expected[%s], actual[%s]",
-                    "Path.normalize", input, expected, actual);
+                    "Path.normalize", input, expected, actual));
         }
     }
 }
