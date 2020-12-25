@@ -2,6 +2,13 @@ package pd.ctype;
 
 public final class Ctype {
 
+    public static final int HT = '\t';
+    public static final int LF = '\n';
+    public static final int CR = '\r';
+    public static final int SP = ' ';
+    public static final int COMMA = ',';
+    public static final int DOUBLE_QUOTE = '\"';
+
     /**
      * [A-Za-z0-9]
      */

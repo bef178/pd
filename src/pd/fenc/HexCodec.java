@@ -1,6 +1,6 @@
 package pd.fenc;
 
-public class Hexdig {
+public class HexCodec {
 
     /**
      * ['9','7'] => 'a'

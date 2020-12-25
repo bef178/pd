@@ -3,7 +3,7 @@ package pd.fenc;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 
-public class UriCodec {
+public class PctCodec {
 
     private static final BitSet SHOULD_ENCODE = new BitSet(256);
 
@@ -43,7 +43,7 @@ public class UriCodec {
         int srcByte = src[i++] & 0xFF;
         if (srcByte == '%') {
             if (dst != null) {
-                dst[start] = (byte) Hexdig.decode1byte(src, i);
+                dst[start] = (byte) HexCodec.decode1byte(src, i);
             }
             return 3;
         } else {
@@ -55,6 +55,8 @@ public class UriCodec {
     }
 
     /**
+     * '[' => '%','5','B'<br/>
+     * <br/>
      * @return num produced bytes of dst
      */
     public static int encode(byte[] src, int i, int j, byte[] dst, int start) {
@@ -82,7 +84,7 @@ public class UriCodec {
         } else {
             if (dst != null) {
                 dst[start++] = '%';
-                Hexdig.encode1byte(srcByte, dst, start);
+                HexCodec.encode1byte(srcByte, dst, start);
             }
             return 3;
         }

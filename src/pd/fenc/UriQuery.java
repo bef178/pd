@@ -28,7 +28,7 @@ public final class UriQuery {
                 key = entryString.substring(0, i);
                 value = entryString.substring(i + 1);
             }
-            queries.put(UriCodec.decode(key).toString(), UriCodec.decode(value).toString());
+            queries.put(PctCodec.decode(key).toString(), PctCodec.decode(value).toString());
         }
         return queries;
     }
@@ -37,9 +37,9 @@ public final class UriQuery {
         StringBuilder sb = new StringBuilder();
         while (it.hasNext()) {
             Map.Entry<String, String> entry = it.next();
-            sb.append(UriCodec.encode(entry.getKey()));
+            sb.append(PctCodec.encode(entry.getKey()));
             sb.append("=");
-            sb.append(UriCodec.encode(entry.getValue()));
+            sb.append(PctCodec.encode(entry.getValue()));
             sb.append("&");
         }
         if (sb.length() > 0) {

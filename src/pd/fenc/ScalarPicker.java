@@ -1,161 +1,158 @@
-package pd.io.format;
+package pd.fenc;
 
 import java.nio.charset.StandardCharsets;
 
 import pd.ctype.Ctype;
-import pd.io.InstallmentByteBuffer;
-import pd.io.ParsingException;
-import pd.io.Pullable;
-import pd.io.PullablePipe;
+import pd.fenc.ParsingException.Reason;
 
 public class ScalarPicker {
 
-    public static int eatWhitespace(Pullable pullable) {
-        int ch = pullable.pull();
-        while (ch != Pullable.E_EOF) {
-            if (!Ctype.isWhitespace(ch)) {
-                break;
-            }
-            ch = pullable.pull();
-        }
-        return ch;
-    }
-
-    public static String pickDottedIdentifier(IntScanner it) {
-        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
+    public static int nextSkippingWhitespaces(Int32Scanner it) {
         while (true) {
-            pickIdentifier(it, buffer);
-            if (buffer.size() == 0) {
-                throw new ParsingException();
+            int ch = it.hasNext() ? it.next() : IReader.EOF;
+            if (!Ctype.isWhitespace(ch)) {
+                return ch;
             }
-            if (it.pull() != '.') {
-                return new String(buffer.copyBytes());
-            }
-            buffer.push('.');
         }
     }
 
-    public static float pickFloat(IntScanner it) {
-        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
+    public static String pickDottedIdentifier(Int32Scanner it) {
+        InstallmentByteBuffer dst = new InstallmentByteBuffer();
+        while (true) {
+            if (!pickIdentifier(it, dst)) {
+                throw new ParsingException(Reason.NotIdentifier.toString());
+            }
+            if (!it.hasNext() || it.next() != '.') {
+                return new String(dst.copyBytes());
+            }
+            dst.append('.');
+        }
+    }
+
+    public static float pickFloat(Int32Scanner it) {
+        InstallmentByteBuffer dst = new InstallmentByteBuffer();
         int stat = 0;
         while (true) {
-            int ch = it.pull();
+            int ch = it.hasNext() ? it.next() : IReader.EOF;
             switch (stat) {
                 case 0:
                     if (ch == '-') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 1;
                     } else if (ch == '0') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 2;
                     } else if (Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 3;
                     } else {
-                        it.back();
-                        throw new ParsingException(String.format("Unexpected %s", (char) ch));
+                        it.moveBack();
+                        throw new ParsingException(String.format("Unexpected [%s]",
+                                new String(Character.toChars(ch))));
                     }
                     break;
                 case 1:
                     if (ch == '0') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 4;
                     } else if (Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 3;
                     } else {
-                        it.back();
+                        it.moveBack();
                         throw new ParsingException();
                     }
                     break;
                 case 2:
                     if (ch == '.') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 5;
                     } else if (Ctype.isDigit(ch)) {
-                        it.back();
+                        it.moveBack();
                         throw new ParsingException();
                     } else {
-                        it.back();
-                        return Float.parseFloat(new String(buffer.copyBytes()));
+                        it.moveBack();
+                        return Float.parseFloat(new String(dst.copyBytes()));
                     }
                     break;
                 case 3:
                     if (Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                     } else if (ch == '.') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 5;
                     } else {
-                        it.back();
-                        return Float.parseFloat(new String(buffer.copyBytes()));
+                        it.moveBack();
+                        return Float.parseFloat(new String(dst.copyBytes()));
                     }
                     break;
                 case 4:
                     if (ch == '.') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 5;
                     } else {
-                        it.back();
+                        it.moveBack();
                         throw new ParsingException();
                     }
                     break;
                 case 5:
                     if (ch == '0') {
-                        buffer.push(ch);
+                        dst.append(ch);
                     } else if (Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 6;
                     } else {
-                        it.back();
+                        it.moveBack();
                         throw new ParsingException();
                     }
                     break;
                 case 6:
                     if (ch == '0') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 5;
                     } else if (Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                     } else {
-                        it.back();
-                        return Float.parseFloat(new String(buffer.copyBytes()));
+                        it.moveBack();
+                        return Float.parseFloat(new String(dst.copyBytes()));
                     }
                     break;
             }
         }
     }
 
-    public static String pickIdentifier(IntScanner it) {
-        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
-        pickIdentifier(it, buffer);
-        return new String(buffer.copyBytes());
+    public static String pickIdentifier(Int32Scanner it) {
+        InstallmentByteBuffer dst = new InstallmentByteBuffer();
+        if (!pickIdentifier(it, dst)) {
+            throw new ParsingException(Reason.NotIdentifier);
+        }
+        return new String(dst.copyBytes());
     }
 
-    private static void pickIdentifier(IntScanner it, InstallmentByteBuffer buffer) {
+    private static boolean pickIdentifier(Int32Scanner it, IWriter dst) {
         int stat = 0;
         while (true) {
-            int ch = it.pull();
+            int ch = it.hasNext() ? it.next() : IReader.EOF;
             switch (stat) {
                 case 0:
                     if (Ctype.isAlpha(ch) || ch == '_') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 1;
                     } else {
-                        it.back();
-                        throw new ParsingException();
+                        it.moveBack();
+                        return false;
                     }
                     break;
                 case 1:
                     if (Ctype.isAlpha(ch) || ch == '_' || Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                     } else {
-                        it.back();
-                        return;
+                        it.moveBack();
+                        return true;
                     }
                     break;
                 default:
-                    break;
+                    throw new IllegalStateException();
             }
         }
     }
@@ -170,63 +167,61 @@ public class ScalarPicker {
      * ok: 0, -1, 1
      * not ok: 00, -0
      */
-    public static int pickInt(IntScanner it) {
-        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
+    public static int pickInt(Int32Scanner it) {
+        InstallmentByteBuffer dst = new InstallmentByteBuffer();
         int stat = 0;
         while (true) {
-            int ch = it.pull();
+            int ch = it.next();
             switch (stat) {
                 case 0:
                     if (ch == '-') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 1;
                     } else if (ch == '0') {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 2;
                     } else if (Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 3;
                     } else {
-                        it.back();
+                        it.moveBack();
                         throw new ParsingException();
                     }
                     break;
                 case 1:
                     if (ch != '0' && Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                         stat = 3;
                     } else {
-                        it.back();
+                        it.moveBack();
                         throw new ParsingException();
                     }
                     break;
                 case 2:
                     if (Ctype.isDigit(ch)) {
-                        it.back();
+                        it.moveBack();
                         throw new ParsingException();
                     } else {
-                        it.back();
-                        return Integer.parseInt(
-                                new String(buffer.copyBytes()));
+                        it.moveBack();
+                        return Integer.parseInt(new String(dst.copyBytes()));
                     }
                 case 3:
                     if (Ctype.isDigit(ch)) {
-                        buffer.push(ch);
+                        dst.append(ch);
                     } else {
-                        it.back();
-                        return Integer.parseInt(
-                                new String(buffer.copyBytes()));
+                        it.moveBack();
+                        return Integer.parseInt(new String(dst.copyBytes()));
                     }
                     break;
             }
         }
     }
 
-    public static String pickString(IntScanner it) {
-        return pickString(it, Pullable.E_EOF);
+    public static String pickString(Int32Scanner it) {
+        return pickString(it, IReader.EOF, false);
     }
 
-    public static String pickString(IntScanner it, int closingSymbol) {
+    public static String pickString(Int32Scanner it, int closingSymbol) {
         return pickString(it, closingSymbol, false);
     }
 
@@ -234,39 +229,37 @@ public class ScalarPicker {
      * Return when meet closing symbol; throw when meet EOF if not silent.<br/>
      * The closing symbol will be reached but not consumed and not part of result.<br/>
      */
-    public static String pickString(IntScanner it, int closingSymbol, boolean silent) {
-        InstallmentByteBuffer buffer = new InstallmentByteBuffer();
-        PullablePipe p = pickStringAsPullablePipe(it, closingSymbol, silent);
-        for (int ch = p.pull(); ch != Pullable.E_EOF; ch = p.pull()) {
-            buffer.append(ch);
+    public static String pickString(Int32Scanner it, int closingSymbol, boolean silent) {
+        InstallmentByteBuffer dst = new InstallmentByteBuffer();
+        Int32Scanner p = pickStringAsScanner(it, closingSymbol, silent);
+        while (p.hasNext()) {
+            dst.append(p.next());
         }
-        return new String(buffer.copyBytes(), StandardCharsets.UTF_8);
+        return new String(dst.copyBytes(), StandardCharsets.UTF_8);
     }
 
-    public static String pickString(IntScanner it, int openingSymbol, int closingSymbol) {
-        if (it.pull() != openingSymbol) {
+    public static String pickString(Int32Scanner it, int openingSymbol, int closingSymbol) {
+        if (!it.hasNext() || it.next() != openingSymbol) {
             throw new ParsingException();
         }
-        return pickString(it, closingSymbol);
+        return pickString(it, closingSymbol, false);
     }
 
-    public static PullablePipe pickStringAsPullablePipe(IntScanner it, int closingSymbol,
+    public static Int32Scanner pickStringAsScanner(Int32Scanner it, int closingSymbol,
             boolean silent) {
 
-        return new PullablePipe() {
-
-            private IntScanner upstream = it;
+        return new Int32Scanner() {
 
             private boolean escaped = false;
 
             @Override
-            public <T extends Pullable> T join(T upstream) {
-                throw new UnsupportedOperationException();
+            public boolean hasNext() {
+                return it.hasNext();
             }
 
             @Override
-            public int pull() {
-                int ch = it.pull();
+            public int next() {
+                int ch = it.next();
                 if (escaped) {
                     escaped = false;
                     return ch;
@@ -274,12 +267,12 @@ public class ScalarPicker {
                     escaped = true;
                     return ch;
                 } else if (ch == closingSymbol) {
-                    upstream.back();
-                    return Pullable.E_EOF;
-                } else if (ch == Pullable.E_EOF) {
+                    it.moveBack();
+                    return IReader.EOF;
+                } else if (ch == IReader.EOF) {
                     if (silent) {
-                        it.back();
-                        return Pullable.E_EOF;
+                        it.moveBack();
+                        return IReader.EOF;
                     } else {
                         throw new ParsingException("Unexpected EOF");
                     }

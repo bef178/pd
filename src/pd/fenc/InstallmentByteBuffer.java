@@ -1,16 +1,16 @@
-package pd.io;
+package pd.fenc;
 
-import static pd.io.Util.checkByte;
+import static pd.fenc.Util.checkByte;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class InstallmentByteBuffer implements Pushable {
+public class InstallmentByteBuffer implements IWriter {
 
     /**
      * not a java.io.Reader<br/>
      */
-    public class Reader implements Pullable {
+    public class Reader implements IReader {
 
         public static final int SEEK_SET = 0;
         public static final int SEEK_CUR = 1;
@@ -18,8 +18,17 @@ public class InstallmentByteBuffer implements Pushable {
 
         private int next = 0;
 
+        @Override
         public boolean hasNext() {
             return next >= 0 && next < size();
+        }
+
+        @Override
+        public int next() {
+            if (hasNext()) {
+                return InstallmentByteBuffer.this.get(next++) & 0xFF;
+            }
+            return -1;
         }
 
         public int peek() {
@@ -29,12 +38,8 @@ public class InstallmentByteBuffer implements Pushable {
             return -1;
         }
 
-        @Override
         public int pull() {
-            if (hasNext()) {
-                return InstallmentByteBuffer.this.get(next++) & 0xFF;
-            }
-            return -1;
+            return next();
         }
 
         public void putBack() {
@@ -75,6 +80,7 @@ public class InstallmentByteBuffer implements Pushable {
 
     private static final int INSTALLMENT_BYTES = 1 << INSTALLMENT_BITS;
     private static final int INSTALLMENT_MASK = INSTALLMENT_BYTES - 1;
+
     private ArrayList<byte[]> savings = new ArrayList<>();
 
     private int size = 0;
@@ -126,6 +132,7 @@ public class InstallmentByteBuffer implements Pushable {
         return append(cs.toString().getBytes());
     }
 
+    @Override
     public InstallmentByteBuffer append(int ch) {
         checkByte(ch);
         setupCapacity(size + 1);
@@ -155,11 +162,6 @@ public class InstallmentByteBuffer implements Pushable {
 
     private int get(int pos) {
         return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
-    }
-
-    @Override
-    public void push(int ch) {
-        append(ch);
     }
 
     private void put(int pos, byte b) {
