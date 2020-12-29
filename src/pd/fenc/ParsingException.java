@@ -1,5 +1,7 @@
 package pd.fenc;
 
+import static pd.fenc.IReader.EOF;
+
 public class ParsingException extends RuntimeException {
 
     public enum Reason {
@@ -13,6 +15,12 @@ public class ParsingException extends RuntimeException {
 
     public ParsingException() {
         super();
+    }
+
+    public ParsingException(int actual) {
+        this(String.format("unexpected [%s]", actual == EOF
+                ? "EOF"
+                : Character.toChars(actual).toString()));
     }
 
     public ParsingException(int expected, int actual) {

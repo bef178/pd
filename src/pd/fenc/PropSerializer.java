@@ -1,36 +1,42 @@
 package pd.fenc;
 
+import static pd.fenc.IReader.EOF;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 
 public class PropSerializer {
 
     public static Entry<String, String> deserialize(Int32Scanner scanner) {
-        int ch = ScalarPicker.nextSkippingWhitespaces(scanner);
+
+        scanner.eatWhitespaces();
+
+        int ch = scanner.hasNext() ? scanner.next() : EOF;
         if (ch == '#') {
             // comment line
             return new SimpleImmutableEntry<String, String>(null, null);
         }
+        scanner.moveBack();
 
         String key = ScalarPicker.pickDottedIdentifier(scanner);
 
-        ch = ScalarPicker.nextSkippingWhitespaces(scanner);
-        if (ch != '=') {
-            throw new ParsingException();
-        }
+        scanner.eatWhitespaces();
 
-        ch = ScalarPicker.nextSkippingWhitespaces(scanner);
+        scanner.eatOrThrow('=');
+
+        scanner.eatWhitespaces();
+
+        ch = scanner.hasNext() ? scanner.next() : EOF;
         if (ch == '\"') {
             String value = ScalarPicker.pickString(scanner, '\"');
             scanner.next();
-            ch = ScalarPicker.nextSkippingWhitespaces(scanner);
-            if (ch != IReader.EOF) {
-                throw new ParsingException();
-            } else {
-                return new SimpleImmutableEntry<String, String>(key, value);
-            }
+            scanner.eatWhitespaces();
+            scanner.eatOrThrow(EOF);
+            return new SimpleImmutableEntry<String, String>(key, value);
         } else {
-            String value = ScalarPicker.pickString(scanner, IReader.EOF);
+            scanner.moveBack();
+            scanner.eatWhitespaces();
+            String value = ScalarPicker.pickString(scanner, EOF);
             return new SimpleImmutableEntry<String, String>(key, value);
         }
     }

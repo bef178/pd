@@ -2,6 +2,8 @@ package pd.fenc;
 
 import java.util.Arrays;
 
+import pd.ctype.Ctype;
+
 /**
  * A scanner is used to feed a parser, providing int32 values(or CachedReader?),<br/>
  * <br/>
@@ -47,6 +49,23 @@ public class Int32Scanner implements IReader {
         this.position = 0;
         this.offset = 0;
         this.recents = new int[] { 0 };
+    }
+
+    public void eatOrThrow(int expected) {
+        int ch = hasNext() ? next() : EOF;
+        if (ch != expected) {
+            throw new ParsingException(expected, ch);
+        }
+    }
+
+    public void eatWhitespaces() {
+        while (hasNext()) {
+            int ch = next();
+            if (!Ctype.isWhitespace(ch)) {
+                moveBack();
+                return;
+            }
+        }
     }
 
     private int getRecent(int numBackSteps) {
