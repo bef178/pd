@@ -1,24 +1,11 @@
 package pd.fenc.json;
 
-import java.util.PrimitiveIterator.OfInt;
+import pd.fenc.Util;
 
 class ImplDirectJsonString implements IJsonString {
 
-    static String serialize(String value) {
-        StringBuilder dst = new StringBuilder();
-        dst.append('\"');
-        OfInt it = value.codePoints().iterator();
-        while (it.hasNext()) {
-            int ch = it.nextInt();
-            if (ch == '\"') {
-                dst.append('\\');
-                dst.append('\"');
-            } else {
-                dst.appendCodePoint(ch);
-            }
-        }
-        dst.append('\"');
-        return dst.toString();
+    public static String serialize(String value) {
+        return Util.serializeToQuotedString(value);
     }
 
     private String value = null;
