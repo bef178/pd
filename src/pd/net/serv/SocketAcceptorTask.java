@@ -38,7 +38,12 @@ public class SocketAcceptorTask implements Runnable {
     }
 
     public Thread createThread() {
-        return createThread(this.getClass().getSimpleName());
+        String threadNamePrefix = getClass().getSimpleName();
+        if (threadNamePrefix == null || threadNamePrefix.isEmpty()) {
+            // inner class or anonymous class
+            threadNamePrefix = SocketAcceptorTask.class.getSimpleName();
+        }
+        return createThread(threadNamePrefix);
     }
 
     public Thread createThread(String threadNamePrefix) {
@@ -81,7 +86,7 @@ public class SocketAcceptorTask implements Runnable {
                 try {
                     socket = serverSocket.accept();
                 } catch (SocketException e) {
-                    if (serverSocket.isClosed()) {
+                    if (serverSocket == null || serverSocket.isClosed()) {
                         break;
                     }
                     // exception on server socket, cannot recover
