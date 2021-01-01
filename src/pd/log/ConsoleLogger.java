@@ -1,8 +1,8 @@
 package pd.log;
 
-import static pd.log.LogManager.Util.getHostname;
-import static pd.log.LogManager.Util.isAcceptable;
-import static pd.log.LogManager.Util.writeLine;
+import static pd.log.Util.getHostname;
+import static pd.log.Util.isAcceptable;
+import static pd.log.Util.writeLine;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,7 +12,8 @@ import pd.time.TimeUtil;
 
 public class ConsoleLogger implements ILogger {
 
-    public static final ConsoleLogger defaultInstance = new ConsoleLogger(LogLevel.getMaxLogLevel());
+    public static final ConsoleLogger defaultInstance = new ConsoleLogger(
+            LogLevel.getMaxLogLevel());
 
     private static final Writer outWriter = new PrintWriter(System.out, true);
     private static final Writer errWriter = new PrintWriter(System.err, true);

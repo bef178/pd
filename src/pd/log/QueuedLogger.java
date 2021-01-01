@@ -1,6 +1,6 @@
 package pd.log;
 
-import static pd.log.LogManager.Util.isAcceptable;
+import static pd.log.Util.isAcceptable;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
@@ -43,6 +43,7 @@ public class QueuedLogger implements ILogger {
     }
 
     class QueuedEntry {
+
         long timestamp;
         LogLevel level;
         String message;
@@ -79,14 +80,16 @@ public class QueuedLogger implements ILogger {
                 try {
                     entry = queue.take();
                 } catch (InterruptedException e) {
-                    logger.logInfoCcConsole("%s: logger thread interrupted, %d remaining", logTag, queue.size());
+                    logger.logInfoCcConsole("%s: logger thread interrupted, %d remaining", logTag,
+                            queue.size());
                     running.set(false);
                     continue;
                 }
                 logger.log(entry.timestamp, entry.level, entry.message);
             }
             stopped.set(true);
-            logger.logInfoCcConsole("%s: logger thread stopped, %d remaining", logTag, queue.size());
+            logger.logInfoCcConsole("%s: logger thread stopped, %d remaining", logTag,
+                    queue.size());
             logger.flush();
         }
     });

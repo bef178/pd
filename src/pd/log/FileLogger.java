@@ -1,8 +1,8 @@
 package pd.log;
 
-import static pd.log.LogManager.Util.getHostname;
-import static pd.log.LogManager.Util.isAcceptable;
-import static pd.log.LogManager.Util.writeLine;
+import static pd.log.Util.getHostname;
+import static pd.log.Util.isAcceptable;
+import static pd.log.Util.writeLine;
 
 import java.io.File;
 import java.io.FileWriter;

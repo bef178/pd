@@ -1,6 +1,6 @@
 package pd.log;
 
-import static pd.log.LogManager.Util.evaluateMessage;
+import static pd.log.Util.evaluateMessage;
 
 import java.io.Closeable;
 import java.io.IOException;
