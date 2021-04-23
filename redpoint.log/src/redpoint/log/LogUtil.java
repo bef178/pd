@@ -1,4 +1,4 @@
-package pd.log;
+package redpoint.log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,11 +6,12 @@ import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
+
+import redpoint.time.TimeUtil;
+
 import java.util.PrimitiveIterator.OfInt;
 
-import pd.time.TimeUtil;
-
-public class Util {
+public class LogUtil {
 
     /**
      * use '{}' as formatting anchor
@@ -103,11 +104,6 @@ public class Util {
         return currentClassLoader != null
                 ? currentClassLoader.getResourceAsStream(file)
                 : ClassLoader.getSystemResourceAsStream(file);
-    }
-
-    public static boolean isAcceptable(LogLevel level, LogLevel maxAcceptableLogLevel) {
-        return level != null && maxAcceptableLogLevel != null
-                && !maxAcceptableLogLevel.isPriorTo(level);
     }
 
     public static Properties loadProperties(String file) {

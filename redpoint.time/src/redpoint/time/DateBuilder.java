@@ -1,11 +1,11 @@
-package pd.time;
+package redpoint.time;
 
-import static pd.time.TimeUtil.MILLISECONDS_PER_MINUTE;
+import static redpoint.time.TimeUtil.MILLISECONDS_PER_MINUTE;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pd.time.TimeUtil.TimeField;
+import redpoint.time.TimeUtil.TimeField;
 
 final class DateBuilder implements EasyTime.Builder {
 

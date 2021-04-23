@@ -1,8 +1,8 @@
-package pd.time;
+package redpoint.time;
 
-import static pd.time.TimeUtil.MILLISECONDS_PER_SECOND;
+import static redpoint.time.TimeUtil.MILLISECONDS_PER_SECOND;
 
-import pd.time.TimeUtil.TimeField;
+import redpoint.time.TimeUtil.TimeField;
 
 /**
  * A "local" date and time with time zone
