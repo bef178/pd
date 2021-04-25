@@ -61,7 +61,7 @@ public class SocketAcceptorTask implements Runnable {
      * should close socket in this method, thus enable handling socket in other threads<br/>
      */
     protected void onSocket(Socket socket) {
-        logger.logTrace("onSocket");
+        logger.logVerbose("onSocket");
         closeSocket(socket, logger);
     }
 
@@ -108,7 +108,7 @@ public class SocketAcceptorTask implements Runnable {
     }
 
     public void stop() {
-        logger.logTrace("stop requested");
+        logger.logVerbose("stop requested");
         running.set(true);
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {

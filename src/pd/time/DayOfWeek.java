@@ -1,4 +1,4 @@
-package redpoint.time;
+package pd.time;
 
 public enum DayOfWeek {
 

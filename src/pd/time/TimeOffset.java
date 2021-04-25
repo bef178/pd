@@ -1,4 +1,4 @@
-package redpoint.time;
+package pd.time;
 
 import java.io.Serializable;;
 

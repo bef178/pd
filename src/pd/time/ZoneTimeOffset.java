@@ -1,6 +1,6 @@
-package redpoint.time;
+package pd.time;
 
-import static redpoint.time.TimeUtil.MILLISECONDS_PER_MINUTE;
+import static pd.time.TimeUtil.MILLISECONDS_PER_MINUTE;
 
 import java.io.Serializable;
 import java.util.regex.Matcher;

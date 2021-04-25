@@ -1,4 +1,4 @@
-package redpoint.log;
+package pd.log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
-import redpoint.time.TimeUtil;
+import pd.time.TimeUtil;
 
 import java.util.PrimitiveIterator.OfInt;
 
@@ -60,8 +60,7 @@ public class LogUtil {
                             break;
                         default:
                             String actual = new String(Character.toChars(ch));
-                            throw new IllegalArgumentException(
-                                    String.format("E: unrecognized \"\\%s\"", actual));
+                            throw new IllegalArgumentException(String.format("E: unrecognized \"\\%s\"", actual));
                     }
                     break;
                 }
@@ -101,8 +100,7 @@ public class LogUtil {
 
     private static InputStream getInputStream(String file) {
         ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-        return currentClassLoader != null
-                ? currentClassLoader.getResourceAsStream(file)
+        return currentClassLoader != null ? currentClassLoader.getResourceAsStream(file)
                 : ClassLoader.getSystemResourceAsStream(file);
     }
 
@@ -122,14 +120,12 @@ public class LogUtil {
     /**
      * actual logger would call this to write
      */
-    public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname,
-            LogLevel level, String message) throws IOException {
+    public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
+            String message) throws IOException {
         // TODO csv
         StringBuilder sb = new StringBuilder();
-        sb.append(TimeUtil.toUtcString(timestamp)).append(fieldSeparator)
-                .append(hostname).append(fieldSeparator)
-                .append(level.toString()).append(fieldSeparator)
-                .append(message).append('\n');
+        sb.append(TimeUtil.toUtcString(timestamp)).append(fieldSeparator).append(hostname).append(fieldSeparator)
+                .append(level.toString()).append(fieldSeparator).append(message).append('\n');
         w.write(sb.toString());
     }
 }

@@ -1,4 +1,4 @@
-package redpoint.time;
+package pd.time;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
