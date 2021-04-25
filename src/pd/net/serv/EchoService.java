@@ -7,12 +7,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import pd.log.ILogger;
+import pd.log.LogManager;
 
 public class EchoService {
 
-    static final Logger LOGGER = LoggerFactory.getLogger(EchoService.class);
+    static final ILogger LOGGER = LogManager.getLogger();
 
     public static void main(String[] args) throws IOException, InterruptedException {
         EchoService server = new EchoService();
