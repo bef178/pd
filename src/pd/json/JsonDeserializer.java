@@ -15,13 +15,13 @@ public class JsonDeserializer {
     private static class DirectJsonTokenCreator implements IJsonTokenCreator {
 
         @Override
-        public DirectJsonBoolean newJsonBoolean(boolean value) {
-            return new DirectJsonBoolean(value);
+        public IJsonArray newJsonArray() {
+            return new DirectJsonArray();
         }
 
         @Override
-        public IJsonArray newJsonArray() {
-            return new DirectJsonArray();
+        public DirectJsonBoolean newJsonBoolean(boolean value) {
+            return new DirectJsonBoolean(value);
         }
 
         @Override

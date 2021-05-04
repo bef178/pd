@@ -11,10 +11,18 @@ public interface IJsonArray extends IJsonToken, Collection<IJsonToken> {
      */
     public IJsonArray insert(IJsonToken value);
 
+    public IJsonArray insert(int index, boolean value);
+
+    public IJsonArray insert(int index, double value);
+
     /**
      * @return this
      */
     public IJsonArray insert(int index, IJsonToken value);
+
+    public IJsonArray insert(int index, long value);
+
+    public IJsonArray insert(int index, String value);
 
     /**
      * @return this

@@ -2,6 +2,11 @@ package pd.json;
 
 class DirectJsonFloat implements IJsonFloat {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
     private double value;
 
     public DirectJsonFloat() {

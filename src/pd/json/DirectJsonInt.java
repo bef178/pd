@@ -2,6 +2,11 @@ package pd.json;
 
 class DirectJsonInt implements IJsonInt {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
     private long value;
 
     public DirectJsonInt() {

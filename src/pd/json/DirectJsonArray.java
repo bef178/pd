@@ -25,9 +25,29 @@ class DirectJsonArray extends ArrayList<IJsonToken> implements IJsonArray {
     }
 
     @Override
+    public DirectJsonArray insert(int index, boolean value) {
+        return insert(index, new DirectJsonBoolean(value));
+    }
+
+    @Override
+    public DirectJsonArray insert(int index, double value) {
+        return insert(index, new DirectJsonFloat(value));
+    }
+
+    @Override
     public DirectJsonArray insert(int index, IJsonToken value) {
         add(index, value);
         return this;
+    }
+
+    @Override
+    public DirectJsonArray insert(int index, long value) {
+        return insert(index, new DirectJsonInt(value));
+    }
+
+    @Override
+    public DirectJsonArray insert(int index, String value) {
+        return insert(index, new DirectJsonString(value));
     }
 
     @Override

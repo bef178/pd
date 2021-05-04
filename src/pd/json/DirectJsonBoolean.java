@@ -2,6 +2,11 @@ package pd.json;
 
 class DirectJsonBoolean implements IJsonBoolean {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
     private boolean value;
 
     public DirectJsonBoolean() {
