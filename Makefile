@@ -6,7 +6,7 @@ clean-build: clean classes jars
 .PHONY: classes
 classes:
 	@ OUT=./out/classes \
-		make -f ./build/java8.mk classes
+		make -f ./build/java11.mk classes
 
 .PHONY: jars
 jars: ./out/pd.core.jar

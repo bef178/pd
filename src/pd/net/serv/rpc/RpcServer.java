@@ -33,8 +33,9 @@ public class RpcServer extends SomeServer<RequestContext> {
     }
 
     private Object getImplementationClassInstance(Class<?> implementationClass)
-            throws InstantiationException, IllegalAccessException {
-        return implementationClass.newInstance(); // XXX where IoC/DI would function
+            throws InstantiationException, IllegalAccessException,
+            IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+        return implementationClass.getDeclaredConstructor().newInstance(); // XXX where IoC/DI would function
     }
 
     @Override
