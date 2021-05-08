@@ -2,8 +2,6 @@ package pd.fenc;
 
 import static pd.fenc.IReader.EOF;
 
-import java.nio.charset.StandardCharsets;
-
 import pd.ctype.Ctype;
 import pd.fenc.ParsingException.Reason;
 
@@ -70,13 +68,32 @@ public class ScalarPicker extends NumberPicker {
      * Return when meet closing symbol; throw when meet EOF if not silent.<br/>
      * The closing symbol will be reached but not consumed and not part of result.<br/>
      */
-    public static String pickString(Int32Scanner it, int closingSymbol, boolean silent) {
-        InstallmentByteBuffer dst = new InstallmentByteBuffer();
-        Int32Scanner p = pickStringAsScanner(it, closingSymbol, silent);
-        while (p.hasNext()) {
-            dst.append(p.next());
+    public static String pickString(Int32Scanner src, int closingSymbol, boolean silent) {
+        StringBuilder sb = new StringBuilder();
+        pickString(src, closingSymbol, silent, ICharWriter.wrap(sb));
+        return sb.toString();
+    }
+
+    public static void pickString(Int32Scanner src, int closingSymbol, boolean silent, ICharWriter dst) {
+        boolean isEscaped = false;
+        while (true) {
+            int ch = src.hasNext() ? src.next() : EOF;
+            if (isEscaped) {
+                isEscaped = false;
+                dst.append(ch);
+            } else if (ch == '\\') {
+                isEscaped = true;
+            } else if (ch == closingSymbol) {
+                src.moveBack();
+                return;
+            } else if (ch == EOF) {
+                if (silent) {
+                    return;
+                } else {
+                    throw new ParsingException(EOF);
+                }
+            }
         }
-        return new String(dst.copyBytes(), StandardCharsets.UTF_8);
     }
 
     public static String pickString(Int32Scanner it, int openingSymbol, int closingSymbol) {
@@ -84,44 +101,6 @@ public class ScalarPicker extends NumberPicker {
             throw new ParsingException();
         }
         return pickString(it, closingSymbol, false);
-    }
-
-    public static Int32Scanner pickStringAsScanner(Int32Scanner it, int closingSymbol,
-            boolean silent) {
-
-        return new Int32Scanner() {
-
-            private boolean escaped = false;
-
-            @Override
-            public boolean hasNext() {
-                return it.hasNext();
-            }
-
-            @Override
-            public int next() {
-                int ch = it.next();
-                if (escaped) {
-                    escaped = false;
-                    return ch;
-                } else if (ch == '\\') {
-                    escaped = true;
-                    return ch;
-                } else if (ch == closingSymbol) {
-                    it.moveBack();
-                    return IReader.EOF;
-                } else if (ch == EOF) {
-                    if (silent) {
-                        it.moveBack();
-                        return EOF;
-                    } else {
-                        throw new ParsingException(EOF);
-                    }
-                } else {
-                    return ch;
-                }
-            }
-        };
     }
 
     private ScalarPicker() {
