@@ -7,38 +7,41 @@ import pd.fenc.ParsingException.Reason;
 
 public class ScalarPicker extends NumberPicker {
 
-    public static String pickDottedIdentifier(Int32Scanner it) {
-        InstallmentByteBuffer dst = new InstallmentByteBuffer();
+    public static String pickDottedIdentifier(Int32Scanner src) {
+        StringBuilder sb = new StringBuilder();
         while (true) {
-            if (!pickIdentifier(it, dst)) {
-                throw new ParsingException(Reason.NotIdentifier.toString());
+            if (!pickIdentifier(src, ICharWriter.wrap(sb))) {
+                throw new ParsingException(Reason.NotIdentifier);
             }
-            if (!it.hasNext() || it.next() != '.') {
-                return new String(dst.copyBytes());
+            if (!src.hasNext() || src.next() != '.') {
+                return sb.toString();
             }
-            dst.append('.');
+            sb.append('.');
         }
     }
 
-    public static String pickIdentifier(Int32Scanner it) {
-        InstallmentByteBuffer dst = new InstallmentByteBuffer();
-        if (!pickIdentifier(it, dst)) {
+    public static String pickIdentifier(Int32Scanner src) {
+        StringBuilder sb = new StringBuilder();
+        if (!pickIdentifier(src, ICharWriter.wrap(sb))) {
             throw new ParsingException(Reason.NotIdentifier);
         }
-        return new String(dst.copyBytes());
+        return sb.toString();
     }
 
-    private static boolean pickIdentifier(Int32Scanner it, IWriter dst) {
+    /**
+     * identifier matches [a-zA-Z_][a-zA-Z_0-9]*
+     */
+    private static boolean pickIdentifier(Int32Scanner src, ICharWriter dst) {
         int stat = 0;
         while (true) {
-            int ch = it.hasNext() ? it.next() : EOF;
+            int ch = src.hasNext() ? src.next() : EOF;
             switch (stat) {
                 case 0:
                     if (Ctype.isAlpha(ch) || ch == '_') {
                         dst.append(ch);
                         stat = 1;
                     } else {
-                        it.moveBack();
+                        src.moveBack();
                         return false;
                     }
                     break;
@@ -46,7 +49,7 @@ public class ScalarPicker extends NumberPicker {
                     if (Ctype.isAlpha(ch) || ch == '_' || Ctype.isDigit(ch)) {
                         dst.append(ch);
                     } else {
-                        it.moveBack();
+                        src.moveBack();
                         return true;
                     }
                     break;
