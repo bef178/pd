@@ -4,7 +4,6 @@ import static pd.fenc.Util.checkByte;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.PrimitiveIterator.OfInt;
 
 public interface IReader {
 
@@ -39,13 +38,6 @@ public interface IReader {
     }
 
     /**
-     * UnicodeProvider
-     */
-    public static IReader wrap(CharSequence cs) {
-        return wrap(cs.codePoints().iterator());
-    }
-
-    /**
      * StreamReader, ByteProvider
      */
     public static IReader wrap(InputStream input) {
@@ -68,25 +60,6 @@ public interface IReader {
                 } catch (IOException e) {
                     throw new ParsingException(e);
                 }
-            }
-        };
-    }
-
-    /**
-     * UnicodeProvider
-     */
-    public static IReader wrap(OfInt it) {
-
-        return new IReader() {
-
-            @Override
-            public boolean hasNext() {
-                return it.hasNext();
-            }
-
-            @Override
-            public int next() {
-                return it.hasNext() ? it.nextInt() : EOF;
             }
         };
     }

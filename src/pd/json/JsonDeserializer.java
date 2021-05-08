@@ -4,9 +4,8 @@ import static pd.ctype.Ctype.COMMA;
 import static pd.ctype.Ctype.DOUBLE_QUOTE;
 import static pd.fenc.IReader.EOF;
 
-import pd.fenc.IReader;
+import pd.fenc.CharReader;
 import pd.fenc.IWriter;
-import pd.fenc.Int32Scanner;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 
@@ -70,7 +69,7 @@ public class JsonDeserializer {
     public static final IJsonTokenCreator creator = new DirectJsonTokenCreator();
 
     public IJsonToken deserialize(String serialized) {
-        Int32Scanner it = new Int32Scanner(IReader.wrap(serialized));
+        CharReader it = CharReader.wrap(serialized);
         return deserializeToJsonToken(it);
     }
 
@@ -78,7 +77,7 @@ public class JsonDeserializer {
         return deserialize(serialized).cast(expectedClass);
     }
 
-    private IJsonArray deserializeToJsonArray(Int32Scanner it) {
+    private IJsonArray deserializeToJsonArray(CharReader it) {
         IJsonArray token = creator.newJsonArray();
         int state = 0;
         while (true) {
@@ -135,7 +134,7 @@ public class JsonDeserializer {
         }
     }
 
-    private IJsonToken deserializeToJsonBooleanFalse(Int32Scanner it) {
+    private IJsonToken deserializeToJsonBooleanFalse(CharReader it) {
         it.eatOrThrow('f');
         it.eatOrThrow('a');
         it.eatOrThrow('l');
@@ -144,7 +143,7 @@ public class JsonDeserializer {
         return creator.newJsonBoolean(false);
     }
 
-    private IJsonToken deserializeToJsonBooleanTrue(Int32Scanner it) {
+    private IJsonToken deserializeToJsonBooleanTrue(CharReader it) {
         it.eatOrThrow('t');
         it.eatOrThrow('r');
         it.eatOrThrow('u');
@@ -152,7 +151,7 @@ public class JsonDeserializer {
         return creator.newJsonBoolean(true);
     }
 
-    private IJsonToken deserializeToJsonIntOrJsonFloat(Int32Scanner it) {
+    private IJsonToken deserializeToJsonIntOrJsonFloat(CharReader it) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.wrap(sb);
         ScalarPicker.pickFloat(it, dst);
@@ -164,7 +163,7 @@ public class JsonDeserializer {
         }
     }
 
-    private IJsonNull deserializeToJsonNull(Int32Scanner it) {
+    private IJsonNull deserializeToJsonNull(CharReader it) {
         it.eatOrThrow('n');
         it.eatOrThrow('u');
         it.eatOrThrow('l');
@@ -172,7 +171,7 @@ public class JsonDeserializer {
         return creator.newJsonNull();
     }
 
-    private IJsonString deserializeToJsonString(Int32Scanner it) {
+    private IJsonString deserializeToJsonString(CharReader it) {
         // state machine go!
         int state = 0;
         StringBuilder sb = new StringBuilder();
@@ -225,7 +224,7 @@ public class JsonDeserializer {
         }
     }
 
-    private IJsonTable deserializeToJsonTable(Int32Scanner it) {
+    private IJsonTable deserializeToJsonTable(CharReader it) {
         IJsonTable token = creator.newJsonTable();
         int state = 0;
         while (true) {
@@ -286,7 +285,7 @@ public class JsonDeserializer {
         }
     }
 
-    private IJsonToken deserializeToJsonToken(Int32Scanner it) {
+    private IJsonToken deserializeToJsonToken(CharReader it) {
         int ch = it.hasNext() ? it.next() : EOF;
         switch (ch) {
             case 'n':

@@ -6,7 +6,7 @@ import pd.ctype.Ctype;
 
 public class ScalarPicker extends NumberPicker {
 
-    public static String pickDottedIdentifier(Int32Scanner src) {
+    public static String pickDottedIdentifier(CharReader src) {
         StringBuilder sb = new StringBuilder();
         while (true) {
             if (!pickIdentifier(src, ICharWriter.wrap(sb))) {
@@ -19,7 +19,7 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public static String pickIdentifier(Int32Scanner src) {
+    public static String pickIdentifier(CharReader src) {
         StringBuilder sb = new StringBuilder();
         if (!pickIdentifier(src, ICharWriter.wrap(sb))) {
             throw new ParsingException();
@@ -31,7 +31,7 @@ public class ScalarPicker extends NumberPicker {
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
      * if fail, src.next() will be the illegal character
      */
-    private static boolean pickIdentifier(Int32Scanner src, ICharWriter dst) {
+    private static boolean pickIdentifier(CharReader src, ICharWriter dst) {
         int stat = 0;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -59,11 +59,11 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public static String pickString(Int32Scanner src) {
+    public static String pickString(CharReader src) {
         return pickString(src, EOF);
     }
 
-    public static String pickString(Int32Scanner src, int closingSymbol) {
+    public static String pickString(CharReader src, int closingSymbol) {
         StringBuilder sb = new StringBuilder();
         if (!pickString(src, closingSymbol, ICharWriter.wrap(sb))) {
             throw new ParsingException();
@@ -75,7 +75,7 @@ public class ScalarPicker extends NumberPicker {
      * Will succ when meet closing symbol or fail when meet EOF; however EOF can be the closing symbol<br/>
      * The closing symbol will not be consumed and not be a part of result<br/>
      */
-    public static boolean pickString(Int32Scanner src, int closingSymbol, ICharWriter dst) {
+    public static boolean pickString(CharReader src, int closingSymbol, ICharWriter dst) {
         boolean isEscaped = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;

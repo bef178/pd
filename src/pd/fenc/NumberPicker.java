@@ -7,7 +7,7 @@ class NumberPicker {
     /**
      * exponent := ('E' / 'e') int
      */
-    static void pickExponent(Int32Scanner it, IWriter dst) {
+    static void pickExponent(CharReader it, IWriter dst) {
         int ch = it.hasNext() ? it.next() : EOF;
         if (ch == 'E' || ch == 'e') {
             dst.append(ch);
@@ -19,17 +19,17 @@ class NumberPicker {
                 String.format("unexpected [%s], expecting [E] or [e]", actual));
     }
 
-    public static void pickFloat(Int32Scanner it, IWriter dst) {
+    public static void pickFloat(CharReader it, IWriter dst) {
         pickNumber(it, dst);
     }
 
-    public static float pickFloat32(Int32Scanner it) {
+    public static float pickFloat32(CharReader it) {
         InstallmentByteBuffer dst = new InstallmentByteBuffer();
         pickFloat(it, dst);
         return Float.parseFloat(new String(dst.copyBytes()));
     }
 
-    public static double pickFloat64(Int32Scanner it) {
+    public static double pickFloat64(CharReader it) {
         InstallmentByteBuffer dst = new InstallmentByteBuffer();
         pickFloat(it, dst);
         return Double.parseDouble(new String(dst.copyBytes()));
@@ -40,7 +40,7 @@ class NumberPicker {
      * <br/>
      * specially, "0.0" is valid<br/>
      */
-    static void pickFraction(Int32Scanner it, IWriter dst) {
+    static void pickFraction(CharReader it, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -103,7 +103,7 @@ class NumberPicker {
     /**
      * pick an valid 10-based integer of string form, per intuition
      */
-    static void pickInt(Int32Scanner it, IWriter dst) {
+    static void pickInt(CharReader it, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -182,19 +182,19 @@ class NumberPicker {
         }
     }
 
-    public static int pickInt32(Int32Scanner it) {
+    public static int pickInt32(CharReader it) {
         InstallmentByteBuffer dst = new InstallmentByteBuffer();
         pickInt(it, dst);
         return Integer.parseInt(new String(dst.copyBytes()));
     }
 
-    public static long pickInt64(Int32Scanner it) {
+    public static long pickInt64(CharReader it) {
         InstallmentByteBuffer dst = new InstallmentByteBuffer();
         pickInt(it, dst);
         return Long.parseLong(new String(dst.copyBytes()));
     }
 
-    public static Number pickNumber(Int32Scanner it) {
+    public static Number pickNumber(CharReader it) {
         InstallmentByteBuffer dst = new InstallmentByteBuffer();
         pickNumber(it, dst);
         return new NumberToken(new String(dst.copyBytes()));
@@ -203,7 +203,7 @@ class NumberPicker {
     /**
      * a number has 3 parts: integer, fraction and exponent
      */
-    static void pickNumber(Int32Scanner it, IWriter dst) {
+    static void pickNumber(CharReader it, IWriter dst) {
         pickInt(it, dst);
 
         int ch = it.hasNext() ? it.next() : EOF;

@@ -7,36 +7,36 @@ import java.util.Map.Entry;
 
 public class PropSerializer {
 
-    public static Entry<String, String> deserialize(Int32Scanner scanner) {
+    public static Entry<String, String> deserialize(CharReader src) {
 
-        scanner.eatWhitespaces();
+        src.eatWhitespaces();
 
-        int ch = scanner.hasNext() ? scanner.next() : EOF;
+        int ch = src.hasNext() ? src.next() : EOF;
         if (ch == '#') {
             // comment line
             return new SimpleImmutableEntry<String, String>(null, null);
         }
-        scanner.moveBack();
+        src.moveBack();
 
-        String key = ScalarPicker.pickDottedIdentifier(scanner);
+        String key = ScalarPicker.pickDottedIdentifier(src);
 
-        scanner.eatWhitespaces();
+        src.eatWhitespaces();
 
-        scanner.eatOrThrow('=');
+        src.eatOrThrow('=');
 
-        scanner.eatWhitespaces();
+        src.eatWhitespaces();
 
-        ch = scanner.hasNext() ? scanner.next() : EOF;
+        ch = src.hasNext() ? src.next() : EOF;
         if (ch == '\"') {
-            String value = ScalarPicker.pickString(scanner, '\"');
-            scanner.next();
-            scanner.eatWhitespaces();
-            scanner.eatOrThrow(EOF);
+            String value = ScalarPicker.pickString(src, '\"');
+            src.next();
+            src.eatWhitespaces();
+            src.eatOrThrow(EOF);
             return new SimpleImmutableEntry<String, String>(key, value);
         } else {
-            scanner.moveBack();
-            scanner.eatWhitespaces();
-            String value = ScalarPicker.pickString(scanner, EOF);
+            src.moveBack();
+            src.eatWhitespaces();
+            String value = ScalarPicker.pickString(src, EOF);
             return new SimpleImmutableEntry<String, String>(key, value);
         }
     }

@@ -20,7 +20,7 @@ public class CsvSerializer {
     /**
      * @return true if record ends
      */
-    private static boolean deserializeField(IReader src, int fieldSeparator, IWriter dst) {
+    private static boolean deserializeField(ICharReader src, int fieldSeparator, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -117,7 +117,7 @@ public class CsvSerializer {
     }
 
     public static List<String> deserializeRecord(OfInt it, int fieldSeparator) {
-        IReader src = IReader.wrap(it);
+        ICharReader src = ICharReader.wrap(it);
         List<String> fields = new LinkedList<String>();
         while (src.hasNext()) {
             StringBuilder sb = new StringBuilder();
@@ -141,7 +141,7 @@ public class CsvSerializer {
     private static int serializeField(String src, int fieldSeparator, IWriter dst) {
         boolean isQuoted = false;
         {
-            IReader it = IReader.wrap(src);
+            ICharReader it = ICharReader.wrap(src);
             while (it.hasNext()) {
                 int ch = it.next();
                 if (ch == DOUBLE_QUOTE || ch == fieldSeparator) {
@@ -152,7 +152,7 @@ public class CsvSerializer {
         }
 
         int numProduced = 0;
-        IReader it = IReader.wrap(src);
+        ICharReader it = ICharReader.wrap(src);
         if (isQuoted) {
             dst.append(DOUBLE_QUOTE);
             numProduced++;
