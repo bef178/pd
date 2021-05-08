@@ -5,7 +5,7 @@ import static pd.ctype.Ctype.DOUBLE_QUOTE;
 import static pd.fenc.IReader.EOF;
 
 import pd.fenc.CharReader;
-import pd.fenc.IWriter;
+import pd.fenc.ICharWriter;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 
@@ -153,7 +153,7 @@ public class JsonDeserializer {
 
     private IJsonToken deserializeToJsonIntOrJsonFloat(CharReader it) {
         StringBuilder sb = new StringBuilder();
-        IWriter dst = IWriter.wrap(sb);
+        ICharWriter dst = ICharWriter.wrap(sb);
         ScalarPicker.pickFloat(it, dst);
         String raw = sb.toString();
         if (raw.indexOf('.') >= 0) {

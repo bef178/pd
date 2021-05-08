@@ -20,7 +20,7 @@ public class CsvSerializer {
     /**
      * @return true if record ends
      */
-    private static boolean deserializeField(ICharReader src, int fieldSeparator, IWriter dst) {
+    private static boolean deserializeField(ICharReader src, int fieldSeparator, ICharWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -121,7 +121,7 @@ public class CsvSerializer {
         List<String> fields = new LinkedList<String>();
         while (src.hasNext()) {
             StringBuilder sb = new StringBuilder();
-            boolean endsRecord = deserializeField(src, fieldSeparator, IWriter.wrap(sb));
+            boolean endsRecord = deserializeField(src, fieldSeparator, ICharWriter.wrap(sb));
             fields.add(sb.toString());
             if (endsRecord) {
                 break;
@@ -138,7 +138,7 @@ public class CsvSerializer {
         return deserializeRecord(csv.codePoints().iterator(), fieldSeparator);
     }
 
-    private static int serializeField(String src, int fieldSeparator, IWriter dst) {
+    private static int serializeField(String src, int fieldSeparator, ICharWriter dst) {
         boolean isQuoted = false;
         {
             ICharReader it = ICharReader.wrap(src);
@@ -180,7 +180,7 @@ public class CsvSerializer {
 
     public static String serializeRecord(List<String> fields, int fieldSeparator) {
         StringBuilder sb = new StringBuilder();
-        IWriter dst = IWriter.wrap(sb);
+        ICharWriter dst = ICharWriter.wrap(sb);
         Iterator<String> it = fields.iterator();
         while (it.hasNext()) {
             String field = it.next();
