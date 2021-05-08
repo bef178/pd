@@ -66,4 +66,11 @@ public class Test_ScalarPicker {
         assertEquals(0, ScalarPicker.pickInt32(it));
         assertEquals(1, it.position());
     }
+
+    @Test
+    public void test_pickString() {
+        Int32Scanner it = new Int32Scanner(IReader.wrap("hel\\lo world"));
+        assertEquals("hel\\lo", ScalarPicker.pickString(it, ' '));
+        assertEquals(' ', it.next());
+    }
 }

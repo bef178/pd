@@ -3,7 +3,6 @@ package pd.fenc;
 import static pd.fenc.IReader.EOF;
 
 import pd.ctype.Ctype;
-import pd.fenc.ParsingException.Reason;
 
 public class ScalarPicker extends NumberPicker {
 
@@ -11,7 +10,7 @@ public class ScalarPicker extends NumberPicker {
         StringBuilder sb = new StringBuilder();
         while (true) {
             if (!pickIdentifier(src, ICharWriter.wrap(sb))) {
-                throw new ParsingException(Reason.NotIdentifier);
+                throw new ParsingException();
             }
             if (!src.hasNext() || src.next() != '.') {
                 return sb.toString();
@@ -23,13 +22,14 @@ public class ScalarPicker extends NumberPicker {
     public static String pickIdentifier(Int32Scanner src) {
         StringBuilder sb = new StringBuilder();
         if (!pickIdentifier(src, ICharWriter.wrap(sb))) {
-            throw new ParsingException(Reason.NotIdentifier);
+            throw new ParsingException();
         }
         return sb.toString();
     }
 
     /**
-     * identifier matches [a-zA-Z_][a-zA-Z_0-9]*
+     * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
+     * if fail, src.next() will be the illegal character
      */
     private static boolean pickIdentifier(Int32Scanner src, ICharWriter dst) {
         int stat = 0;
@@ -59,51 +59,43 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public static String pickString(Int32Scanner it) {
-        return pickString(it, EOF, false);
+    public static String pickString(Int32Scanner src) {
+        return pickString(src, EOF);
     }
 
-    public static String pickString(Int32Scanner it, int closingSymbol) {
-        return pickString(it, closingSymbol, false);
-    }
-
-    /**
-     * Return when meet closing symbol; throw when meet EOF if not silent.<br/>
-     * The closing symbol will be reached but not consumed and not part of result.<br/>
-     */
-    public static String pickString(Int32Scanner src, int closingSymbol, boolean silent) {
+    public static String pickString(Int32Scanner src, int closingSymbol) {
         StringBuilder sb = new StringBuilder();
-        pickString(src, closingSymbol, silent, ICharWriter.wrap(sb));
+        if (!pickString(src, closingSymbol, ICharWriter.wrap(sb))) {
+            throw new ParsingException();
+        }
         return sb.toString();
     }
 
-    public static void pickString(Int32Scanner src, int closingSymbol, boolean silent, ICharWriter dst) {
+    /**
+     * Will succ when meet closing symbol or fail when meet EOF; however EOF can be the closing symbol<br/>
+     * The closing symbol will not be consumed and not be a part of result<br/>
+     */
+    public static boolean pickString(Int32Scanner src, int closingSymbol, ICharWriter dst) {
         boolean isEscaped = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
             if (isEscaped) {
                 isEscaped = false;
+                dst.append('\\');
                 dst.append(ch);
             } else if (ch == '\\') {
                 isEscaped = true;
             } else if (ch == closingSymbol) {
-                src.moveBack();
-                return;
-            } else if (ch == EOF) {
-                if (silent) {
-                    return;
-                } else {
-                    throw new ParsingException(EOF);
+                if (closingSymbol != EOF) {
+                    src.moveBack();
                 }
+                return true;
+            } else if (ch == EOF) {
+                return false;
+            } else {
+                dst.append(ch);
             }
         }
-    }
-
-    public static String pickString(Int32Scanner it, int openingSymbol, int closingSymbol) {
-        if (!it.hasNext() || it.next() != openingSymbol) {
-            throw new ParsingException();
-        }
-        return pickString(it, closingSymbol, false);
     }
 
     private ScalarPicker() {

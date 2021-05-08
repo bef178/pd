@@ -1,5 +1,7 @@
 package pd.fenc;
 
+import static pd.fenc.IReader.EOF;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,6 +57,13 @@ public final class Util {
                 // dummy
             }
         }
+    }
+
+    public static String codepointToString(int ch) {
+        if (ch == EOF) {
+            return "EOF";
+        }
+        return Character.toChars(ch).toString();
     }
 
     public static void consumeDataAndCloseSilently(InputStream stream) {

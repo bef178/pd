@@ -4,10 +4,6 @@ import static pd.fenc.IReader.EOF;
 
 public class ParsingException extends RuntimeException {
 
-    public enum Reason {
-        NotIdentifier
-    }
-
     /**
      * generated serial version UID
      */
@@ -24,12 +20,7 @@ public class ParsingException extends RuntimeException {
     }
 
     public ParsingException(int expected, int actual) {
-        this(Character.toChars(expected).toString(),
-                Character.toChars(actual).toString());
-    }
-
-    public ParsingException(Reason reason) {
-        this(reason.toString());
+        this(Util.codepointToString(expected), Util.codepointToString(actual));
     }
 
     public ParsingException(String message) {
