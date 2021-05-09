@@ -1,7 +1,5 @@
 package pd.fenc;
 
-import pd.ctype.Ctype;
-
 /**
  * It often requires "pre-reading" few symbols to speculate which token parser should be invoked.<br>
  * While, we know stream cannot move backward physically.<br/>
@@ -68,7 +66,7 @@ public class CharReader implements IReader {
     public void eatWhitespaces() {
         while (hasNext()) {
             int ch = next();
-            if (!Ctype.isWhitespace(ch)) {
+            if (!Cascii.isWhitespace(ch)) {
                 moveBack();
                 return;
             }

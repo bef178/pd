@@ -2,8 +2,6 @@ package pd.fenc;
 
 import static pd.fenc.IReader.EOF;
 
-import pd.ctype.Ctype;
-
 public class ScalarPicker extends NumberPicker {
 
     public static String pickDottedIdentifier(CharReader src) {
@@ -37,7 +35,7 @@ public class ScalarPicker extends NumberPicker {
             int ch = src.hasNext() ? src.next() : EOF;
             switch (stat) {
                 case 0:
-                    if (Ctype.isAlpha(ch) || ch == '_') {
+                    if (Cascii.isAlpha(ch) || ch == '_') {
                         dst.append(ch);
                         stat = 1;
                     } else {
@@ -46,7 +44,7 @@ public class ScalarPicker extends NumberPicker {
                     }
                     break;
                 case 1:
-                    if (Ctype.isAlpha(ch) || ch == '_' || Ctype.isDigit(ch)) {
+                    if (Cascii.isAlpha(ch) || ch == '_' || Cascii.isDigit(ch)) {
                         dst.append(ch);
                     } else {
                         src.moveBack();

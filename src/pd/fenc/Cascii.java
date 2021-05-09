@@ -1,6 +1,6 @@
-package pd.ctype;
+package pd.fenc;
 
-public final class Ctype {
+public final class Cascii {
 
     public static final int HT = '\t';
     public static final int LF = '\n';
@@ -115,7 +115,7 @@ public final class Ctype {
         return ch;
     }
 
-    private Ctype() {
+    private Cascii() {
         // private dummy
     }
 }

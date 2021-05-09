@@ -1,9 +1,9 @@
 package pd.fenc;
 
-import static pd.ctype.Ctype.COMMA;
-import static pd.ctype.Ctype.CR;
-import static pd.ctype.Ctype.DOUBLE_QUOTE;
-import static pd.ctype.Ctype.LF;
+import static pd.fenc.Cascii.COMMA;
+import static pd.fenc.Cascii.CR;
+import static pd.fenc.Cascii.DOUBLE_QUOTE;
+import static pd.fenc.Cascii.LF;
 import static pd.fenc.IReader.EOF;
 
 import java.util.Arrays;

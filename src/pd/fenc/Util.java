@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.PrimitiveIterator.OfInt;
 
-import pd.ctype.Ctype;
-
 public final class Util {
 
     /**
@@ -34,7 +32,7 @@ public final class Util {
     }
 
     public static int checkSingleWidthAscii(int value) {
-        if (value == Ctype.SP || Ctype.isVisible(value)) {
+        if (value == Cascii.SP || Cascii.isVisible(value)) {
             return value;
         }
         throw new ParsingException(

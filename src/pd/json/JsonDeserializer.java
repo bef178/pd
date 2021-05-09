@@ -1,7 +1,7 @@
 package pd.json;
 
-import static pd.ctype.Ctype.COMMA;
-import static pd.ctype.Ctype.DOUBLE_QUOTE;
+import static pd.fenc.Cascii.COMMA;
+import static pd.fenc.Cascii.DOUBLE_QUOTE;
 import static pd.fenc.IReader.EOF;
 
 import pd.fenc.CharReader;
