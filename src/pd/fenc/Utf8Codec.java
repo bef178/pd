@@ -1,7 +1,5 @@
 package pd.fenc;
 
-import pd.ctype.Cbit8;
-
 /**
  * https://en.wikipedia.org/wiki/UTF-8
  *
@@ -147,7 +145,7 @@ public class Utf8Codec {
         assert isUtf8HeadByte(headByte);
 
         int n = 0;
-        while (n < 8 && Cbit8.getBit((byte) headByte, n)) {
+        while (n < 8 && Cstream.getBit((byte) headByte, n)) {
             ++n;
         }
         switch (n) {

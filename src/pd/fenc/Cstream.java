@@ -1,18 +1,18 @@
-package pd.ctype;
+package pd.fenc;
 
-public final class Cbit8 {
+public final class Cstream {
 
-    private static final int BITS = 8;
+    private static final int BITS_PER_BYTE = 8;
 
     public static boolean getBit(byte mem, int offset) {
-        assert offset >= 0 && offset < BITS;
-        return getBits(mem, 1 << (BITS - 1 - offset)) != 0;
+        assert offset >= 0 && offset < BITS_PER_BYTE;
+        return getBits(mem, 1 << (BITS_PER_BYTE - 1 - offset)) != 0;
     }
 
     public static boolean getBit(byte[] mem, int offset) {
         assert mem != null;
-        assert offset >= 0 && offset < mem.length * BITS;
-        return getBit(mem[offset / BITS], offset % BITS);
+        assert offset >= 0 && offset < mem.length * BITS_PER_BYTE;
+        return getBit(mem[offset / BITS_PER_BYTE], offset % BITS_PER_BYTE);
     }
 
     private static byte getBits(byte mem, int bits) {
@@ -21,15 +21,15 @@ public final class Cbit8 {
     }
 
     private static byte setBit(byte mem, int offset, boolean value) {
-        assert offset >= 0 && offset < BITS;
-        return setBits(mem, 1 << (BITS - 1 - offset), value);
+        assert offset >= 0 && offset < BITS_PER_BYTE;
+        return setBits(mem, 1 << (BITS_PER_BYTE - 1 - offset), value);
     }
 
     public static void setBit(byte[] mem, int offset, boolean value) {
         assert mem != null;
-        assert offset >= 0 && offset < mem.length * BITS;
-        final int p = offset / BITS;
-        mem[p] = setBit(mem[p], offset % BITS, true);
+        assert offset >= 0 && offset < mem.length * BITS_PER_BYTE;
+        final int p = offset / BITS_PER_BYTE;
+        mem[p] = setBit(mem[p], offset % BITS_PER_BYTE, true);
     }
 
     private static byte setBits(byte mem, int bits, boolean value) {
@@ -47,9 +47,9 @@ public final class Cbit8 {
      */
     @Deprecated
     public static byte shiftArithmeticR(byte mem, int offset) {
-        assert offset >= 0 && offset < BITS;
+        assert offset >= 0 && offset < BITS_PER_BYTE;
         mem >>= offset;
-        mem &= ((1 << (BITS - offset)) - 1);
+        mem &= ((1 << (BITS_PER_BYTE - offset)) - 1);
         return mem;
     }
 
@@ -58,7 +58,7 @@ public final class Cbit8 {
      */
     @Deprecated
     public static byte shiftL(byte mem, int offset) {
-        assert offset >= 0 && offset < BITS;
+        assert offset >= 0 && offset < BITS_PER_BYTE;
         mem <<= offset;
         return mem;
     }
@@ -67,8 +67,8 @@ public final class Cbit8 {
         assert mem != null;
         assert offset >= 0;
 
-        final int p = offset / BITS;
-        final int q = offset % BITS;
+        final int p = offset / BITS_PER_BYTE;
+        final int q = offset % BITS_PER_BYTE;
 
         for (int i = 0; i < mem.length; ++i) {
             mem[i] = i + p < mem.length ? mem[i + p] : 0;
@@ -77,7 +77,7 @@ public final class Cbit8 {
         int carry = 0;
         for (int i = mem.length - 1; i >= 0; --i) {
             int result = (mem[i] << q) | carry;
-            carry = mem[i] >>> (BITS - q);
+            carry = mem[i] >>> (BITS_PER_BYTE - q);
             mem[i] = (byte) result;
         }
     }
@@ -87,12 +87,12 @@ public final class Cbit8 {
      */
     @Deprecated
     public static byte shiftR(byte mem, int offset) {
-        assert offset >= 0 && offset < BITS;
+        assert offset >= 0 && offset < BITS_PER_BYTE;
         mem >>= offset;
         return mem;
     }
 
-    private Cbit8() {
+    private Cstream() {
         // private dummy
     }
 }
