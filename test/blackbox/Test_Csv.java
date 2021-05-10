@@ -8,14 +8,15 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import pd.fenc.CsvSerializer;
+import pd.csv.CsvDeserializer;
+import pd.csv.CsvSerializer;
 
-public class Test_CsvSerializer {
+public class Test_Csv {
 
     @Test
     public void test_deserialize() {
         String csv = "PartId,\"Quantity\",'Color',4297719,'Bla\\'ck'";
-        List<String> l = CsvSerializer.deserializeRecord(csv);
+        List<String> l = CsvDeserializer.deserialize(csv, ',', "\r\n");
         assertEquals("PartId", l.get(0));
         assertEquals("Quantity", l.get(1));
         assertEquals("'Color'", l.get(2));
@@ -29,7 +30,7 @@ public class Test_CsvSerializer {
                 "SetNumber", "b\"bb", "c"
         };
         String csv = "SetNumber,\"b\"\"bb\",c\r\n";
-        assertEquals(csv, CsvSerializer.serializeRecord(Arrays.asList(fields), ','));
-        assertArrayEquals(fields, CsvSerializer.deserializeRecord(csv).toArray(new String[0]));
+        assertEquals(csv, CsvSerializer.serialize(Arrays.asList(fields), ',', "\r\n"));
+        assertArrayEquals(fields, CsvDeserializer.deserialize(csv, ',', "\r\n").toArray(new String[0]));
     }
 }

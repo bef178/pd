@@ -63,6 +63,17 @@ public class CharReader implements IReader {
         }
     }
 
+    public void eatOrThrow(String expecteds) {
+        ICharReader it = ICharReader.wrap(expecteds);
+        while (it.hasNext()) {
+            int expected = it.next();
+            int ch = hasNext() ? next() : EOF;
+            if (ch != expected) {
+                throw new ParsingException(expected, ch);
+            }
+        }
+    }
+
     public void eatWhitespaces() {
         while (hasNext()) {
             int ch = next();
@@ -100,6 +111,9 @@ public class CharReader implements IReader {
             return recent.getLast(backOffset--);
         }
         int value = src.next(); // let it throw
+        if (value == EOF) {
+            throw new ParsingException();
+        }
         recent.add(value);
         pos++;
         return value;
