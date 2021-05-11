@@ -1,34 +1,15 @@
 package pd.fenc;
 
 /**
- * https://en.wikipedia.org/wiki/UTF-8
- *
- * Treat utf8 as a protocol for integer value to octets.
- * It ranges to 7 bytes, i.e. 36 effective bits, covering entire int32.
- * While, Unicode stops at U+10FFFF, taking 21 effective bits.
+ * https://en.wikipedia.org/wiki/UTF-8<br/>
+ * <br/>
+ * Utf8 works as a protocol between int32 stream and int8 stream.<br/>
+ * An Utf8 tuple costs 7 bytes at most, being able to represent 36 effective bits.<br/>
+ * Non-negative int32 uses 31 bits at most, costing 6 bytes.<br/>
+ * While, stopping at U+10FFFF, an Unicode actually uses 21 bits at most, that is 4 bytes.<br/>
+ * Without code point validation, we can enhance the performance.<br/>
  */
 public class Utf8Codec {
-
-    private static class Decoder implements IReader {
-
-        private IReader src;
-
-        public Decoder(IReader src) {
-            this.src = src;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return src.hasNext();
-        }
-
-        @Override
-        public int next() {
-            int[] dst = new int[1];
-            Utf8Codec.decode1unit(src, dst, 0);
-            return dst[0];
-        }
-    }
 
     public static int checkUtf8FollowerByte(int value) {
         if (isUtf8FollowerByte(value)) {
@@ -46,81 +27,74 @@ public class Utf8Codec {
                 String.format("expected a utf8 head byte, actual [0x%X]", value));
     }
 
-    public static int decode(byte[] src, int i, int j, int[] dst, int start) {
-        int k = start;
-        while (i < j) {
-            i += decode1unit(src, i, dst, k++);
+    public static void decode(IReader utf8, ICharWriter ucs4) {
+        while (utf8.hasNext()) {
+            int ch = decode1unit(utf8);
+            if (ucs4 != null) {
+                ucs4.append(ch);
+            }
         }
-        return k - start;
-    }
-
-    public static int decode1unit(byte[] src, int i, int[] dst, int start) {
-        return decode1unit(IReader.wrap(src, i, src.length), dst, start);
     }
 
     /**
-     * @return num bytes consumed
+     * get a single ucs4 from utf8 stream
      */
-    public static int decode1unit(IReader src, int[] dst, int start) {
+    public static int decode1unit(IReader src) {
         int headByte = checkUtf8HeadByte(src.next());
         int n = getNumUtf8BytesByUtf8HeadByte(headByte);
         switch (n) {
-            case 0:
-                break;
             case 1:
-                dst[start] = headByte;
-                break;
-            default: {
+                return headByte;
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6: {
                 int unheader = 0xFF >> n;
                 int ucs4 = unheader & headByte;
                 for (int i = 1; i < n; i++) {
                     ucs4 = (ucs4 << 6) | (checkUtf8FollowerByte(src.next()) & 0x3F);
                 }
-                dst[start] = ucs4;
-                break;
+                return ucs4;
             }
+            default:
+                break;
         }
-        return n;
+        throw new ParsingException();
     }
 
-    public static IReader decodeToStream(byte[] utf8, int i, int j) {
-        return new Decoder(IReader.wrap(utf8, i, j));
+    public static void encode(ICharReader ucs4, IWriter utf8) {
+        while (ucs4.hasNext()) {
+            int ch = ucs4.next();
+            if (utf8 != null) {
+                encode1unit(ch, utf8);
+            }
+        }
     }
 
     /**
      * a fast encoder without checking content
      */
-    public static int encode(int[] src, int i, int j, byte[] dst, int start) {
-        int k = start;
-        while (i < j) {
-            k += encode1unit(src[i++], dst, k);
-        }
-        return k - start;
-    }
-
-    public static int encode1unit(int ucs4, byte[] dst, int start) {
+    public static void encode1unit(int ucs4, IWriter utf8) {
         int n = getNumUtf8Bytes(ucs4);
         if (n == 1) {
-            dst[start++] = (byte) ucs4;
-            return 1;
-        }
-
-        int k = start;
-        for (int i = 0; i < n; i++) {
-            int v = (ucs4 >> ((n - 1 - i) * 6)) & 0x3F;
-            if (i == 0) {
-                int header = (0xFF << (8 - n)) & 0xFF;
-                dst[k++] = (byte) (v | header);
-            } else {
-                dst[k++] = (byte) (v | 0x80);
+            utf8.append(ucs4);
+        } else {
+            for (int i = 0; i < n; i++) {
+                int v = (ucs4 >> ((n - 1 - i) * 6)) & 0x3F;
+                if (i == 0) {
+                    int header = (0xFF << (8 - n)) & 0xFF;
+                    utf8.append(v | header);
+                } else {
+                    utf8.append(v | 0x80);
+                }
             }
         }
-        return k - start;
     }
 
     public static int getNumUtf8Bytes(int ucs4) {
         if (ucs4 < 0) {
-            return 7;
+            // dummy
         } else if (ucs4 <= 0x7F) {
             return 1;
         } else if (ucs4 <= 0x7FF) {
@@ -138,14 +112,14 @@ public class Utf8Codec {
             // LE 31-bit
             return 6;
         }
-        throw new IllegalStateException();
+        throw new ParsingException();
     }
 
-    public static int getNumUtf8BytesByUtf8HeadByte(int headByte) {
-        assert isUtf8HeadByte(headByte);
+    public static int getNumUtf8BytesByUtf8HeadByte(int utf8HeadByte) {
+        assert isUtf8HeadByte(utf8HeadByte);
 
         int n = 0;
-        while (n < 8 && Cstream.getBit((byte) headByte, n)) {
+        while (n < 8 && Cstream.getBit((byte) utf8HeadByte, n)) {
             ++n;
         }
         switch (n) {
@@ -159,20 +133,20 @@ public class Utf8Codec {
                 return n;
             default:
                 // invalid utf8 head
-                return 0;
+                throw new ParsingException();
         }
 
     }
 
     /**
-     * value being 0b10??????
+     * value in [0b10000000,0b10111111]
      */
     public static boolean isUtf8FollowerByte(int value) {
         return value >= 0x80 && value <= 0xBF;
     }
 
     /**
-     * value being ascii or in range of [0b11000000,0b11111110]
+     * value is ascii or in [0b11000000,0b11111110]
      */
     public static boolean isUtf8HeadByte(int value) {
         return (value >= 0 && value <= 0x7F) || (value >= 0xC0 && value <= 0xFE);
