@@ -16,39 +16,40 @@ public class InstallmentByteBuffer implements IWriter {
         public static final int SEEK_CUR = 1;
         public static final int SEEK_END = 2;
 
-        private int next = 0;
+        private int pos = 0;
 
         @Override
         public boolean hasNext() {
-            return next >= 0 && next < size();
+            return pos >= 0 && pos < size();
+        }
+
+        public void moveBack() {
+            seek(size - 1);
         }
 
         @Override
         public int next() {
             if (hasNext()) {
-                return InstallmentByteBuffer.this.get(next++) & 0xFF;
+                return InstallmentByteBuffer.this.get(pos++) & 0xFF;
             }
             return -1;
         }
 
         public int peek() {
             if (hasNext()) {
-                return InstallmentByteBuffer.this.get(next) & 0xFF;
+                return InstallmentByteBuffer.this.get(pos) & 0xFF;
             }
             return -1;
         }
 
-        public int pull() {
-            return next();
-        }
-
-        public void putBack() {
-            seek(size - 1);
+        @Override
+        public int position() {
+            return pos;
         }
 
         public void seek(int pos) {
             if (pos >= 0 && pos < size) {
-                next = pos;
+                this.pos = pos;
                 return;
             }
             throw new IndexOutOfBoundsException();
@@ -60,7 +61,7 @@ public class InstallmentByteBuffer implements IWriter {
                     whence = 0;
                     break;
                 case SEEK_CUR:
-                    whence = next;
+                    whence = pos;
                     break;
                 case SEEK_END:
                     whence = size;
@@ -204,5 +205,10 @@ public class InstallmentByteBuffer implements IWriter {
             Arrays.fill(a, (byte) 0);
         }
         size = 0;
+    }
+
+    @Override
+    public int position() {
+        return size;
     }
 }

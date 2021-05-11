@@ -23,16 +23,21 @@ public interface IReader {
 
         return new IReader() {
 
-            private int p = i;
+            private int pos = i;
 
             @Override
             public boolean hasNext() {
-                return p < j;
+                return pos < j;
             }
 
             @Override
             public int next() {
-                return src[p++];
+                return src[pos++];
+            }
+
+            @Override
+            public int position() {
+                return pos;
             }
         };
     }
@@ -43,6 +48,8 @@ public interface IReader {
     public static IReader wrap(InputStream input) {
 
         return new IReader() {
+
+            private int pos = 0;
 
             @Override
             public boolean hasNext() {
@@ -56,10 +63,17 @@ public interface IReader {
             @Override
             public int next() {
                 try {
-                    return checkByte(input.read());
+                    int value = checkByte(input.read());
+                    pos++;
+                    return value;
                 } catch (IOException e) {
                     throw new ParsingException(e);
                 }
+            }
+
+            @Override
+            public int position() {
+                return pos;
             }
         };
     }
@@ -70,4 +84,6 @@ public interface IReader {
      * returned value should be checked before use
      */
     public int next();
+
+    public int position();
 }

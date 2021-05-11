@@ -119,6 +119,7 @@ public class CharReader implements IReader {
         return value;
     }
 
+    @Override
     public int position() {
         return pos - backOffset;
     }

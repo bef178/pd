@@ -1,7 +1,5 @@
 package pd.fenc;
 
-import static pd.fenc.IReader.EOF;
-
 import java.util.PrimitiveIterator.OfInt;
 
 public interface ICharReader {
@@ -14,6 +12,8 @@ public interface ICharReader {
 
         return new ICharReader() {
 
+            private int pos = 0;
+
             @Override
             public boolean hasNext() {
                 return it.hasNext();
@@ -21,7 +21,14 @@ public interface ICharReader {
 
             @Override
             public int next() {
-                return it.hasNext() ? it.nextInt() : EOF;
+                int value = it.nextInt();
+                pos++;
+                return value;
+            }
+
+            @Override
+            public int position() {
+                return pos;
             }
         };
     }
@@ -32,4 +39,6 @@ public interface ICharReader {
      * provide an unicode character
      */
     public int next();
+
+    public int position();
 }
