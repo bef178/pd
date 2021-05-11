@@ -2,7 +2,7 @@ package pd.fenc;
 
 public interface IWriter {
 
-    public IWriter append(int value);
-
     public int position();
+
+    public IWriter push(int value);
 }

@@ -36,7 +36,7 @@ public class ScalarPicker extends NumberPicker {
             switch (stat) {
                 case 0:
                     if (Cascii.isAlpha(ch) || ch == '_') {
-                        dst.append(ch);
+                        dst.push(ch);
                         stat = 1;
                     } else {
                         src.moveBack();
@@ -45,7 +45,7 @@ public class ScalarPicker extends NumberPicker {
                     break;
                 case 1:
                     if (Cascii.isAlpha(ch) || ch == '_' || Cascii.isDigit(ch)) {
-                        dst.append(ch);
+                        dst.push(ch);
                     } else {
                         src.moveBack();
                         return true;
@@ -79,8 +79,8 @@ public class ScalarPicker extends NumberPicker {
             int ch = src.hasNext() ? src.next() : EOF;
             if (isEscaped) {
                 isEscaped = false;
-                dst.append('\\');
-                dst.append(ch);
+                dst.push('\\');
+                dst.push(ch);
             } else if (ch == '\\') {
                 isEscaped = true;
             } else if (ch == closingSymbol) {
@@ -91,7 +91,7 @@ public class ScalarPicker extends NumberPicker {
             } else if (ch == EOF) {
                 return false;
             } else {
-                dst.append(ch);
+                dst.push(ch);
             }
         }
     }

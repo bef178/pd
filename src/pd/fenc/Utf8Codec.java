@@ -31,7 +31,7 @@ public class Utf8Codec {
         while (utf8.hasNext()) {
             int ch = decode1unit(utf8);
             if (ucs4 != null) {
-                ucs4.append(ch);
+                ucs4.push(ch);
             }
         }
     }
@@ -78,15 +78,15 @@ public class Utf8Codec {
     public static void encode1unit(int ucs4, IWriter utf8) {
         int n = getNumUtf8Bytes(ucs4);
         if (n == 1) {
-            utf8.append(ucs4);
+            utf8.push(ucs4);
         } else {
             for (int i = 0; i < n; i++) {
                 int v = (ucs4 >> ((n - 1 - i) * 6)) & 0x3F;
                 if (i == 0) {
                     int header = (0xFF << (8 - n)) & 0xFF;
-                    utf8.append(v | header);
+                    utf8.push(v | header);
                 } else {
-                    utf8.append(v | 0x80);
+                    utf8.push(v | 0x80);
                 }
             }
         }

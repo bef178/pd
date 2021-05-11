@@ -6,7 +6,7 @@ public class Typeset {
 
     private static void appendBytes(byte[] a, IWriter dst) {
         for (int i : a) {
-            dst.append(checkSingleWidthAscii(i & 0xFF));
+            dst.push(checkSingleWidthAscii(i & 0xFF));
         }
     }
 
@@ -15,7 +15,7 @@ public class Typeset {
             if (!src.hasNext()) {
                 break;
             }
-            dst.append(checkSingleWidthAscii(src.next()));
+            dst.push(checkSingleWidthAscii(src.next()));
         }
     }
 
@@ -34,7 +34,7 @@ public class Typeset {
 
         while (src.hasNext()) {
             appendBytes(suffix, dst);
-            dst.append('\n');
+            dst.push('\n');
 
             appendBytes(prefix, dst);
             room = numBytesPerLine - prefix.length - suffix.length;

@@ -9,22 +9,22 @@ public interface ICharWriter {
             private int pos = 0;
 
             @Override
-            public ICharWriter append(int ch) {
-                sb.appendCodePoint(ch);
-                return this;
+            public int position() {
+                return pos;
             }
 
             @Override
-            public int position() {
-                return pos;
+            public ICharWriter push(int ch) {
+                sb.appendCodePoint(ch);
+                return this;
             }
         };
     }
 
+    public int position();
+
     /**
      * consume an Unicode character
      */
-    public ICharWriter append(int ch);
-
-    public int position();
+    public ICharWriter push(int ch);
 }

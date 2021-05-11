@@ -94,11 +94,40 @@ public class InstallmentByteBuffer implements IWriter {
         setupCapacity(initialCapacity);
     }
 
-    public InstallmentByteBuffer append(byte[] a) {
-        return append(a, 0, a.length);
+    public int capacity() {
+        return savings.size() << INSTALLMENT_BITS;
     }
 
-    public InstallmentByteBuffer append(byte[] a, int i, int j) {
+    /**
+     * @return a copy of valid in bounds byte array
+     */
+    public byte[] copyBytes() {
+        byte[] bytes = new byte[size];
+        int i = 0;
+        while (i + INSTALLMENT_BYTES <= size) {
+            System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
+                    0, bytes, i, INSTALLMENT_BYTES);
+            i += INSTALLMENT_BYTES;
+        }
+        System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
+                0, bytes, i, size - i);
+        return bytes;
+    }
+
+    private int get(int pos) {
+        return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
+    }
+
+    @Override
+    public int position() {
+        return size;
+    }
+
+    public InstallmentByteBuffer push(byte[] a) {
+        return push(a, 0, a.length);
+    }
+
+    public InstallmentByteBuffer push(byte[] a, int i, int j) {
         int n = j - i;
         setupCapacity(size + n);
 
@@ -129,40 +158,12 @@ public class InstallmentByteBuffer implements IWriter {
         return this;
     }
 
-    public InstallmentByteBuffer append(CharSequence cs) {
-        return append(cs.toString().getBytes());
-    }
-
     @Override
-    public InstallmentByteBuffer append(int ch) {
+    public InstallmentByteBuffer push(int ch) {
         checkByte(ch);
         setupCapacity(size + 1);
         put(size++, (byte) ch);
         return this;
-    }
-
-    public int capacity() {
-        return savings.size() << INSTALLMENT_BITS;
-    }
-
-    /**
-     * @return a copy of valid in bounds byte array
-     */
-    public byte[] copyBytes() {
-        byte[] bytes = new byte[size];
-        int i = 0;
-        while (i + INSTALLMENT_BYTES <= size) {
-            System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
-                    0, bytes, i, INSTALLMENT_BYTES);
-            i += INSTALLMENT_BYTES;
-        }
-        System.arraycopy(savings.get(i >> INSTALLMENT_BITS),
-                0, bytes, i, size - i);
-        return bytes;
-    }
-
-    private int get(int pos) {
-        return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
     }
 
     private void put(int pos, byte b) {
@@ -205,10 +206,5 @@ public class InstallmentByteBuffer implements IWriter {
             Arrays.fill(a, (byte) 0);
         }
         size = 0;
-    }
-
-    @Override
-    public int position() {
-        return size;
     }
 }
