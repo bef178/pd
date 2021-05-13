@@ -8,21 +8,18 @@ import pd.fenc.HexCodec;
 
 public class Test_HexCodec {
 
-    // vm arguments: -ea
-    public static void main(String[] args) {
-    }
-
     @Test
     public void test_decode1byte() {
-        byte[] src = { '6', '1' };
-        int dstByte = HexCodec.decode1byte(src, 0);
-        assertEquals('a', dstByte);
+        int[] a = { '6', '1' };
+        int byteValue = HexCodec.decode1byte(a[0], a[1]) & 0xFF;
+        assertEquals('a', byteValue);
     }
 
     @Test
     public void test_encode1byte() {
-        byte[] dst = new byte[2];
-        HexCodec.encode1byte('a', dst, 0);
+        byte byteValue = 0x61;
+        int[] dst = new int[2];
+        HexCodec.encode1byte(byteValue, dst, 0);
         assertEquals('6', dst[0]);
         assertEquals('1', dst[1]);
     }

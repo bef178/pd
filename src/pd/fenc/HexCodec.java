@@ -3,13 +3,11 @@ package pd.fenc;
 public class HexCodec {
 
     /**
-     * ['9','7'] => 'a'
-     *
-     * always consume 2 bytes
+     * ['6','1'] => (byte) 0x61
      */
-    public static int decode1byte(byte[] src, int i) {
-        int dstByte = decode4bit(src[i++]);
-        return (dstByte << 4) | decode4bit(src[i]);
+    public static byte decode1byte(int hiValue, int loValue) {
+        int byteValue = (decode4bit(hiValue) << 4) | decode4bit(loValue);
+        return (byte) byteValue;
     }
 
     private static int decode4bit(int ch) {
@@ -46,14 +44,12 @@ public class HexCodec {
     }
 
     /**
-     * 'a' => ['9','7']
-     *
-     * always produce 2 bytes
+     * always consume 1 byte and produce 2 int32<br/>
+     * 0x61 => ['6','1']
      */
-    public static void encode1byte(int srcByte, byte[] dst, int start) {
-        assert (srcByte >= 0 && srcByte <= 0xFF);
-        dst[start++] = (byte) encode4bit((srcByte >> 4) & 0x0F);
-        dst[start] = (byte) encode4bit(srcByte & 0x0F);
+    public static void encode1byte(byte byteValue, int[] dst, int start) {
+        dst[start] = (byte) encode4bit((byteValue >> 4) & 0x0F);
+        dst[start + 1] = (byte) encode4bit(byteValue & 0x0F);
     }
 
     private static int encode4bit(int value) {

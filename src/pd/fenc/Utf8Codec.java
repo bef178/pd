@@ -27,24 +27,16 @@ public class Utf8Codec {
                 String.format("expected a utf8 head byte, actual [0x%X]", value));
     }
 
-    public static void decode(IReader utf8, ICharWriter ucs4) {
-        while (utf8.hasNext()) {
-            int ch = decode1unit(utf8);
-            if (ucs4 != null) {
-                ucs4.push(ch);
-            }
-        }
-    }
-
     /**
      * get a single ucs4 from utf8 stream
      */
-    public static int decode1unit(IReader src) {
-        int headByte = checkUtf8HeadByte(src.next());
+    public static int decode1unit(byte[] a, int i, int[] dst, int start) {
+        int headByte = checkUtf8HeadByte(a[i++]);
         int n = getNumUtf8BytesByUtf8HeadByte(headByte);
         switch (n) {
             case 1:
-                return headByte;
+                dst[start] = headByte;
+                return 1;
             case 2:
             case 3:
             case 4:
@@ -52,24 +44,16 @@ public class Utf8Codec {
             case 6: {
                 int unheader = 0xFF >> n;
                 int ucs4 = unheader & headByte;
-                for (int i = 1; i < n; i++) {
-                    ucs4 = (ucs4 << 6) | (checkUtf8FollowerByte(src.next()) & 0x3F);
+                for (int j = 1; j < n; j++) {
+                    ucs4 = (ucs4 << 6) | (checkUtf8FollowerByte(a[i++]) & 0x3F);
                 }
-                return ucs4;
+                dst[start] = ucs4;
+                return n;
             }
             default:
                 break;
         }
         throw new ParsingException();
-    }
-
-    public static void encode(ICharReader ucs4, IWriter utf8) {
-        while (ucs4.hasNext()) {
-            int ch = ucs4.next();
-            if (utf8 != null) {
-                encode1unit(ch, utf8);
-            }
-        }
     }
 
     /**
