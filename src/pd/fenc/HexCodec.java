@@ -44,8 +44,8 @@ public class HexCodec {
     }
 
     /**
-     * always consume 1 byte and produce 2 int32<br/>
-     * 0x61 => ['6','1']
+     * consume 1 byte and produce 2 int32<br/>
+     * (byte) 0x61 => ['6','1']
      */
     public static void encode1byte(byte byteValue, int[] dst, int start) {
         dst[start] = (byte) encode4bit((byteValue >> 4) & 0x0F);

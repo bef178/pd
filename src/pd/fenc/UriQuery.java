@@ -1,5 +1,6 @@
 package pd.fenc;
 
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -22,11 +23,11 @@ public final class UriQuery {
             i += numConsumed;
             dst.push(buffer[0] & 0xFF);
         }
-        return new String(dst.copyBytes());
+        return new String(dst.copyBytes(), StandardCharsets.UTF_8);
     }
 
     private static String encodePctString(String s) {
-        byte[] utf8 = s.getBytes();
+        byte[] utf8 = s.getBytes(StandardCharsets.UTF_8);
         int i = 0;
         int[] buffer = new int[3];
         StringBuilder sb = new StringBuilder();

@@ -11,27 +11,28 @@ package pd.fenc;
  */
 public class Utf8Codec {
 
-    public static int checkUtf8FollowerByte(int value) {
-        if (isUtf8FollowerByte(value)) {
-            return value;
+    public static byte checkUtf8FollowerByte(byte byteValue) {
+        if (isUtf8FollowerByte(byteValue)) {
+            return byteValue;
         }
         throw new ParsingException(
-                String.format("expected a utf8 follower byte, actual [0x%X]", value));
+                String.format("expected a utf8 follower byte, actual [0x%02X]", byteValue));
     }
 
-    public static int checkUtf8HeadByte(int value) {
-        if (isUtf8HeadByte(value)) {
-            return value;
+    public static byte checkUtf8HeadByte(byte byteValue) {
+        if (isUtf8HeadByte(byteValue)) {
+            return byteValue;
         }
         throw new ParsingException(
-                String.format("expected a utf8 head byte, actual [0x%X]", value));
+                String.format("expected a utf8 head byte, actual [0x%02X]", byteValue));
     }
 
     /**
-     * get a single ucs4 from utf8 stream
+     * consume 1-6 byte and produce 1 int32<br/>
+     * return number of consumed byte
      */
     public static int decode1unit(byte[] a, int i, int[] dst, int start) {
-        int headByte = checkUtf8HeadByte(a[i++]);
+        byte headByte = checkUtf8HeadByte(a[i++]);
         int n = getNumUtf8BytesByUtf8HeadByte(headByte);
         switch (n) {
             case 1:
@@ -57,20 +58,21 @@ public class Utf8Codec {
     }
 
     /**
-     * a fast encoder without checking content
+     * consume 1 int32 and produce 1-6 byte<br/>
+     * return number of produced byte
      */
-    public static void encode1unit(int ucs4, IWriter utf8) {
+    public static void encode1unit(int ucs4, byte[] dst, int start) {
         int n = getNumUtf8Bytes(ucs4);
         if (n == 1) {
-            utf8.push(ucs4);
+            dst[start] = (byte) ucs4;
         } else {
             for (int i = 0; i < n; i++) {
                 int v = (ucs4 >> ((n - 1 - i) * 6)) & 0x3F;
                 if (i == 0) {
                     int header = (0xFF << (8 - n)) & 0xFF;
-                    utf8.push(v | header);
+                    dst[start++] = (byte) (v | header);
                 } else {
-                    utf8.push(v | 0x80);
+                    dst[start++] = (byte) (v | 0x80);
                 }
             }
         }
@@ -99,7 +101,7 @@ public class Utf8Codec {
         throw new ParsingException();
     }
 
-    public static int getNumUtf8BytesByUtf8HeadByte(int utf8HeadByte) {
+    public static int getNumUtf8BytesByUtf8HeadByte(byte utf8HeadByte) {
         assert isUtf8HeadByte(utf8HeadByte);
 
         int n = 0;
@@ -125,14 +127,16 @@ public class Utf8Codec {
     /**
      * value in [0b10000000,0b10111111]
      */
-    public static boolean isUtf8FollowerByte(int value) {
+    public static boolean isUtf8FollowerByte(byte byteValue) {
+        int value = byteValue & 0xFF;
         return value >= 0x80 && value <= 0xBF;
     }
 
     /**
      * value is ascii or in [0b11000000,0b11111110]
      */
-    public static boolean isUtf8HeadByte(int value) {
+    public static boolean isUtf8HeadByte(byte byteValue) {
+        int value = byteValue & 0xFF;
         return (value >= 0 && value <= 0x7F) || (value >= 0xC0 && value <= 0xFE);
     }
 }
