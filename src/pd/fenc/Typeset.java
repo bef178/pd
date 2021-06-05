@@ -1,12 +1,12 @@
 package pd.fenc;
 
-import static pd.fenc.Util.checkSingleWidthAscii;
+import static pd.fenc.Util.checkPrintableAscii;
 
 public class Typeset {
 
     private static void appendBytes(byte[] a, IWriter dst) {
         for (int i : a) {
-            dst.push(checkSingleWidthAscii(i & 0xFF));
+            dst.push(checkPrintableAscii(i & 0xFF));
         }
     }
 
@@ -15,7 +15,7 @@ public class Typeset {
             if (!src.hasNext()) {
                 break;
             }
-            dst.push(checkSingleWidthAscii(src.next()));
+            dst.push(checkPrintableAscii(src.next()));
         }
     }
 

@@ -41,6 +41,13 @@ public final class Cascii {
         return ch >= 'a' && ch <= 'z';
     }
 
+    /**
+     * visible single-width graph or SP
+     */
+    public static boolean isPrintable(int ch) {
+        return ch >= 0x20 && ch < 0x7F;
+    }
+
     public static boolean isPunct(int ch) {
         switch (ch) {
             case '!':
@@ -81,10 +88,6 @@ public final class Cascii {
 
     public static boolean isUpper(int ch) {
         return ch >= 'A' && ch <= 'Z';
-    }
-
-    public static boolean isVisible(int ch) {
-        return ch > 0x20 && ch < 0x7F; // exclude SP and DEL
     }
 
     public static boolean isWhitespace(int ch) {

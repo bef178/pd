@@ -31,8 +31,8 @@ public final class Util {
                 String.format("Expected value in [-1,0xFF], actual [%x]", value));
     }
 
-    public static int checkSingleWidthAscii(int value) {
-        if (value == Cascii.SP || Cascii.isVisible(value)) {
+    public static int checkPrintableAscii(int value) {
+        if (Cascii.isPrintable(value)) {
             return value;
         }
         throw new ParsingException(
