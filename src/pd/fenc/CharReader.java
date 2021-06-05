@@ -1,11 +1,13 @@
 package pd.fenc;
 
+import static pd.fenc.IReader.EOF;
+
 /**
  * It often requires "pre-reading" few symbols to speculate which token parser should be invoked.<br>
  * While, we know stream cannot move backward physically.<br/>
  * This reader caches few recent-meet characters thus supports "as-if" move backward.<br/>
  */
-public class CharReader implements IReader {
+public class CharReader implements ICharReader {
 
     private class Recent {
 
