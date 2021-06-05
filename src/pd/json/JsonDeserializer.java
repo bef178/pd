@@ -3,82 +3,62 @@ package pd.json;
 import static pd.fenc.Cascii.COMMA;
 import static pd.fenc.Cascii.DOUBLE_QUOTE;
 import static pd.fenc.IReader.EOF;
+import static pd.json.JsonCodec.tokenFactory;
+
+import java.lang.reflect.Array;
 
 import pd.fenc.CharReader;
 import pd.fenc.ICharWriter;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 
-public class JsonDeserializer {
+class JsonDeserializer {
 
-    private static class DirectJsonTokenCreator implements IJsonTokenCreator {
-
-        @Override
-        public IJsonArray newJsonArray() {
-            return new DirectJsonArray();
+    /**
+     * `IJsonToken` => java object
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T deserialize(IJsonToken token, Class<T> expectedClass) {
+        if (token instanceof IJsonNull) {
+            return null;
+        } else if (expectedClass == boolean.class || expectedClass == Boolean.class) {
+            return (T) (Boolean) token.cast(IJsonBoolean.class).value();
+        } else if (expectedClass == byte.class || expectedClass == Byte.class
+                || expectedClass == char.class || expectedClass == Character.class
+                || expectedClass == short.class || expectedClass == Short.class
+                || expectedClass == int.class || expectedClass == Integer.class
+                || expectedClass == long.class || expectedClass == Long.class) {
+            return (T) (Long) token.cast(IJsonInt.class).int64();
+        } else if (expectedClass == float.class || expectedClass == Float.class
+                || expectedClass == double.class || expectedClass == Double.class) {
+            return (T) (Double) token.cast(IJsonFloat.class).float64();
+        } else if (expectedClass == String.class) {
+            return (T) token.cast(IJsonString.class).value();
         }
 
-        @Override
-        public DirectJsonBoolean newJsonBoolean(boolean value) {
-            return new DirectJsonBoolean(value);
+        if (expectedClass.isArray()) {
+            IJsonArray arrayToken = token.cast(IJsonArray.class);
+            Class<?> elementClass = expectedClass.getComponentType();
+            Object array = Array.newInstance(elementClass, arrayToken.size());
+            for (int i = 0; i < arrayToken.size(); i++) {
+                Array.set(array, i, deserialize(arrayToken.get(i), elementClass));
+            }
+            return (T) array;
         }
 
-        @Override
-        public IJsonFloat newJsonFloat(double value) {
-            return new DirectJsonFloat(value);
-        }
-
-        @Override
-        public IJsonInt newJsonInt(long value) {
-            return new DirectJsonInt(value);
-        }
-
-        @Override
-        public DirectJsonNull newJsonNull() {
-            return DirectJsonNull.defaultInstance;
-        }
-
-        @Override
-        public IJsonString newJsonString(String value) {
-            return new DirectJsonString(value);
-        }
-
-        @Override
-        public IJsonTable newJsonTable() {
-            return new DirectJsonTable();
-        }
+        throw new UnsupportedOperationException();
     }
 
-    public interface IJsonTokenCreator {
-
-        public IJsonArray newJsonArray();
-
-        public IJsonBoolean newJsonBoolean(boolean value);
-
-        public IJsonFloat newJsonFloat(double value);
-
-        public IJsonInt newJsonInt(long value);
-
-        public IJsonNull newJsonNull();
-
-        public IJsonString newJsonString(String value);
-
-        public IJsonTable newJsonTable();
-    }
-
-    public static final IJsonTokenCreator creator = new DirectJsonTokenCreator();
-
+    /**
+     * `String` => `IJsonToken`<br/>
+     */
     public IJsonToken deserialize(String serialized) {
         CharReader it = CharReader.wrap(serialized);
         return deserializeToJsonToken(it);
     }
 
-    public <T extends IJsonToken> T deserialize(String serialized, Class<T> expectedClass) {
-        return deserialize(serialized).cast(expectedClass);
-    }
-
     private IJsonArray deserializeToJsonArray(CharReader it) {
-        IJsonArray token = creator.newJsonArray();
+        IJsonArray token = tokenFactory.newJsonArray();
         int state = 0;
         while (true) {
             switch (state) {
@@ -140,7 +120,7 @@ public class JsonDeserializer {
         it.eatOrThrow('l');
         it.eatOrThrow('s');
         it.eatOrThrow('e');
-        return creator.newJsonBoolean(false);
+        return tokenFactory.newJsonBoolean(false);
     }
 
     private IJsonToken deserializeToJsonBooleanTrue(CharReader it) {
@@ -148,7 +128,7 @@ public class JsonDeserializer {
         it.eatOrThrow('r');
         it.eatOrThrow('u');
         it.eatOrThrow('e');
-        return creator.newJsonBoolean(true);
+        return tokenFactory.newJsonBoolean(true);
     }
 
     private IJsonToken deserializeToJsonIntOrJsonFloat(CharReader it) {
@@ -157,9 +137,9 @@ public class JsonDeserializer {
         ScalarPicker.pickFloat(it, dst);
         String raw = sb.toString();
         if (raw.indexOf('.') >= 0) {
-            return creator.newJsonFloat(Double.parseDouble(raw));
+            return tokenFactory.newJsonFloat(Double.parseDouble(raw));
         } else {
-            return creator.newJsonFloat(Long.parseLong(raw));
+            return tokenFactory.newJsonFloat(Long.parseLong(raw));
         }
     }
 
@@ -168,7 +148,7 @@ public class JsonDeserializer {
         it.eatOrThrow('u');
         it.eatOrThrow('l');
         it.eatOrThrow('l');
-        return creator.newJsonNull();
+        return tokenFactory.newJsonNull();
     }
 
     private IJsonString deserializeToJsonString(CharReader it) {
@@ -190,7 +170,7 @@ public class JsonDeserializer {
                     switch (ch) {
                         case DOUBLE_QUOTE:
                             // consume the end delimiter and exit
-                            return creator.newJsonString(sb.toString());
+                            return tokenFactory.newJsonString(sb.toString());
                         case '\\':
                             state = 2;
                             break;
@@ -225,7 +205,7 @@ public class JsonDeserializer {
     }
 
     private IJsonTable deserializeToJsonTable(CharReader it) {
-        IJsonTable token = creator.newJsonTable();
+        IJsonTable token = tokenFactory.newJsonTable();
         int state = 0;
         while (true) {
             switch (state) {
@@ -292,6 +272,7 @@ public class JsonDeserializer {
                 it.moveBack();
                 return deserializeToJsonNull(it);
             case 't':
+                it.moveBack();
                 return deserializeToJsonBooleanTrue(it);
             case 'f':
                 it.moveBack();

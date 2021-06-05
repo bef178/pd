@@ -33,4 +33,6 @@ public interface IJsonArray extends IJsonToken, Collection<IJsonToken> {
      * @return this
      */
     public IJsonArray set(int index, IJsonToken value);
+
+    public int size();
 }

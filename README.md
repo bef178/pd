@@ -16,18 +16,23 @@
 
 Depends on pd.fenc, thus being a package rather than a sub project.
 
-Converts `IJsonToken` <=> `String` via `JsonSerializer` & `JsonDeserializer`.
+Converts `IJsonToken` <=> `String` via `JsonCodec`.
 
 `IJsonToken` is extended by:
   - `IJsonNull`
-  - `IJsonBoolean`, `IJsonInt`, `IJsonFloat`
+  - `IJsonBoolean`
+  - `IJsonInt`
+  - `IJsonFloat`
   - `IJsonString`
   - `IJsonArray`
   - `IJsonTable`
 
-To create a json token, use `JsonDeserializer.creator` variable.
+To create a json token, use `JsonCodec.tokenFactory` variable.
 
-**TODO** convert java object <=> json token <=> `String` thus somehow hide json token
+**TODO** convert json token => java object thus somehow hide json token  
+it is troublesome due to  
+1. java type erasure
+2. with interface type and instance known but the implementation type unknown
 
 **TODO** notation as config
 
