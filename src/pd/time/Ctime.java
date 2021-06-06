@@ -108,12 +108,15 @@ public final class Ctime extends Cdate {
         return MILLISECONDS_PER_DAY * days + millisecondOfDay;
     }
 
+    public static String toUtcString(int[] fieldValues) {
+        return toUtcString(UTC_TIME_FORMAT, fieldValues);
+    }
+
     public static String toUtcString(long millisecondsSinceEpoch) {
         return toUtcString(UTC_TIME_FORMAT, millisecondsSinceEpoch);
     }
 
-    public static String toUtcString(String format, long millisecondsSinceEpoch) {
-        int[] fieldValues = breakMilliseconds(millisecondsSinceEpoch);
+    private static String toUtcString(String format, int[] fieldValues) {
         return String.format(format,
                 fieldValues[TimeField.YEAR.ordinal()],
                 fieldValues[TimeField.MONTH_OF_YEAR.ordinal()] + 1,
@@ -122,6 +125,11 @@ public final class Ctime extends Cdate {
                 fieldValues[TimeField.MM.ordinal()],
                 fieldValues[TimeField.SS.ordinal()],
                 fieldValues[TimeField.SSS.ordinal()]);
+    }
+
+    public static String toUtcString(String format, long millisecondsSinceEpoch) {
+        int[] fieldValues = breakMilliseconds(millisecondsSinceEpoch);
+        return toUtcString(format, fieldValues);
     }
 
     private Ctime() {

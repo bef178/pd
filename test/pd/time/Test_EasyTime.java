@@ -29,16 +29,16 @@ public class Test_EasyTime {
                 .setLocalTotalMilliseconds(milliseconds)
                 .setTimeZone(ZoneTimeOffset.UTC)
                 .build();
-        assertEquals("2019-04-28 10:56:53.818 +0000", date.toString());
+        assertEquals("2019-04-28T10:56:53.818Z", date.toString());
 
         date = date.rebase(ZoneTimeOffset.fromString("+0800"));
-        assertEquals("2019-04-28 18:56:53.818 +0800", date.toString());
+        assertEquals("2019-04-28T18:56:53.818+0800", date.toString());
 
         date = EasyTime.builder().setLocalDatePart(2019, MonthOfYear.April, 28)
                 .setLocalTimePart(18, 56, 53, 818)
                 .setTimeZone(ZoneTimeOffset.fromString("+0800")).build()
                 .rebase(ZoneTimeOffset.UTC);
-        assertEquals("2019-04-28 10:56:53.818 +0000", date.toString());
+        assertEquals("2019-04-28T10:56:53.818Z", date.toString());
         assertEquals(milliseconds, date.getMillisecondsSinceEpoch());
     }
 }

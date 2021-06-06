@@ -50,4 +50,10 @@ public class Test_Ctime {
             assertEquals(expected, actual);
         }
     }
+
+    @Test
+    public void test_toUtcString() {
+        long milliseconds = 1622947550000L;
+        assertEquals("2021-06-06T02:45:50.000Z", Ctime.toUtcString(milliseconds));
+    }
 }

@@ -155,16 +155,12 @@ public class EasyTime {
 
     @Override
     public final String toString() {
-        return zoneTimeOffset == null
-                ? String.format("%04d-%02d-%02d %02d:%02d:%02d.%03d",
-                        getFieldValue(TimeField.YEAR),
-                        getFieldValue(TimeField.MONTH_OF_YEAR),
-                        getFieldValue(TimeField.DAY_OF_MONTH),
-                        getFieldValue(TimeField.HH),
-                        getFieldValue(TimeField.MM),
-                        getFieldValue(TimeField.SS),
-                        getFieldValue(TimeField.SSS))
-                : String.format("%04d-%02d-%02d %02d:%02d:%02d.%03d %s",
+        if (fieldValues == null) {
+            fieldValues = Ctime.breakMilliseconds(localTotalMilliseconds);
+        }
+        return zoneTimeOffset == null || zoneTimeOffset == ZoneTimeOffset.UTC
+                ? Ctime.toUtcString(fieldValues)
+                : String.format("%04d-%02d-%02dT%02d:%02d:%02d.%03d%s",
                         getFieldValue(TimeField.YEAR),
                         getFieldValue(TimeField.MONTH_OF_YEAR),
                         getFieldValue(TimeField.DAY_OF_MONTH),
