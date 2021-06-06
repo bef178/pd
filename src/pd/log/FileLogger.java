@@ -10,7 +10,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import pd.time.TimeUtil;
+import pd.time.Ctime;
 
 /**
  * FileLogger holds a thread writing down records to avoid latency from IO
@@ -130,14 +130,14 @@ public class FileLogger implements ILogger {
 
     protected String getLogFileBasename(long timestamp, LogLevel level) {
         timestamp -= timestamp % dstInterval;
-        String timePart = TimeUtil.toUtcString("%04d%02d%02d%02d%02d%02dZ", timestamp);
+        String timePart = Ctime.toUtcString("%04d%02d%02d%02d%02d%02dZ", timestamp);
         String logLevelPart = level.ordinal() <= LogLevel.WARNING.ordinal() ? "warning" : "verbose";
         return String.format("%s_%s_%s.%s.log", dstPrefix, timePart, getHostname(), logLevelPart);
     }
 
     @Override
     public void log(LogLevel level, String message, Object... messageArguments) {
-        writer.add(TimeUtil.now(), level, message, messageArguments);
+        writer.add(Ctime.now(), level, message, messageArguments);
     }
 
     @Override

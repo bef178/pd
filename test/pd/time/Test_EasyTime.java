@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import pd.time.TimeUtil.TimeField;
+import pd.time.Ctime.TimeField;
 
 public class Test_EasyTime {
 

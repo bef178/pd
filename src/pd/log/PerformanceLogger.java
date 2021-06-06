@@ -2,7 +2,7 @@ package pd.log;
 
 import java.io.Closeable;
 
-import pd.time.TimeUtil;
+import pd.time.Ctime;
 
 public class PerformanceLogger implements Closeable {
 
@@ -22,7 +22,7 @@ public class PerformanceLogger implements Closeable {
     @Override
     public void close() {
         if (endTimestamp == 0) {
-            endTimestamp = TimeUtil.now();
+            endTimestamp = Ctime.now();
         }
 
         if (logger != null) {
@@ -31,6 +31,6 @@ public class PerformanceLogger implements Closeable {
     }
 
     public void restart() {
-        startTimestamp = TimeUtil.now();
+        startTimestamp = Ctime.now();
     }
 }

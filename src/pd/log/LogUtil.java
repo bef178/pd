@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
-import pd.time.TimeUtil;
+import pd.time.Ctime;
 
 import java.util.PrimitiveIterator.OfInt;
 
@@ -124,7 +124,7 @@ public class LogUtil {
             String message) throws IOException {
         // TODO csv
         StringBuilder sb = new StringBuilder();
-        sb.append(TimeUtil.toUtcString(timestamp)).append(fieldSeparator).append(hostname).append(fieldSeparator)
+        sb.append(Ctime.toUtcString(timestamp)).append(fieldSeparator).append(hostname).append(fieldSeparator)
                 .append(level.toString()).append(fieldSeparator).append(message).append('\n');
         w.write(sb.toString());
     }

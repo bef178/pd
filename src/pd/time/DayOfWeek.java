@@ -14,7 +14,7 @@ public enum DayOfWeek {
     }
 
     public DayOfWeek addDays(long days) {
-        int dayOfWeek = TimeUtil.daysToDayOfWeek(days);
+        int dayOfWeek = Ctime.daysToDayOfWeek(days);
         return fromOrdinal(dayOfWeek);
     }
 }

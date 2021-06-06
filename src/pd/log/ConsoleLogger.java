@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import pd.time.TimeUtil;
+import pd.time.Ctime;
 
 public class ConsoleLogger implements ILogger {
 
@@ -40,7 +40,7 @@ public class ConsoleLogger implements ILogger {
         }
         Writer w = level.ordinal() < LogLevel.INFO.ordinal() ? errWriter : outWriter;
         try {
-            writeLine(w, ",", TimeUtil.now(), getHostname(), level, evaluateMessage(message, messageArguments));
+            writeLine(w, ",", Ctime.now(), getHostname(), level, evaluateMessage(message, messageArguments));
             w.flush();
         } catch (IOException e) {
             e.printStackTrace();

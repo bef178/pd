@@ -1,8 +1,8 @@
 package pd.time;
 
-import static pd.time.TimeUtil.MILLISECONDS_PER_SECOND;
+import static pd.time.Ctime.MILLISECONDS_PER_SECOND;
 
-import pd.time.TimeUtil.TimeField;
+import pd.time.Ctime.TimeField;
 
 /**
  * A "local" date and time with time zone
@@ -37,9 +37,9 @@ public class EasyTime {
     }
 
     public static EasyTime now() {
-        long millisecondsSinceLocalEpoch = System.currentTimeMillis();
+        long localTotalMilliseconds = System.currentTimeMillis();
         long offsetMilliseconds = java.util.TimeZone.getDefault().getRawOffset();
-        return new EasyTime(millisecondsSinceLocalEpoch, offsetMilliseconds);
+        return new EasyTime(localTotalMilliseconds, offsetMilliseconds);
     }
 
     private final long localTotalMilliseconds;
@@ -102,7 +102,7 @@ public class EasyTime {
         }
 
         if (fieldValues == null) {
-            fieldValues = TimeUtil.getTimeFieldValues(localTotalMilliseconds);
+            fieldValues = Ctime.breakMilliseconds(localTotalMilliseconds);
         }
 
         switch (field) {
@@ -115,15 +115,15 @@ public class EasyTime {
         }
     }
 
+    public final long getTotalLocalMilliseconds() {
+        return localTotalMilliseconds;
+    }
+
     public final long getMillisecondsSinceEpoch() {
         if (getTimeZone() == null) {
             throw new UnsupportedOperationException();
         }
         return localTotalMilliseconds - getTimeZone().getOffsetMilliseconds();
-    }
-
-    public final long getMillisecondsSinceLocalEpoch() {
-        return localTotalMilliseconds;
     }
 
     public final ZoneTimeOffset getTimeZone() {

@@ -1,11 +1,11 @@
 package pd.time;
 
-import static pd.time.TimeUtil.MILLISECONDS_PER_MINUTE;
+import static pd.time.Ctime.MILLISECONDS_PER_MINUTE;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pd.time.TimeUtil.TimeField;
+import pd.time.Ctime.TimeField;
 
 final class DateBuilder implements EasyTime.Builder {
 
@@ -44,8 +44,8 @@ final class DateBuilder implements EasyTime.Builder {
 
     @Override
     public EasyTime build() {
-        long localTotalDays = TimeUtil.totalDays(year, dayOfYear);
-        long localTotalMilliseconds = TimeUtil.totalMilliseconds(localTotalDays,
+        long localTotalDays = Ctime.totalDays(year, dayOfYear);
+        long localTotalMilliseconds = Ctime.totalMilliseconds(localTotalDays,
                 millisecondOfDay);
         return new EasyTime(localTotalMilliseconds, timeZone);
     }
@@ -61,9 +61,9 @@ final class DateBuilder implements EasyTime.Builder {
         int weekOfYear = week;
         int dayOfWeek = day.ordinal();
 
-        int dayOfFirstYearDay = TimeUtil.daysToDayOfWeek(TimeUtil.totalDays(year, 0));
+        int dayOfFirstYearDay = Ctime.daysToDayOfWeek(Ctime.totalDays(year, 0));
         int dayOfYear = weekOfYear * 7 + dayOfWeek - dayOfFirstYearDay;
-        assert dayOfYear >= 0 && dayOfYear < TimeUtil.getNumDaysByYear(year);
+        assert dayOfYear >= 0 && dayOfYear < Ctime.getNumDaysByYear(year);
         this.year = year;
         this.dayOfYear = dayOfYear;
         return this;
@@ -79,7 +79,7 @@ final class DateBuilder implements EasyTime.Builder {
         int dayOfMonth = day - 1;
 
         this.year = year;
-        this.dayOfYear = TimeUtil.toDayOfYear(year, monthOfYear, dayOfMonth);
+        this.dayOfYear = Ctime.toDayOfYear(year, monthOfYear, dayOfMonth);
         return this;
     }
 
@@ -89,13 +89,13 @@ final class DateBuilder implements EasyTime.Builder {
         assert mm >= 0 && mm < 60;
         assert ss >= 0 && ss <= 60;
         assert sss >= 0 && sss < 1000;
-        this.millisecondOfDay = TimeUtil.toMillisecondOfDay(hh, mm, ss, sss);
+        this.millisecondOfDay = Ctime.toMillisecondOfDay(hh, mm, ss, sss);
         return this;
     }
 
     @Override
     public DateBuilder setLocalTotalMilliseconds(long localTotalMilliseconds) {
-        int[] values = TimeUtil.getTimeFieldValues(localTotalMilliseconds);
+        int[] values = Ctime.breakMilliseconds(localTotalMilliseconds);
         year = values[TimeField.YEAR.ordinal()];
         dayOfYear = values[TimeField.DAY_OF_YEAR.ordinal()];
         millisecondOfDay = values[TimeField.MILLISECONDS_OF_DAY.ordinal()];
