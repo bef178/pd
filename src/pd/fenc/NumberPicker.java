@@ -212,6 +212,8 @@ class NumberPicker {
         } else if (ch == '.') {
             it.moveBack();
             pickFraction(it, dst);
+        } else {
+            it.moveBack();
         }
 
         ch = it.hasNext() ? it.next() : EOF;
@@ -220,6 +222,8 @@ class NumberPicker {
         } else if (ch == 'E' || ch == 'e') {
             it.moveBack();
             pickExponent(it, dst);
+        } else {
+            it.moveBack();
         }
 
         ch = it.hasNext() ? it.next() : EOF;

@@ -139,7 +139,7 @@ class JsonDeserializer {
         if (raw.indexOf('.') >= 0) {
             return tokenFactory.newJsonFloat(Double.parseDouble(raw));
         } else {
-            return tokenFactory.newJsonFloat(Long.parseLong(raw));
+            return tokenFactory.newJsonInt(Long.parseLong(raw));
         }
     }
 

@@ -17,21 +17,7 @@ public class Test_Json {
     private static final String src2 = "{\"Consume\":{\"Moneys\":{\"totalMoney\":\"0.01\"},\"record\":[{\"AppID\":\"11\",\"CreateTime\":\"2008-09-05T08:49:18.063+08:00\",\"GiveEgg\":\"0\",\"ID\":\"714833524\",\"OrderState\":\"2\",\"OrderStateName\":\"失败\",\"OrderType\":\"3\",\"OrderTypeName\":\"实物交易订单\",\"PayID\":\"3\",\"PayWayID\":\"1\",\"PayWayName\":\"快钱在线支付\",\"TotalMoney\":\"0.01\",\"TotalNumber\":\"0\",\"TradeSource\":\"商城购物\",\"UserID\":\"668288112\"},{\"AppID\":\"11\",\"CreateTime\":\"2008-09-05T08:46:12.813+08:00\",\"GiveEgg\":\"0\",\"ID\":\"1350320533\",\"OrderState\":\"3\",\"OrderStateName\":\"处理中\",\"OrderType\":\"3\",\"OrderTypeName\":\"实物交易订单\",\"PayID\":\"7\",\"PayWayID\":\"2\",\"PayWayName\":\"XXX邮政储蓄所\",\"TotalMoney\":\"0.01\",\"TotalNumber\":\"0\",\"TradeSource\":\"商城购物\",\"UserID\":\"668288112\"},{\"AppID\":\"18\",\"CreateTime\":\"2008-09-05T08:40:55.703+08:00\",\"GiveEgg\":\"0\",\"ID\":\"1413965649\",\"OrderState\":\"1\",\"OrderStateName\":\"成功\",\"OrderType\":\"4\",\"OrderTypeName\":\"同步交易订单\",\"PayID\":\"2\",\"PayWayID\":\"1\",\"PayWayName\":\"财付通在线支付\",\"TotalMoney\":\"0.01\",\"TotalNumber\":\"0\",\"TradeSource\":\"同步课程\",\"UserID\":\"668288112\"},{\"AppID\":\"11\",\"CreateTime\":\"2008-09-05T08:39:29.127+08:00\",\"GiveEgg\":\"0\",\"ID\":\"83430389\",\"OrderState\":\"2\",\"OrderStateName\":\"失败\",\"OrderType\":\"3\",\"OrderTypeName\":\"实物交易订单\",\"PayID\":\"3\",\"PayWayID\":\"1\",\"PayWayName\":\"快钱在线支付\",\"TotalMoney\":\"0.01\",\"TotalNumber\":\"0\",\"TradeSource\":\"商城购物\",\"UserID\":\"668288112\"},{\"AppID\":\"11\",\"CreateTime\":\"2008-09-05T08:38:33.28+08:00\",\"GiveEgg\":\"0\",\"ID\":\"1206699325\",\"OrderState\":\"2\",\"OrderStateName\":\"失败\",\"OrderType\":\"3\",\"OrderTypeName\":\"实物交易订单\",\"PayID\":\"3\",\"PayWayID\":\"1\",\"PayWayName\":\"快钱在线支付\",\"TotalMoney\":\"0.01\",\"TotalNumber\":\"0\",\"TradeSource\":\"商城购物\",\"UserID\":\"668288112\"},{\"AppID\":\"11\",\"CreateTime\":\"2008-09-05T08:31:54.453+08:00\",\"GiveEgg\":\"0\",\"ID\":\"795858378\",\"OrderState\":\"2\",\"OrderStateName\":\"失败\",\"OrderType\":\"3\",\"OrderTypeName\":\"实物交易订单\",\"PayID\":\"3\",\"PayWayID\":\"1\",\"PayWayName\":\"快钱在线支付\",\"TotalMoney\":\"0.01\",\"TotalNumber\":\"0\",\"TradeSource\":\"商城购物\",\"UserID\":\"668288112\"}],\"results\":{\"totalRecords\":\"6\"}}}";
 
     @Test
-    private void testCreator() {
-        IJsonTable token = tokenFactory.newJsonTable()
-                .put("jj", tokenFactory.newJsonString(src1))
-                .put("dd", tokenFactory.newJsonInt(77))
-                .put("vv", tokenFactory.newJsonArray().insert(tokenFactory.newJsonString("vbvb")));
-        String serialized = JsonCodec.serialize(token);
-
-        IJsonTable token2 = JsonCodec.deserialize(serialized, IJsonTable.class);
-        String serialized2 = JsonCodec.serialize(token2);
-
-        assertEquals(serialized, serialized2);
-    }
-
-    @Test
-    public void testGet() {
+    public void test_JsonTable_get() {
         IJsonTable token = JsonCodec.deserialize(src2, IJsonTable.class);
         String userId = token.get("Consume")
                 .cast(IJsonTable.class).get("record")
@@ -41,21 +27,40 @@ public class Test_Json {
         assertEquals("668288112", userId);
     }
 
-    private void testParseAndSerialize(String serialzied) {
-        IJsonToken token2 = JsonCodec.deserialize(serialzied, IJsonToken.class);
+    @Test
+    public void test_JsonTokenFactory() {
+        IJsonTable token = tokenFactory.newJsonTable()
+                .put("ss", tokenFactory.newJsonString("hello"))
+                .put("ii", tokenFactory.newJsonInt(77))
+                .put("ff", tokenFactory.newJsonFloat(5.5))
+                .put("ll", tokenFactory.newJsonArray()
+                        .insert(tokenFactory.newJsonString("vava"))
+                        .insert(tokenFactory.newJsonString("vbvb")))
+                .put("nn", tokenFactory.newJsonNull())
+                .put("bb", tokenFactory.newJsonBoolean(true));
+        String serialized = JsonCodec.serialize(token);
+        System.out.println(serialized);
+        assertEquals("{\"ss\":\"hello\",\"ii\":77,\"ff\":5.5,\"ll\":[\"vava\",\"vbvb\"],\"nn\":null,\"bb\":true}", serialized);
+
+        IJsonTable token2 = JsonCodec.deserialize(serialized, IJsonTable.class);
         String serialized2 = JsonCodec.serialize(token2);
 
+        assertEquals(serialized, serialized2);
+    }
+
+    @Test
+    public void test_JsonToken_serialize() {
+        test_JsonToken_serialize(src1);
+        test_JsonToken_serialize(src2);
+    }
+
+    private void test_JsonToken_serialize(String serialzied) {
+        IJsonToken token2 = JsonCodec.deserialize(serialzied, IJsonToken.class);
+        String serialized2 = JsonCodec.serialize(token2);
         assertEquals(serialzied, serialized2);
 
         IJsonToken token3 = JsonCodec.deserialize(serialized2, IJsonToken.class);
         String serialzied3 = JsonCodec.serialize(token3);
-
         assertEquals(serialzied, serialzied3);
-    }
-
-    @Test
-    public void testSerializeAndDeserialize() {
-        testParseAndSerialize(src1);
-        testParseAndSerialize(src2);
     }
 }
