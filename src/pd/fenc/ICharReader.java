@@ -5,10 +5,12 @@ import java.util.PrimitiveIterator.OfInt;
 public interface ICharReader {
 
     public static ICharReader wrap(CharSequence cs) {
+        // pain: two or more intermediate objects
+        // gain: existing facilities and avoid seldom O(n) on chatAt(i)
         return wrap(cs.codePoints().iterator());
     }
 
-    public static ICharReader wrap(OfInt it) {
+    private static ICharReader wrap(OfInt it) {
 
         return new ICharReader() {
 

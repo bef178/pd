@@ -42,19 +42,12 @@ public class CharReader implements ICharReader {
 
     private final ICharReader src;
 
-    private int pos;
-
     private final Recent recent = new Recent(2);
 
     private int backOffset;
 
     public CharReader(ICharReader src) {
-        this(src, 0);
-    }
-
-    public CharReader(ICharReader src, int pos) {
         this.src = src;
-        this.pos = pos;
         this.backOffset = 0;
     }
 
@@ -117,12 +110,11 @@ public class CharReader implements ICharReader {
             throw new ParsingException();
         }
         recent.add(value);
-        pos++;
         return value;
     }
 
     @Override
     public int position() {
-        return pos - backOffset;
+        return src.position() - backOffset;
     }
 }
