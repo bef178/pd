@@ -21,29 +21,29 @@ public class Test_ScalarPicker {
 
     @Test
     public void test_pickDottedIdentifier() {
-        CharReader it = CharReader.wrap("a.b.c=");
+        CharReader it = new CharReader("a.b.c=");
         assertEquals("a.b.c", ScalarPicker.pickDottedIdentifier(it));
     }
 
     @Test
     public void test_pickFloat32() {
-        CharReader it = CharReader.wrap("0");
+        CharReader it = new CharReader("0");
         assertEquals(0f, ScalarPicker.pickFloat32(it));
 
-        it = CharReader.wrap("0.0");
+        it = new CharReader("0.0");
         assertEquals(0f, ScalarPicker.pickFloat32(it), 0.000001f);
         assertEquals(3, it.position());
 
-        it = CharReader.wrap("1");
+        it = new CharReader("1");
         assertEquals(1f, ScalarPicker.pickFloat32(it), 0.000001f);
 
-        it = CharReader.wrap("-1");
+        it = new CharReader("-1");
         assertEquals(-1f, ScalarPicker.pickFloat32(it), 0.000001f);
 
-        it = CharReader.wrap("1.01");
+        it = new CharReader("1.01");
         assertEquals(1.01f, ScalarPicker.pickFloat32(it), 0.000001f);
 
-        it = CharReader.wrap("-1.1");
+        it = new CharReader("-1.1");
         assertEquals(-1.1f, ScalarPicker.pickFloat32(it), 0.000001f);
     }
 
@@ -52,7 +52,7 @@ public class Test_ScalarPicker {
         for (String raw : new String[] {
                 "-0", "0.", ".1", "-0.0"
         }) {
-            CharReader it = CharReader.wrap(raw);
+            CharReader it = new CharReader(raw);
             assertThrows(ParsingException.class, () -> {
                 ScalarPicker.pickFloat32(it);
             }, String.format("case [%s] failed", raw));
@@ -61,14 +61,14 @@ public class Test_ScalarPicker {
 
     @Test
     public void test_pickInt32() {
-        CharReader it = CharReader.wrap("00");
+        CharReader it = new CharReader("00");
         assertEquals(0, ScalarPicker.pickInt32(it));
         assertEquals(1, it.position());
     }
 
     @Test
     public void test_pickString() {
-        CharReader it = CharReader.wrap("hel\\lo world");
+        CharReader it = new CharReader("hel\\lo world");
         assertEquals("hel\\lo", ScalarPicker.pickString(it, ' '));
         assertEquals(' ', it.next());
     }

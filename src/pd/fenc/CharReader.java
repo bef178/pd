@@ -1,13 +1,11 @@
 package pd.fenc;
 
-import static pd.fenc.IReader.EOF;
-
 /**
  * It often requires "pre-reading" few symbols to speculate which token parser should be invoked.<br>
  * While, we know stream cannot move backward physically.<br/>
  * This reader caches few recent-meet characters thus supports "as-if" move backward.<br/>
  */
-public class CharReader implements ICharReader {
+public class CharReader implements IReader {
 
     private class Recent {
 
@@ -36,17 +34,17 @@ public class CharReader implements ICharReader {
         }
     }
 
-    public static CharReader wrap(CharSequence cs) {
-        return new CharReader(ICharReader.wrap(cs));
-    }
-
-    private final ICharReader src;
+    private final IReader src;
 
     private final Recent recent = new Recent(2);
 
     private int backOffset;
 
-    public CharReader(ICharReader src) {
+    public CharReader(CharSequence cs) {
+        this(IReader.unicodeStream(cs));
+    }
+
+    public CharReader(IReader src) {
         this.src = src;
         this.backOffset = 0;
     }
@@ -59,7 +57,7 @@ public class CharReader implements ICharReader {
     }
 
     public void eatOrThrow(String expecteds) {
-        ICharReader it = ICharReader.wrap(expecteds);
+        IReader it = IReader.unicodeStream(expecteds);
         while (it.hasNext()) {
             int expected = it.next();
             int ch = hasNext() ? next() : EOF;

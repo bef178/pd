@@ -12,6 +12,12 @@
 <br/>
 <br/>
 
+## pd.fenc
+
+i/o stuff such as encoding, formatting, parsing, etc
+
+> Lost in IReader, IByteProvider, IUnicodeStream etc, until I realize the confusion is actually from a same function name `wrap` returns different ranges of values. Self-explanatory names are important.
+
 ## pd.json
 
 Depends on pd.fenc, thus being a package rather than a sub project.

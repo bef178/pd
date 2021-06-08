@@ -4,48 +4,51 @@ import static pd.fenc.Util.checkByte;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.PrimitiveIterator.OfInt;
 
+/**
+ * no confusion, this is just a provider of int32<br/>
+ * value can be octet(byte), ascii, surrogate, unicode, ..., any int32<br>
+ * better to add a check before taking the value<br/>
+ */
 public interface IReader {
 
     public static final int EOF = -1;
 
-    /**
-     * ByteProvider
-     */
-    public static IReader wrap(byte[] src) {
-        return wrap(src, 0, src.length);
+    public static IReader octetStream(byte[] src) {
+        return octetStream(src, 0, src.length);
     }
 
     /**
-     * ByteProvider
+     * wrap to an int32 stream having value in [0, 0xFF]
      */
-    public static IReader wrap(byte[] src, int i, int j) {
+    public static IReader octetStream(byte[] src, int i, int j) {
+        assert src != null;
+        assert i >= 0;
+        assert j > i && j < src.length;
 
         return new IReader() {
 
-            private int pos = i;
+            private int offset = i;
 
             @Override
             public boolean hasNext() {
-                return pos < j;
+                return offset < j;
             }
 
             @Override
             public int next() {
-                return src[pos++];
+                return src[offset++] & 0xFF;
             }
 
             @Override
             public int position() {
-                return pos;
+                return offset - i;
             }
         };
     }
 
-    /**
-     * StreamReader, ByteProvider
-     */
-    public static IReader wrap(InputStream input) {
+    public static IReader octetStream(InputStream input) {
 
         return new IReader() {
 
@@ -78,11 +81,42 @@ public interface IReader {
         };
     }
 
+    /**
+     * wrap to an int32 stream having value in [0, 0x10FFFF]
+     */
+    public static IReader unicodeStream(CharSequence cs) {
+        // pain: two or more intermediate objects
+        // gain: existing facilities and avoid seldom O(n) on chatAt(i)
+        return unicodeStream(cs.codePoints().iterator());
+    }
+
+    private static IReader unicodeStream(OfInt it) {
+
+        return new IReader() {
+
+            private int pos = 0;
+
+            @Override
+            public boolean hasNext() {
+                return it.hasNext();
+            }
+
+            @Override
+            public int next() {
+                int value = it.nextInt();
+                pos++;
+                return value;
+            }
+
+            @Override
+            public int position() {
+                return pos;
+            }
+        };
+    }
+
     public boolean hasNext();
 
-    /**
-     * returned value should be checked before use
-     */
     public int next();
 
     public int position();

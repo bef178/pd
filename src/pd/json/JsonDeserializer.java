@@ -8,7 +8,7 @@ import static pd.json.JsonCodec.tokenFactory;
 import java.lang.reflect.Array;
 
 import pd.fenc.CharReader;
-import pd.fenc.ICharWriter;
+import pd.fenc.IWriter;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 
@@ -53,7 +53,7 @@ class JsonDeserializer {
      * `String` => `IJsonToken`<br/>
      */
     public IJsonToken deserialize(String serialized) {
-        CharReader it = CharReader.wrap(serialized);
+        CharReader it = new CharReader(serialized);
         return deserializeToJsonToken(it);
     }
 
@@ -133,7 +133,7 @@ class JsonDeserializer {
 
     private IJsonToken deserializeToJsonIntOrJsonFloat(CharReader it) {
         StringBuilder sb = new StringBuilder();
-        ICharWriter dst = ICharWriter.wrap(sb);
+        IWriter dst = IWriter.unicodeStream(sb);
         ScalarPicker.pickFloat(it, dst);
         String raw = sb.toString();
         if (raw.indexOf('.') >= 0) {

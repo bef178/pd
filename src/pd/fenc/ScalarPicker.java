@@ -7,7 +7,7 @@ public class ScalarPicker extends NumberPicker {
     public static String pickDottedIdentifier(CharReader src) {
         StringBuilder sb = new StringBuilder();
         while (true) {
-            if (!pickIdentifier(src, ICharWriter.wrap(sb))) {
+            if (!pickIdentifier(src, IWriter.unicodeStream(sb))) {
                 throw new ParsingException();
             }
             if (!src.hasNext() || src.next() != '.') {
@@ -19,7 +19,7 @@ public class ScalarPicker extends NumberPicker {
 
     public static String pickIdentifier(CharReader src) {
         StringBuilder sb = new StringBuilder();
-        if (!pickIdentifier(src, ICharWriter.wrap(sb))) {
+        if (!pickIdentifier(src, IWriter.unicodeStream(sb))) {
             throw new ParsingException();
         }
         return sb.toString();
@@ -29,7 +29,7 @@ public class ScalarPicker extends NumberPicker {
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
      * if fail, src.next() will be the illegal character
      */
-    private static boolean pickIdentifier(CharReader src, ICharWriter dst) {
+    private static boolean pickIdentifier(CharReader src, IWriter dst) {
         int stat = 0;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -63,7 +63,7 @@ public class ScalarPicker extends NumberPicker {
 
     public static String pickString(CharReader src, int closingSymbol) {
         StringBuilder sb = new StringBuilder();
-        if (!pickString(src, closingSymbol, ICharWriter.wrap(sb))) {
+        if (!pickString(src, closingSymbol, IWriter.unicodeStream(sb))) {
             throw new ParsingException();
         }
         return sb.toString();
@@ -76,7 +76,7 @@ public class ScalarPicker extends NumberPicker {
      * - `closingSymbol` can be `EOF`<br/>
      * Will fail in front of `EOF`<br/>
      */
-    public static boolean pickString(CharReader src, int closingSymbol, ICharWriter dst) {
+    public static boolean pickString(CharReader src, int closingSymbol, IWriter dst) {
         boolean isEscaped = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;

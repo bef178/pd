@@ -14,7 +14,7 @@ public class CsvDeserializer {
 
     public static List<String> deserialize(String raw, int comma, String crlf) {
         HashSet<Integer> commas = getCommas(comma, crlf);
-        CharReader src = CharReader.wrap(raw);
+        CharReader src = new CharReader(raw);
         List<String> record = new LinkedList<String>();
         while (true) {
             String field = pickCsvField(src, commas);
