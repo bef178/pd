@@ -1,4 +1,4 @@
-package pd.net.serv;
+package pd.app.echoservice;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -9,6 +9,8 @@ import java.net.Socket;
 
 import pd.log.ILogger;
 import pd.log.LogManager;
+import pd.net.serv.RequestContext;
+import pd.net.serv.SomeServer;
 
 public class EchoService {
 
@@ -26,7 +28,21 @@ public class EchoService {
         ackBody.append("<title>Echo Service</title>");
         ackBody.append("</head>");
         ackBody.append("<body>");
-        ackBody.append("<h1>Welcome to Echo Service</h1>");
+        ackBody.append("<h1>Echo Service</h1>");
+
+        ackBody.append("<div style=\"font-family: monospace;\">");
+        ackBody.append("<div>")
+                .append("remote-host: ")
+                .append(request.remoteInetAddr.getHostAddress()).append(":")
+                .append(request.remotePort).append("</div>");
+        ackBody.append("<div>")
+                .append("remote-hostname: ")
+                .append(request.remoteInetAddr.getHostName())
+                .append("</div>");
+        ackBody.append("</div>");
+
+        ackBody.append("<br/>");
+
         ackBody.append("<div style=\"font-family: monospace;\">");
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(request.reqStream));
