@@ -70,8 +70,11 @@ public class ScalarPicker extends NumberPicker {
     }
 
     /**
-     * Will succ when meet closing symbol or fail when meet EOF; however EOF can be the closing symbol<br/>
-     * The closing symbol will not be consumed and not be a part of result<br/>
+     * Will succ in front of `closingSymbol`<br/>
+     * - `closingSymbol` will not be consumed and not be a part of result<br/>
+     * - `closingSymbol` can be escaped by `\`<br/>
+     * - `closingSymbol` can be `EOF`<br/>
+     * Will fail in front of `EOF`<br/>
      */
     public static boolean pickString(CharReader src, int closingSymbol, ICharWriter dst) {
         boolean isEscaped = false;
