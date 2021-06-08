@@ -8,7 +8,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import pd.log.ILogger;
 
-public class AcceptSocketLooper implements Runnable {
+public class SocketLooper implements Runnable {
+
+    private static final String logPrefix = SocketLooper.class.getSimpleName();
 
     public static void closeSocket(Socket socket, ILogger logger) {
         if (socket != null && !socket.isClosed()) {
@@ -28,22 +30,25 @@ public class AcceptSocketLooper implements Runnable {
 
     protected ILogger logger;
 
-    private volatile AtomicBoolean running = new AtomicBoolean(false);
-    private volatile AtomicBoolean stopped = new AtomicBoolean(true);
+    private volatile AtomicBoolean isRunning = new AtomicBoolean(false);
+    private volatile AtomicBoolean isStopped = new AtomicBoolean(true);
 
-    public AcceptSocketLooper(ServerSocket serverSocket, Object runningNotifier, ILogger logger) {
+    public SocketLooper(ServerSocket serverSocket, Object runningNotifier, ILogger logger) {
         this.serverSocket = serverSocket;
         this.runningNotifier = runningNotifier;
         this.logger = logger;
     }
 
     public Thread createThread() {
-        String threadNamePrefix = getClass().getSimpleName();
-        if (threadNamePrefix == null || threadNamePrefix.isEmpty()) {
-            // inner class or anonymous class
-            threadNamePrefix = AcceptSocketLooper.class.getSimpleName();
+        String prefix = getClass().getSimpleName();
+        if (prefix == null || prefix.isEmpty()) {
+            // anonymous class or inner class
+            prefix = getClass().getSuperclass().getSimpleName();
         }
-        return createThread(threadNamePrefix);
+        if (prefix == null || prefix.isEmpty()) {
+            prefix = logPrefix;
+        }
+        return createThread(prefix);
     }
 
     public Thread createThread(String threadNamePrefix) {
@@ -52,26 +57,31 @@ public class AcceptSocketLooper implements Runnable {
         return thread;
     }
 
-    public boolean isStopped() {
-        return stopped.get();
+    /**
+     * will run in server socket thread<br/>
+     * should close socket in the end<br/>
+     */
+    protected void dispatchSocket(Socket socket) {
+        onSocket(socket);
+        closeSocket(socket, logger);
     }
 
-    /**
-     * run in server socket thread<br/>
-     * should close socket in this method, thus enable handling socket in other threads<br/>
-     */
+    public boolean isStopped() {
+        return isStopped.get();
+    }
+
     protected void onSocket(Socket socket) {
         logger.logVerbose("onSocket");
-        closeSocket(socket, logger);
     }
 
     @Override
     public void run() {
-        running.set(true);
-        stopped.set(false);
+        isRunning.set(true);
+        isStopped.set(false);
 
         if (runningNotifier != null) {
             synchronized (runningNotifier) {
+                logger.logInfo("{} started", logPrefix);
                 runningNotifier.notify();
             }
         }
@@ -81,7 +91,7 @@ public class AcceptSocketLooper implements Runnable {
         }
 
         try {
-            while (running.get()) {
+            while (isRunning.get()) {
                 Socket socket;
                 try {
                     socket = serverSocket.accept();
@@ -94,7 +104,7 @@ public class AcceptSocketLooper implements Runnable {
                 }
 
                 try {
-                    onSocket(socket);
+                    dispatchSocket(socket);
                 } catch (Exception e) {
                     logger.logError("E: exception when onSocket(): {}", e.getMessage());
                 }
@@ -103,13 +113,13 @@ public class AcceptSocketLooper implements Runnable {
             logger.logError("E: exception: {}", e.getMessage());
         }
 
-        stopped.set(true);
+        isStopped.set(true);
         logger.logInfo("server socket stopped");
     }
 
     public void stop() {
         logger.logVerbose("stop requested");
-        running.set(false);
+        isRunning.set(false);
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
                 serverSocket.close();

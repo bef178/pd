@@ -1,22 +1,17 @@
 package pd.net.serv;
 
-import static pd.net.serv.AcceptSocketLooper.closeSocket;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import pd.log.ILogger;
 import pd.log.LogManager;
-import pd.time.Ctime;
 
 public abstract class SomeServer<T extends RequestContext> {
 
     static final ILogger logger = LogManager.getLogger();
 
-    public static ServerSocket createServerSocket(final int port, int numAttempts, int interval, ILogger logger)
+    public static ServerSocket createServerSocket(final int port, int numAttempts, int retryInterval, ILogger logger)
             throws IOException {
         for (int i = 0; i < numAttempts; i++) {
             try {
@@ -30,7 +25,7 @@ public abstract class SomeServer<T extends RequestContext> {
                     logger.logWarning("W: create socket fails, IOException: {}", e.getMessage());
                 }
                 try {
-                    Thread.sleep(interval);
+                    Thread.sleep(retryInterval);
                 } catch (InterruptedException e1) {
                     // dummy
                 }
@@ -43,11 +38,9 @@ public abstract class SomeServer<T extends RequestContext> {
 
     private final int port;
 
-    private ExecutorService executor;
-
     private int numExecutorThreads;
 
-    private AcceptSocketLooper acceptorTask;
+    private SocketLooper acceptorLooper;
 
     private Thread acceptorThread;
 
@@ -62,53 +55,18 @@ public abstract class SomeServer<T extends RequestContext> {
 
     protected abstract T buildRequest(Socket socket) throws IOException;
 
-    /**
-     * unnecessary to close socket<br/>
-     */
     protected abstract void onRequest(T request) throws IOException;
-
-    private void onSocket(Socket socket) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                long startTimestamp = Ctime.now();
-                logger.logInfo("{} runnable start: {}", socket, startTimestamp);
-
-                T request = null;
-                try {
-                    request = buildRequest(socket);
-                } catch (IOException e) {
-                    logger.logError("E: exception when make request: {}", e.getMessage());
-                    closeSocket(socket, logger);
-                    return;
-                }
-
-                try {
-                    onRequest(request);
-                } catch (Exception e) {
-                    logger.logError("E: exception when onRequest: {}", e.getMessage());
-                } finally {
-                    closeSocket(socket, logger);
-                }
-
-                long endTimestamp = Ctime.now();
-                logger.logInfo("{} runnable end: {}, duration: {}", socket, endTimestamp,
-                        endTimestamp - startTimestamp);
-            }
-        });
-    }
 
     /**
      * create a server socket and run in a new thread<br/>
-     * blocked until server socket thread fully started<br/>
+     * blocked until the new thread is fully started<br/>
      */
     public void start() throws IOException {
-        if (executor != null && !executor.isShutdown()) {
-            logger.logError("E: executor already running");
-            return;
-        }
+        startServerSocketThread();
+    }
 
-        if (acceptorTask != null && !acceptorTask.isStopped()) {
+    private void startServerSocketThread() throws IOException {
+        if (acceptorLooper != null && !acceptorLooper.isStopped()) {
             logger.logError("E: socketAcceptor not stopped");
             return;
         }
@@ -118,22 +76,32 @@ public abstract class SomeServer<T extends RequestContext> {
             return;
         }
 
-        executor = Executors.newFixedThreadPool(numExecutorThreads);
-        logger.logInfo("executor created with {} threads", numExecutorThreads);
-
         ServerSocket serverSocket = createServerSocket(port, 2, 1000, logger);
-        logger.logInfo("server socket created", numExecutorThreads);
+        logger.logInfo("server socket created");
 
         Object notifier = new Object();
 
-        acceptorTask = new AcceptSocketLooper(serverSocket, notifier, logger) {
+        acceptorLooper = new MultithreadSocketLooper(serverSocket, numExecutorThreads, notifier, logger) {
+
             @Override
             protected final void onSocket(Socket socket) {
-                SomeServer.this.onSocket(socket);
+                T request = null;
+                try {
+                    request = buildRequest(socket);
+                } catch (IOException e) {
+                    logger.logError("E: exception when buildRequest: {}", e.getMessage());
+                    return;
+                }
+
+                try {
+                    onRequest(request);
+                } catch (Exception e) {
+                    logger.logError("E: exception when onRequest: {}", e.getMessage());
+                }
             }
         };
 
-        acceptorThread = acceptorTask.createThread();
+        acceptorThread = acceptorLooper.createThread();
         logger.logInfo("ServerSocketAcceptorThread [{}] created", acceptorThread.getName());
 
         acceptorThread.start();
@@ -148,13 +116,8 @@ public abstract class SomeServer<T extends RequestContext> {
     }
 
     public void stop() {
-        if (acceptorTask != null) {
-            acceptorTask.stop();
-        }
-        if (executor != null) {
-            executor.shutdown();
-            executor = null;
-            logger.logInfo("executor shutdown");
+        if (acceptorLooper != null) {
+            acceptorLooper.stop();
         }
         try {
             acceptorThread.join(4000);
