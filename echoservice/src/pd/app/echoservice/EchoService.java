@@ -17,6 +17,7 @@ public class EchoService {
     static final ILogger LOGGER = LogManager.getLogger();
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        LogManager.useConsoleLogger();
         EchoService server = new EchoService();
         server.start(8881);
     }
@@ -77,8 +78,7 @@ public class EchoService {
     }
 
     public void start(int port) throws IOException {
-
-        SomeServer<RequestContext> server = new SomeServer<RequestContext>() {
+        SomeServer<RequestContext> server = new SomeServer<RequestContext>(LogManager.getLogger()) {
 
             @Override
             protected RequestContext buildRequest(Socket socket) throws IOException {

@@ -5,11 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import pd.log.ILogger;
-import pd.log.LogManager;
 
 public abstract class SomeServer<T extends RequestContext> {
-
-    static final ILogger logger = LogManager.getLogger();
 
     public static ServerSocket createServerSocket(final int port, int numAttempts, int retryInterval, ILogger logger)
             throws IOException {
@@ -36,17 +33,20 @@ public abstract class SomeServer<T extends RequestContext> {
         throw new IllegalStateException();
     }
 
+    protected final ILogger logger;
+
     private int numExecutorThreads;
 
     private SocketLooper acceptorLooper;
 
     private Thread acceptorThread;
 
-    public SomeServer() {
-        this(Runtime.getRuntime().availableProcessors() + 1);
+    public SomeServer(ILogger logger) {
+        this(Runtime.getRuntime().availableProcessors() + 1, logger);
     }
 
-    public SomeServer(int numThreads) {
+    public SomeServer(int numThreads, ILogger logger) {
+        this.logger = logger;
         this.numExecutorThreads = numThreads;
     }
 
