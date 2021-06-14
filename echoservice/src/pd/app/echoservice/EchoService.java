@@ -78,7 +78,7 @@ public class EchoService {
 
     public void start(int port) throws IOException {
 
-        SomeServer<RequestContext> server = new SomeServer<RequestContext>(port) {
+        SomeServer<RequestContext> server = new SomeServer<RequestContext>() {
 
             @Override
             protected RequestContext buildRequest(Socket socket) throws IOException {
@@ -90,6 +90,6 @@ public class EchoService {
                 EchoService.this.onRequest(request);
             }
         };
-        server.start();
+        server.start(port);
     }
 }

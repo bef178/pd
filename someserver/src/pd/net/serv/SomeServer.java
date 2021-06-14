@@ -36,20 +36,17 @@ public abstract class SomeServer<T extends RequestContext> {
         throw new IllegalStateException();
     }
 
-    private final int port;
-
     private int numExecutorThreads;
 
     private SocketLooper acceptorLooper;
 
     private Thread acceptorThread;
 
-    public SomeServer(int port) {
-        this(port, Runtime.getRuntime().availableProcessors() + 1);
+    public SomeServer() {
+        this(Runtime.getRuntime().availableProcessors() + 1);
     }
 
-    public SomeServer(int port, int numThreads) {
-        this.port = port;
+    public SomeServer(int numThreads) {
         this.numExecutorThreads = numThreads;
     }
 
@@ -61,11 +58,11 @@ public abstract class SomeServer<T extends RequestContext> {
      * create a server socket and run in a new thread<br/>
      * blocked until the new thread is fully started<br/>
      */
-    public void start() throws IOException {
-        startServerSocketThread();
+    public void start(int port) throws IOException {
+        startServerSocketThread(port);
     }
 
-    private void startServerSocketThread() throws IOException {
+    private void startServerSocketThread(int port) throws IOException {
         if (acceptorLooper != null && !acceptorLooper.isStopped()) {
             logger.logError("E: socketAcceptor not stopped");
             return;
