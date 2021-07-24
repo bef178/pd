@@ -2,7 +2,6 @@ package pd.app.demo.rpcechoservice;
 
 import java.io.IOException;
 
-import pd.app.demo.rpcechoservice.shared.IEchoService;
 import pd.log.LogManager;
 import pd.net.serv.rpc.RpcServer;
 

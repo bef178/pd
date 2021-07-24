@@ -16,15 +16,20 @@ public class RpcServer extends SomeServer<RequestContext> {
 
     public final ServiceRegistry serviceRegistry;
 
-    private static final RpcCodec rpcCodec = new RpcCodec();
+    private final RpcCodec rpcCodec;
 
     public RpcServer(ILogger logger) {
         this(new ServiceRegistry(), logger);
     }
 
     public RpcServer(ServiceRegistry serviceRegistry, ILogger logger) {
+        this(serviceRegistry, new RpcCodec(), logger);
+    }
+
+    public RpcServer(ServiceRegistry serviceRegistry, RpcCodec rpcCodec, ILogger logger) {
         super(logger);
         this.serviceRegistry = serviceRegistry;
+        this.rpcCodec = rpcCodec;
     }
 
     @Override

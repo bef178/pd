@@ -8,19 +8,21 @@ import java.net.Socket;
 
 public class RpcClientStub {
 
-    @SuppressWarnings("unchecked")
     public static <T> T getRemoteService(String host, int port, Class<T> interfaceClass) {
+        return getRemoteService(host, port, interfaceClass, new RpcCodec());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getRemoteService(String host, int port, Class<T> interfaceClass, RpcCodec rpcCodec) {
 
         return (T) Proxy.newProxyInstance(
                 RpcClientStub.class.getClassLoader(),
                 new Class<?>[] { interfaceClass },
-                new RpcClientInvocationHandler(host, port, interfaceClass));
+                new RpcClientInvocationHandler(host, port, interfaceClass, rpcCodec));
     }
 }
 
 class RpcClientInvocationHandler implements InvocationHandler {
-
-    private static final RpcCodec rpcCodec = new RpcCodec();
 
     private final String host;
 
@@ -28,10 +30,13 @@ class RpcClientInvocationHandler implements InvocationHandler {
 
     private final Class<?> interfaceClass;
 
-    public RpcClientInvocationHandler(String host, int port, Class<?> interfaceClass) {
+    private final RpcCodec rpcCodec;
+
+    public RpcClientInvocationHandler(String host, int port, Class<?> interfaceClass, RpcCodec rpcCodec) {
         this.host = host;
         this.port = port;
         this.interfaceClass = interfaceClass;
+        this.rpcCodec = rpcCodec;
     }
 
     @Override
