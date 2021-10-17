@@ -1,7 +1,7 @@
-package pd.app.demo.rpcechoservice.client;
+package pd.demo.rpcechoservice.client;
 
-import pd.app.demo.rpcechoservice.IEchoService;
-import pd.net.serv.rpc.RpcClientStub;
+import pd.demo.rpcechoservice.IEchoService;
+import pd.net.rpc.RpcClientStub;
 
 public class Main {
 

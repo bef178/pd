@@ -1,4 +1,4 @@
-package pd.app.demo.rpcechoservice;
+package pd.demo.rpcechoservice;
 
 public class EchoService implements IEchoService {
 

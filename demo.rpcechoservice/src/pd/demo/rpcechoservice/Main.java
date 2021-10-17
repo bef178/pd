@@ -1,9 +1,9 @@
-package pd.app.demo.rpcechoservice;
+package pd.demo.rpcechoservice;
 
 import java.io.IOException;
 
 import pd.log.LogManager;
-import pd.net.serv.rpc.RpcServer;
+import pd.net.rpc.RpcServer;
 
 public class Main {
 

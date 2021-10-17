@@ -1,5 +1,4 @@
-package pd.net.serv.rpc;
-
+package pd.net.rpc;
 
 import java.util.HashMap;
 

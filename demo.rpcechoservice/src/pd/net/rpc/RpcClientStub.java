@@ -1,4 +1,4 @@
-package pd.net.serv.rpc;
+package pd.net.rpc;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
