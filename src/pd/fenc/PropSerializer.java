@@ -28,7 +28,7 @@ public class PropSerializer {
 
         ch = src.hasNext() ? src.next() : EOF;
         if (ch == '\"') {
-            String value = ScalarPicker.pickString(src, '\"');
+            String value = ScalarPicker.pickBackSlashEscapedString(src, '\"');
             src.next();
             src.eatWhitespaces();
             src.eatOrThrow(EOF);
@@ -36,7 +36,7 @@ public class PropSerializer {
         } else {
             src.moveBack();
             src.eatWhitespaces();
-            String value = ScalarPicker.pickString(src, EOF);
+            String value = ScalarPicker.pickBackSlashEscapedString(src, EOF);
             return new SimpleImmutableEntry<String, String>(key, value);
         }
     }

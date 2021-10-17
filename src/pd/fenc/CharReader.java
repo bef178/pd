@@ -55,20 +55,6 @@ public class CharReader implements IReader {
         }
     }
 
-    public void eatOrThrow(int... expecteds) {
-        for (int expected : expecteds) {
-            eatOrThrow(expected);
-        }
-    }
-
-    public void eatOrThrow(String expecteds) {
-        IReader it = IReader.unicodeStream(expecteds);
-        while (it.hasNext()) {
-            int expected = it.next();
-            eatOrThrow(expected);
-        }
-    }
-
     public void eatWhitespaces() {
         while (hasNext()) {
             int ch = next();
@@ -118,15 +104,6 @@ public class CharReader implements IReader {
         return src.position() - backOffset;
     }
 
-    public boolean tryEat(int... expecteds) {
-        for (int expected : expecteds) {
-            if (!tryEat(expected)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     /**
      * will stop in front of unexpected value
      */
@@ -145,5 +122,16 @@ public class CharReader implements IReader {
                 return false;
             }
         }
+    }
+
+    public boolean tryEat(String expecteds) {
+        IReader it = IReader.unicodeStream(expecteds);
+        while (it.hasNext()) {
+            int expected = it.next();
+            if (!tryEat(expected)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

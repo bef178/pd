@@ -4,6 +4,15 @@ import static pd.fenc.IReader.EOF;
 
 public class ScalarPicker extends NumberPicker {
 
+    public static String pickBackSlashEscapedString(CharReader src, int terminator) {
+        StringBuilder sb = new StringBuilder();
+        IWriter dst = IWriter.unicodeStream(sb);
+        if (!tryPickBackSlashEscapedString(src, dst, terminator)) {
+            throw new ParsingException();
+        }
+        return sb.toString();
+    }
+
     public static String pickDottedIdentifier(CharReader src) {
         StringBuilder sb = new StringBuilder();
         while (true) {
@@ -57,41 +66,56 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public static String pickString(CharReader src) {
-        return pickString(src, EOF);
-    }
-
-    public static String pickString(CharReader src, int closingSymbol) {
+    public static String pickString(CharReader src, int... closingSymbols) {
         StringBuilder sb = new StringBuilder();
-        if (!pickString(src, closingSymbol, IWriter.unicodeStream(sb))) {
-            throw new ParsingException();
+        IWriter dst = IWriter.unicodeStream(sb);
+        if (!tryPickString(src, dst, closingSymbols)) {
+            throw new ParsingException("Unexpected EOF");
         }
         return sb.toString();
     }
 
     /**
-     * Will succ in front of `closingSymbol`<br/>
-     * - `closingSymbol` will not be consumed and not be a part of result<br/>
-     * - `closingSymbol` can be escaped by `\`<br/>
-     * - `closingSymbol` can be `EOF`<br/>
+     * Will succ when meet `terminator`<br/>
+     * - `terminator` will not be consumed and not be a part of result<br/>
+     * - `terminator` can be escaped by `\`<br/>
+     * - `terminator` can be `EOF`<br/>
      * Will fail in front of `EOF`<br/>
      */
-    public static boolean pickString(CharReader src, int closingSymbol, IWriter dst) {
-        boolean isEscaped = false;
+    public static boolean tryPickBackSlashEscapedString(CharReader src, IWriter dst, int terminator) {
+        boolean isEscaping = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
-            if (isEscaped) {
-                isEscaped = false;
+            if (isEscaping) {
+                isEscaping = false;
                 dst.push('\\');
                 dst.push(ch);
             } else if (ch == '\\') {
-                isEscaped = true;
-            } else if (ch == closingSymbol) {
-                if (closingSymbol != EOF) {
+                isEscaping = true;
+            } else if (ch == terminator) {
+                if (ch != EOF) {
                     src.moveBack();
                 }
                 return true;
             } else if (ch == EOF) {
+                // unexpected EOF
+                return false;
+            } else {
+                dst.push(ch);
+            }
+        }
+    }
+
+    public static boolean tryPickString(CharReader src, IWriter dst, int... terminators) {
+        while (true) {
+            int ch = src.hasNext() ? src.next() : EOF;
+            if (Int32Array.contains(terminators, ch)) {
+                if (ch != EOF) {
+                    src.moveBack();
+                }
+                return true;
+            } else if (ch == EOF) {
+                // unexpected EOF
                 return false;
             } else {
                 dst.push(ch);

@@ -27,7 +27,9 @@ public class CsvDeserializer {
                 continue;
             } else {
                 src.moveBack();
-                src.eatOrThrow(crlf);
+                if (!src.tryEat(crlf)) {
+                    throw new IllegalArgumentException();
+                }
                 record.add(field);
                 break;
             }
