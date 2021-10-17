@@ -20,6 +20,10 @@ public final class Cascii {
         return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
     }
 
+    public static boolean isAscii(int ch) {
+        return ch >= 0 && ch <= 0xFF;
+    }
+
     public static boolean isDigit(int ch) {
         return isDigit(ch, 10);
     }
@@ -42,7 +46,8 @@ public final class Cascii {
     }
 
     /**
-     * visible single-width graph or SP
+     * visible single-width graph or SP<br/>
+     * @see int isprint(int ch)
      */
     public static boolean isPrintable(int ch) {
         return ch >= 0x20 && ch < 0x7F;
@@ -88,6 +93,13 @@ public final class Cascii {
 
     public static boolean isUpper(int ch) {
         return ch >= 'A' && ch <= 'Z';
+    }
+
+    /**
+     * @see int isgraph(int ch)
+     */
+    public static boolean isVisible(int ch) {
+        return ch > 0x20 && ch < 0x7F;
     }
 
     public static boolean isWhitespace(int ch) {

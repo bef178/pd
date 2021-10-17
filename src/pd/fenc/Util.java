@@ -9,6 +9,14 @@ import java.util.PrimitiveIterator.OfInt;
 
 public final class Util {
 
+    public static int checkAscii(int value) {
+        if (Cascii.isAscii(value)) {
+            return value;
+        }
+        throw new ParsingException(
+                String.format("Expected value in [0,0xFF], actual [%x]", value));
+    }
+
     /**
      * accept value in range of [0, 0xFF]
      */

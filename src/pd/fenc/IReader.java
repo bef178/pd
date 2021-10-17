@@ -1,5 +1,6 @@
 package pd.fenc;
 
+import static pd.fenc.Util.checkAscii;
 import static pd.fenc.Util.checkByte;
 
 import java.io.IOException;
@@ -14,6 +15,39 @@ import java.util.PrimitiveIterator.OfInt;
 public interface IReader {
 
     public static final int EOF = -1;
+
+    public static IReader asciiStream(InputStream input) {
+
+        return new IReader() {
+
+            private int pos = 0;
+
+            @Override
+            public boolean hasNext() {
+                try {
+                    return input.available() > 0;
+                } catch (IOException e) {
+                    throw new ParsingException(e);
+                }
+            }
+
+            @Override
+            public int next() {
+                try {
+                    int value = checkAscii(input.read());
+                    pos++;
+                    return value;
+                } catch (IOException e) {
+                    throw new ParsingException(e);
+                }
+            }
+
+            @Override
+            public int position() {
+                return pos;
+            }
+        };
+    }
 
     public static IReader octetStream(byte[] src) {
         return octetStream(src, 0, src.length);
