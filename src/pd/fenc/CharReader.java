@@ -50,9 +50,14 @@ public class CharReader implements IReader {
     }
 
     public void eatOrThrow(int expected) {
-        int ch = hasNext() ? next() : EOF;
-        if (ch != expected) {
-            throw new ParsingException(expected, ch);
+        if (tryEat(expected)) {
+            throw new ParsingException(expected, next());
+        }
+    }
+
+    public void eatOrThrow(int... expecteds) {
+        for (int expected : expecteds) {
+            eatOrThrow(expected);
         }
     }
 
@@ -60,10 +65,7 @@ public class CharReader implements IReader {
         IReader it = IReader.unicodeStream(expecteds);
         while (it.hasNext()) {
             int expected = it.next();
-            int ch = hasNext() ? next() : EOF;
-            if (ch != expected) {
-                throw new ParsingException(expected, ch);
-            }
+            eatOrThrow(expected);
         }
     }
 
@@ -114,5 +116,34 @@ public class CharReader implements IReader {
     @Override
     public int position() {
         return src.position() - backOffset;
+    }
+
+    public boolean tryEat(int... expecteds) {
+        for (int expected : expecteds) {
+            if (!tryEat(expected)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * will stop in front of unexpected value
+     */
+    public boolean tryEat(int expected) {
+        if (hasNext()) {
+            if (next() == expected) {
+                return true;
+            } else {
+                moveBack();
+                return false;
+            }
+        } else {
+            if (expected == EOF) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 }
