@@ -99,7 +99,7 @@ class JsonSerializer {
         }
 
         if (o instanceof Map) {
-            IJsonTable token = tokenFactory.newJsonTable();
+            IJsonObject token = tokenFactory.newJsonObject();
             for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) o).entrySet()) {
                 String key = entry.getKey().toString();
                 IJsonToken value = serialize(entry.getValue());
@@ -107,7 +107,7 @@ class JsonSerializer {
             }
             return token;
         } else {
-            IJsonTable token = tokenFactory.newJsonTable();
+            IJsonObject token = tokenFactory.newJsonObject();
             for (Field field : o.getClass().getFields()) {
                 String key = field.getName();
                 IJsonToken value;
@@ -169,7 +169,7 @@ class JsonSerializer {
         sb.append(']');
     }
 
-    private void serializeJsonTable(IJsonTable jsonTable, String margin, String indent, String eol, int numIndents,
+    private void serializeJsonObject(IJsonObject jsonObject, String margin, String indent, String eol, int numIndents,
             StringBuilder sb) {
 
         if (margin == null) {
@@ -186,13 +186,13 @@ class JsonSerializer {
 
         sb.append('{');
 
-        if (!jsonTable.isEmpty()) {
+        if (!jsonObject.isEmpty()) {
             sb.append(eol);
         }
 
         numIndents++;
 
-        Iterator<Entry<String, IJsonToken>> it = jsonTable.entrySet().iterator();
+        Iterator<Entry<String, IJsonToken>> it = jsonObject.entrySet().iterator();
         while (it.hasNext()) {
             Entry<String, IJsonToken> entry = it.next();
             String key = entry.getKey();
@@ -213,7 +213,7 @@ class JsonSerializer {
 
         numIndents--;
 
-        if (!jsonTable.isEmpty()) {
+        if (!jsonObject.isEmpty()) {
             serializeMarginAndIndents(margin, indent, numIndents, sb);
         }
 
@@ -234,8 +234,8 @@ class JsonSerializer {
             sb.append(Util.serializeToQuotedString(token.cast(IJsonString.class).value()));
         } else if (token instanceof IJsonArray) {
             serializeJsonArray(token.cast(IJsonArray.class), margin, indent, eol, numIndents, sb);
-        } else if (token instanceof IJsonTable) {
-            serializeJsonTable(token.cast(IJsonTable.class), margin, indent, eol, numIndents, sb);
+        } else if (token instanceof IJsonObject) {
+            serializeJsonObject(token.cast(IJsonObject.class), margin, indent, eol, numIndents, sb);
         }
     }
 

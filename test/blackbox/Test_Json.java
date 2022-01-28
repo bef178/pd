@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 
 import pd.json.IJsonArray;
 import pd.json.IJsonString;
-import pd.json.IJsonTable;
 import pd.json.IJsonToken;
+import pd.json.IJsonObject;
 import pd.json.JsonCodec;
 
 public class Test_Json {
@@ -18,18 +18,18 @@ public class Test_Json {
 
     @Test
     public void test_JsonTable_get() {
-        IJsonTable token = JsonCodec.deserialize(src2, IJsonTable.class);
+        IJsonObject token = JsonCodec.deserialize(src2, IJsonObject.class);
         String userId = token.get("Consume")
-                .cast(IJsonTable.class).get("record")
+                .cast(IJsonObject.class).get("record")
                 .cast(IJsonArray.class).get(5)
-                .cast(IJsonTable.class).get("UserID")
+                .cast(IJsonObject.class).get("UserID")
                 .cast(IJsonString.class).value();
         assertEquals("668288112", userId);
     }
 
     @Test
     public void test_JsonTokenFactory() {
-        IJsonTable token = tokenFactory.newJsonTable()
+        IJsonObject token = tokenFactory.newJsonObject()
                 .put("ss", tokenFactory.newJsonString("hello"))
                 .put("ii", tokenFactory.newJsonInt(77))
                 .put("ff", tokenFactory.newJsonFloat(5.5))
@@ -42,7 +42,7 @@ public class Test_Json {
         System.out.println(serialized);
         assertEquals("{\"ss\":\"hello\",\"ii\":77,\"ff\":5.5,\"ll\":[\"vava\",\"vbvb\"],\"nn\":null,\"bb\":true}", serialized);
 
-        IJsonTable token2 = JsonCodec.deserialize(serialized, IJsonTable.class);
+        IJsonObject token2 = JsonCodec.deserialize(serialized, IJsonObject.class);
         String serialized2 = JsonCodec.serialize(token2);
 
         assertEquals(serialized, serialized2);

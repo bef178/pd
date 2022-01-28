@@ -35,8 +35,8 @@ public class JsonCodec {
         }
 
         @Override
-        public IJsonTable newJsonTable() {
-            return new DirectJsonTable();
+        public IJsonObject newJsonObject() {
+            return new DirectJsonObject();
         }
     }
 
@@ -54,7 +54,7 @@ public class JsonCodec {
 
         public IJsonString newJsonString(String value);
 
-        public IJsonTable newJsonTable();
+        public IJsonObject newJsonObject();
     }
 
     public static final IJsonTokenFactory tokenFactory = new DirectJsonTokenFactory();

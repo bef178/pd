@@ -204,8 +204,8 @@ class JsonDeserializer {
         }
     }
 
-    private IJsonTable deserializeToJsonTable(CharReader it) {
-        IJsonTable token = tokenFactory.newJsonTable();
+    private IJsonObject deserializeToJsonObject(CharReader it) {
+        IJsonObject token = tokenFactory.newJsonObject();
         int state = 0;
         while (true) {
             switch (state) {
@@ -297,7 +297,7 @@ class JsonDeserializer {
                 return deserializeToJsonArray(it);
             case '{':
                 it.moveBack();
-                return deserializeToJsonTable(it);
+                return deserializeToJsonObject(it);
             default:
                 break;
         }
