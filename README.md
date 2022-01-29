@@ -17,29 +17,3 @@
 i/o stuff such as encoding, formatting, parsing, etc
 
 > Lost in IReader, IByteProvider, IUnicodeStream etc, until I realize the confusion is actually from a same function name `wrap` returns different ranges of values. Self-explanatory names are important.
-
-## pd.json
-
-Depends on pd.fenc, thus being a package rather than a sub project.
-
-Converts `IJsonToken` <=> `String` via `JsonCodec`.
-
-`IJsonToken` is extended by:
-  - `IJsonNull`
-  - `IJsonBoolean`
-  - `IJsonInt`
-  - `IJsonFloat`
-  - `IJsonString`
-  - `IJsonArray`
-  - `IJsonTable`
-
-To create a json token, use `JsonCodec.tokenFactory` variable.
-
-**TODO** convert json token => java object thus somehow hide json token  
-it is troublesome due to  
-1. java type erasure
-2. with interface type and instance known but the implementation type unknown
-
-**TODO** notation as config
-
-**TODO** custom serialize() & deserialize() on java object
