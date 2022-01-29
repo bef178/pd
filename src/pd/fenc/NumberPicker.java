@@ -197,7 +197,7 @@ class NumberPicker {
     public static Number pickNumber(CharReader it) {
         StringBuilder sb = new StringBuilder();
         pickNumber(it, IWriter.unicodeStream(sb));
-        return new NumberToken(sb.toString());
+        return new TextNumber(sb.toString());
     }
 
     /**

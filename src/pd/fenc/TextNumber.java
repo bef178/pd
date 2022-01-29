@@ -1,27 +1,27 @@
 package pd.fenc;
 
-public class NumberToken extends Number {
+public class TextNumber extends Number {
 
     /**
      *
      */
     private static final long serialVersionUID = 1L;
 
-    private String raw;
+    protected String raw;
 
-    public NumberToken() {
+    public TextNumber() {
         this(0);
     }
 
-    public NumberToken(double value) {
+    public TextNumber(double value) {
         this(Double.toString(value));
     }
 
-    public NumberToken(long value) {
+    public TextNumber(long value) {
         this(Long.toString(value));
     }
 
-    public NumberToken(String raw) {
+    public TextNumber(String raw) {
         set(raw);
     }
 
@@ -45,15 +45,17 @@ public class NumberToken extends Number {
         return Long.parseLong(raw);
     }
 
-    public void set(double value) {
+    public TextNumber set(double value) {
         raw = Double.toString(value);
+        return this;
     }
 
-    public void set(long value) {
+    public TextNumber set(long value) {
         raw = Long.toString(value);
+        return this;
     }
 
-    public void set(String raw) {
+    public TextNumber set(String raw) {
         if (raw == null) {
             throw new NullPointerException();
         }
@@ -63,6 +65,7 @@ public class NumberToken extends Number {
             throw new ParsingException(String.format("unrecognized number [%s]", raw));
         }
         this.raw = raw;
+        return this;
     }
 
     @Override

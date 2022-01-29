@@ -50,7 +50,7 @@ public class CharReader implements IReader {
     }
 
     public void eatOrThrow(int expected) {
-        if (tryEat(expected)) {
+        if (!tryEat(expected)) {
             throw new ParsingException(expected, next());
         }
     }

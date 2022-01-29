@@ -1,124 +1,162 @@
 package pd.json;
 
-import static pd.json.JsonCodec.tokenFactory;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.PrimitiveIterator.OfInt;
 
-import pd.fenc.ParsingException;
+import pd.fenc.Cascii;
+import pd.fenc.HexCodec;
+import pd.json.type.IJson;
+import pd.json.type.IJsonArray;
+import pd.json.type.IJsonBoolean;
+import pd.json.type.IJsonNull;
+import pd.json.type.IJsonNumber;
+import pd.json.type.IJsonObject;
+import pd.json.type.IJsonString;
 
 class JsonSerializer {
 
-    private IJsonToken serialize(Field field, Object o) throws IllegalArgumentException, IllegalAccessException {
+    private final IJsonFactory factory;
+
+    public JsonSerializer(IJsonFactory factory) {
+        this.factory = factory;
+    }
+
+    private IJson convert(Field field, Object o) throws IllegalArgumentException, IllegalAccessException {
         Class<?> fieldType = field.getType();
         if (fieldType.isPrimitive()) {
             if (fieldType == boolean.class) {
-                return tokenFactory.newJsonBoolean(field.getBoolean(o));
-            } else if (fieldType == byte.class) {
-                return tokenFactory.newJsonInt(field.getByte(o));
-            } else if (fieldType == char.class) {
-                return tokenFactory.newJsonInt(field.getChar(o));
-            } else if (fieldType == short.class) {
-                return tokenFactory.newJsonInt(field.getShort(o));
-            } else if (fieldType == int.class) {
-                return tokenFactory.newJsonInt(field.getInt(o));
-            } else if (fieldType == long.class) {
-                return tokenFactory.newJsonInt(field.getLong(o));
-            } else if (fieldType == float.class) {
-                return tokenFactory.newJsonFloat(field.getFloat(o));
-            } else if (fieldType == double.class) {
-                return tokenFactory.newJsonFloat(field.getDouble(o));
-            } else {
-                throw new ParsingException();
+                return factory.newJsonBoolean(field.getBoolean(o));
             }
+
+            if (fieldType == byte.class) {
+                return factory.newJsonNumber().set(field.getByte(o));
+            } else if (fieldType == char.class) {
+                return factory.newJsonNumber().set(field.getChar(o));
+            } else if (fieldType == short.class) {
+                return factory.newJsonNumber().set(field.getShort(o));
+            } else if (fieldType == int.class) {
+                return factory.newJsonNumber().set(field.getInt(o));
+            } else if (fieldType == long.class) {
+                return factory.newJsonNumber().set(field.getLong(o));
+            }
+
+            if (fieldType == float.class) {
+                return factory.newJsonNumber().set(field.getFloat(o));
+            } else if (fieldType == double.class) {
+                return factory.newJsonNumber().set(field.getDouble(o));
+            }
+
+            throw new JsonException();
         }
-        return serialize(field.get(o));
+        return convert(field.get(o));
     }
 
     /**
-     * `IJsonToken` => `String`<br/>
-     */
-    public String serialize(IJsonToken jsonToken, String margin, String indent, String eol, int numIndents) {
-        StringBuilder sb = new StringBuilder();
-        serializeJsonToken(jsonToken, margin, indent, eol, numIndents, sb);
-        return sb.toString();
-    }
-
-    /**
-     * `Object` => `IJsonToken`<br/>
-     * serialize only public fields
+     * `Object` => `IJson`<br/>
+     * serialize public fields only
      */
     @SuppressWarnings("unchecked")
-    public IJsonToken serialize(Object o) {
+    public IJson convert(Object o) {
         if (o == null) {
-            return tokenFactory.newJsonNull();
+            return factory.newJsonNull();
         }
 
         if (o instanceof Boolean) {
-            return tokenFactory.newJsonBoolean((Boolean) o);
-        } else if (o instanceof Byte) {
-            return tokenFactory.newJsonInt((Byte) o);
+            return factory.newJsonBoolean((Boolean) o);
+        }
+
+        if (o instanceof Byte) {
+            return factory.newJsonNumber().set((Byte) o);
         } else if (o instanceof Character) {
-            return tokenFactory.newJsonInt((Character) o);
+            return factory.newJsonNumber().set((Character) o);
         } else if (o instanceof Short) {
-            return tokenFactory.newJsonInt((Short) o);
+            return factory.newJsonNumber().set((Short) o);
         } else if (o instanceof Integer) {
-            return tokenFactory.newJsonInt((Integer) o);
+            return factory.newJsonNumber().set((Integer) o);
         } else if (o instanceof Long) {
-            return tokenFactory.newJsonInt((Long) o);
-        } else if (o instanceof Float) {
-            return tokenFactory.newJsonFloat((Float) o);
+            return factory.newJsonNumber().set((Long) o);
+        }
+
+        if (o instanceof Float) {
+            return factory.newJsonNumber().set((Float) o);
         } else if (o instanceof Double) {
-            return tokenFactory.newJsonFloat((Double) o);
+            return factory.newJsonNumber().set((Double) o);
         }
 
         if (o instanceof String) {
-            return tokenFactory.newJsonString((String) o);
+            return factory.newJsonString().set((String) o);
         }
 
         if (o instanceof List) {
-            IJsonArray token = tokenFactory.newJsonArray();
+            IJsonArray a = factory.newJsonArray();
             for (Object element : (List<Object>) o) {
-                IJsonToken value = serialize(element);
-                token.add(value);
+                IJson json = convert(element);
+                a.add(json);
             }
-            return token;
+            return a;
         } else if (o.getClass().isArray()) {
-            IJsonArray token = tokenFactory.newJsonArray();
+            IJsonArray a = factory.newJsonArray();
             int length = Array.getLength(o);
             for (int i = 0; i < length; i++) {
                 Object element = Array.get(o, i);
-                IJsonToken value = serialize(element);
-                token.add(value);
+                IJson json = convert(element);
+                a.add(json);
             }
-            return token;
+            return a;
         }
 
         if (o instanceof Map) {
-            IJsonObject token = tokenFactory.newJsonObject();
+            IJsonObject jsonObject = factory.newJsonObject();
             for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) o).entrySet()) {
                 String key = entry.getKey().toString();
-                IJsonToken value = serialize(entry.getValue());
-                token.put(key, value);
+                IJson json = convert(entry.getValue());
+                jsonObject.put(key, json);
             }
-            return token;
+            return jsonObject;
         } else {
-            IJsonObject token = tokenFactory.newJsonObject();
+            IJsonObject jsonObject = factory.newJsonObject();
             for (Field field : o.getClass().getFields()) {
                 String key = field.getName();
-                IJsonToken value;
                 try {
-                    value = serialize(field, o);
+                    IJson json = convert(field, o);
+                    jsonObject.put(key, json);
                 } catch (IllegalArgumentException | IllegalAccessException e) {
-                    throw new ParsingException(e);
+                    throw new JsonException(e);
                 }
-                token.put(key, value);
             }
-            return token;
+            return jsonObject;
+        }
+    }
+
+    /**
+     * `IJson` => `String`<br/>
+     */
+    public String serialize(IJson json, String margin, String indent, String eol, int numIndents) {
+        StringBuilder sb = new StringBuilder();
+        serializeJson(json, margin, indent, eol, numIndents, sb);
+        return sb.toString();
+    }
+
+    private void serializeJson(IJson json, String margin, String indent, String eol, int numIndents, StringBuilder sb) {
+        if (json instanceof IJsonNull) {
+            sb.append("null");
+        } else if (json instanceof IJsonBoolean) {
+            sb.append(Boolean.toString(IJsonBoolean.class.cast(json).getBoolean()));
+        } else if (json instanceof IJsonNumber) {
+            sb.append(IJsonNumber.class.cast(json).toString());
+        } else if (json instanceof IJsonString) {
+            serializeJsonString(IJsonString.class.cast(json).getString(), sb);
+        } else if (json instanceof IJsonArray) {
+            serializeJsonArray(IJsonArray.class.cast(json), margin, indent, eol, numIndents, sb);
+        } else if (json instanceof IJsonObject) {
+            serializeJsonObject(IJsonObject.class.cast(json), margin, indent, eol, numIndents, sb);
+        } else {
+            throw new JsonException();
         }
     }
 
@@ -145,13 +183,13 @@ class JsonSerializer {
 
         numIndents++;
 
-        Iterator<IJsonToken> it = jsonArray.iterator();
+        Iterator<IJson> it = jsonArray.iterator();
         while (it.hasNext()) {
-            IJsonToken token = it.next();
+            IJson json = it.next();
 
             serializeMarginAndIndents(margin, indent, numIndents, sb);
 
-            serializeJsonToken(token, margin, indent, eol, numIndents, sb);
+            serializeJson(json, margin, indent, eol, numIndents, sb);
 
             if (it.hasNext()) {
                 sb.append(',');
@@ -192,17 +230,17 @@ class JsonSerializer {
 
         numIndents++;
 
-        Iterator<Entry<String, IJsonToken>> it = jsonObject.entrySet().iterator();
+        Iterator<Entry<String, IJson>> it = jsonObject.entrySet().iterator();
         while (it.hasNext()) {
-            Entry<String, IJsonToken> entry = it.next();
+            Entry<String, IJson> entry = it.next();
             String key = entry.getKey();
-            IJsonToken value = entry.getValue();
+            IJson value = entry.getValue();
 
             serializeMarginAndIndents(margin, indent, numIndents, sb);
 
-            sb.append(Util.serializeToQuotedString(key));
+            serializeJsonString(key, sb);
             sb.append(':');
-            serializeJsonToken(value, margin, indent, eol, numIndents, sb);
+            serializeJson(value, margin, indent, eol, numIndents, sb);
 
             if (it.hasNext()) {
                 sb.append(',');
@@ -220,23 +258,32 @@ class JsonSerializer {
         sb.append('}');
     }
 
-    private void serializeJsonToken(IJsonToken token, String margin, String indent, String eol, int numIndents,
-            StringBuilder sb) {
-        if (token instanceof IJsonNull) {
-            sb.append("null");
-        } else if (token instanceof IJsonBoolean) {
-            sb.append(Boolean.toString(token.cast(IJsonBoolean.class).value()));
-        } else if (token instanceof IJsonInt) {
-            sb.append(Long.toString(token.cast(IJsonInt.class).int64()));
-        } else if (token instanceof IJsonFloat) {
-            sb.append(Double.toString(token.cast(IJsonFloat.class).float64()));
-        } else if (token instanceof IJsonString) {
-            sb.append(Util.serializeToQuotedString(token.cast(IJsonString.class).value()));
-        } else if (token instanceof IJsonArray) {
-            serializeJsonArray(token.cast(IJsonArray.class), margin, indent, eol, numIndents, sb);
-        } else if (token instanceof IJsonObject) {
-            serializeJsonObject(token.cast(IJsonObject.class), margin, indent, eol, numIndents, sb);
+    private void serializeJsonString(String s, StringBuilder sb) {
+        sb.appendCodePoint('\"');
+        OfInt it = s.codePoints().iterator();
+        while (it.hasNext()) {
+            int ch = it.nextInt();
+            if (ch == '\"' || ch == '\\') {
+                sb.append('\\').append(ch);
+            } else if (ch == '\b') {
+                sb.append('\\').append('b');
+            } else if (ch == '\f') {
+                sb.append('\\').append('f');
+            } else if (ch == '\n') {
+                sb.append('\\').append('n');
+            } else if (ch == '\r') {
+                sb.append('\\').append('r');
+            } else if (ch == '\t') {
+                sb.append('\\').append('t');
+            } else if (Cascii.isControl(ch)) {
+                int[] a = new int[2];
+                HexCodec.encode1byte((byte) ch, a, 0);
+                sb.append('\\').append('u').append('0').append('0').append((char) a[0]).append((char) a[1]);
+            } else {
+                sb.appendCodePoint(ch);
+            }
         }
+        sb.appendCodePoint('\"');
     }
 
     private void serializeMarginAndIndents(String margin, String indent, int numIndents, StringBuilder sb) {

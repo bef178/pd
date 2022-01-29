@@ -5,7 +5,6 @@ import static pd.fenc.IReader.EOF;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.PrimitiveIterator.OfInt;
 
 public final class Util {
 
@@ -84,28 +83,6 @@ public final class Util {
         } finally {
             closeSilently(stream);
         }
-    }
-
-    public static String serializeToQuotedString(String raw) {
-        return serializeToQuotedString(raw, '\"');
-    }
-
-    public static String serializeToQuotedString(String raw, int quote) {
-        assert quote != '\\';
-        StringBuilder sb = new StringBuilder();
-        sb.appendCodePoint(quote);
-        OfInt it = raw.codePoints().iterator();
-        while (it.hasNext()) {
-            int ch = it.nextInt();
-            if (ch == quote) {
-                sb.append('\\');
-                sb.append(quote);
-            } else {
-                sb.appendCodePoint(ch);
-            }
-        }
-        sb.appendCodePoint(quote);
-        return sb.toString();
     }
 
     private Util() {

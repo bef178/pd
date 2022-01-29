@@ -24,6 +24,10 @@ public final class Cascii {
         return ch >= 0 && ch <= 0xFF;
     }
 
+    public static boolean isControl(int ch) {
+        return ch >= 0 && ch < 0x20 || ch == 0x7F;
+    }
+
     public static boolean isDigit(int ch) {
         return isDigit(ch, 10);
     }

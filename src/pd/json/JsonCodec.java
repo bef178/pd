@@ -1,80 +1,22 @@
 package pd.json;
 
+import pd.json.simplejson.SimpleJsonFactory;
+import pd.json.type.IJson;
+
 public class JsonCodec {
 
-    private static class DirectJsonTokenFactory implements IJsonTokenFactory {
+    public static final IJsonFactory factory = new SimpleJsonFactory();
 
-        @Override
-        public IJsonArray newJsonArray() {
-            return new DirectJsonArray();
+    private static final JsonSerializer serializer = new JsonSerializer(factory);
+
+    private static final JsonDeserializer deserializer = new JsonDeserializer(factory);
+
+    public static <T> T deserialize(String jsonCode, Class<T> expectedJavaClass) {
+        IJson json = deserializer.deserialize(jsonCode);
+        if (IJson.class.isAssignableFrom(expectedJavaClass)) {
+            return expectedJavaClass.cast(json);
         }
-
-        @Override
-        public DirectJsonBoolean newJsonBoolean(boolean value) {
-            return new DirectJsonBoolean(value);
-        }
-
-        @Override
-        public IJsonFloat newJsonFloat(double value) {
-            return new DirectJsonFloat(value);
-        }
-
-        @Override
-        public IJsonInt newJsonInt(long value) {
-            return new DirectJsonInt(value);
-        }
-
-        @Override
-        public DirectJsonNull newJsonNull() {
-            return DirectJsonNull.defaultInstance;
-        }
-
-        @Override
-        public IJsonString newJsonString(String value) {
-            return new DirectJsonString(value);
-        }
-
-        @Override
-        public IJsonObject newJsonObject() {
-            return new DirectJsonObject();
-        }
-    }
-
-    public interface IJsonTokenFactory {
-
-        public IJsonArray newJsonArray();
-
-        public IJsonBoolean newJsonBoolean(boolean value);
-
-        public IJsonFloat newJsonFloat(double value);
-
-        public IJsonInt newJsonInt(long value);
-
-        public IJsonNull newJsonNull();
-
-        public IJsonString newJsonString(String value);
-
-        public IJsonObject newJsonObject();
-    }
-
-    public static final IJsonTokenFactory tokenFactory = new DirectJsonTokenFactory();
-    private static final JsonSerializer serializer = new JsonSerializer();
-    private static final JsonDeserializer deserializer = new JsonDeserializer();
-
-    public static <T> T deserialize(String serialized, Class<T> expectedClass) {
-        IJsonToken token = deserializer.deserialize(serialized);
-        if (IJsonToken.class.isAssignableFrom(expectedClass)) {
-            return expectedClass.cast(token);
-        }
-        return deserializer.deserialize(token, expectedClass);
-    }
-
-    public static String serialize(IJsonToken token) {
-        return serialize(token, "", "", "", 0);
-    }
-
-    public static String serialize(IJsonToken token, String margin, String indent, String eol, int numIndents) {
-        return serializer.serialize(token, margin, indent, eol, numIndents);
+        return deserializer.convert(json, expectedJavaClass);
     }
 
     public static String serialize(Object object) {
@@ -82,7 +24,9 @@ public class JsonCodec {
     }
 
     public static String serialize(Object object, String margin, String indent, String eol, int numIndents) {
-        IJsonToken token = serializer.serialize(object);
-        return serializer.serialize(token, margin, indent, eol, numIndents);
+        IJson json = IJson.class.isAssignableFrom(object.getClass())
+                ? IJson.class.cast(object)
+                : serializer.convert(object);
+        return serializer.serialize(json, margin, indent, eol, numIndents);
     }
 }
