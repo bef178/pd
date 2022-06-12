@@ -37,6 +37,10 @@ public final class StringExtension {
         return hashCode;
     }
 
+    public static boolean isNullOrEmpty(String s) {
+        return s == null || s.isEmpty();
+    }
+
     public static String[] split(String s, final int delimeter) {
         List<String> list = new LinkedList<String>();
         int start = -1;
