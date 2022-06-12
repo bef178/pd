@@ -6,7 +6,7 @@ public class LogManager {
 
     private static class Config {
 
-        private static final String KEY_PREFIX = LogManager.class.getPackageName();
+        private static final String KEY_PREFIX = LogManager.class.getPackage().getName();
         private static final String KEY_LOGGERCLASS = KEY_PREFIX + ".loggerClass";
         private static final String KEY_LOGLEVEL = KEY_PREFIX + ".loggerLevel";
         private static final String KEY_FILELOGGER_ROOT = KEY_PREFIX + ".fileLogger.root";

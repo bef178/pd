@@ -68,7 +68,7 @@ public final class Util {
         if (ch == EOF) {
             return "EOF";
         }
-        return Character.toString(ch);
+        return new String(new int[] { ch }, 0, 1);
     }
 
     public static void consumeDataAndCloseSilently(InputStream stream) {

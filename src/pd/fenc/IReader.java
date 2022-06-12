@@ -124,7 +124,7 @@ public interface IReader {
         return unicodeStream(cs.codePoints().iterator());
     }
 
-    private static IReader unicodeStream(OfInt it) {
+    public static IReader unicodeStream(OfInt it) {
 
         return new IReader() {
 
