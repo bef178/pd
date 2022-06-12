@@ -1,4 +1,7 @@
-package pd.fenc;
+package pd.fenc.codec;
+
+import pd.fenc.ParsingException;
+import pd.util.CbitArray;
 
 /**
  * https://en.wikipedia.org/wiki/UTF-8<br/>
@@ -105,7 +108,7 @@ public class Utf8Codec {
         assert isUtf8HeadByte(utf8HeadByte);
 
         int n = 0;
-        while (n < 8 && Cstream.getBit((byte) utf8HeadByte, n)) {
+        while (n < 8 && CbitArray.getBit((byte) utf8HeadByte, n)) {
             ++n;
         }
         switch (n) {

@@ -1,6 +1,6 @@
 package pd.csv;
 
-import static pd.fenc.Cascii.DOUBLE_QUOTE;
+import static pd.util.Cascii.DOUBLE_QUOTE;
 
 import java.util.HashSet;
 import java.util.Iterator;

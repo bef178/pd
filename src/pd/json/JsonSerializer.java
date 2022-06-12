@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PrimitiveIterator.OfInt;
 
-import pd.fenc.Cascii;
-import pd.fenc.HexCodec;
+import pd.fenc.codec.HexCodec;
 import pd.json.type.IJson;
 import pd.json.type.IJsonArray;
 import pd.json.type.IJsonBoolean;
@@ -17,6 +16,7 @@ import pd.json.type.IJsonNull;
 import pd.json.type.IJsonNumber;
 import pd.json.type.IJsonObject;
 import pd.json.type.IJsonString;
+import pd.util.Cascii;
 
 class JsonSerializer {
 

@@ -1,9 +1,9 @@
-package pd.fenc;
+package pd.util;
 
 import java.util.Collection;
 import java.util.Iterator;
 
-public class Cset<E> {
+public class CollectionExtension<E> {
 
     /**
      * one += another
@@ -37,7 +37,7 @@ public class Cset<E> {
         }
     }
 
-    private Cset() {
+    private CollectionExtension() {
         // private dummy
     }
 }

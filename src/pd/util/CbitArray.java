@@ -1,23 +1,19 @@
-package pd.fenc;
+package pd.util;
 
-public final class Cstream {
+public final class CbitArray {
 
     private static final int BITS_PER_BYTE = 8;
 
     public static boolean getBit(byte mem, int offset) {
         assert offset >= 0 && offset < BITS_PER_BYTE;
-        return getBits(mem, 1 << (BITS_PER_BYTE - 1 - offset)) != 0;
+        int mask = 1 << (BITS_PER_BYTE - 1 - offset);
+        return (mem & mask) != 0;
     }
 
     public static boolean getBit(byte[] mem, int offset) {
         assert mem != null;
         assert offset >= 0 && offset < mem.length * BITS_PER_BYTE;
         return getBit(mem[offset / BITS_PER_BYTE], offset % BITS_PER_BYTE);
-    }
-
-    private static byte getBits(byte mem, int bits) {
-        mem &= bits;
-        return mem;
     }
 
     private static byte setBit(byte mem, int offset, boolean value) {
@@ -32,11 +28,11 @@ public final class Cstream {
         mem[p] = setBit(mem[p], offset % BITS_PER_BYTE, true);
     }
 
-    private static byte setBits(byte mem, int bits, boolean value) {
+    private static byte setBits(byte mem, int bitsMask, boolean value) {
         if (value) {
-            mem |= bits;
+            mem |= bitsMask;
         } else {
-            mem &= ~bits;
+            mem &= ~bitsMask;
         }
         return mem;
     }
@@ -92,7 +88,7 @@ public final class Cstream {
         return mem;
     }
 
-    private Cstream() {
+    private CbitArray() {
         // private dummy
     }
 }

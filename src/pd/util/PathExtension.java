@@ -1,4 +1,4 @@
-package pd.fenc;
+package pd.util;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -7,7 +7,7 @@ import java.util.LinkedList;
  * path is a string<br/>
  * https://tools.ietf.org/rfc/rfc3986.txt<br/>
  */
-public class UriPath {
+public class PathExtension {
 
     /**
      * get last component of a path; trailing '/'(s) will be ignored<br/>

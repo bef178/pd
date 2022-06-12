@@ -1,4 +1,4 @@
-package pd.fenc;
+package pd.fenc.codec;
 
 import java.util.BitSet;
 

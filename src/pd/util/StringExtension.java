@@ -1,9 +1,9 @@
-package pd.fenc;
+package pd.util;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public final class Cstring {
+public final class StringExtension {
 
     public static final int compare(String s1, String s2) {
         if (s1 == null) {
@@ -72,5 +72,9 @@ public final class Cstring {
         }
         list.add(s.substring(start));
         return list.toArray(new String[0]);
+    }
+
+    private StringExtension() {
+        // private dummy
     }
 }

@@ -1,5 +1,7 @@
 package pd.fenc;
 
+import pd.util.Cascii;
+
 /**
  * It often requires "pre-reading" few symbols to speculate which token parser should be invoked.<br>
  * While, we know stream cannot move backward physically.<br/>

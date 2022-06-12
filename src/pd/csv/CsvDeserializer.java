@@ -1,8 +1,8 @@
 package pd.csv;
 
 import static pd.csv.CsvSerializer.getCommas;
-import static pd.fenc.Cascii.DOUBLE_QUOTE;
 import static pd.fenc.IReader.EOF;
+import static pd.util.Cascii.DOUBLE_QUOTE;
 
 import java.util.HashSet;
 import java.util.LinkedList;

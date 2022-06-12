@@ -7,10 +7,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import pd.fenc.Cascii;
 import pd.fenc.CharReader;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
+import pd.util.Cascii;
 
 public class CurlyBracePattern {
 

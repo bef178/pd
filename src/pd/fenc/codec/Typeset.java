@@ -1,6 +1,9 @@
-package pd.fenc;
+package pd.fenc.codec;
 
 import static pd.fenc.Util.checkPrintableAscii;
+
+import pd.fenc.IReader;
+import pd.fenc.IWriter;
 
 public class Typeset {
 

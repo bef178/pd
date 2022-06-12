@@ -2,6 +2,9 @@ package pd.fenc;
 
 import static pd.fenc.IReader.EOF;
 
+import pd.util.Cascii;
+import pd.util.Cint32Array;
+
 public class ScalarPicker extends NumberPicker {
 
     public static String pickBackSlashEscapedString(CharReader src, int terminator) {
@@ -109,7 +112,7 @@ public class ScalarPicker extends NumberPicker {
     public static boolean tryPickString(CharReader src, IWriter dst, int... terminators) {
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
-            if (Int32Array.contains(terminators, ch)) {
+            if (Cint32Array.contains(terminators, ch)) {
                 if (ch != EOF) {
                     src.moveBack();
                 }

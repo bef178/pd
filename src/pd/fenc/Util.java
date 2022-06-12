@@ -6,6 +6,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
+import pd.util.Cascii;
+
 public final class Util {
 
     public static int checkAscii(int value) {

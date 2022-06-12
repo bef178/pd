@@ -1,7 +1,10 @@
-package pd.fenc;
+package pd.fenc.codec;
 
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleEntry;
+
+import pd.fenc.InstallmentByteBuffer;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;

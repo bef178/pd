@@ -1,6 +1,6 @@
-package pd.fenc;
+package pd.util;
 
-public final class Int32Array {
+public final class Cint32Array {
 
     public static final boolean contains(int[] a, int value) {
         return indexOf(a, value) >= 0;
@@ -15,7 +15,7 @@ public final class Int32Array {
         return -1;
     }
 
-    private Int32Array() {
+    private Cint32Array() {
         // dummy
     }
 }

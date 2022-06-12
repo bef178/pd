@@ -1,9 +1,12 @@
-package pd.fenc;
+package pd.fenc.codec;
 
 import static pd.fenc.IReader.EOF;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
+
+import pd.fenc.CharReader;
+import pd.fenc.ScalarPicker;
 
 public class PropSerializer {
 

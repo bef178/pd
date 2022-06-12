@@ -1,23 +1,23 @@
 package pd.net.http;
 
-import static pd.fenc.Cascii.CR;
-import static pd.fenc.Cascii.HT;
-import static pd.fenc.Cascii.LF;
-import static pd.fenc.Cascii.SP;
 import static pd.fenc.IReader.EOF;
+import static pd.util.Cascii.CR;
+import static pd.util.Cascii.HT;
+import static pd.util.Cascii.LF;
+import static pd.util.Cascii.SP;
 
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import pd.fenc.Cascii;
 import pd.fenc.CharReader;
 import pd.fenc.IReader;
 import pd.fenc.InstallmentByteBuffer;
-import pd.fenc.Int32Array;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
+import pd.util.Cascii;
+import pd.util.Cint32Array;
 
 public class MessageParser {
 
@@ -242,7 +242,7 @@ public class MessageParser {
         StringBuilder sb = new StringBuilder();
         while (true) {
             int ch = it.hasNext() ? it.next() : EOF;
-            if (Int32Array.contains(terminators, ch)) {
+            if (Cint32Array.contains(terminators, ch)) {
                 if (ch != EOF) {
                     it.moveBack();
                 }
@@ -290,7 +290,7 @@ public class MessageParser {
                 case 0: {
                     // expect key
                     int ch = it.hasNext() ? it.next() : EOF;
-                    if (Int32Array.contains(terminators, ch)) {
+                    if (Cint32Array.contains(terminators, ch)) {
                         if (ch != EOF) {
                             it.moveBack();
                         }
@@ -309,7 +309,7 @@ public class MessageParser {
                 case 1: {
                     // expect key cont.
                     int ch = it.hasNext() ? it.next() : EOF;
-                    if (Int32Array.contains(terminators, ch)) {
+                    if (Cint32Array.contains(terminators, ch)) {
                         if (ch != EOF) {
                             it.moveBack();
                         }
@@ -332,7 +332,7 @@ public class MessageParser {
                 case 4: {
                     // expect value
                     int ch = it.hasNext() ? it.next() : EOF;
-                    if (Int32Array.contains(terminators, ch)) {
+                    if (Cint32Array.contains(terminators, ch)) {
                         if (ch != EOF) {
                             it.moveBack();
                         }
@@ -350,7 +350,7 @@ public class MessageParser {
                 case 5: {
                     // expect value cont.
                     int ch = it.hasNext() ? it.next() : EOF;
-                    if (Int32Array.contains(terminators, ch)) {
+                    if (Cint32Array.contains(terminators, ch)) {
                         if (ch != EOF) {
                             it.moveBack();
                         }
