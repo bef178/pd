@@ -13,6 +13,7 @@ import pd.log.ILogger;
 import pd.log.LogManager;
 import pd.net.http.HttpRequestContext;
 import pd.net.serv.SomeServer;
+import pd.util.CurlyBracketPattern;
 
 public class SomeApplication extends SomeServer<HttpRequestContext> {
 
@@ -57,7 +58,7 @@ public class SomeApplication extends SomeServer<HttpRequestContext> {
         for (Method method : type.getDeclaredMethods()) {
             RouteEndpoint routeEndpointAnno = method.getDeclaredAnnotation(RouteEndpoint.class);
             if (routeEndpointAnno != null) {
-                CurlyBracePattern.validateOrThrow(routeEndpointAnno.pathPattern());
+                CurlyBracketPattern.validateOrThrow(routeEndpointAnno.pathPattern());
                 router.register(controller, method, routeEndpointAnno.httpMethod(), routeEndpointAnno.pathPattern());
             }
         }

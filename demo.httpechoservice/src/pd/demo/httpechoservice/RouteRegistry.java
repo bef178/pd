@@ -8,6 +8,7 @@ import java.util.Map;
 
 import pd.demo.httpechoservice.controller.IController;
 import pd.net.http.HttpRequestContext;
+import pd.util.CurlyBracketPattern;
 
 public class RouteRegistry {
 
@@ -47,7 +48,7 @@ public class RouteRegistry {
         List<RouteEntry> slot = registry.get(request.mHttpMethod);
         if (slot != null) {
             for (RouteEntry entry : slot) {
-                var pathParams = CurlyBracePattern.matchRequestPath(entry.requestPathPattern, requestPath);
+                var pathParams = CurlyBracketPattern.match(entry.requestPathPattern, requestPath);
                 if (pathParams != null) {
                     var result = new RouteResult();
                     result.controller = entry.controller;

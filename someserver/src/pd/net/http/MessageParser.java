@@ -7,6 +7,7 @@ import static pd.util.Cascii.LF;
 import static pd.util.Cascii.SP;
 
 import java.io.InputStream;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +161,7 @@ public class MessageParser {
                     int ch = it.hasNext() ? it.next() : EOF;
                     if (ch == LF) {
                         String value = sb.toString().trim();
-                        return Map.entry(key, value);
+                        return new SimpleImmutableEntry<>(key, value);
                     } else {
                         throw new ParsingException(ERR_INVALID_HTTP_HEADER);
                     }
@@ -314,7 +315,7 @@ public class MessageParser {
                             it.moveBack();
                         }
                         key = sb.toString();
-                        return Map.entry(key, "");
+                        return new SimpleImmutableEntry<>(key, "");
                     } else if (!Cascii.isVisible(ch)) {
                         throw new ParsingException(ERR_INVALID_HTTP_REQUEST_QUERY);
                     } else if (ch == '=') {
@@ -323,7 +324,7 @@ public class MessageParser {
                         state = 4;
                     } else if (ch == '&') {
                         key = sb.toString();
-                        return Map.entry(key, "");
+                        return new SimpleImmutableEntry<>(key, "");
                     } else {
                         sb.appendCodePoint(ch);
                     }
@@ -336,11 +337,11 @@ public class MessageParser {
                         if (ch != EOF) {
                             it.moveBack();
                         }
-                        return Map.entry(key, "");
+                        return new SimpleImmutableEntry<>(key, "");
                     } else if (!Cascii.isVisible(ch)) {
                         throw new ParsingException(ERR_INVALID_HTTP_REQUEST_QUERY);
                     } else if (ch == '&') {
-                        return Map.entry(key, "");
+                        return new SimpleImmutableEntry<>(key, "");
                     } else {
                         sb.appendCodePoint(ch);
                         state = 5;
@@ -354,11 +355,11 @@ public class MessageParser {
                         if (ch != EOF) {
                             it.moveBack();
                         }
-                        return Map.entry(key, sb.toString());
+                        return new SimpleImmutableEntry<>(key, sb.toString());
                     } else if (!Cascii.isVisible(ch)) {
                         throw new ParsingException(ERR_INVALID_HTTP_REQUEST_QUERY);
                     } else if (ch == '&') {
-                        return Map.entry(key, sb.toString());
+                        return new SimpleImmutableEntry<>(key, sb.toString());
                     } else {
                         sb.appendCodePoint(ch);
                     }

@@ -8,84 +8,12 @@ import java.net.UnknownHostException;
 import java.util.Properties;
 
 import pd.time.Ctime;
-
-import java.util.PrimitiveIterator.OfInt;
+import pd.util.CurlyBracketPattern;
 
 public class LogUtil {
 
-    /**
-     * use '{}' as formatting anchor
-     */
     public static String evaluateMessage(String message, Object... messageArguments) {
-        if (messageArguments == null || messageArguments.length == 0) {
-            return message;
-        }
-
-        // state machine
-        StringBuilder sb = new StringBuilder();
-        OfInt it = message.codePoints().iterator();
-        int nextArgumentIndex = 0;
-        int state = 0;
-        while (state != 3) {
-            switch (state) {
-                case 0: {
-                    int ch = it.hasNext() ? it.nextInt() : -1;
-                    switch (ch) {
-                        case '\\':
-                            state = 1;
-                            break;
-                        case '{':
-                            state = 2;
-                            break;
-                        case -1:
-                            state = 3;
-                            break;
-                        default:
-                            state = 0;
-                            sb.appendCodePoint(ch);
-                            break;
-                    }
-                    break;
-                }
-                case 1: {
-                    int ch = it.hasNext() ? it.nextInt() : -1;
-                    switch (ch) {
-                        case '\\':
-                            state = 0;
-                            sb.append('\\');
-                            break;
-                        case '{':
-                            state = 0;
-                            sb.append('{');
-                            break;
-                        default:
-                            String actual = new String(Character.toChars(ch));
-                            throw new IllegalArgumentException(String.format("E: unrecognized \"\\%s\"", actual));
-                    }
-                    break;
-                }
-                case 2: {
-                    int ch = it.hasNext() ? it.nextInt() : -1;
-                    switch (ch) {
-                        case '}':
-                            state = 0;
-                            if (nextArgumentIndex < messageArguments.length) {
-                                sb.append(messageArguments[nextArgumentIndex++]);
-                            } else {
-                                sb.append("{}");
-                            }
-                            break;
-                        default:
-                            state = 0;
-                            sb.append('{');
-                            sb.appendCodePoint(ch);
-                            break;
-                    }
-                    break;
-                }
-            }
-        }
-        return sb.toString();
+        return CurlyBracketPattern.format(message, messageArguments);
     }
 
     public static String getHostname() {
