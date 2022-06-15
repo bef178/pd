@@ -19,7 +19,7 @@ ifndef LIB
 LIB := ./lib
 endif
 
-LIB_FILES := $(foreach D,$(LIB),$(call find-jar-files,$(D)))
+LIB_FILES := $(LIB) $(foreach D,$(LIB),$(call find-jar-files,$(D)))
 ifeq ($(LIB_FILES),)
   ifeq ($(CLASSPATH),)
     CLASSPATH := ""

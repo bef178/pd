@@ -8,16 +8,14 @@ classes:
 	@ \
 	SRC=./src/java \
 	OUT=./out/classes \
-	make -f ../build/java8.mk classes
+	make -f ../build/java8.mk
 
 .PHONY: jar
 jar: ./out/someserver.jar
 
 ./out/someserver.jar: classes
 	@ \
-	JAR_FILE=$@ \
-	JAR_ROOT=./out/classes \
-	JAVA_PACKAGES=pd.someserver \
+	JAR_TARGET_FILE=$@ \
 	make -f ../build/jar.mk
 
 .PHONY: clean

@@ -8,16 +8,19 @@ classes:
 	@ \
 	SRC=./src/java \
 	OUT=./out/classes \
-	make -f ./build/java8.mk classes
+	make -f ./build/java8.mk
+	@ \
+	SRC=./src/test \
+	OUT=./out/test-classes \
+	LIB="./lib ./out/classes" \
+	make -f ./build/java8.mk
 
 .PHONY: jar
 jar: ./out/pd.core.jar
 
 ./out/pd.core.jar: classes
 	@ \
-	JAR_FILE=$@ \
-	JAR_ROOT=./out/classes \
-	JAVA_PACKAGES=pd.fenc,pd.json,pd.log,pd.net,pd.time,pd.util \
+	JAR_TARGET_FILE=$@ \
 	make -f ./build/jar.mk
 
 .PHONY: clean

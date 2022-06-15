@@ -19,7 +19,7 @@ ifndef LIB
 LIB := ./lib
 endif
 
-LIB_FILES := $(foreach D,$(LIB),$(call find-jar-files,$(D)))
+LIB_FILES := $(LIB) $(foreach D,$(LIB),$(call find-jar-files,$(D)))
 ifeq ($(LIB_FILES),)
   ifeq ($(CLASSPATH),)
     CLASSPATH := ""
@@ -49,7 +49,7 @@ JAVAC := /usr/lib/jvm/java-8-openjdk-amd64/bin/javac
 classes: $(SRC_FILES)
 	@echo "compiling ..."
 	@mkdir -p $(OUT)
-	@$(JAVAC) -source 1.8 -target 1.8 \
+	@$(JAVAC) -source 8 -target 8 \
 		-deprecation \
 		-classpath $(CLASSPATH) \
 		-d $(OUT) $(SRC_FILES)
