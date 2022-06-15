@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import pd.fenc.UriPath;
+import pd.util.PathExtension;
 
 public class Test_UriPath {
 
@@ -29,7 +29,7 @@ public class Test_UriPath {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = UriPath.getBasename(input);
+            String actual = PathExtension.getBasename(input);
             assertEquals(expected, actual, String.format(
                     "E: check %s: input[%s], expected[%s], actual[%s]",
                     "Path.getBasename", input, expected, actual));
@@ -50,7 +50,7 @@ public class Test_UriPath {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = UriPath.getParent(input);
+            String actual = PathExtension.getParent(input);
             assertEquals(expected, actual, String.format(
                     "E: check %s: input[%s], expected[%s], actual[%s]",
                     "Path.getParent", input, expected, actual));
@@ -69,7 +69,7 @@ public class Test_UriPath {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = UriPath.normalize(input);
+            String actual = PathExtension.normalize(input);
             assertEquals(expected, actual, String.format(
                     "E: check %s: input[%s], expected[%s], actual[%s]",
                     "Path.normalize", input, expected, actual));

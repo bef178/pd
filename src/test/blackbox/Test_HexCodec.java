@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import pd.fenc.HexCodec;
+import pd.fenc.codec.HexCodec;
 
 public class Test_HexCodec {
 
