@@ -7,7 +7,7 @@ class NumberPicker {
     /**
      * exponent := ('E' / 'e') int
      */
-    static void pickExponent(CharReader src, IWriter dst) {
+    void pickExponent(CharReader src, IWriter dst) {
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == 'E' || ch == 'e') {
             dst.push(ch);
@@ -21,7 +21,7 @@ class NumberPicker {
     /**
      * a number has 3 parts: integer, fraction and exponent
      */
-    public static void pickFloat(CharReader src, IWriter dst) {
+    public void pickFloat(CharReader src, IWriter dst) {
         pickInt(src, dst);
 
         int ch = src.hasNext() ? src.next() : EOF;
@@ -52,13 +52,13 @@ class NumberPicker {
         }
     }
 
-    public static float pickFloat32(CharReader src) {
+    public float pickFloat32(CharReader src) {
         StringBuilder sb = new StringBuilder();
         pickFloat(src, IWriter.unicodeStream(sb));
         return Float.parseFloat(sb.toString());
     }
 
-    public static double pickFloat64(CharReader src) {
+    public double pickFloat64(CharReader src) {
         StringBuilder sb = new StringBuilder();
         pickFloat(src, IWriter.unicodeStream(sb));
         return Double.parseDouble(sb.toString());
@@ -69,7 +69,7 @@ class NumberPicker {
      * <br/>
      * specially, "0.0" is valid<br/>
      */
-    static void pickFraction(CharReader src, IWriter dst) {
+    void pickFraction(CharReader src, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -132,7 +132,7 @@ class NumberPicker {
     /**
      * pick a valid 10-based integer of string form, per intuition
      */
-    static void pickInt(CharReader src, IWriter dst) {
+    void pickInt(CharReader src, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -211,19 +211,19 @@ class NumberPicker {
         }
     }
 
-    public static int pickInt32(CharReader src) {
+    public int pickInt32(CharReader src) {
         StringBuilder sb = new StringBuilder();
         pickInt(src, IWriter.unicodeStream(sb));
         return Integer.parseInt(sb.toString());
     }
 
-    public static long pickInt64(CharReader src) {
+    public long pickInt64(CharReader src) {
         StringBuilder sb = new StringBuilder();
         pickInt(src, IWriter.unicodeStream(sb));
         return Long.parseLong(sb.toString());
     }
 
-    public static Number pickNumber(CharReader src) {
+    public Number pickNumber(CharReader src) {
         StringBuilder sb = new StringBuilder();
         pickFloat(src, IWriter.unicodeStream(sb));
         return new TextNumber(sb.toString());

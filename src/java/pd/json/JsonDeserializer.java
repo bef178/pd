@@ -194,7 +194,7 @@ class JsonDeserializer {
     private IJsonNumber deserializeToJsonNumber(CharReader it) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
-        ScalarPicker.pickFloat(it, dst);
+        new ScalarPicker().pickFloat(it, dst);
         String raw = sb.toString();
         return factory.newJsonNumber().set(raw);
     }

@@ -7,7 +7,7 @@ import pd.util.Cint32Array;
 
 public class ScalarPicker extends NumberPicker {
 
-    public static String pickBackSlashEscapedString(CharReader src, int terminator) {
+    public String pickBackSlashEscapedString(CharReader src, int terminator) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         if (!tryPickBackSlashEscapedString(src, dst, terminator)) {
@@ -16,7 +16,7 @@ public class ScalarPicker extends NumberPicker {
         return sb.toString();
     }
 
-    public static String pickDottedIdentifier(CharReader src) {
+    public String pickDottedIdentifier(CharReader src) {
         StringBuilder sb = new StringBuilder();
         while (true) {
             if (!pickIdentifier(src, IWriter.unicodeStream(sb))) {
@@ -29,7 +29,7 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public static String pickIdentifier(CharReader src) {
+    public String pickIdentifier(CharReader src) {
         StringBuilder sb = new StringBuilder();
         if (!pickIdentifier(src, IWriter.unicodeStream(sb))) {
             throw new ParsingException();
@@ -41,7 +41,7 @@ public class ScalarPicker extends NumberPicker {
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
      * if fail, src.next() will be the illegal character
      */
-    private static boolean pickIdentifier(CharReader src, IWriter dst) {
+    private boolean pickIdentifier(CharReader src, IWriter dst) {
         int stat = 0;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -69,7 +69,7 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public static String pickString(CharReader src, int... closingSymbols) {
+    public String pickString(CharReader src, int... closingSymbols) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         if (!tryPickString(src, dst, closingSymbols)) {
@@ -85,7 +85,7 @@ public class ScalarPicker extends NumberPicker {
      * - `terminator` can be `EOF`<br/>
      * Will fail in front of `EOF`<br/>
      */
-    public static boolean tryPickBackSlashEscapedString(CharReader src, IWriter dst, int terminator) {
+    public boolean tryPickBackSlashEscapedString(CharReader src, IWriter dst, int terminator) {
         boolean isEscaping = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -109,7 +109,7 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public static boolean tryPickString(CharReader src, IWriter dst, int... terminators) {
+    public boolean tryPickString(CharReader src, IWriter dst, int... terminators) {
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
             if (Cint32Array.contains(terminators, ch)) {
@@ -124,9 +124,5 @@ public class ScalarPicker extends NumberPicker {
                 dst.push(ch);
             }
         }
-    }
-
-    private ScalarPicker() {
-        // dummy
     }
 }

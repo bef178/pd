@@ -11,6 +11,7 @@ import pd.fenc.ScalarPicker;
 public class PropSerializer {
 
     public static Entry<String, String> deserialize(CharReader src) {
+        ScalarPicker picker = new ScalarPicker();
 
         src.eatWhitespaces();
 
@@ -21,7 +22,7 @@ public class PropSerializer {
         }
         src.moveBack();
 
-        String key = ScalarPicker.pickDottedIdentifier(src);
+        String key = picker.pickDottedIdentifier(src);
 
         src.eatWhitespaces();
 
@@ -31,7 +32,7 @@ public class PropSerializer {
 
         ch = src.hasNext() ? src.next() : EOF;
         if (ch == '\"') {
-            String value = ScalarPicker.pickBackSlashEscapedString(src, '\"');
+            String value = picker.pickBackSlashEscapedString(src, '\"');
             src.next();
             src.eatWhitespaces();
             src.eatOrThrow(EOF);
@@ -39,7 +40,7 @@ public class PropSerializer {
         } else {
             src.moveBack();
             src.eatWhitespaces();
-            String value = ScalarPicker.pickBackSlashEscapedString(src, EOF);
+            String value = picker.pickBackSlashEscapedString(src, EOF);
             return new SimpleImmutableEntry<String, String>(key, value);
         }
     }
