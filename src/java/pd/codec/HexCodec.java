@@ -1,4 +1,4 @@
-package pd.fenc.codec;
+package pd.codec;
 
 public class HexCodec {
 

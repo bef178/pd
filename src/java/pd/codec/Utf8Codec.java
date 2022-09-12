@@ -1,4 +1,4 @@
-package pd.fenc.codec;
+package pd.codec;
 
 import pd.fenc.ParsingException;
 import pd.util.CbitArray;

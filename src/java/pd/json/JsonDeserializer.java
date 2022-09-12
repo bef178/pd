@@ -4,11 +4,11 @@ import static pd.fenc.IReader.EOF;
 
 import java.lang.reflect.Array;
 
+import pd.codec.HexCodec;
 import pd.fenc.CharReader;
 import pd.fenc.IWriter;
 import pd.fenc.ScalarPicker;
 import pd.fenc.Util;
-import pd.fenc.codec.HexCodec;
 import pd.json.type.IJson;
 import pd.json.type.IJsonArray;
 import pd.json.type.IJsonBoolean;

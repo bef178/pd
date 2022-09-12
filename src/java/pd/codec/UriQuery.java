@@ -1,14 +1,13 @@
-package pd.fenc.codec;
+package pd.codec;
 
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleEntry;
-
-import pd.fenc.InstallmentByteBuffer;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import pd.fenc.InstallmentByteBuffer;
 
 /**
  * query is a string<br/>

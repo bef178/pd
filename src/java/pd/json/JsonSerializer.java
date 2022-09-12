@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PrimitiveIterator.OfInt;
 
-import pd.fenc.codec.HexCodec;
+import pd.codec.HexCodec;
 import pd.json.type.IJson;
 import pd.json.type.IJsonArray;
 import pd.json.type.IJsonBoolean;
