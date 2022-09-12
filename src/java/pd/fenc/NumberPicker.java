@@ -105,6 +105,8 @@ class NumberPicker {
                     // a valid fraction is recognized
                     int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
+                        case EOF:
+                            return;
                         case '0':
                         case '1':
                         case '2':
@@ -189,6 +191,8 @@ class NumberPicker {
                     // recognized a valid int
                     int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
+                        case EOF:
+                            return;
                         case '0':
                         case '1':
                         case '2':

@@ -153,5 +153,8 @@ public interface IReader {
 
     public int next();
 
+    /**
+     * the next position it will read
+     */
     public int position();
 }
