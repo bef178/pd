@@ -10,7 +10,8 @@ public final class Rect {
     public final int x1, y1;
 
     public Rect(int x0, int y0, int x1, int y1) {
-        assert isValid();
+        assert x0 <= x1;
+        assert y0 <= y1;
 
         this.x0 = x0;
         this.y0 = y0;
@@ -90,10 +91,6 @@ public final class Rect {
             return true;
         }
         return getIntersection(box) != null;
-    }
-
-    public boolean isValid() {
-        return x0 <= x1 && y0 <= y1;
     }
 
     public Rect move(int dx, int dy) {
