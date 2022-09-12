@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface FromProperty {
     String value();
+    int priority() default 10;
 }

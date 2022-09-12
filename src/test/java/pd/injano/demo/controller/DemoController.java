@@ -21,12 +21,12 @@ public class DemoController {
 
     @PostConstruct
     public void onPostConstruct() {
-        DemoApplication.injector.inject(this);
+        DemoApplication.injector.injectClassFields(this);
     }
 
     @GetMapping("/hello")
     public String hello() {
-        return String.format("\"%s\" says \"%s\"", name, greeting.message());
+        return String.format("%s says \"%s\"", name, greeting.message());
     }
 }
 

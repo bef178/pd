@@ -1,13 +1,14 @@
 package pd.injano;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,72 +19,84 @@ import pd.injano.annotation.OnConstructed;
 @Slf4j
 class InstanceHolder {
 
-    private final PropertyHolder propertyHolder;
-
     // className => classInstance
     private final Map<String, Object> cache = new ConcurrentHashMap<>();
 
-    private boolean isInitialized = false;
-
-    public InstanceHolder(PropertyHolder propertyHolder) {
-        assert propertyHolder != null;
-        this.propertyHolder = propertyHolder;
-    }
-
-    public void scan(Set<Class<?>> managedClasses) {
-        if (isInitialized) {
-            throw new IllegalStateException();
-        }
-        isInitialized = true;
-
-        // instantiate managed singleton(s)
-        for (Class<?> clazz : managedClasses) {
+    /**
+     * instantiate managed singleton(s)
+     */
+    public void instantiateClasses(Collection<Class<?>> classes) {
+        for (Class<?> clazz : classes) {
             if (clazz.isInterface()) {
-                log.info("Skipping instantiating interface {}", clazz);
+                log.info("Skip instantiating interface {}", clazz);
                 continue;
             }
-            cache.put(clazz.getCanonicalName(), createInstance(clazz));
-        }
 
-        for (Object instance : cache.values()) {
-            inject(instance);
-        }
-
-        // as if onConstructed callback
-        for (Object instance : cache.values()) {
-            Method[] methods = instance.getClass().getDeclaredMethods();
-            for (Method method : methods) {
-                if (method.isAnnotationPresent(OnConstructed.class)) {
-                    try {
-                        method.setAccessible(true);
-                        method.invoke(instance);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(
-                                "Failed to invoke @OnConstructed method \"" + method.getName() + "\"", e);
-                    }
+            String className = clazz.getCanonicalName();
+            if (!cache.containsKey(className)) {
+                // createInstance
+                try {
+                    Constructor<?> constructor = clazz.getDeclaredConstructor();
+                    constructor.setAccessible(true);
+                    Object instance = constructor.newInstance();
+                    cache.put(className, instance);
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException(
+                            "Failed to find no-args constructor \"" + className + "\"", e);
+                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                        | InvocationTargetException e) {
+                    throw new RuntimeException("Failed to create instance \"" + className + "\"", e);
                 }
             }
         }
     }
 
-    public void inject(Object instance) {
-        if (!isInitialized) {
-            throw new IllegalStateException();
+    public void injectClassFields(PropertyHolder propertyHolder) {
+        injectClassFields(cache.values(), propertyHolder);
+    }
+
+    public void injectClassFields(Collection<Object> instances, PropertyHolder propertyHolder) {
+        List<PrioritizedMemberField> all = new LinkedList<>();
+        for (Object instance : instances) {
+            for (Field field : instance.getClass().getDeclaredFields()) {
+                FromProperty annoFromProperty = field.getAnnotation(FromProperty.class);
+                if (annoFromProperty != null) {
+                    PrioritizedMemberField a = new PrioritizedMemberField();
+                    a.field = field;
+                    a.instance = instance;
+                    a.priority = annoFromProperty.priority();
+                    all.add(a);
+                    continue;
+                }
+
+                Managed annoManaged = field.getAnnotation(Managed.class);
+                if (annoManaged != null) {
+                    PrioritizedMemberField a = new PrioritizedMemberField();
+                    a.field = field;
+                    a.instance = instance;
+                    a.priority = annoManaged.priority();
+                    all.add(a);
+                    continue;
+                }
+            }
         }
-        for (Field field : instance.getClass().getDeclaredFields()) {
-            for (Annotation annotation : field.getAnnotations()) {
-                Class<?> annotationType = annotation.annotationType();
-                if (annotationType == Managed.class) {
-                    assign(instance, field, findInstance(field.getType()));
+        all.sort(PrioritizedMemberField.comparator);
+
+        for (PrioritizedMemberField a : all) {
+            FromProperty annoFromProperty = a.field.getAnnotation(FromProperty.class);
+            if (annoFromProperty != null) {
+                String propertyKey = annoFromProperty.value();
+                if (!propertyHolder.containsKey(propertyKey)) {
+                    throw new IllegalArgumentException("Failed to find property \"" + propertyKey + "\"");
                 }
-                if (annotationType == FromProperty.class) {
-                    String propertyKey = ((FromProperty) annotation).value();
-                    Object value = propertyHolder.getProperty(propertyKey);
-                    if (value == null) {
-                        throw new IllegalArgumentException("Failed to find property \"" + propertyKey + "\"");
-                    }
-                    assign(instance, field, value);
-                }
+                a.assign(propertyHolder.getProperty(propertyKey));
+                continue;
+            }
+
+            Managed annoManaged = a.field.getAnnotation(Managed.class);
+            if (annoManaged != null) {
+                a.assign(findInstance(a.field.getType()));
+                continue;
             }
         }
     }
@@ -104,29 +117,32 @@ class InstanceHolder {
         return null;
     }
 
+    public void invokeCallbacks() {
+        invokeCallbacks(cache.values());
+    }
+
+    private void invokeCallbacks(Collection<Object> instances) {
+        List<PrioritizedMemberMethod> all = new LinkedList<>();
+        for (Object instance : instances) {
+            for (Method method : instance.getClass().getDeclaredMethods()) {
+                OnConstructed annoOnConstructed = method.getAnnotation(OnConstructed.class);
+                if (annoOnConstructed != null) {
+                    PrioritizedMemberMethod a = new PrioritizedMemberMethod();
+                    a.method = method;
+                    a.instance = instance;
+                    a.priority = annoOnConstructed.priority();
+                    all.add(a);
+                }
+            }
+        }
+        all.sort(PrioritizedMemberMethod.comparator);
+
+        for (PrioritizedMemberMethod a : all) {
+            a.invoke();
+        }
+    }
+
     public void clear() {
         cache.clear();
-    }
-
-    private static void assign(Object instance, Field field, Object value) {
-        try {
-            field.setAccessible(true);
-            field.set(instance, value);
-        } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("Failed to set field \"" + field.getName() + "\"", e);
-        }
-    }
-
-    private static Object createInstance(Class<?> clazz) {
-        try {
-            Constructor<?> constructor = clazz.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return constructor.newInstance();
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException("Failed to find no-args constructor \"" + clazz.getCanonicalName() + "\"", e);
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e) {
-            throw new RuntimeException("Failed to create instance \"" + clazz.getCanonicalName() + "\"", e);
-        }
     }
 }

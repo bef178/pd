@@ -16,6 +16,10 @@ class PropertyHolder {
         }
     }
 
+    public boolean containsKey(String key) {
+        return cache.containsKey(key);
+    }
+
     public String getProperty(String key) {
         return cache.getProperty(key);
     }
