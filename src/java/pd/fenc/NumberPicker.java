@@ -7,31 +7,60 @@ class NumberPicker {
     /**
      * exponent := ('E' / 'e') int
      */
-    static void pickExponent(CharReader it, IWriter dst) {
-        int ch = it.hasNext() ? it.next() : EOF;
+    static void pickExponent(CharReader src, IWriter dst) {
+        int ch = src.hasNext() ? src.next() : EOF;
         if (ch == 'E' || ch == 'e') {
             dst.push(ch);
-            pickInt(it, dst);
+            pickInt(src, dst);
             return;
         }
         String actual = new String(Character.toChars(ch));
-        throw new ParsingException(
-                String.format("unexpected [%s], expecting [E] or [e]", actual));
+        throw new ParsingException(String.format("unexpected [%s], expecting [E] or [e]", actual));
     }
 
-    public static void pickFloat(CharReader it, IWriter dst) {
-        pickNumber(it, dst);
+    /**
+     * a number has 3 parts: integer, fraction and exponent
+     */
+    public static void pickFloat(CharReader src, IWriter dst) {
+        pickInt(src, dst);
+
+        int ch = src.hasNext() ? src.next() : EOF;
+        if (ch == EOF) {
+            return;
+        } else if (ch == '.') {
+            src.moveBack();
+            pickFraction(src, dst);
+        } else {
+            src.moveBack();
+        }
+
+        ch = src.hasNext() ? src.next() : EOF;
+        if (ch == EOF) {
+            return;
+        } else if (ch == 'E' || ch == 'e') {
+            src.moveBack();
+            pickExponent(src, dst);
+        } else {
+            src.moveBack();
+        }
+
+        ch = src.hasNext() ? src.next() : EOF;
+        if (ch == EOF) {
+            return;
+        } else {
+            src.moveBack();
+        }
     }
 
-    public static float pickFloat32(CharReader it) {
+    public static float pickFloat32(CharReader src) {
         StringBuilder sb = new StringBuilder();
-        pickFloat(it, IWriter.unicodeStream(sb));
+        pickFloat(src, IWriter.unicodeStream(sb));
         return Float.parseFloat(sb.toString());
     }
 
-    public static double pickFloat64(CharReader it) {
+    public static double pickFloat64(CharReader src) {
         StringBuilder sb = new StringBuilder();
-        pickFloat(it, IWriter.unicodeStream(sb));
+        pickFloat(src, IWriter.unicodeStream(sb));
         return Double.parseDouble(sb.toString());
     }
 
@@ -40,19 +69,19 @@ class NumberPicker {
      * <br/>
      * specially, "0.0" is valid<br/>
      */
-    static void pickFraction(CharReader it, IWriter dst) {
+    static void pickFraction(CharReader src, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
                 case 0: {
-                    it.eatOrThrow('.');
+                    src.eatOrThrow('.');
                     dst.push('.');
                     state = 1;
                     break;
                 }
                 case 1: {
                     // seen '.'
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '0':
                         case '1':
@@ -74,7 +103,7 @@ class NumberPicker {
                 }
                 case 2: {
                     // a valid fraction is recognized
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '0':
                         case '1':
@@ -89,7 +118,7 @@ class NumberPicker {
                             dst.push(ch);
                             break;
                         default:
-                            it.moveBack();
+                            src.moveBack();
                             return;
                     }
                     break;
@@ -101,14 +130,14 @@ class NumberPicker {
     }
 
     /**
-     * pick an valid 10-based integer of string form, per intuition
+     * pick a valid 10-based integer of string form, per intuition
      */
-    static void pickInt(CharReader it, IWriter dst) {
+    static void pickInt(CharReader src, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
                 case 0: {
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '-':
                             dst.push(ch);
@@ -136,7 +165,7 @@ class NumberPicker {
                 }
                 case 1: {
                     // seen the negative sign
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '1':
                         case '2':
@@ -157,8 +186,8 @@ class NumberPicker {
                     break;
                 }
                 case 3: {
-                    // a valid int is recognized
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    // recognized a valid int
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '0':
                         case '1':
@@ -173,7 +202,7 @@ class NumberPicker {
                             dst.push(ch);
                             break;
                         default:
-                            it.moveBack();
+                            src.moveBack();
                             return;
                     }
                     break;
@@ -182,55 +211,21 @@ class NumberPicker {
         }
     }
 
-    public static int pickInt32(CharReader it) {
+    public static int pickInt32(CharReader src) {
         StringBuilder sb = new StringBuilder();
-        pickInt(it, IWriter.unicodeStream(sb));
+        pickInt(src, IWriter.unicodeStream(sb));
         return Integer.parseInt(sb.toString());
     }
 
-    public static long pickInt64(CharReader it) {
+    public static long pickInt64(CharReader src) {
         StringBuilder sb = new StringBuilder();
-        pickInt(it, IWriter.unicodeStream(sb));
+        pickInt(src, IWriter.unicodeStream(sb));
         return Long.parseLong(sb.toString());
     }
 
-    public static Number pickNumber(CharReader it) {
+    public static Number pickNumber(CharReader src) {
         StringBuilder sb = new StringBuilder();
-        pickNumber(it, IWriter.unicodeStream(sb));
+        pickFloat(src, IWriter.unicodeStream(sb));
         return new TextNumber(sb.toString());
-    }
-
-    /**
-     * a number has 3 parts: integer, fraction and exponent
-     */
-    static void pickNumber(CharReader it, IWriter dst) {
-        pickInt(it, dst);
-
-        int ch = it.hasNext() ? it.next() : EOF;
-        if (ch == EOF) {
-            return;
-        } else if (ch == '.') {
-            it.moveBack();
-            pickFraction(it, dst);
-        } else {
-            it.moveBack();
-        }
-
-        ch = it.hasNext() ? it.next() : EOF;
-        if (ch == EOF) {
-            return;
-        } else if (ch == 'E' || ch == 'e') {
-            it.moveBack();
-            pickExponent(it, dst);
-        } else {
-            it.moveBack();
-        }
-
-        ch = it.hasNext() ? it.next() : EOF;
-        if (ch == EOF) {
-            return;
-        } else {
-            it.moveBack();
-        }
     }
 }
