@@ -11,10 +11,6 @@ import pd.util.PathExtension;
 
 public class Test_UriPath {
 
-    // vm arguments: -ea
-    public static void main(String[] args) {
-    }
-
     @Test
     public void test_getBasename() {
         LinkedHashMap<String, String> testcases = new LinkedHashMap<>();
