@@ -8,12 +8,12 @@ import java.net.UnknownHostException;
 import java.util.Properties;
 
 import pd.time.Ctime;
-import pd.util.CurlyBracketPattern;
+import pd.util.CurvePattern;
 
 public class LogUtil {
 
     public static String evaluateMessage(String message, Object... messageArguments) {
-        return CurlyBracketPattern.format(message, messageArguments);
+        return CurvePattern.format(message, messageArguments);
     }
 
     public static String getHostname() {
