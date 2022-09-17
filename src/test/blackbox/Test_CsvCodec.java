@@ -8,15 +8,14 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import pd.csv.CsvDeserializer;
-import pd.csv.CsvSerializer;
+import pd.codec.csv.CsvCodec;
 
-public class Test_Csv {
+public class Test_CsvCodec {
 
     @Test
     public void test_deserialize() {
-        String csv = "PartId,\"Quantity\",'Color',4297719,'Bla\\'ck'";
-        List<String> l = CsvDeserializer.deserialize(csv, ',', "\r\n");
+        String csvText = "PartId,\"Quantity\",'Color',4297719,'Bla\\'ck'";
+        List<String> l = CsvCodec.deserialize(csvText);
         assertEquals("PartId", l.get(0));
         assertEquals("Quantity", l.get(1));
         assertEquals("'Color'", l.get(2));
@@ -29,8 +28,8 @@ public class Test_Csv {
         String[] fields = new String[] {
                 "SetNumber", "b\"bb", "c"
         };
-        String csv = "SetNumber,\"b\"\"bb\",c\r\n";
-        assertEquals(csv, CsvSerializer.serialize(Arrays.asList(fields), ',', "\r\n"));
-        assertArrayEquals(fields, CsvDeserializer.deserialize(csv, ',', "\r\n").toArray(new String[0]));
+        String csvText = "SetNumber,\"b\"\"bb\",c\r\n";
+        assertEquals(csvText, CsvCodec.serialize(Arrays.asList(fields)));
+        assertArrayEquals(fields, CsvCodec.deserialize(csvText).toArray(new String[0]));
     }
 }
