@@ -1,6 +1,6 @@
-package pd.json.simplejson;
+package pd.codec.json.simplejson;
 
-import pd.json.type.IJsonNull;
+import pd.codec.json.IJsonNull;
 
 class SimpleJsonNull implements IJsonNull {
 
@@ -9,7 +9,7 @@ class SimpleJsonNull implements IJsonNull {
      */
     private static final long serialVersionUID = 1L;
 
-    public static final SimpleJsonNull jsonNull = new SimpleJsonNull();
+    public static final SimpleJsonNull NULL = new SimpleJsonNull();
 
     private SimpleJsonNull() {
         // dummy

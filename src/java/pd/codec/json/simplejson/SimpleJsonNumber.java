@@ -1,17 +1,25 @@
-package pd.json.simplejson;
+package pd.codec.json.simplejson;
 
+import pd.codec.json.IJsonNumber;
 import pd.fenc.TextNumber;
-import pd.json.type.IJsonNumber;
 
 public class SimpleJsonNumber extends TextNumber implements IJsonNumber {
 
     /**
-    *
-    */
+     *
+     */
     private static final long serialVersionUID = 1L;
 
     public SimpleJsonNumber() {
-        super();
+        this(0);
+    }
+
+    public SimpleJsonNumber(double value) {
+        super(value);
+    }
+
+    public SimpleJsonNumber(long value) {
+        super(value);
     }
 
     @Override

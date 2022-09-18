@@ -1,4 +1,4 @@
-package pd.json.type;
+package pd.codec.json;
 
 import java.util.Map;
 

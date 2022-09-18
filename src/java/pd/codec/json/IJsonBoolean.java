@@ -1,4 +1,4 @@
-package pd.json.type;
+package pd.codec.json;
 
 public interface IJsonBoolean extends IJson {
 
@@ -8,4 +8,6 @@ public interface IJsonBoolean extends IJson {
     public default JsonType getJsonType() {
         return JsonType.BOOLEAN;
     }
+
+    public IJsonBoolean set(boolean value);
 }

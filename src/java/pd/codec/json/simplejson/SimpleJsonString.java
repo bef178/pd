@@ -1,6 +1,6 @@
-package pd.json.simplejson;
+package pd.codec.json.simplejson;
 
-import pd.json.type.IJsonString;
+import pd.codec.json.IJsonString;
 
 class SimpleJsonString implements IJsonString {
 

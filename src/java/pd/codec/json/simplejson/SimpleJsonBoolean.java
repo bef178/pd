@@ -1,6 +1,6 @@
-package pd.json.simplejson;
+package pd.codec.json.simplejson;
 
-import pd.json.type.IJsonBoolean;
+import pd.codec.json.IJsonBoolean;
 
 class SimpleJsonBoolean implements IJsonBoolean {
 
@@ -9,11 +9,11 @@ class SimpleJsonBoolean implements IJsonBoolean {
      */
     private static final long serialVersionUID = 1L;
 
-    public static final SimpleJsonBoolean jsonFalse = new SimpleJsonBoolean(false);
+    private boolean value;
 
-    public static final SimpleJsonBoolean jsonTrue = new SimpleJsonBoolean(true);
-
-    private final boolean value;
+    public SimpleJsonBoolean() {
+        this(false);
+    }
 
     private SimpleJsonBoolean(boolean value) {
         this.value = value;
@@ -22,5 +22,11 @@ class SimpleJsonBoolean implements IJsonBoolean {
     @Override
     public boolean getBoolean() {
         return value;
+    }
+
+    @Override
+    public SimpleJsonBoolean set(boolean value) {
+        this.value = value;
+        return this;
     }
 }
