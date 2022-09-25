@@ -10,31 +10,33 @@ import java.util.LinkedList;
 public class PathExtension {
 
     /**
-     * get last component of a path; trailing '/'(s) will be ignored<br/>
+     * get the last component of a path; trailing '/'(s) will be ignored<br/>
      */
     public static String getBasename(String path) {
-        assert path != null;
-        int startIndex = -1;
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+
         int endIndex = -1;
-        for (int i = 0; i < path.length(); i++) {
-            if (path.charAt(i) == '/') {
-                if (startIndex == -1) {
-                    startIndex = i;
-                } else if (endIndex == -1) {
-                    endIndex = i;
+        for (int i = path.length() - 1; i >= 0; i--) {
+            int ch = path.charAt(i);
+            if (endIndex == -1) {
+                if (ch == '/') {
+                    // ignore trailing '/'
+                    continue;
+                } else {
+                    endIndex = i + 1;
                 }
-            } else if (startIndex == -1 || endIndex != -1) {
-                startIndex = i;
-                endIndex = -1;
+            } else {
+                if (ch == '/') {
+                    return path.substring(i + 1, endIndex);
+                } else {
+                    // found partial, go ahead
+                    continue;
+                }
             }
         }
-        if (startIndex == -1) {
-            startIndex = 0;
-        }
-        if (endIndex == -1) {
-            endIndex = path.length();
-        }
-        return path.substring(startIndex, endIndex);
+        return endIndex == -1 ? "/" : path.substring(0, endIndex);
     }
 
     /**
