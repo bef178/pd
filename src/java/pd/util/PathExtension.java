@@ -40,10 +40,13 @@ public class PathExtension {
     }
 
     /**
-     * strip last component of a path; trailing '/'(s) will be ignored<br/>
+     * strip the last component of a path; trailing '/'(s) will be ignored<br/>
      */
     public static String getParent(String path) {
-        assert path != null;
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+
         int endIndex = -1;
         int candidateIndex = -1;
         for (int i = 0; i < path.length(); i++) {
@@ -77,7 +80,13 @@ public class PathExtension {
      * return e.g. "/a/b/c" or "./a/b/c" or "../a/b/c"
      */
     public static String normalize(String path) {
-        assert path != null;
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+
+        if (path.equals("/")) {
+            return "/";
+        }
         return String.join("/", normalize(path.split("/")));
     }
 

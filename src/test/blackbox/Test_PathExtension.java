@@ -48,15 +48,13 @@ public class Test_PathExtension {
         testcases.put("/abc", "/");
         testcases.put("/", "/");
         testcases.put("abc//.///", "abc");
-        testcases.put("", ".");
+        testcases.put(".", ".");
 
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
             String actual = PathExtension.getParent(input);
-            assertEquals(expected, actual, String.format(
-                    "E: check %s: input[%s], expected[%s], actual[%s]",
-                    "Path.getParent", input, expected, actual));
+            assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
 
@@ -68,14 +66,13 @@ public class Test_PathExtension {
         testcases.put("./../abc", "../abc");
         testcases.put("/../abc", "/abc");
         testcases.put("../.././../abc/..", "../../..");
+        testcases.put("/", "/");
 
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
             String actual = PathExtension.normalize(input);
-            assertEquals(expected, actual, String.format(
-                    "E: check %s: input[%s], expected[%s], actual[%s]",
-                    "Path.normalize", input, expected, actual));
+            assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
 }
