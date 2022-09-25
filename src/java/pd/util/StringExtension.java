@@ -41,7 +41,20 @@ public final class StringExtension {
         return s == null || s.isEmpty();
     }
 
-    public static String[] split(String s, final int delimeter) {
+    public static String[] split(String s, int ch) {
+        List<String> a = new LinkedList<>();
+        int startIndex = 0;
+        int endIndex;
+        while ((endIndex = s.indexOf(ch, startIndex)) != -1) {
+            a.add(s.substring(startIndex, endIndex));
+            startIndex = endIndex + 1;
+        }
+        a.add(s.substring(startIndex));
+        return a.toArray(new String[a.size()]);
+    }
+
+    @SuppressWarnings("unused")
+    private static String[] split1(String s, final int delimeter) {
         List<String> list = new LinkedList<String>();
         int start = -1;
         int i = 0;
