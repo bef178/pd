@@ -29,6 +29,6 @@ public class JsonCodec {
     }
 
     public String serialize(IJson json, JsonFormatConfig config) {
-        return new JsonSerializer().serialize(json, config);
+        return new JsonSerializer(config).serialize(json);
     }
 }

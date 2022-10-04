@@ -10,16 +10,23 @@ import pd.util.Cascii;
 
 class JsonSerializer {
 
+    private final JsonFormatConfig config;
+
+    public JsonSerializer(JsonFormatConfig config) {
+        assert config != null;
+        this.config = config;
+    }
+
     /**
      * `IJson` => `String`<br/>
      */
-    public String serialize(IJson json, JsonFormatConfig config) {
+    public String serialize(IJson json) {
         StringBuilder sb = new StringBuilder();
-        serializeJson(json, config, 0, sb);
+        serializeJson(json, 0, sb);
         return sb.toString();
     }
 
-    private void serializeJson(IJson json, JsonFormatConfig config, int numIndents, StringBuilder sb) {
+    private void serializeJson(IJson json, int numIndents, StringBuilder sb) {
         if (json instanceof IJsonNull) {
             sb.append("null");
         } else if (json instanceof IJsonBoolean) {
@@ -29,16 +36,15 @@ class JsonSerializer {
         } else if (json instanceof IJsonString) {
             serializeJsonString(IJsonString.class.cast(json).getString(), sb);
         } else if (json instanceof IJsonArray) {
-            serializeJsonArray(IJsonArray.class.cast(json), config, numIndents, sb);
+            serializeJsonArray(IJsonArray.class.cast(json), numIndents, sb);
         } else if (json instanceof IJsonObject) {
-            serializeJsonObject(IJsonObject.class.cast(json), config, numIndents, sb);
+            serializeJsonObject(IJsonObject.class.cast(json), numIndents, sb);
         } else {
             throw new ParsingException();
         }
     }
 
-    private void serializeJsonArray(IJsonArray jsonArray, JsonFormatConfig config, int numIndents,
-            StringBuilder sb) {
+    private void serializeJsonArray(IJsonArray jsonArray, int numIndents, StringBuilder sb) {
 
         sb.append('[');
 
@@ -50,8 +56,8 @@ class JsonSerializer {
 
         Iterator<IJson> it = jsonArray.iterator();
         while (it.hasNext()) {
-            serializeMarginAndIndents(config, numIndents, sb);
-            serializeJson(it.next(), config, numIndents, sb);
+            serializeMarginAndIndents(numIndents, sb);
+            serializeJson(it.next(), numIndents, sb);
             if (it.hasNext()) {
                 sb.append(',');
             }
@@ -61,14 +67,13 @@ class JsonSerializer {
         numIndents--;
 
         if (!jsonArray.isEmpty()) {
-            serializeMarginAndIndents(config, numIndents, sb);
+            serializeMarginAndIndents(numIndents, sb);
         }
 
         sb.append(']');
     }
 
-    private void serializeJsonObject(IJsonObject jsonObject, JsonFormatConfig config, int numIndents,
-            StringBuilder sb) {
+    private void serializeJsonObject(IJsonObject jsonObject, int numIndents, StringBuilder sb) {
 
         sb.append('{');
 
@@ -84,13 +89,13 @@ class JsonSerializer {
             String key = entry.getKey();
             IJson value = entry.getValue();
 
-            serializeMarginAndIndents(config, numIndents, sb);
+            serializeMarginAndIndents(numIndents, sb);
 
             serializeJsonString(key, sb);
             sb.append(config.colonPrefix);
             sb.append(':');
             sb.append(config.colonSuffix);
-            serializeJson(value, config, numIndents, sb);
+            serializeJson(value, numIndents, sb);
 
             if (it.hasNext()) {
                 sb.append(',');
@@ -102,7 +107,7 @@ class JsonSerializer {
         numIndents--;
 
         if (!jsonObject.isEmpty()) {
-            serializeMarginAndIndents(config, numIndents, sb);
+            serializeMarginAndIndents(numIndents, sb);
         }
 
         sb.append('}');
@@ -147,7 +152,7 @@ class JsonSerializer {
         sb.appendCodePoint('\"');
     }
 
-    private void serializeMarginAndIndents(JsonFormatConfig config, int numIndents, StringBuilder sb) {
+    private void serializeMarginAndIndents(int numIndents, StringBuilder sb) {
         sb.append(config.margin);
         for (int i = 0; i < numIndents; i++) {
             sb.append(config.indent);
