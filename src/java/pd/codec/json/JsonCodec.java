@@ -1,34 +1,39 @@
 package pd.codec.json;
 
-public class JsonCodec {
+public final class JsonCodec {
 
-    private final IJsonFactory factory;
+    private static final IJsonFactory factory = new SimpleJsonFactory();
 
-    public JsonCodec() {
-        this(new SimpleJsonFactory());
+    public static <T> T convertToJava(IJson json, Class<T> targetClass) {
+        return new JsonInverter().convertToJava(json, targetClass);
     }
 
-    public JsonCodec(IJsonFactory factory) {
-        this.factory = factory;
-    }
-
-    public <T> T convert(IJson json, Class<T> expectedClass) {
-        return new JsonInverter().convertToJava(json, expectedClass);
-    }
-
-    public IJson convert(Object object) {
+    public static IJson convertToJson(Object object) {
         return new JsonConverter(factory).convertToJson(object);
     }
 
-    public IJson deserialize(String jsonText) {
+    public static <T> T decode(String jsonText, Class<T> targetClass) {
+        IJson json = deserialize(jsonText);
+        return convertToJava(json, targetClass);
+    }
+
+    public static IJson deserialize(String jsonText) {
         return new JsonDeserializer(factory).deserialize(jsonText);
     }
 
-    public String serialize(IJson json) {
-        return serialize(json, JsonFormatConfig.cheetsheetStyle());
+    public static String encode(Object object, JsonFormatConfig config) {
+        IJson json = convertToJson(object);
+        return serialize(json, config);
     }
 
-    public String serialize(IJson json, JsonFormatConfig config) {
+    public static String serialize(IJson json, JsonFormatConfig config) {
+        if (config == null) {
+            config = JsonFormatConfig.cheetsheetStyle();
+        }
         return new JsonSerializer(config).serialize(json);
+    }
+
+    private JsonCodec() {
+        // private dummy
     }
 }
