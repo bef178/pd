@@ -1,6 +1,8 @@
 package pd.codec.json;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static pd.codec.json.Test_JsonSerializer.json2;
 
 import org.junit.jupiter.api.Test;
 
@@ -75,5 +77,15 @@ public class Test_IJson {
         assertTrue(json != json2);
         assertTrue(json.equals(json2));
         assertTrue(json.hashCode() == json2.hashCode());
+    }
+
+    @Test
+    public void test_IJson_get() {
+        assertEquals("1413965649", json2
+                .asJsonObject().get("consume")
+                .asJsonObject().get("records")
+                .asJsonArray().get(1)
+                .asJsonObject().get("ID")
+                .asJsonString().getString());
     }
 }
