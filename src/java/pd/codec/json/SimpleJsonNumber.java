@@ -2,7 +2,7 @@ package pd.codec.json;
 
 import pd.fenc.TextNumber;
 
-public class SimpleJsonNumber extends TextNumber implements IJsonNumber {
+final class SimpleJsonNumber extends TextNumber implements IJsonNumber {
 
     /**
      *

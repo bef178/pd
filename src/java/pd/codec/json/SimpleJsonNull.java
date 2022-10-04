@@ -1,6 +1,6 @@
 package pd.codec.json;
 
-class SimpleJsonNull implements IJsonNull {
+final class SimpleJsonNull implements IJsonNull {
 
     /**
      *

@@ -1,6 +1,6 @@
 package pd.codec.json;
 
-class SimpleJsonString implements IJsonString {
+final class SimpleJsonString implements IJsonString {
 
     /**
      *

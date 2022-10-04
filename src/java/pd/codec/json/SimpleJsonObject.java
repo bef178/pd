@@ -2,14 +2,14 @@ package pd.codec.json;
 
 import java.util.LinkedHashMap;
 
-class SimpleJsonObject extends LinkedHashMap<String, IJson> implements IJsonObject {
+final class SimpleJsonObject extends LinkedHashMap<String, IJson> implements IJsonObject {
 
     /**
      *
      */
     private static final long serialVersionUID = 1L;
 
-    SimpleJsonObject() {
+    public SimpleJsonObject() {
         super();
     }
 

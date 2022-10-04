@@ -1,6 +1,6 @@
 package pd.codec.json;
 
-class SimpleJsonBoolean implements IJsonBoolean {
+final class SimpleJsonBoolean implements IJsonBoolean {
 
     /**
      *

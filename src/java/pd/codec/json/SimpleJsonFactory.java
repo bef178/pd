@@ -1,6 +1,6 @@
 package pd.codec.json;
 
-public class SimpleJsonFactory implements IJsonFactory {
+final class SimpleJsonFactory implements IJsonFactory {
 
     @Override
     public SimpleJsonArray getJsonArray() {

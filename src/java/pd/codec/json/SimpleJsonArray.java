@@ -2,7 +2,7 @@ package pd.codec.json;
 
 import java.util.ArrayList;
 
-class SimpleJsonArray extends ArrayList<IJson> implements IJsonArray {
+final class SimpleJsonArray extends ArrayList<IJson> implements IJsonArray {
 
     /**
      *
