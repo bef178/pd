@@ -1,5 +1,7 @@
 package pd.fenc;
 
+import java.util.Objects;
+
 public class TextNumber extends Number {
 
     /**
@@ -31,8 +33,28 @@ public class TextNumber extends Number {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (o instanceof TextNumber) {
+            TextNumber another = (TextNumber) o;
+            return Objects.equals(another.raw, raw);
+        }
+        return false;
+    }
+
+    @Override
     public float floatValue() {
         return Float.parseFloat(raw);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(raw);
     }
 
     @Override
