@@ -1,0 +1,126 @@
+package pd.codec.json;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
+
+import pd.fenc.ParsingException;
+
+class JsonConverter {
+
+    private final IJsonFactory factory;
+
+    public JsonConverter(IJsonFactory factory) {
+        assert factory != null;
+        this.factory = factory;
+    }
+
+    /**
+     * `Object` => `IJson`<br/>
+     * adopt public fields only<br/>
+     */
+    @SuppressWarnings("unchecked")
+    public IJson convertToJson(Object o) {
+        if (o != null && IJson.class.isAssignableFrom(o.getClass())) {
+            return IJson.class.cast(o);
+        }
+
+        if (o == null) {
+            return factory.getJsonNull();
+        }
+
+        if (o instanceof Boolean) {
+            return factory.createJsonBoolean((Boolean) o);
+        }
+
+        if (o instanceof Byte) {
+            return factory.createJsonNumber((Byte) o);
+        } else if (o instanceof Character) {
+            return factory.createJsonNumber((Character) o);
+        } else if (o instanceof Short) {
+            return factory.createJsonNumber((Short) o);
+        } else if (o instanceof Integer) {
+            return factory.createJsonNumber((Integer) o);
+        } else if (o instanceof Long) {
+            return factory.createJsonNumber((Long) o);
+        }
+
+        if (o instanceof Float) {
+            return factory.createJsonNumber((Float) o);
+        } else if (o instanceof Double) {
+            return factory.createJsonNumber((Double) o);
+        }
+
+        if (o instanceof String) {
+            return factory.createJsonString((String) o);
+        }
+
+        if (o instanceof List) {
+            IJsonArray a = factory.createJsonArray();
+            for (Object element : (List<Object>) o) {
+                a.add(convertToJson(element));
+            }
+            return a;
+        } else if (o.getClass().isArray()) {
+            IJsonArray a = factory.createJsonArray();
+            int length = Array.getLength(o);
+            for (int i = 0; i < length; i++) {
+                Object element = Array.get(o, i);
+                a.add(convertToJson(element));
+            }
+            return a;
+        }
+
+        if (o instanceof Map) {
+            IJsonObject jsonObject = factory.createJsonObject();
+            for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) o).entrySet()) {
+                String key = entry.getKey().toString();
+                jsonObject.put(key, convertToJson(entry.getValue()));
+            }
+            return jsonObject;
+        } else {
+            IJsonObject jsonObject = factory.createJsonObject();
+            // public fields only
+            for (Field field : o.getClass().getFields()) {
+                String key = field.getName();
+                try {
+                    jsonObject.put(key, convertToJson(o, field));
+                } catch (IllegalArgumentException | IllegalAccessException e) {
+                    throw new ParsingException(e);
+                }
+            }
+            return jsonObject;
+        }
+    }
+
+    private IJson convertToJson(Object o, Field field) throws IllegalArgumentException, IllegalAccessException {
+        Class<?> fieldType = field.getType();
+        if (fieldType.isPrimitive()) {
+            if (fieldType == boolean.class) {
+                return factory.createJsonBoolean(field.getBoolean(o));
+            }
+
+            if (fieldType == byte.class) {
+                return factory.createJsonNumber(field.getByte(o));
+            } else if (fieldType == char.class) {
+                return factory.createJsonNumber(field.getChar(o));
+            } else if (fieldType == short.class) {
+                return factory.createJsonNumber(field.getShort(o));
+            } else if (fieldType == int.class) {
+                return factory.createJsonNumber(field.getInt(o));
+            } else if (fieldType == long.class) {
+                return factory.createJsonNumber(field.getLong(o));
+            }
+
+            if (fieldType == float.class) {
+                return factory.createJsonNumber(field.getFloat(o));
+            } else if (fieldType == double.class) {
+                return factory.createJsonNumber(field.getDouble(o));
+            }
+
+            throw new ParsingException();
+        }
+        return convertToJson(field.get(o));
+    }
+}

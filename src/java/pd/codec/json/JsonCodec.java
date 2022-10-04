@@ -1,39 +1,34 @@
 package pd.codec.json;
 
-import pd.codec.json.JsonSerializer.Config;
-
 public class JsonCodec {
 
-    private final JsonSerializer serializer;
-
-    private final JsonDeserializer deserializer;
+    private final IJsonFactory factory;
 
     public JsonCodec() {
         this(new SimpleJsonFactory());
     }
 
     public JsonCodec(IJsonFactory factory) {
-        serializer = new JsonSerializer(factory);
-        deserializer = new JsonDeserializer(factory);
+        this.factory = factory;
     }
 
     public <T> T convert(IJson json, Class<T> expectedClass) {
-        return deserializer.convert(json, expectedClass);
+        return new JsonInverter().convertToJava(json, expectedClass);
     }
 
     public IJson convert(Object object) {
-        return serializer.convert(object);
+        return new JsonConverter(factory).convertToJson(object);
     }
 
     public IJson deserialize(String jsonText) {
-        return deserializer.deserialize(jsonText);
+        return new JsonDeserializer(factory).deserialize(jsonText);
     }
 
     public String serialize(IJson json) {
-        return serialize(json, Config.cheetsheetStyle());
+        return serialize(json, JsonFormatConfig.cheetsheetStyle());
     }
 
-    public String serialize(IJson json, Config config) {
-        return serializer.serialize(json, config);
+    public String serialize(IJson json, JsonFormatConfig config) {
+        return new JsonSerializer().serialize(json, config);
     }
 }

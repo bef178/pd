@@ -2,11 +2,6 @@ package pd.codec.json;
 
 import static pd.fenc.IReader.EOF;
 
-import java.lang.reflect.Array;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import pd.codec.HexCodec;
 import pd.fenc.CharReader;
 import pd.fenc.IWriter;
@@ -20,69 +15,12 @@ class JsonDeserializer {
     private final IJsonFactory factory;
 
     public JsonDeserializer(IJsonFactory factory) {
+        assert factory != null;
         this.factory = factory;
     }
 
     /**
-     * `IJson` => `Object`
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T convert(IJson json, Class<T> expectedClass) {
-        if (IJson.class.isAssignableFrom(expectedClass)) {
-            return expectedClass.cast(json);
-        }
-
-        if (json instanceof IJsonNull) {
-            return null;
-        }
-
-        if (expectedClass == boolean.class || expectedClass == Boolean.class) {
-            return (T) (Boolean) IJsonBoolean.class.cast(json).getBoolean();
-        }
-
-        if (expectedClass == byte.class || expectedClass == Byte.class
-                || expectedClass == char.class || expectedClass == Character.class
-                || expectedClass == short.class || expectedClass == Short.class
-                || expectedClass == int.class || expectedClass == Integer.class
-                || expectedClass == long.class || expectedClass == Long.class) {
-            return (T) (Long) IJsonNumber.class.cast(json).getInt64();
-        }
-
-        if (expectedClass == float.class || expectedClass == Float.class
-                || expectedClass == double.class || expectedClass == Double.class) {
-            return (T) (Double) IJsonNumber.class.cast(json).getFloat64();
-        }
-
-        if (expectedClass == String.class) {
-            return (T) IJsonString.class.cast(json).getString();
-        }
-
-        if (List.class.isAssignableFrom(expectedClass)) {
-            // TODO introduce TypeRegister
-            throw new UnsupportedOperationException();
-        } else if (expectedClass.isArray()) {
-            IJsonArray jsonArray = IJsonArray.class.cast(json);
-            Class<?> elementClass = expectedClass.getComponentType();
-            Object array = Array.newInstance(elementClass, jsonArray.size());
-            for (int i = 0; i < jsonArray.size(); i++) {
-                Array.set(array, i, convert(jsonArray.get(i), elementClass));
-            }
-            return (T) array;
-        }
-
-        if (Map.class.isAssignableFrom(expectedClass)) {
-            if (expectedClass.isAssignableFrom(LinkedHashMap.class)) {
-            }
-            // TODO
-            throw new UnsupportedOperationException();
-        }
-
-        // TODO Object
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * `String` => `IJson`
+     * `String` => `IJson`<br/>
      */
     public IJson deserialize(String jsonText) {
         if (jsonText == null) {
