@@ -4,17 +4,20 @@ public final class JsonCodec {
 
     private static final IJsonFactory factory = new SimpleJsonFactory();
 
-    public static <T> T convertToJava(IJson json, Class<T> targetClass) {
-        return new JsonInverter().convertToJava(json, targetClass);
+    public static <T> T convertToJava(IJson json, Class<T> targetClass, JsonTypeConfig config) {
+        if (config == null) {
+            config = new JsonTypeConfig();
+        }
+        return new JsonInverter(config).convertToJava(json, targetClass);
     }
 
     public static IJson convertToJson(Object object) {
         return new JsonConverter(factory).convertToJson(object);
     }
 
-    public static <T> T decode(String jsonText, Class<T> targetClass) {
+    public static <T> T decode(String jsonText, Class<T> targetClass, JsonTypeConfig config) {
         IJson json = deserialize(jsonText);
-        return convertToJava(json, targetClass);
+        return convertToJava(json, targetClass, config);
     }
 
     public static IJson deserialize(String jsonText) {

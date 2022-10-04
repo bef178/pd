@@ -1,58 +1,159 @@
 package pd.codec.json;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import pd.fenc.ParsingException;
+import pd.fenc.TextNumber;
+import pd.util.PathExtension;
+
 class JsonInverter {
+
+    private final JsonTypeConfig config;
+
+    public JsonInverter(JsonTypeConfig config) {
+        assert config != null;
+        this.config = config;
+    }
 
     /**
      * `IJson` => `Object`<br/>
      */
-    @SuppressWarnings("unchecked")
     public <T> T convertToJava(IJson json, Class<T> targetClass) {
         assert targetClass != null;
-
-        if (IJson.class.isAssignableFrom(targetClass)) {
-            return targetClass.cast(json);
+        try {
+            return convertToJava(json, targetClass, "/");
+        } catch (Exception e) {
+            throw new ParsingException(e);
         }
+    }
 
-        if (json == null) {
+    @SuppressWarnings("unchecked")
+    private <T> T convertToJava(IJson json, Class<T> targetClass, String path)
+            throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
+            IllegalArgumentException, InvocationTargetException {
+        // `targetClass` might be `null`
+
+        if (json == null || json.getJsonType() == JsonType.NULL) {
             return null;
         }
 
-        if (json instanceof IJsonNull) {
-            return null;
+        Class<?> indeedClass = config.findPathRef(path);
+        if (indeedClass == null) {
+            indeedClass = config.findTypeRef(targetClass);
+        }
+        if (indeedClass != null) {
+            if (targetClass != null) {
+                // check compatibility
+                if (!targetClass.isAssignableFrom(indeedClass)) {
+                    throw new ParsingException(String.format(
+                            "E: mismatched type: %s => %s", targetClass.getName(), indeedClass.getName()));
+                }
+            }
+        } else {
+            if (targetClass != null) {
+                indeedClass = targetClass;
+            } else {
+                indeedClass = getDefaultImplementationType(json.getJsonType());
+            }
+        }
+
+        if (indeedClass.isAssignableFrom(json.getClass())) {
+            return (T) json;
+        }
+
+        if (indeedClass.isInterface()) {
+            throw new ParsingException("E: shall not instantiate an interface: " + indeedClass.getName());
+        } else if (Modifier.isAbstract(indeedClass.getModifiers())) {
+            throw new ParsingException("E: shall not instantiate an abstract class: " + indeedClass.getName());
         }
 
         Object[] outValues = new Object[1];
-        if (tryConvertToPrimitive(json, targetClass, outValues)) {
+        if (tryConvertToPrimitive(json, indeedClass, outValues)) {
             return (T) outValues[0];
         }
 
-        if (List.class.isAssignableFrom(targetClass)) {
-            // TODO introduce TypeRegister
-            throw new UnsupportedOperationException();
-        } else if (targetClass.isArray()) {
-            IJsonArray jsonArray = IJsonArray.class.cast(json);
-            Class<?> elementClass = targetClass.getComponentType();
+        if (indeedClass.isArray()) {
+            IJsonArray jsonArray = json.asJsonArray();
+            Class<?> elementClass = indeedClass.getComponentType();
             Object array = Array.newInstance(elementClass, jsonArray.size());
             for (int i = 0; i < jsonArray.size(); i++) {
-                Array.set(array, i, convertToJava(jsonArray.get(i), elementClass));
+                String elementPath = PathExtension.resolve(path, "[" + i + "]");
+                Array.set(array, i, convertToJava(jsonArray.get(i), elementClass, elementPath));
             }
             return (T) array;
         }
 
-        if (Map.class.isAssignableFrom(targetClass)) {
-            if (targetClass.isAssignableFrom(LinkedHashMap.class)) {
+        if (List.class.isAssignableFrom(indeedClass)) {
+            if (indeedClass.isAssignableFrom(IJsonArray.class)) {
+                return (T) json.asJsonArray();
             }
-            // TODO
-            throw new UnsupportedOperationException();
+            IJsonArray jsonArray = json.asJsonArray();
+            Constructor<?> constructor = indeedClass.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            List<?> instance = (List<?>) constructor.newInstance();
+            for (int i = 0; i < jsonArray.size(); i++) {
+                String elementPath = PathExtension.resolve(path, "[" + i + "]");
+                instance.add(convertToJava(jsonArray.get(i), null, elementPath));
+            }
+            return (T) instance;
         }
 
-        // TODO Object
-        throw new UnsupportedOperationException();
+        if (Map.class.isAssignableFrom(indeedClass)) {
+            if (indeedClass.isAssignableFrom(IJsonObject.class)) {
+                return (T) json.asJsonObject();
+            }
+            IJsonObject jsonObject = json.asJsonObject();
+            Constructor<?> constructor = indeedClass.getDeclaredConstructor();
+            Map<String, ?> instance = (Map<String, ?>) constructor.newInstance();
+            for (Map.Entry<String, IJson> entry : jsonObject.entrySet()) {
+                String fieldPath = PathExtension.resolve(path, entry.getKey());
+                instance.put(entry.getKey(), convertToJava(entry.getValue(), null, fieldPath));
+            }
+            return (T) instance;
+        }
+
+        // object
+        IJsonObject jsonObject = json.asJsonObject();
+        Constructor<?> constructor = indeedClass.getDeclaredConstructor();
+        Object instance = constructor.newInstance();
+        for (Field field : indeedClass.getFields()) {
+            String fieldName = field.getName();
+            if (jsonObject.containsKey(fieldName)) {
+                field.setAccessible(true);
+                String fieldPath = PathExtension.resolve(path, fieldName);
+                Object fieldValue = convertToJava(jsonObject.get(fieldName), field.getDeclaringClass(), fieldPath);
+                field.set(instance, fieldValue);
+            }
+        }
+        return (T) instance;
+    }
+
+    private Class<?> getDefaultImplementationType(JsonType jsonType) {
+        assert jsonType != null;
+        switch (jsonType) {
+            case NULL:
+                return Object.class;
+            case BOOLEAN:
+                return Boolean.class;
+            case NUMBER:
+                return TextNumber.class;
+            case STRING:
+                return String.class;
+            case ARRAY:
+                return ArrayList.class;
+            case OBJECT:
+                return LinkedHashMap.class;
+            default:
+                throw new ParsingException();
+        }
     }
 
     /**
