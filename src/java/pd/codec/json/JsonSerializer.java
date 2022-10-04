@@ -53,25 +53,25 @@ class JsonSerializer {
         Class<?> fieldType = field.getType();
         if (fieldType.isPrimitive()) {
             if (fieldType == boolean.class) {
-                return factory.getJsonBoolean(field.getBoolean(o));
+                return factory.createJsonBoolean(field.getBoolean(o));
             }
 
             if (fieldType == byte.class) {
-                return factory.getJsonNumber().set(field.getByte(o));
+                return factory.createJsonNumber(field.getByte(o));
             } else if (fieldType == char.class) {
-                return factory.getJsonNumber().set(field.getChar(o));
+                return factory.createJsonNumber(field.getChar(o));
             } else if (fieldType == short.class) {
-                return factory.getJsonNumber().set(field.getShort(o));
+                return factory.createJsonNumber(field.getShort(o));
             } else if (fieldType == int.class) {
-                return factory.getJsonNumber().set(field.getInt(o));
+                return factory.createJsonNumber(field.getInt(o));
             } else if (fieldType == long.class) {
-                return factory.getJsonNumber().set(field.getLong(o));
+                return factory.createJsonNumber(field.getLong(o));
             }
 
             if (fieldType == float.class) {
-                return factory.getJsonNumber().set(field.getFloat(o));
+                return factory.createJsonNumber(field.getFloat(o));
             } else if (fieldType == double.class) {
-                return factory.getJsonNumber().set(field.getDouble(o));
+                return factory.createJsonNumber(field.getDouble(o));
             }
 
             throw new ParsingException();
@@ -94,39 +94,39 @@ class JsonSerializer {
         }
 
         if (o instanceof Boolean) {
-            return factory.getJsonBoolean((Boolean) o);
+            return factory.createJsonBoolean((Boolean) o);
         }
 
         if (o instanceof Byte) {
-            return factory.getJsonNumber().set((Byte) o);
+            return factory.createJsonNumber((Byte) o);
         } else if (o instanceof Character) {
-            return factory.getJsonNumber().set((Character) o);
+            return factory.createJsonNumber((Character) o);
         } else if (o instanceof Short) {
-            return factory.getJsonNumber().set((Short) o);
+            return factory.createJsonNumber((Short) o);
         } else if (o instanceof Integer) {
-            return factory.getJsonNumber().set((Integer) o);
+            return factory.createJsonNumber((Integer) o);
         } else if (o instanceof Long) {
-            return factory.getJsonNumber().set((Long) o);
+            return factory.createJsonNumber((Long) o);
         }
 
         if (o instanceof Float) {
-            return factory.getJsonNumber().set((Float) o);
+            return factory.createJsonNumber((Float) o);
         } else if (o instanceof Double) {
-            return factory.getJsonNumber().set((Double) o);
+            return factory.createJsonNumber((Double) o);
         }
 
         if (o instanceof String) {
-            return factory.getJsonString().set((String) o);
+            return factory.createJsonString((String) o);
         }
 
         if (o instanceof List) {
-            IJsonArray a = factory.getJsonArray();
+            IJsonArray a = factory.createJsonArray();
             for (Object element : (List<Object>) o) {
                 a.add(convert(element));
             }
             return a;
         } else if (o.getClass().isArray()) {
-            IJsonArray a = factory.getJsonArray();
+            IJsonArray a = factory.createJsonArray();
             int length = Array.getLength(o);
             for (int i = 0; i < length; i++) {
                 Object element = Array.get(o, i);
@@ -136,14 +136,14 @@ class JsonSerializer {
         }
 
         if (o instanceof Map) {
-            IJsonObject jsonObject = factory.getJsonObject();
+            IJsonObject jsonObject = factory.createJsonObject();
             for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) o).entrySet()) {
                 String key = entry.getKey().toString();
                 jsonObject.put(key, convert(entry.getValue()));
             }
             return jsonObject;
         } else {
-            IJsonObject jsonObject = factory.getJsonObject();
+            IJsonObject jsonObject = factory.createJsonObject();
             // public fields only
             for (Field field : o.getClass().getFields()) {
                 String key = field.getName();

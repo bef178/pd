@@ -132,7 +132,7 @@ class JsonDeserializer {
     }
 
     private IJsonArray deserializeToJsonArray(CharReader src) {
-        IJsonArray jsonArray = factory.getJsonArray();
+        IJsonArray jsonArray = factory.createJsonArray();
         int state = 0;
         while (true) {
             switch (state) {
@@ -194,7 +194,7 @@ class JsonDeserializer {
         src.eatOrThrow('l');
         src.eatOrThrow('s');
         src.eatOrThrow('e');
-        return factory.getJsonBoolean(false);
+        return factory.createJsonBoolean(false);
 
     }
 
@@ -210,11 +210,11 @@ class JsonDeserializer {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         new ScalarPicker().pickFloat(src, dst);
-        return factory.getJsonNumber().set(sb.toString());
+        return factory.createJsonNumber().set(sb.toString());
     }
 
     private IJsonObject deserializeToJsonObject(CharReader src) {
-        IJsonObject jsonObject = factory.getJsonObject();
+        IJsonObject jsonObject = factory.createJsonObject();
         int state = 0;
         while (true) {
             switch (state) {
@@ -293,7 +293,7 @@ class JsonDeserializer {
                     int ch = src.hasNext() ? src.next() : EOF;
                     if (ch == '\"') {
                         // consume the end delimiter and exit
-                        return factory.getJsonString().set(sb.toString());
+                        return factory.createJsonString(sb.toString());
                     } else if (ch == '\\') {
                         state = 2;
                     } else if (Cascii.isControl(ch)) {
@@ -365,6 +365,6 @@ class JsonDeserializer {
         src.eatOrThrow('r');
         src.eatOrThrow('u');
         src.eatOrThrow('e');
-        return factory.getJsonBoolean(true);
+        return factory.createJsonBoolean(true);
     }
 }

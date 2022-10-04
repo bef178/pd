@@ -2,17 +2,31 @@ package pd.codec.json;
 
 public interface IJsonFactory {
 
-    public IJsonArray getJsonArray();
+    public IJsonArray createJsonArray();
 
-    public IJsonBoolean getJsonBoolean();
+    public IJsonBoolean createJsonBoolean();
 
-    public IJsonBoolean getJsonBoolean(boolean value);
+    default IJsonBoolean createJsonBoolean(boolean value) {
+        return createJsonBoolean().set(value);
+    }
+
+    public IJsonNumber createJsonNumber();
+
+    default IJsonNumber createJsonNumber(double value) {
+        return createJsonNumber().set(value);
+    }
+
+    default IJsonNumber createJsonNumber(long value) {
+        return createJsonNumber().set(value);
+    }
+
+    public IJsonObject createJsonObject();
+
+    public IJsonString createJsonString();
+
+    default IJsonString createJsonString(String value) {
+        return createJsonString().set(value);
+    }
 
     public IJsonNull getJsonNull();
-
-    public IJsonNumber getJsonNumber();
-
-    public IJsonObject getJsonObject();
-
-    public IJsonString getJsonString();
 }

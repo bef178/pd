@@ -3,37 +3,32 @@ package pd.codec.json;
 final class SimpleJsonFactory implements IJsonFactory {
 
     @Override
-    public SimpleJsonArray getJsonArray() {
+    public SimpleJsonArray createJsonArray() {
         return new SimpleJsonArray();
     }
 
     @Override
-    public SimpleJsonBoolean getJsonBoolean() {
+    public SimpleJsonBoolean createJsonBoolean() {
         return new SimpleJsonBoolean();
     }
 
     @Override
-    public SimpleJsonBoolean getJsonBoolean(boolean value) {
-        return new SimpleJsonBoolean().set(value);
+    public SimpleJsonNumber createJsonNumber() {
+        return new SimpleJsonNumber();
+    }
+
+    @Override
+    public SimpleJsonObject createJsonObject() {
+        return new SimpleJsonObject();
+    }
+
+    @Override
+    public SimpleJsonString createJsonString() {
+        return new SimpleJsonString();
     }
 
     @Override
     public SimpleJsonNull getJsonNull() {
         return SimpleJsonNull.NULL;
-    }
-
-    @Override
-    public SimpleJsonNumber getJsonNumber() {
-        return new SimpleJsonNumber();
-    }
-
-    @Override
-    public SimpleJsonObject getJsonObject() {
-        return new SimpleJsonObject();
-    }
-
-    @Override
-    public SimpleJsonString getJsonString() {
-        return new SimpleJsonString();
     }
 }

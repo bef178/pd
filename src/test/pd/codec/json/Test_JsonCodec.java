@@ -40,15 +40,15 @@ public class Test_JsonCodec {
     @Test
     public void test_JsonFactory() {
         IJsonFactory factory = new SimpleJsonFactory();
-        IJsonObject jsonObject = factory.getJsonObject()
-                .set("ss", factory.getJsonString().set("hello"))
-                .set("ii", factory.getJsonNumber().set(77))
-                .set("ff", factory.getJsonNumber().set(5.5))
-                .set("ll", factory.getJsonArray()
-                        .append(factory.getJsonString().set("vava"))
-                        .append(factory.getJsonString().set("vbvb")))
+        IJsonObject jsonObject = factory.createJsonObject()
+                .set("ss", factory.createJsonString("hello"))
+                .set("ii", factory.createJsonNumber(77))
+                .set("ff", factory.createJsonNumber(5.5))
+                .set("ll", factory.createJsonArray()
+                        .append(factory.createJsonString("vava"))
+                        .append(factory.createJsonString("vbvb")))
                 .set("nn", factory.getJsonNull())
-                .set("bb", factory.getJsonBoolean(true));
+                .set("bb", factory.createJsonBoolean(true));
         String jsonText = jsonCodec.serialize(jsonObject);
         assertEquals("{\"ss\":\"hello\",\"ii\":77,\"ff\":5.5,\"ll\":[\"vava\",\"vbvb\"],\"nn\":null,\"bb\":true}",
                 jsonText);
