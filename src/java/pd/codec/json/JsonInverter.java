@@ -12,33 +12,23 @@ class JsonInverter {
      */
     @SuppressWarnings("unchecked")
     public <T> T convertToJava(IJson json, Class<T> targetClass) {
+        assert targetClass != null;
+
         if (IJson.class.isAssignableFrom(targetClass)) {
             return targetClass.cast(json);
+        }
+
+        if (json == null) {
+            return null;
         }
 
         if (json instanceof IJsonNull) {
             return null;
         }
 
-        if (targetClass == boolean.class || targetClass == Boolean.class) {
-            return (T) (Boolean) IJsonBoolean.class.cast(json).getBoolean();
-        }
-
-        if (targetClass == byte.class || targetClass == Byte.class
-                || targetClass == char.class || targetClass == Character.class
-                || targetClass == short.class || targetClass == Short.class
-                || targetClass == int.class || targetClass == Integer.class
-                || targetClass == long.class || targetClass == Long.class) {
-            return (T) (Long) IJsonNumber.class.cast(json).getInt64();
-        }
-
-        if (targetClass == float.class || targetClass == Float.class
-                || targetClass == double.class || targetClass == Double.class) {
-            return (T) (Double) IJsonNumber.class.cast(json).getFloat64();
-        }
-
-        if (targetClass == String.class) {
-            return (T) IJsonString.class.cast(json).getString();
+        Object[] outValues = new Object[1];
+        if (tryConvertToPrimitive(json, targetClass, outValues)) {
+            return (T) outValues[0];
         }
 
         if (List.class.isAssignableFrom(targetClass)) {
@@ -63,5 +53,56 @@ class JsonInverter {
 
         // TODO Object
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * `outValues` should consist of 1 element<br/>
+     */
+    private boolean tryConvertToPrimitive(IJson json, Class<?> targetClass, Object[] outValues) {
+        if (targetClass == boolean.class || targetClass == Boolean.class) {
+            outValues[0] = json.asJsonBoolean().getBoolean();
+            return true;
+        }
+
+        if (targetClass == byte.class || targetClass == Byte.class) {
+            outValues[0] = (byte) json.asJsonNumber().getInt32();
+            return true;
+        }
+
+        if (targetClass == char.class || targetClass == Character.class) {
+            outValues[0] = (char) json.asJsonNumber().getInt32();
+            return true;
+        }
+
+        if (targetClass == short.class || targetClass == Short.class) {
+            outValues[0] = (short) json.asJsonNumber().getInt32();
+            return true;
+        }
+
+        if (targetClass == int.class || targetClass == Integer.class) {
+            outValues[0] = json.asJsonNumber().getInt32();
+            return true;
+        }
+
+        if (targetClass == long.class || targetClass == Long.class) {
+            outValues[0] = json.asJsonNumber().getInt64();
+            return true;
+        }
+
+        if (targetClass == float.class || targetClass == Float.class) {
+            outValues[0] = json.asJsonNumber().getFloat32();
+            return true;
+        }
+
+        if (targetClass == double.class || targetClass == Double.class) {
+            outValues[0] = json.asJsonNumber().getFloat64();
+            return true;
+        }
+
+        if (targetClass == String.class) {
+            outValues[0] = json.asJsonString().getString();
+            return true;
+        }
+        return false;
     }
 }
