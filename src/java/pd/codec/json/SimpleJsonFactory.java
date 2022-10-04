@@ -1,6 +1,4 @@
-package pd.codec.json.simplejson;
-
-import pd.codec.json.IJsonFactory;
+package pd.codec.json;
 
 public class SimpleJsonFactory implements IJsonFactory {
 

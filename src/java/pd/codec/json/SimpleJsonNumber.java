@@ -1,6 +1,5 @@
-package pd.codec.json.simplejson;
+package pd.codec.json;
 
-import pd.codec.json.IJsonNumber;
 import pd.fenc.TextNumber;
 
 public class SimpleJsonNumber extends TextNumber implements IJsonNumber {

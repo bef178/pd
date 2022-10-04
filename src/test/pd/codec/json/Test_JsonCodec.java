@@ -1,14 +1,8 @@
-package blackbox;
+package pd.codec.json;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
-
-import pd.codec.json.IJson;
-import pd.codec.json.IJsonFactory;
-import pd.codec.json.IJsonObject;
-import pd.codec.json.JsonCodec;
-import pd.codec.json.simplejson.SimpleJsonFactory;
 
 public class Test_JsonCodec {
 

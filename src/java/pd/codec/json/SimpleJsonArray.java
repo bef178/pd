@@ -1,9 +1,6 @@
-package pd.codec.json.simplejson;
+package pd.codec.json;
 
 import java.util.ArrayList;
-
-import pd.codec.json.IJson;
-import pd.codec.json.IJsonArray;
 
 class SimpleJsonArray extends ArrayList<IJson> implements IJsonArray {
 

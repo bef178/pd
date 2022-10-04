@@ -1,6 +1,4 @@
-package pd.codec.json.simplejson;
-
-import pd.codec.json.IJsonBoolean;
+package pd.codec.json;
 
 class SimpleJsonBoolean implements IJsonBoolean {
 

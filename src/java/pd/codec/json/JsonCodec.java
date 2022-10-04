@@ -1,7 +1,6 @@
 package pd.codec.json;
 
 import pd.codec.json.JsonSerializer.Config;
-import pd.codec.json.simplejson.SimpleJsonFactory;
 
 public class JsonCodec {
 

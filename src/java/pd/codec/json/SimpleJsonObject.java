@@ -1,9 +1,6 @@
-package pd.codec.json.simplejson;
+package pd.codec.json;
 
 import java.util.LinkedHashMap;
-
-import pd.codec.json.IJson;
-import pd.codec.json.IJsonObject;
 
 class SimpleJsonObject extends LinkedHashMap<String, IJson> implements IJsonObject {
 

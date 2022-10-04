@@ -1,6 +1,4 @@
-package pd.codec.json.simplejson;
-
-import pd.codec.json.IJsonNull;
+package pd.codec.json;
 
 class SimpleJsonNull implements IJsonNull {
 
