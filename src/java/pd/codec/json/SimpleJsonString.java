@@ -1,5 +1,7 @@
 package pd.codec.json;
 
+import java.util.Objects;
+
 final class SimpleJsonString implements IJsonString {
 
     /**
@@ -18,8 +20,28 @@ final class SimpleJsonString implements IJsonString {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (o instanceof IJsonString) {
+            IJsonString another = (IJsonString) o;
+            return Objects.equals(another.getString(), getString());
+        }
+        return false;
+    }
+
+    @Override
     public String getString() {
         return value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
     }
 
     @Override
