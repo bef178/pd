@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class Test_JsonSerializer {
+public class Test_JsonCodec {
 
     private static final IJsonFactory f = new SimpleJsonFactory();
 
@@ -77,42 +77,42 @@ public class Test_JsonSerializer {
     }
 
     @Test
-    public void test_deserialize() {
+    public void test_JsonCodec_deserialize() {
         assertEquals(json, JsonCodec.deserialize(jsonText));
     }
 
     @Test
-    public void test_deserialize2() {
+    public void test_JsonCodec_deserialize2() {
         assertEquals(json2, JsonCodec.deserialize(json2Text));
     }
 
     @Test
-    public void test_deserialize_struct() {
+    public void test_JsonCodec_deserialize3_struct() {
         assertEquals(json3, JsonCodec.deserialize(json3Text));
     }
 
     @Test
-    public void test_deserialize_sequence() {
+    public void test_JsonCodec_deserialize4_sequence() {
         assertEquals(json4, JsonCodec.deserialize(json4Text));
     }
 
     @Test
-    public void test_serialize() {
+    public void test_JsonCodec_serialize() {
         assertEquals(jsonText, JsonCodec.serialize(json, null));
     }
 
     @Test
-    public void test_serialize2() {
+    public void test_JsonCodec_serialize2() {
         assertEquals(json2Text, JsonCodec.serialize(json2, null));
     }
 
     @Test
-    public void test_serialize_struct() {
+    public void test_JsonCodec_serialize3_struct() {
         assertEquals(json3Text, JsonCodec.serialize(json3, null));
     }
 
     @Test
-    public void test_serialize_sequence() {
+    public void test_JsonCodec_serialize4_sequence() {
         assertEquals(json4Text, JsonCodec.serialize(json4, null));
     }
 }

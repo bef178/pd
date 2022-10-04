@@ -1,8 +1,8 @@
 package pd.codec.json;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static pd.codec.json.Test_JsonSerializer.json2;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static pd.codec.json.Test_JsonCodec.json2;
 
 import org.junit.jupiter.api.Test;
 
