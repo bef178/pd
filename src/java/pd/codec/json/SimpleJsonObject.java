@@ -1,6 +1,10 @@
 package pd.codec.json;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 final class SimpleJsonObject extends LinkedHashMap<String, IJson> implements IJsonObject {
 
@@ -9,8 +13,38 @@ final class SimpleJsonObject extends LinkedHashMap<String, IJson> implements IJs
      */
     private static final long serialVersionUID = 1L;
 
+    private static final Comparator<Map.Entry<String, IJson>> comparator = Map.Entry.comparingByKey();
+
     public SimpleJsonObject() {
         super();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (o instanceof SimpleJsonObject) {
+            return equalsIgnoreOrder((SimpleJsonObject) o);
+        }
+        return false;
+    }
+
+    public boolean equalsIgnoreOrder(Map<String, IJson> o) {
+        if (o == this) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        List<Map.Entry<String, IJson>> l = new ArrayList<>(o.entrySet());
+        l.sort(comparator);
+        List<Map.Entry<String, IJson>> a = new ArrayList<>(entrySet());
+        a.sort(comparator);
+        return l.equals(a);
     }
 
     @Override

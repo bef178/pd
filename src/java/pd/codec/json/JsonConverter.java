@@ -2,6 +2,7 @@ package pd.codec.json;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
@@ -84,6 +85,10 @@ class JsonConverter {
         IJsonObject jsonObject = factory.createJsonObject();
         // public fields only
         for (Field field : o.getClass().getFields()) {
+            int fieldModifiers = field.getModifiers();
+            if (Modifier.isStatic(fieldModifiers) || Modifier.isTransient(fieldModifiers)) {
+                continue;
+            }
             String key = field.getName();
             try {
                 jsonObject.put(key, convertToJson(o, field));

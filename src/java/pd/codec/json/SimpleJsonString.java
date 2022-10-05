@@ -49,4 +49,9 @@ final class SimpleJsonString implements IJsonString {
         this.value = value;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }

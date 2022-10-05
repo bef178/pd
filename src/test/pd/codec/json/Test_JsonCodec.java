@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import pd.entity.Cat;
+
 public class Test_JsonCodec {
 
     private static final IJsonFactory f = new SimpleJsonFactory();
@@ -19,6 +21,9 @@ public class Test_JsonCodec {
 
     private static final IJson json4;
     private static final String json4Text;
+
+    private static final IJson json5;
+    private static final Cat cat5;
 
     static {
         json = f.createJsonString().set("9\n3d$fs冬你我他");
@@ -74,6 +79,28 @@ public class Test_JsonCodec {
                 .append(f.createJsonString("a"))
                 .append(f.createJsonString("b"));
         json4Text = "[\"a\",\"b\"]";
+
+        json5 = f.createJsonObject()
+                .set("Phylum", f.createJsonString("Chordata"))
+                .set("Class", f.createJsonString("Mammalia"))
+                .set("Order", f.createJsonString("Carnivora"))
+                .set("Family", f.createJsonString("Felidae"))
+                .set("Genus", f.createJsonString("Felis"))
+                .set("Species", f.createJsonString("Felis catus"))
+                .set("name", f.createJsonString("Mimi"));
+        cat5 = new Cat();
+        cat5.Phylum = "Chordata";
+        cat5.Class = "Mammalia";
+        cat5.Order = "Carnivora";
+        cat5.Family = "Felidae";
+        cat5.Genus = "Felis";
+        cat5.Species = "Felis catus";
+        cat5.name = "Mimi";
+    }
+
+    @Test
+    public void test_JsonCodec_convertToJson() {
+        assertEquals(json5, JsonCodec.convertToJson(cat5));
     }
 
     @Test
