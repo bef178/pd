@@ -178,8 +178,12 @@ public class PathExtension {
      * "a", "b" => "a/b"
      */
     public static String resolve(String path, String another) {
+        assert path != null && !path.isEmpty();
+        assert another != null && !another.isEmpty();
         if (isAbsolute(another)) {
             return another;
+        } else if (path.charAt(path.length() - 1) == '/') {
+            return path + another;
         } else {
             return path + "/" + another;
         }

@@ -75,4 +75,12 @@ public class Test_PathExtension {
             assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
+
+    @Test
+    public void test_resolve() {
+        assertEquals("a/b", PathExtension.resolve("a", "b"));
+        assertEquals("/b", PathExtension.resolve("a", "/b"));
+        assertEquals("a/b", PathExtension.resolve("a/", "b"));
+        assertEquals("a///b", PathExtension.resolve("a///", "b"));
+    }
 }
