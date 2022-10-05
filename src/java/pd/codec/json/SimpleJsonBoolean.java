@@ -20,17 +20,6 @@ final class SimpleJsonBoolean implements IJsonBoolean {
     }
 
     @Override
-    public boolean getBoolean() {
-        return value;
-    }
-
-    @Override
-    public SimpleJsonBoolean set(boolean value) {
-        this.value = value;
-        return this;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
@@ -46,7 +35,18 @@ final class SimpleJsonBoolean implements IJsonBoolean {
     }
 
     @Override
+    public boolean getBoolean() {
+        return value;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hashCode(value);
+    }
+
+    @Override
+    public SimpleJsonBoolean set(boolean value) {
+        this.value = value;
+        return this;
     }
 }
