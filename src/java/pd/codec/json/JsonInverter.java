@@ -129,7 +129,7 @@ class JsonInverter {
             if (jsonObject.containsKey(fieldName)) {
                 field.setAccessible(true);
                 String fieldPath = PathExtension.resolve(path, fieldName);
-                Object fieldValue = convertToJava(jsonObject.get(fieldName), field.getDeclaringClass(), fieldPath);
+                Object fieldValue = convertToJava(jsonObject.get(fieldName), field.getType(), fieldPath);
                 field.set(instance, fieldValue);
             }
         }
