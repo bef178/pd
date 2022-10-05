@@ -1,19 +1,24 @@
 package pd.codec;
 
 import java.nio.charset.StandardCharsets;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Iterator;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import pd.fenc.InstallmentByteBuffer;
+import pd.util.StringExtension;
 
 /**
  * query is a string<br/>
  * https://tools.ietf.org/rfc/rfc3986.txt<br/>
  */
-public final class UriQuery {
+public final class UriQueryCodec {
+
+    public static final int majorSeparator = '&';
+
+    public static final int kvSeparator = '=';
 
     private static String decodePctString(String s) {
         int[] ucs4 = s.codePoints().toArray();
@@ -43,52 +48,44 @@ public final class UriQuery {
         return sb.toString();
     }
 
-    public static List<SimpleEntry<String, String>> parse(String queryString) {
+    public static List<SimpleImmutableEntry<String, String>> parse(String queryString) {
         if (queryString == null) {
             return null;
         }
 
-        List<SimpleEntry<String, String>> queries = new LinkedList<>();
-        for (String entryString : queryString.split("&")) {
+        List<SimpleImmutableEntry<String, String>> entries = new LinkedList<>();
+        for (String entryString : StringExtension.split(queryString, majorSeparator)) {
             String key = null;
             String value = null;
-            int i = entryString.indexOf('=');
-            if (i < 0) {
-                // a&b=1 => a=&b=1
+            int i = entryString.indexOf(kvSeparator);
+            if (i == -1) {
+                // "a" => { "a" : "" }
                 key = entryString;
                 value = "";
             } else {
+                // "a=" => { "a" : "" }
+                // "a=b=1" => { "a" : "b=1" }
                 key = entryString.substring(0, i);
                 value = entryString.substring(i + 1);
             }
-            queries.add(new SimpleEntry<String, String>(
+            entries.add(new SimpleImmutableEntry<String, String>(
                     decodePctString(key),
                     decodePctString(value)));
         }
-        return queries;
+        return entries;
     }
 
-    public static String toQueryString(Iterator<Map.Entry<String, String>> it) {
+    public static String toQueryString(Collection<? extends Map.Entry<String, String>> entries) {
         StringBuilder sb = new StringBuilder();
-        while (it.hasNext()) {
-            Map.Entry<String, String> entry = it.next();
+        for (Map.Entry<String, String> entry : entries) {
             sb.append(encodePctString(entry.getKey()));
-            sb.append("=");
+            sb.appendCodePoint(kvSeparator);
             sb.append(encodePctString(entry.getValue()));
-            sb.append("&");
+            sb.appendCodePoint(majorSeparator);
         }
         if (sb.length() > 0) {
             sb.setLength(sb.length() - 1);
         }
         return sb.toString();
-    }
-
-    public static String toQueryString(Map<String, String> queryMap) {
-        if (queryMap == null) {
-            return null;
-        }
-
-        Iterator<Map.Entry<String, String>> it = queryMap.entrySet().iterator();
-        return toQueryString(it);
     }
 }
