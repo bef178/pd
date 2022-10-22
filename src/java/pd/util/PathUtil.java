@@ -17,7 +17,7 @@ public class PathUtil {
      * get the last component of a path; trailing '/'(s) will be ignored<br/>
      */
     public static String basename(String path) {
-        if (path.isEmpty()) {
+        if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
 
@@ -95,15 +95,17 @@ public class PathUtil {
     }
 
     public static boolean isAbsolute(String path) {
-        assert path != null;
-        return path.length() > 0 && path.charAt(0) == '/';
+        if (path == null || path.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        return path.charAt(0) == '/';
     }
 
     /**
      * return e.g. "/a/b/c" or "./a/b/c" or "../a/b/c"
      */
     public static String normalize(String path) {
-        if (path.isEmpty()) {
+        if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
 
@@ -169,9 +171,15 @@ public class PathUtil {
      * "/a/b/c", "/d" => "../../../d"
      */
     public static String relativize(String from, String to) {
-        assert from != null;
-        assert to != null;
-        assert isAbsolute(from) == isAbsolute(to);
+        if (from == null || from.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        if (to == null || to.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        if (isAbsolute(from) != isAbsolute(to)) {
+            throw new IllegalArgumentException();
+        }
         return String.join("/", relativize(from.split("/"), to.split("/")));
     }
 
