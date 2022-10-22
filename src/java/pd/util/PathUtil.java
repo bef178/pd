@@ -101,6 +101,28 @@ public class PathUtil {
         return path.charAt(0) == '/';
     }
 
+    public static String join(String path, String... more) {
+        return Paths.get(path, more).toString();
+    }
+
+    /**
+     * will ignore the possible absolute path in the middle
+     */
+    @SuppressWarnings("unused")
+    private static String join1(String path, String... more) {
+        if (path == null || path.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        StringBuilder sb = new StringBuilder().append(path);
+        for (String another : more) {
+            if (another == null || another.isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+            sb.append('/').append(another);
+        }
+        return sb.toString();
+    }
+
     /**
      * return e.g. "/a/b/c" or "./a/b/c" or "../a/b/c"
      */
@@ -118,7 +140,7 @@ public class PathUtil {
     private static String[] normalize(String[] a) {
         assert a != null;
 
-        LinkedList<String> segs = new LinkedList<String>();
+        LinkedList<String> segs = new LinkedList<>();
 
         int i = 0;
         switch (a[i]) {
@@ -205,17 +227,12 @@ public class PathUtil {
         return a;
     }
 
-    /**
-     * a.k.a `join()`<br/>
-     */
-    public static String resolve(String path, String... others) {
+    public static String resolve(String path, String... more) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(path);
-        for (String another : others) {
+        StringBuilder sb = new StringBuilder().append(path);
+        for (String another : more) {
             if (another == null || another.isEmpty()) {
                 throw new IllegalArgumentException();
             }
@@ -223,8 +240,7 @@ public class PathUtil {
                 sb.setLength(0);
                 sb.append(another);
             } else {
-                sb.append('/');
-                sb.append(another);
+                sb.append('/').append(another);
             }
         }
         return sb.toString();
