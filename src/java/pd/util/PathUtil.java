@@ -5,6 +5,7 @@ import java.util.LinkedList;
 
 /**
  * `String` as path<br/>
+ * normalized path will not end with '/'<br/>
  * <br/>
  * https://tools.ietf.org/rfc/rfc3986.txt<br/>
  */
@@ -176,17 +177,27 @@ public class PathUtil {
     }
 
     /**
-     * "a", "b" => "a/b"
+     * a.k.a `join()`<br/>
      */
-    public static String resolve(String path, String another) {
-        assert path != null && !path.isEmpty();
-        assert another != null && !another.isEmpty();
-        if (isAbsolute(another)) {
-            return another;
-        } else if (path.charAt(path.length() - 1) == '/') {
-            return path + another;
-        } else {
-            return path + "/" + another;
+    public static String resolve(String path, String... others) {
+        if (path == null || path.isEmpty()) {
+            throw new IllegalArgumentException();
         }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(path);
+        for (String another : others) {
+            if (another == null || another.isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+            if (isAbsolute(another)) {
+                sb.setLength(0);
+                sb.append(another);
+            } else {
+                sb.append('/');
+                sb.append(another);
+            }
+        }
+        return sb.toString();
     }
 }

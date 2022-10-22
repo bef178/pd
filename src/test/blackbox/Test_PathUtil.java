@@ -79,7 +79,8 @@ public class Test_PathUtil {
     public void test_resolve() {
         assertEquals("a/b", PathUtil.resolve("a", "b"));
         assertEquals("/b", PathUtil.resolve("a", "/b"));
-        assertEquals("a/b", PathUtil.resolve("a/", "b"));
-        assertEquals("a///b", PathUtil.resolve("a///", "b"));
+        assertEquals("a///b", PathUtil.resolve("a//", "b"));
+        assertEquals("a//b/c", PathUtil.resolve("a/", "b", "c"));
+        assertEquals("//c", PathUtil.resolve("a/", "b", "//c"));
     }
 }
