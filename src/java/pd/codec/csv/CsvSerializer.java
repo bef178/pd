@@ -1,10 +1,10 @@
 package pd.codec.csv;
 
 import static pd.codec.csv.CsvDeserializer.CRLF;
-import static pd.util.Cascii.COMMA;
-import static pd.util.Cascii.CR;
-import static pd.util.Cascii.DOUBLE_QUOTE;
-import static pd.util.Cascii.LF;
+import static pd.util.AsciiUtil.COMMA;
+import static pd.util.AsciiUtil.CR;
+import static pd.util.AsciiUtil.DOUBLE_QUOTE;
+import static pd.util.AsciiUtil.LF;
 
 import java.util.List;
 import java.util.PrimitiveIterator.OfInt;

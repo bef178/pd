@@ -3,6 +3,9 @@ package pd.util;
 import java.util.Collection;
 import java.util.Iterator;
 
+/**
+ * naming: Extension having some methods those cannot be placed in host class for some reason
+ */
 public class CollectionExtension<E> {
 
     /**

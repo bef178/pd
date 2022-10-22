@@ -1,9 +1,9 @@
 package pd.fenc;
 
 import static pd.fenc.IReader.EOF;
-
-import pd.util.Cascii;
-import pd.util.Cint32Array;
+import static pd.util.AsciiUtil.isAlpha;
+import static pd.util.AsciiUtil.isDigit;
+import static pd.util.Int32ArrayExtension.contains;
 
 public class ScalarPicker extends NumberPicker {
 
@@ -47,7 +47,7 @@ public class ScalarPicker extends NumberPicker {
             int ch = src.hasNext() ? src.next() : EOF;
             switch (stat) {
                 case 0:
-                    if (Cascii.isAlpha(ch) || ch == '_') {
+                    if (isAlpha(ch) || ch == '_') {
                         dst.push(ch);
                         stat = 1;
                     } else {
@@ -56,7 +56,7 @@ public class ScalarPicker extends NumberPicker {
                     }
                     break;
                 case 1:
-                    if (Cascii.isAlpha(ch) || ch == '_' || Cascii.isDigit(ch)) {
+                    if (isAlpha(ch) || ch == '_' || isDigit(ch)) {
                         dst.push(ch);
                     } else {
                         src.moveBack();
@@ -112,7 +112,7 @@ public class ScalarPicker extends NumberPicker {
     public boolean tryPickString(CharReader src, IWriter dst, int... terminators) {
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
-            if (Cint32Array.contains(terminators, ch)) {
+            if (contains(terminators, ch)) {
                 if (ch != EOF) {
                     src.moveBack();
                 }

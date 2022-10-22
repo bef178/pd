@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import pd.util.CurvePattern;
+import pd.fenc.CurvePattern;
 
 public class Test_CurvePattern {
 

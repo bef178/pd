@@ -1,6 +1,9 @@
 package pd.util;
 
-public final class CbitArray {
+/**
+ * `byte` or `byte[]` as BitStream
+ */
+public class BitStreamUtil {
 
     private static final int BITS_PER_BYTE = 8;
 
@@ -88,7 +91,7 @@ public final class CbitArray {
         return mem;
     }
 
-    private CbitArray() {
+    private BitStreamUtil() {
         // private dummy
     }
 }

@@ -6,7 +6,7 @@ import java.util.PrimitiveIterator.OfInt;
 
 import pd.codec.HexCodec;
 import pd.fenc.ParsingException;
-import pd.util.Cascii;
+import pd.util.AsciiUtil;
 
 class JsonSerializer {
 
@@ -139,7 +139,7 @@ class JsonSerializer {
                     sb.append('\\').append('t');
                     break;
                 default:
-                    if (Cascii.isControl(ch)) {
+                    if (AsciiUtil.isControl(ch)) {
                         int[] a = new int[2];
                         HexCodec.encode1byte((byte) ch, a, 0);
                         sb.append('\\').append('u').append('0').append('0').append((char) a[0]).append((char) a[1]);

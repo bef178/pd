@@ -1,4 +1,4 @@
-package pd.util;
+package pd.fenc;
 
 import static pd.fenc.IReader.EOF;
 
@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.PrimitiveIterator.OfInt;
 import java.util.Set;
-
-import pd.fenc.ParsingException;
 
 /**
  * interpolated string

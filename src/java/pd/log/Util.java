@@ -7,10 +7,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
+import pd.fenc.CurvePattern;
 import pd.time.Ctime;
-import pd.util.CurvePattern;
 
-public class LogUtil {
+public class Util {
 
     public static String evaluateMessage(String message, Object... messageArguments) {
         return CurvePattern.format(message, messageArguments);

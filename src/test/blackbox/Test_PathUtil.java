@@ -2,19 +2,18 @@ package blackbox;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static pd.util.PathExtension.getBasename;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import pd.util.PathExtension;
+import pd.util.PathUtil;
 
-public class Test_PathExtension {
+public class Test_PathUtil {
 
     @Test
-    public void test_getBasename() {
+    public void test_basename() {
         LinkedHashMap<String, String> testcases = new LinkedHashMap<>();
         testcases.put("abc", "abc");
         testcases.put("abc/def", "def");
@@ -27,20 +26,20 @@ public class Test_PathExtension {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = getBasename(input);
+            String actual = PathUtil.basename(input);
             assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
 
     @Test
-    public void test_getBasename_fail() {
+    public void test_basename_fail() {
         assertThrows(IllegalArgumentException.class, () -> {
-            getBasename("");
+            PathUtil.basename("");
         });
     }
 
     @Test
-    public void test_getParent() {
+    public void test_parent() {
         LinkedHashMap<String, String> testcases = new LinkedHashMap<>();
         testcases.put("abc", ".");
         testcases.put("abc//", ".");
@@ -53,7 +52,7 @@ public class Test_PathExtension {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = PathExtension.getParent(input);
+            String actual = PathUtil.parent(input);
             assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
@@ -71,16 +70,16 @@ public class Test_PathExtension {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = PathExtension.normalize(input);
+            String actual = PathUtil.normalize(input);
             assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
 
     @Test
     public void test_resolve() {
-        assertEquals("a/b", PathExtension.resolve("a", "b"));
-        assertEquals("/b", PathExtension.resolve("a", "/b"));
-        assertEquals("a/b", PathExtension.resolve("a/", "b"));
-        assertEquals("a///b", PathExtension.resolve("a///", "b"));
+        assertEquals("a/b", PathUtil.resolve("a", "b"));
+        assertEquals("/b", PathUtil.resolve("a", "/b"));
+        assertEquals("a/b", PathUtil.resolve("a/", "b"));
+        assertEquals("a///b", PathUtil.resolve("a///", "b"));
     }
 }

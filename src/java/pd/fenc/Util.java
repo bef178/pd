@@ -6,12 +6,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
-import pd.util.Cascii;
+import pd.util.AsciiUtil;
 
 public final class Util {
 
     public static int checkAscii(int value) {
-        if (Cascii.isAscii(value)) {
+        if (AsciiUtil.isAscii(value)) {
             return value;
         }
         throw new ParsingException(
@@ -41,7 +41,7 @@ public final class Util {
     }
 
     public static int checkPrintableAscii(int value) {
-        if (Cascii.isPrintable(value)) {
+        if (AsciiUtil.isPrintable(value)) {
             return value;
         }
         throw new ParsingException(
@@ -70,7 +70,7 @@ public final class Util {
         if (ch == EOF) {
             return "EOF";
         }
-        return new String(new int[] { ch }, 0, 1);
+        return new String(Character.toChars(ch));
     }
 
     public static void consumeDataAndCloseSilently(InputStream stream) {

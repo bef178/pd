@@ -12,7 +12,7 @@ import java.util.Map;
 
 import pd.fenc.ParsingException;
 import pd.fenc.TextNumber;
-import pd.util.PathExtension;
+import pd.util.PathUtil;
 
 class JsonInverter {
 
@@ -85,7 +85,7 @@ class JsonInverter {
             Class<?> elementClass = indeedClass.getComponentType();
             Object array = Array.newInstance(elementClass, jsonArray.size());
             for (int i = 0; i < jsonArray.size(); i++) {
-                String elementPath = PathExtension.resolve(path, "[" + i + "]");
+                String elementPath = PathUtil.resolve(path, "[" + i + "]");
                 Array.set(array, i, convertToJava(jsonArray.get(i), elementClass, elementPath));
             }
             return (T) array;
@@ -100,7 +100,7 @@ class JsonInverter {
             constructor.setAccessible(true);
             List<?> instance = (List<?>) constructor.newInstance();
             for (int i = 0; i < jsonArray.size(); i++) {
-                String elementPath = PathExtension.resolve(path, "[" + i + "]");
+                String elementPath = PathUtil.resolve(path, "[" + i + "]");
                 instance.add(convertToJava(jsonArray.get(i), null, elementPath));
             }
             return (T) instance;
@@ -114,7 +114,7 @@ class JsonInverter {
             Constructor<?> constructor = indeedClass.getDeclaredConstructor();
             Map<String, ?> instance = (Map<String, ?>) constructor.newInstance();
             for (Map.Entry<String, IJson> entry : jsonObject.entrySet()) {
-                String fieldPath = PathExtension.resolve(path, entry.getKey());
+                String fieldPath = PathUtil.resolve(path, entry.getKey());
                 instance.put(entry.getKey(), convertToJava(entry.getValue(), null, fieldPath));
             }
             return (T) instance;
@@ -128,7 +128,7 @@ class JsonInverter {
             String fieldName = field.getName();
             if (jsonObject.containsKey(fieldName)) {
                 field.setAccessible(true);
-                String fieldPath = PathExtension.resolve(path, fieldName);
+                String fieldPath = PathUtil.resolve(path, fieldName);
                 Object fieldValue = convertToJava(jsonObject.get(fieldName), field.getType(), fieldPath);
                 field.set(instance, fieldValue);
             }

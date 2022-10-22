@@ -8,7 +8,7 @@ import pd.fenc.IWriter;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.fenc.Util;
-import pd.util.Cascii;
+import pd.util.AsciiUtil;
 
 class JsonDeserializer {
 
@@ -234,7 +234,7 @@ class JsonDeserializer {
                         return factory.createJsonString(sb.toString());
                     } else if (ch == '\\') {
                         state = 2;
-                    } else if (Cascii.isControl(ch)) {
+                    } else if (AsciiUtil.isControl(ch)) {
                         throw new ParsingException(String.format("unexpected unicode(%d)", ch));
                     } else {
                         sb.appendCodePoint(ch);

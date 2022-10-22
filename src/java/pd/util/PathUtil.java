@@ -4,15 +4,16 @@ import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
- * path is a string<br/>
+ * `String` as path<br/>
+ * <br/>
  * https://tools.ietf.org/rfc/rfc3986.txt<br/>
  */
-public class PathExtension {
+public class PathUtil {
 
     /**
      * get the last component of a path; trailing '/'(s) will be ignored<br/>
      */
-    public static String getBasename(String path) {
+    public static String basename(String path) {
         if (path.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -42,7 +43,7 @@ public class PathExtension {
     /**
      * strip the last component of a path; trailing '/'(s) will be ignored<br/>
      */
-    public static String getParent(String path) {
+    public static String parent(String path) {
         if (path.isEmpty()) {
             throw new IllegalArgumentException();
         }

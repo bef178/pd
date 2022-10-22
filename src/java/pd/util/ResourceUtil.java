@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import static pd.util.InputStreamExtension.readAllBytes;
 
-public class ResourceExtension {
+public class ResourceUtil {
 
     public static byte[] resourceAsBytes(String resourceName) {
         assert resourceName != null;
@@ -36,7 +36,7 @@ public class ResourceExtension {
         return new String(resourceAsBytes(resourceName));
     }
 
-    private ResourceExtension() {
+    private ResourceUtil() {
         // private dummy
     }
 }

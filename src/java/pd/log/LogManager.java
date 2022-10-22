@@ -19,7 +19,7 @@ public class LogManager {
          * return null if any unacceptable values
          */
         public static ILogger createLoggerByProps() {
-            Properties props = LogUtil.loadProperties(PROPS_FILE);
+            Properties props = Util.loadProperties(PROPS_FILE);
             try {
                 ILogger logger = createLoggerByProps(props);
                 return logger;

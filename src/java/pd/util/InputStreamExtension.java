@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
-public final class InputStreamExtension {
+public class InputStreamExtension {
 
     public static byte[] readAllBytes(InputStream stream) throws IOException {
         final int CHUNK_SIZE = 4096;

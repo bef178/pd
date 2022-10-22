@@ -1,6 +1,6 @@
 package pd.util;
 
-public final class Cint32Array {
+public class Int32ArrayExtension {
 
     public static final boolean contains(int[] a, int value) {
         return indexOf(a, value) >= 0;
@@ -15,7 +15,7 @@ public final class Cint32Array {
         return -1;
     }
 
-    private Cint32Array() {
+    private Int32ArrayExtension() {
         // dummy
     }
 }

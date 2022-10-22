@@ -1,7 +1,7 @@
 package pd.log;
 
-import static pd.log.LogUtil.getHostname;
-import static pd.log.LogUtil.writeLine;
+import static pd.log.Util.getHostname;
+import static pd.log.Util.writeLine;
 
 import java.io.File;
 import java.io.FileWriter;

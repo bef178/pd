@@ -3,7 +3,7 @@ package pd.util;
 import java.util.LinkedList;
 import java.util.List;
 
-public final class StringExtension {
+public class StringExtension {
 
     public static final int compare(String s1, String s2) {
         if (s1 == null) {

@@ -1,6 +1,11 @@
 package pd.util;
 
-public final class Cascii {
+/**
+ * `int` as ascii code<br/>
+ * <br/>
+ * naming: Util consisting of static methods<br/>
+ */
+public class AsciiUtil {
 
     public static final int HT = '\t';
     public static final int LF = '\n';
@@ -134,7 +139,7 @@ public final class Cascii {
         return ch;
     }
 
-    private Cascii() {
+    private AsciiUtil() {
         // private dummy
     }
 }
