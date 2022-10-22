@@ -39,7 +39,7 @@ public class Test_PathUtil {
     }
 
     @Test
-    public void test_parent() {
+    public void test_dirname() {
         LinkedHashMap<String, String> testcases = new LinkedHashMap<>();
         testcases.put("abc", ".");
         testcases.put("abc//", ".");
@@ -52,7 +52,7 @@ public class Test_PathUtil {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = PathUtil.parent(input);
+            String actual = PathUtil.dirname(input);
             assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }

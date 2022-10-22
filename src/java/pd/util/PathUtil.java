@@ -46,8 +46,8 @@ public class PathUtil {
     /**
      * strip the last component of a path; trailing '/'(s) will be ignored<br/>
      */
-    public static String parent(String path) {
-        if (path.isEmpty()) {
+    public static String dirname(String path) {
+        if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
 
