@@ -1,5 +1,7 @@
 package pd.util;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -71,6 +73,25 @@ public class PathUtil {
             return "/";
         }
         return path.substring(0, endIndex);
+    }
+
+    public static boolean exists(String path) {
+        if (path == null || path.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        return Files.exists(Paths.get(path));
+    }
+
+    public static String fileext(String path) {
+        if (path == null || path.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+
+        int i = path.lastIndexOf('.');
+        if (i == -1) {
+            return null;
+        }
+        return path.substring(i + 1);
     }
 
     public static boolean isAbsolute(String path) {
