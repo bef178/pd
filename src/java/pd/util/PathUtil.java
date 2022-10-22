@@ -94,7 +94,7 @@ public class PathUtil {
         return path.substring(i + 1);
     }
 
-    public static boolean isAbsolute(String path) {
+    public static boolean isAbsolutePath(String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -177,7 +177,7 @@ public class PathUtil {
         if (to == null || to.isEmpty()) {
             throw new IllegalArgumentException();
         }
-        if (isAbsolute(from) != isAbsolute(to)) {
+        if (isAbsolutePath(from) != isAbsolutePath(to)) {
             throw new IllegalArgumentException();
         }
         return String.join("/", relativize(from.split("/"), to.split("/")));
@@ -219,7 +219,7 @@ public class PathUtil {
             if (another == null || another.isEmpty()) {
                 throw new IllegalArgumentException();
             }
-            if (isAbsolute(another)) {
+            if (isAbsolutePath(another)) {
                 sb.setLength(0);
                 sb.append(another);
             } else {
