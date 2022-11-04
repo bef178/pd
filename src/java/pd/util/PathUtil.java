@@ -1,17 +1,15 @@
 package pd.util;
 
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
- * `String` as path<br/>
- * normalized path will not end with '/'<br/>
+ * This class itself is to manipulate path strings. With extensions, it is able to do file existence check, content modification, etc.<br/>
  * <br/>
- * https://tools.ietf.org/rfc/rfc3986.txt<br/>
+ * @see <a href="https://tools.ietf.org/rfc/rfc3986.txt">rfc3986</a><br/>
  */
-public class PathUtil {
+public class PathUtil extends FileSystemUtil {
 
     /**
      * get the last component of a path; trailing '/'(s) will be ignored<br/>
@@ -26,8 +24,7 @@ public class PathUtil {
             int ch = path.charAt(i);
             if (endIndex == -1) {
                 if (ch == '/') {
-                    // ignore trailing '/'
-                    continue;
+                    // ignored: trailing '/'
                 } else {
                     endIndex = i + 1;
                 }
@@ -35,8 +32,7 @@ public class PathUtil {
                 if (ch == '/') {
                     return path.substring(i + 1, endIndex);
                 } else {
-                    // found partial, go ahead
-                    continue;
+                    // ignored: found partial, go ahead
                 }
             }
         }
@@ -73,13 +69,6 @@ public class PathUtil {
             return "/";
         }
         return path.substring(0, endIndex);
-    }
-
-    public static boolean exists(String path) {
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
-        return Files.exists(Paths.get(path));
     }
 
     public static String fileext(String path) {
@@ -124,6 +113,8 @@ public class PathUtil {
     }
 
     /**
+     * normalized path will not end with '/'<br/>
+     * <br/>
      * return e.g. "/a/b/c" or "./a/b/c" or "../a/b/c"
      */
     public static String normalize(String path) {
@@ -140,53 +131,51 @@ public class PathUtil {
     private static String[] normalize(String[] a) {
         assert a != null;
 
-        LinkedList<String> segs = new LinkedList<>();
+        LinkedList<String> segments = new LinkedList<>();
 
         int i = 0;
         switch (a[i]) {
             case "":
             case ".":
             case "..":
-                segs.add(a[i++]);
+                segments.add(a[i++]);
                 break;
             default:
-                segs.add(".");
+                segments.add(".");
                 break;
         }
 
         while (i < a.length) {
             switch (a[i]) {
                 case "":
-                    i++;
-                    break;
                 case ".":
                     i++;
                     break;
                 case "..":
-                    switch (segs.getLast()) {
+                    switch (segments.getLast()) {
                         case "":
                             i++;
                             break;
                         case ".":
-                            segs.removeLast();
-                            segs.add(a[i++]);
+                            segments.removeLast();
+                            segments.add(a[i++]);
                             break;
                         case "..":
-                            segs.add(a[i++]);
+                            segments.add(a[i++]);
                             break;
                         default:
-                            segs.removeLast();
+                            segments.removeLast();
                             i++;
                             break;
                     }
                     break;
                 default:
-                    segs.add(a[i++]);
+                    segments.add(a[i++]);
                     break;
             }
         }
 
-        return segs.toArray(new String[segs.size()]);
+        return segments.toArray(new String[0]);
     }
 
     /**
