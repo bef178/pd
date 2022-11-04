@@ -16,9 +16,9 @@ classes:
 	make -f ./build/java8.mk
 
 .PHONY: jar
-jar: ./out/pd.core.jar
+jar: ./out/pd.common.jar
 
-./out/pd.core.jar: classes
+./out/pd.common.jar: classes
 	@ \
 	JAR_TARGET_FILE=$@ \
 	make -f ./build/jar.mk
