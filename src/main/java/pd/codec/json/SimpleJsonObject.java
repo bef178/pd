@@ -53,8 +53,14 @@ final class SimpleJsonObject extends LinkedHashMap<String, IJson> implements IJs
     }
 
     @Override
-    public IJson remove(String key) {
+    public IJson getAndRemove(String key) {
         return super.remove(key);
+    }
+
+    @Override
+    public IJsonObject remove(String key) {
+        super.remove(key);
+        return this;
     }
 
     @Override

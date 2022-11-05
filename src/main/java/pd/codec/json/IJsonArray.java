@@ -4,6 +4,11 @@ import java.util.Collection;
 
 public interface IJsonArray extends IJson, Collection<IJson> {
 
+    @Override
+    public default JsonType getJsonType() {
+        return JsonType.ARRAY;
+    }
+
     /**
      * @return this
      */
@@ -11,10 +16,7 @@ public interface IJsonArray extends IJson, Collection<IJson> {
 
     public IJson get(int index);
 
-    @Override
-    public default JsonType getJsonType() {
-        return JsonType.ARRAY;
-    }
+    public IJson getAndRemove(int index);
 
     /**
      * index in [0, size()]
@@ -23,7 +25,10 @@ public interface IJsonArray extends IJson, Collection<IJson> {
      */
     public IJsonArray insert(int index, IJson value);
 
-    public IJson remove(int index);
+    /**
+     * @return this
+     */
+    public IJsonArray remove(int index);
 
     /**
      * @return this

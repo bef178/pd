@@ -25,14 +25,20 @@ final class SimpleJsonArray extends ArrayList<IJson> implements IJsonArray {
     }
 
     @Override
+    public IJson getAndRemove(int index) {
+        return super.remove(index);
+    }
+
+    @Override
     public SimpleJsonArray insert(int index, IJson value) {
         add(index, value);
         return this;
     }
 
     @Override
-    public IJson remove(int index) {
-        return super.remove(index);
+    public IJsonArray remove(int index) {
+        super.remove(index);
+        return this;
     }
 
     @Override
