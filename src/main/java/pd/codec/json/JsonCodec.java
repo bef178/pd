@@ -6,11 +6,7 @@ public final class JsonCodec {
 
     public static final IJsonFactory f = new SimpleJsonFactory();
 
-    private static final JsonCodec one;
-
-    static {
-        one = new JsonCodec(false);
-    }
+    private static final JsonCodec one = new JsonCodec().freeze();
 
     public static JsonCodec singleton() {
         return one;
@@ -18,15 +14,7 @@ public final class JsonCodec {
 
     private final Config config = new Config(f);
 
-    private final boolean configurable;
-
-    public JsonCodec() {
-        this(true);
-    }
-
-    private JsonCodec(boolean configurable) {
-        this.configurable = configurable;
-    }
+    private boolean configurable = true;
 
     public JsonCodec configEncoder(SerializationStyle option) {
         if (!configurable) {
@@ -87,6 +75,11 @@ public final class JsonCodec {
             throw new RuntimeException("not configurable");
         }
         config.registerDecoder(surfacedClass, func);
+        return this;
+    }
+
+    public JsonCodec freeze() {
+        configurable = false;
         return this;
     }
 
