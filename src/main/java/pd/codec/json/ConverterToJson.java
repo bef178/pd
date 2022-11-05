@@ -8,13 +8,15 @@ import java.util.Map;
 
 import pd.fenc.ParsingException;
 
-class JsonConverter {
+class ConverterToJson {
 
-    private final IJsonFactory factory;
+    private final Config config;
 
-    public JsonConverter(IJsonFactory factory) {
-        assert factory != null;
-        this.factory = factory;
+    public ConverterToJson(Config config) {
+        if (config == null) {
+            throw new NullPointerException();
+        }
+        this.config = config;
     }
 
     /**
@@ -24,8 +26,16 @@ class JsonConverter {
     @SuppressWarnings("unchecked")
     public IJson convertToJson(Object o) {
         if (o != null && IJson.class.isAssignableFrom(o.getClass())) {
-            return IJson.class.cast(o);
+            return (IJson) o;
         }
+
+        if (o != null) {
+            if (config.encoders.containsKey(o.getClass())) {
+                return config.encoders.get(o.getClass()).convert(o);
+            }
+        }
+
+        IJsonFactory factory = config.f;
 
         if (o == null) {
             return factory.getJsonNull();
@@ -100,6 +110,8 @@ class JsonConverter {
     }
 
     private IJson convertToJson(Object o, Field field) throws IllegalArgumentException, IllegalAccessException {
+        IJsonFactory factory = config.f;
+
         Class<?> fieldType = field.getType();
         if (fieldType.isPrimitive()) {
             if (fieldType == byte.class) {

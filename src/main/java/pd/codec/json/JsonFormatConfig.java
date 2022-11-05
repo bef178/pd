@@ -1,24 +1,10 @@
 package pd.codec.json;
 
-public class JsonFormatConfig {
+class JsonFormatConfig {
 
-    public static JsonFormatConfig cheetsheetStyle() {
+    public static JsonFormatConfig cheatsheetStyle() {
         JsonFormatConfig config = new JsonFormatConfig();
-        config.margin = "";
-        config.indent = "";
-        config.eol = "";
-        config.colonPrefix = "";
-        config.colonSuffix = "";
-        return config;
-    }
-
-    public static JsonFormatConfig multilinesSytle() {
-        JsonFormatConfig config = new JsonFormatConfig();
-        config.margin = "";
-        config.indent = "    ";
-        config.eol = "\n";
-        config.colonPrefix = "";
-        config.colonSuffix = " ";
+        config.mountCheatsheetStyle();
         return config;
     }
 
@@ -27,4 +13,22 @@ public class JsonFormatConfig {
     public String eol = "";
     public String colonPrefix = "";
     public String colonSuffix = "";
+
+    public void mountCheatsheetStyle() {
+        JsonFormatConfig config = this;
+        config.margin = "";
+        config.indent = "";
+        config.eol = "";
+        config.colonPrefix = "";
+        config.colonSuffix = "";
+    }
+
+    public void mountMultilinesStyle() {
+        JsonFormatConfig config = this;
+        config.margin = "";
+        config.indent = "    ";
+        config.eol = "\n";
+        config.colonPrefix = "";
+        config.colonSuffix = " ";
+    }
 }

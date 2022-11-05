@@ -14,29 +14,31 @@ import pd.fenc.ParsingException;
 import pd.fenc.TextNumber;
 import pd.util.PathUtil;
 
-class JsonInverter {
+class ConverterToObject {
 
-    private final JsonTypeConfig config;
+    private final Config config;
 
-    public JsonInverter(JsonTypeConfig config) {
-        assert config != null;
+    public ConverterToObject(Config config) {
+        if (config == null) {
+            throw new NullPointerException();
+        }
         this.config = config;
     }
 
     /**
      * `IJson` => `Object`<br/>
      */
-    public <T> T convertToJava(IJson json, Class<T> targetClass) {
+    public <T> T convertToObject(IJson json, Class<T> targetClass) {
         assert targetClass != null;
         try {
-            return convertToJava(json, targetClass, "/");
+            return convertToObject(json, targetClass, "/");
         } catch (Exception e) {
             throw new ParsingException(e);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToJava(IJson json, Class<T> targetClass, String path)
+    private <T> T convertToObject(IJson json, Class<T> targetClass, String path)
             throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException {
         // `targetClass` might be `null`
@@ -45,9 +47,13 @@ class JsonInverter {
             return null;
         }
 
-        Class<?> indeedClass = config.findPathRef(path);
+        if (config.decoders.containsKey(targetClass)) {
+            return (T) config.decoders.get(targetClass).convert(json, path);
+        }
+
+        Class<?> indeedClass = config.typeConfig.findPathRef(path);
         if (indeedClass == null) {
-            indeedClass = config.findTypeRef(targetClass);
+            indeedClass = config.typeConfig.findTypeRef(targetClass);
         }
         if (indeedClass != null) {
             if (targetClass != null) {
@@ -86,7 +92,7 @@ class JsonInverter {
             Object array = Array.newInstance(elementClass, jsonArray.size());
             for (int i = 0; i < jsonArray.size(); i++) {
                 String elementPath = PathUtil.resolve(path, "[" + i + "]");
-                Array.set(array, i, convertToJava(jsonArray.get(i), elementClass, elementPath));
+                Array.set(array, i, convertToObject(jsonArray.get(i), elementClass, elementPath));
             }
             return (T) array;
         }
@@ -101,7 +107,7 @@ class JsonInverter {
             List<?> instance = (List<?>) constructor.newInstance();
             for (int i = 0; i < jsonArray.size(); i++) {
                 String elementPath = PathUtil.resolve(path, "[" + i + "]");
-                instance.add(convertToJava(jsonArray.get(i), null, elementPath));
+                instance.add(convertToObject(jsonArray.get(i), null, elementPath));
             }
             return (T) instance;
         }
@@ -115,7 +121,7 @@ class JsonInverter {
             Map<String, ?> instance = (Map<String, ?>) constructor.newInstance();
             for (Map.Entry<String, IJson> entry : jsonObject.entrySet()) {
                 String fieldPath = PathUtil.resolve(path, entry.getKey());
-                instance.put(entry.getKey(), convertToJava(entry.getValue(), null, fieldPath));
+                instance.put(entry.getKey(), convertToObject(entry.getValue(), null, fieldPath));
             }
             return (T) instance;
         }
@@ -129,7 +135,7 @@ class JsonInverter {
             if (jsonObject.containsKey(fieldName)) {
                 field.setAccessible(true);
                 String fieldPath = PathUtil.resolve(path, fieldName);
-                Object fieldValue = convertToJava(jsonObject.get(fieldName), field.getType(), fieldPath);
+                Object fieldValue = convertToObject(jsonObject.get(fieldName), field.getType(), fieldPath);
                 field.set(instance, fieldValue);
             }
         }

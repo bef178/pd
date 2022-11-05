@@ -8,7 +8,7 @@ import java.util.Map;
 
 import pd.fenc.ParsingException;
 
-public class JsonTypeConfig {
+class JsonTypeConfig {
 
     private LinkedHashMap<String, String> nameRefs = new LinkedHashMap<>();
 
@@ -89,7 +89,7 @@ public class JsonTypeConfig {
     }
 
     /**
-     * defines the indeed implementation type at given path of given type<br/>
+     * defines the true implementation type at given path of given type<br/>
      */
     void registerTypeDescentRef(Class<?> clazz, String descentPathPattern, Class<?> dstClass) {
         assert clazz != null;
@@ -99,7 +99,7 @@ public class JsonTypeConfig {
     }
 
     /**
-     * defines the indeed implementation type of declared type<br/>
+     * defines the true implementation type of declared type<br/>
      * <br/>
      * e.g.#1 call(List.class, ArrayList.class);<br/>
      * e.g.#2 call(HashMap.class, LinkedHashMap.class);<br/>

@@ -101,13 +101,12 @@ public class Test_JsonCodec {
     }
 
     @Test
-    public void test_JsonCodec_convertToJava() {
-        assertEquals(cat5, jsonCodec.convertToJava(json5, Cat.class));
-    }
-
-    @Test
     public void test_JsonCodec_convertToJson() {
         assertEquals(json5, jsonCodec.convertToJson(cat5));
+    }
+
+    public void test_JsonCodec_convertToObject() {
+        assertEquals(cat5, jsonCodec.convertToObject(json5, Cat.class));
     }
 
     @Test
