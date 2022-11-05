@@ -75,15 +75,16 @@ class ConverterToObject {
             return (T) json;
         }
 
+        // primitive is abstract
+        Object[] outValues = new Object[1];
+        if (tryConvertToPrimitive(json, indeedClass, outValues)) {
+            return (T) outValues[0];
+        }
+
         if (indeedClass.isInterface()) {
             throw new ParsingException("E: shall not instantiate an interface: " + indeedClass.getName());
         } else if (Modifier.isAbstract(indeedClass.getModifiers())) {
             throw new ParsingException("E: shall not instantiate an abstract class: " + indeedClass.getName());
-        }
-
-        Object[] outValues = new Object[1];
-        if (tryConvertToPrimitive(json, indeedClass, outValues)) {
-            return (T) outValues[0];
         }
 
         if (indeedClass.isArray()) {
