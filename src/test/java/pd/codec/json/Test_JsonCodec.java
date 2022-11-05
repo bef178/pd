@@ -8,7 +8,9 @@ import pd.entity.Cat;
 
 public class Test_JsonCodec {
 
-    private static final IJsonFactory f = new SimpleJsonFactory();
+    private static final JsonCodec jsonCodec = JsonCodec.singleton();
+
+    private static final IJsonFactory f = JsonCodec.f;
 
     private static final IJson json;
     private static final String jsonText;
@@ -100,51 +102,51 @@ public class Test_JsonCodec {
 
     @Test
     public void test_JsonCodec_convertToJava() {
-        assertEquals(cat5, JsonCodec.convertToJava(json5, Cat.class, null));
+        assertEquals(cat5, jsonCodec.convertToJava(json5, Cat.class));
     }
 
     @Test
     public void test_JsonCodec_convertToJson() {
-        assertEquals(json5, JsonCodec.convertToJson(cat5));
+        assertEquals(json5, jsonCodec.convertToJson(cat5));
     }
 
     @Test
     public void test_JsonCodec_deserialize() {
-        assertEquals(json, JsonCodec.deserialize(jsonText));
+        assertEquals(json, jsonCodec.deserialize(jsonText));
     }
 
     @Test
     public void test_JsonCodec_deserialize2() {
-        assertEquals(json2, JsonCodec.deserialize(json2Text));
+        assertEquals(json2, jsonCodec.deserialize(json2Text));
     }
 
     @Test
     public void test_JsonCodec_deserialize3_struct() {
-        assertEquals(json3, JsonCodec.deserialize(json3Text));
+        assertEquals(json3, jsonCodec.deserialize(json3Text));
     }
 
     @Test
     public void test_JsonCodec_deserialize4_sequence() {
-        assertEquals(json4, JsonCodec.deserialize(json4Text));
+        assertEquals(json4, jsonCodec.deserialize(json4Text));
     }
 
     @Test
     public void test_JsonCodec_serialize() {
-        assertEquals(jsonText, JsonCodec.serialize(json, null));
+        assertEquals(jsonText, jsonCodec.serialize(json));
     }
 
     @Test
     public void test_JsonCodec_serialize2() {
-        assertEquals(json2Text, JsonCodec.serialize(json2, null));
+        assertEquals(json2Text, jsonCodec.serialize(json2));
     }
 
     @Test
     public void test_JsonCodec_serialize3_struct() {
-        assertEquals(json3Text, JsonCodec.serialize(json3, null));
+        assertEquals(json3Text, jsonCodec.serialize(json3));
     }
 
     @Test
     public void test_JsonCodec_serialize4_sequence() {
-        assertEquals(json4Text, JsonCodec.serialize(json4, null));
+        assertEquals(json4Text, jsonCodec.serialize(json4));
     }
 }

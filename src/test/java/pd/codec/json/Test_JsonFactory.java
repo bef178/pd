@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 
 public class Test_JsonFactory {
 
+    private static final JsonCodec jsonCodec = JsonCodec.singleton();
+
     @Test
     public void test_JsonFactory() {
         IJsonFactory factory = new SimpleJsonFactory();
@@ -20,9 +22,9 @@ public class Test_JsonFactory {
                 .set("nn", factory.getJsonNull())
                 .set("bb", factory.createJsonBoolean(true));
         String jsonText = "{\"ss\":\"hello\",\"ii\":77,\"ff\":5.5,\"ll\":[\"vava\",\"vbvb\"],\"nn\":null,\"bb\":true}";
-        assertEquals(jsonText, JsonCodec.serialize(json, null));
+        assertEquals(jsonText, jsonCodec.serialize(json));
 
-        IJsonObject json2 = JsonCodec.deserialize(jsonText).asJsonObject();
-        assertEquals(jsonText, JsonCodec.serialize(json2, null));
+        IJsonObject json2 = jsonCodec.deserialize(jsonText).asJsonObject();
+        assertEquals(jsonText, jsonCodec.serialize(json2));
     }
 }
