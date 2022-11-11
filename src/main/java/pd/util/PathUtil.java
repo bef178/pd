@@ -9,7 +9,7 @@ import java.util.LinkedList;
  * <br/>
  * @see <a href="https://tools.ietf.org/rfc/rfc3986.txt">rfc3986</a><br/>
  */
-public class PathUtil extends FileSystemUtil {
+public class PathUtil extends FileReadUtil {
 
     /**
      * get the last component of a path; trailing '/'(s) will be ignored<br/>

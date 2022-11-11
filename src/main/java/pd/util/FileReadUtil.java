@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 
 import static pd.util.PathUtil.dirname;
 
-class FileSystemUtil {
+class FileReadUtil {
 
     public static boolean exists(String path) {
         if (path == null || path.isEmpty()) {
