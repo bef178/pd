@@ -30,9 +30,9 @@ class JsonSerializer {
         if (json instanceof IJsonNull) {
             sb.append("null");
         } else if (json instanceof IJsonBoolean) {
-            sb.append(Boolean.toString(IJsonBoolean.class.cast(json).getBoolean()));
+            sb.append(IJsonBoolean.class.cast(json).getBoolean());
         } else if (json instanceof IJsonNumber) {
-            sb.append(IJsonNumber.class.cast(json).toString());
+            sb.append(IJsonNumber.class.cast(json));
         } else if (json instanceof IJsonString) {
             serializeJsonString(IJsonString.class.cast(json).getString(), sb);
         } else if (json instanceof IJsonArray) {
@@ -88,6 +88,10 @@ class JsonSerializer {
             Entry<String, IJson> entry = it.next();
             String key = entry.getKey();
             IJson value = entry.getValue();
+
+            if (value == null) {
+                continue;
+            }
 
             serializeMarginAndIndents(numIndents, sb);
 
