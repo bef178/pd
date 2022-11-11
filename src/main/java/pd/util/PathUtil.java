@@ -71,7 +71,7 @@ public class PathUtil extends FileSystemUtil {
         return path.substring(0, endIndex);
     }
 
-    public static String fileext(String path) {
+    public static String fileExtension(String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
