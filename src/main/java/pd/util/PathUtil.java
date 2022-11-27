@@ -90,15 +90,12 @@ public class PathUtil extends FileReadUtil {
         return path.charAt(0) == '/';
     }
 
-    public static String join(String path, String... more) {
-        return Paths.get(path, more).toString();
-    }
-
     /**
      * will ignore the possible absolute path in the middle
      */
-    @SuppressWarnings("unused")
-    private static String join1(String path, String... more) {
+    public static String join(String path, String... more) {
+        // not use Paths. it will trim "//" to "/"
+        // return Paths.get(path, more).toString();
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
