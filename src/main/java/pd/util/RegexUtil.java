@@ -8,9 +8,9 @@ import java.util.regex.Pattern;
 public class RegexUtil {
 
     public static List<String> match(String regex, String s) {
+        Matcher m = Pattern.compile(regex, Pattern.MULTILINE).matcher(s);
         List<String> capturingGroups = new LinkedList<>();
-        Matcher m = Pattern.compile(regex).matcher(s);
-        if (m.find()) {
+        while (m.find()) {
             for (int i = 0; i <= m.groupCount(); i++) {
                 capturingGroups.add(m.group(i));
             }
