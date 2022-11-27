@@ -1,6 +1,7 @@
 package pd.util;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -42,5 +43,9 @@ class FileReadUtil {
             mkdir(dirname, true);
         }
         Files.write(Paths.get(path), bytes);
+    }
+
+    public static void save(String path, String content) throws IOException {
+        save(path, content.getBytes(StandardCharsets.UTF_8));
     }
 }
