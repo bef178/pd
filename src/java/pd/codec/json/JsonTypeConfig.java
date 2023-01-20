@@ -10,18 +10,11 @@ import pd.fenc.ParsingException;
 
 class JsonTypeConfig {
 
-    private LinkedHashMap<String, String> nameRefs = new LinkedHashMap<>();
-
     private LinkedHashMap<SimpleImmutableEntry<String, String>, Class<?>> typeRefs = new LinkedHashMap<>();
 
     public JsonTypeConfig() {
         registerTypeRef(List.class, ArrayList.class);
         registerTypeRef(Map.class, LinkedHashMap.class);
-    }
-
-    public String findNameRef(String path) {
-        assert path != null && !path.isEmpty();
-        return nameRefs.get(path);
     }
 
     public Class<?> findPathRef(final String descentPath) {
@@ -66,17 +59,6 @@ class JsonTypeConfig {
         SimpleImmutableEntry<String, String> key = new SimpleImmutableEntry<>(
                 clazz == null ? null : clazz.getName(), descentPathPattern);
         typeRefs.put(key, dstClass);
-    }
-
-    /**
-     * changes the Json tree<br/>
-     * <br/>
-     * e.g. call("/a/b/snake_case", "a/b/camelCase");<br/>
-     */
-    public void registerNameRef(String path, String dstPath) {
-        assert path != null && !path.isEmpty();
-        assert dstPath != null && !dstPath.isEmpty();
-        nameRefs.put(path, dstPath);
     }
 
     /**
