@@ -1,8 +1,8 @@
 package pd.codec.json;
 
-import java.util.Collection;
+import java.util.List;
 
-public interface IJsonArray extends IJson, Collection<IJson> {
+public interface IJsonArray extends IJson, List<IJson> {
 
     @Override
     public default JsonType getJsonType() {

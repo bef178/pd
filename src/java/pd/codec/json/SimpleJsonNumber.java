@@ -32,6 +32,12 @@ final class SimpleJsonNumber extends TextNumber implements IJsonNumber {
     }
 
     @Override
+    public boolean isRoundNumber() {
+        double f = getFloat64();
+        return f == (long) f;
+    }
+
+    @Override
     public SimpleJsonNumber set(double value) {
         super.set(value);
         return this;

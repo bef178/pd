@@ -1,6 +1,11 @@
 package pd.codec.json;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import pd.codec.json.json2object.TypeMapping;
 
 class Config {
 
@@ -8,14 +13,15 @@ class Config {
 
     public JsonFormatConfig formatConfig = JsonFormatConfig.cheatsheetStyle();
 
-    public JsonTypeConfig typeConfig = new JsonTypeConfig();
+    public final TypeMapping typeMapping;
 
     public LinkedHashMap<Class<?>, IFuncConvertToJson> encoders = new LinkedHashMap<>();
 
-    public LinkedHashMap<Class<?>, IFuncConvertToObject> decoders = new LinkedHashMap<>();
-
     public Config(IJsonFactory f) {
         this.f = f;
+        typeMapping = new TypeMapping();
+        typeMapping.register(List.class, ArrayList.class);
+        typeMapping.register(Map.class, LinkedHashMap.class);
     }
 
     public <T> IFuncConvertToJson<T> registerEncoder(Class<T> surfacedClass, IFuncConvertToJson<T> func) {
@@ -23,12 +29,5 @@ class Config {
             throw new NullPointerException();
         }
         return encoders.put(surfacedClass, func);
-    }
-
-    public <T> IFuncConvertToObject<T> registerDecoder(Class<T> surfacedClass, IFuncConvertToObject<T> func) {
-        if (func == null) {
-            throw new NullPointerException();
-        }
-        return decoders.put(surfacedClass, func);
     }
 }

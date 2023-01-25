@@ -1,5 +1,7 @@
 package pd.codec.json;
 
+import pd.codec.json.json2object.JsonToObjectConverter;
+
 import static pd.fenc.CurvePattern.format;
 
 public final class JsonCodec {
@@ -70,14 +72,6 @@ public final class JsonCodec {
         return this;
     }
 
-    public <T> JsonCodec configDecoder(Class<T> surfacedClass, IFuncConvertToObject<T> func) {
-        if (!configurable) {
-            throw new RuntimeException("not configurable");
-        }
-        config.registerDecoder(surfacedClass, func);
-        return this;
-    }
-
     public JsonCodec freeze() {
         configurable = false;
         return this;
@@ -95,8 +89,8 @@ public final class JsonCodec {
         return new ConverterToJson(config).convertToJson(object);
     }
 
-    public <T> T convertToObject(IJson json, Class<T> surfacedClass) {
-        return new ConverterToObject(config).convertToObject(json, surfacedClass);
+    public <T> T convertToJavaObject(IJson json, Class<T> targetClass) {
+        return new JsonToObjectConverter(config.typeMapping).convert(json, targetClass);
     }
 
     public String encode(Object object) {
@@ -106,6 +100,6 @@ public final class JsonCodec {
 
     public <T> T decode(String s, Class<T> surfacedClass) {
         IJson json = deserialize(s);
-        return convertToObject(json, surfacedClass);
+        return convertToJavaObject(json, surfacedClass);
     }
 }

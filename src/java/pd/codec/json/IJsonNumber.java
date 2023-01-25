@@ -14,6 +14,8 @@ public interface IJsonNumber extends IJson {
 
     public long getInt64();
 
+    public boolean isRoundNumber();
+
     @Override
     public default JsonType getJsonType() {
         return JsonType.NUMBER;
