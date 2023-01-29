@@ -1,19 +1,25 @@
-package pd.codec.json;
+package pd.codec.json.serialization;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.PrimitiveIterator.OfInt;
 
 import pd.codec.HexCodec;
+import pd.codec.json.IJson;
+import pd.codec.json.IJsonArray;
+import pd.codec.json.IJsonBoolean;
+import pd.codec.json.IJsonNull;
+import pd.codec.json.IJsonNumber;
+import pd.codec.json.IJsonObject;
+import pd.codec.json.IJsonString;
 import pd.fenc.ParsingException;
 import pd.util.AsciiUtil;
 
-class JsonSerializer {
+public class JsonSerializer {
 
-    private final JsonFormatConfig config;
+    private final SerializationConfig config;
 
-    public JsonSerializer(JsonFormatConfig config) {
-        assert config != null;
+    public JsonSerializer(SerializationConfig config) {
         this.config = config;
     }
 

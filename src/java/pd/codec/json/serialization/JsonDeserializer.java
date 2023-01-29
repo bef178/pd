@@ -1,8 +1,15 @@
-package pd.codec.json;
+package pd.codec.json.serialization;
 
 import static pd.fenc.IReader.EOF;
 
 import pd.codec.HexCodec;
+import pd.codec.json.IJson;
+import pd.codec.json.IJsonArray;
+import pd.codec.json.IJsonFactory;
+import pd.codec.json.IJsonNull;
+import pd.codec.json.IJsonNumber;
+import pd.codec.json.IJsonObject;
+import pd.codec.json.IJsonString;
 import pd.fenc.CharReader;
 import pd.fenc.IWriter;
 import pd.fenc.ParsingException;
@@ -10,13 +17,12 @@ import pd.fenc.ScalarPicker;
 import pd.fenc.Util;
 import pd.util.AsciiUtil;
 
-class JsonDeserializer {
+public class JsonDeserializer {
 
-    private final IJsonFactory factory;
+    private final IJsonFactory f;
 
     public JsonDeserializer(IJsonFactory factory) {
-        assert factory != null;
-        this.factory = factory;
+        this.f = factory;
     }
 
     /**
@@ -70,7 +76,7 @@ class JsonDeserializer {
     }
 
     private IJsonArray deserializeToJsonArray(CharReader src) {
-        IJsonArray jsonArray = factory.createJsonArray();
+        IJsonArray jsonArray = f.createJsonArray();
         int state = 0;
         while (true) {
             switch (state) {
@@ -132,7 +138,7 @@ class JsonDeserializer {
         src.eatOrThrow('l');
         src.eatOrThrow('s');
         src.eatOrThrow('e');
-        return factory.createJsonBoolean(false);
+        return f.createJsonBoolean(false);
 
     }
 
@@ -141,18 +147,18 @@ class JsonDeserializer {
         src.eatOrThrow('u');
         src.eatOrThrow('l');
         src.eatOrThrow('l');
-        return factory.getJsonNull();
+        return f.getJsonNull();
     }
 
     private IJsonNumber deserializeToJsonNumber(CharReader src) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         new ScalarPicker().pickFloat(src, dst);
-        return factory.createJsonNumber().set(sb.toString());
+        return f.createJsonNumber().set(sb.toString());
     }
 
     private IJsonObject deserializeToJsonObject(CharReader src) {
-        IJsonObject jsonObject = factory.createJsonObject();
+        IJsonObject jsonObject = f.createJsonObject();
         int state = 0;
         while (true) {
             switch (state) {
@@ -231,7 +237,7 @@ class JsonDeserializer {
                     int ch = src.hasNext() ? src.next() : EOF;
                     if (ch == '\"') {
                         // consume the end delimiter and exit
-                        return factory.createJsonString(sb.toString());
+                        return f.createJsonString(sb.toString());
                     } else if (ch == '\\') {
                         state = 2;
                     } else if (AsciiUtil.isControl(ch)) {
@@ -303,6 +309,6 @@ class JsonDeserializer {
         src.eatOrThrow('r');
         src.eatOrThrow('u');
         src.eatOrThrow('e');
-        return factory.createJsonBoolean(true);
+        return f.createJsonBoolean(true);
     }
 }

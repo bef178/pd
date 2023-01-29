@@ -2,8 +2,9 @@ package pd.codec.json;
 
 import pd.codec.json.json2object.JsonToObjectConverter;
 import pd.codec.json.object2json.ObjectToJsonConverter;
-
-import static pd.fenc.CurvePattern.format;
+import pd.codec.json.serialization.JsonDeserializer;
+import pd.codec.json.serialization.JsonSerializer;
+import pd.codec.json.serialization.SerializationConfig;
 
 public final class JsonCodec {
 
@@ -17,65 +18,38 @@ public final class JsonCodec {
 
     private final Config config = new Config(f);
 
-    private boolean configurable = true;
+    private boolean frozen = false;
 
-    public JsonCodec configEncoder(SerializationStyle option) {
-        if (!configurable) {
+    public JsonCodec configEncoder(SerializationConfig.Style style) {
+        if (frozen) {
             throw new RuntimeException("not configurable");
         }
-        switch (option) {
-            case CHEATSHEET:
-                config.formatConfig.mountCheatsheetStyle();
-                break;
-            case MULTILINES:
-                config.formatConfig.mountMultilinesStyle();
-                break;
-            default:
-                throw new RuntimeException(format("unknown option `{}`", option.name()));
-        }
+        config.serializationConfig.mountStyle(style);
         return this;
     }
 
-    public JsonCodec configEncoder(SerializationOption option, String value) {
-        if (!configurable) {
+    public JsonCodec configEncoder(SerializationConfig.Option option, String value) {
+        if (frozen) {
             throw new RuntimeException("not configurable");
         }
         if (value == null) {
             throw new NullPointerException("value should not be null");
         }
-        switch (option) {
-            case MARGIN:
-                config.formatConfig.margin = value;
-                break;
-            case INDENT:
-                config.formatConfig.indent = value;
-                break;
-            case EOL:
-                config.formatConfig.eol = value;
-                break;
-            case COLON_PREFIX:
-                config.formatConfig.colonPrefix = value;
-                break;
-            case COLON_SUFFIX:
-                config.formatConfig.colonSuffix = value;
-                break;
-            default:
-                throw new RuntimeException(format("unknown option `{}`", option.name()));
-        }
+        config.serializationConfig.setOption(option, value);
         return this;
     }
 
     public JsonCodec freeze() {
-        configurable = false;
+        frozen = true;
         return this;
     }
 
     public String serialize(IJson json) {
-        return new JsonSerializer(config.formatConfig).serialize(json);
+        return new JsonSerializer(config.serializationConfig).serialize(json);
     }
 
     public IJson deserialize(String s) {
-        return new JsonDeserializer(f).deserialize(s);
+        return new JsonDeserializer(config.f).deserialize(s);
     }
 
     public IJson convertToJson(Object object) {
