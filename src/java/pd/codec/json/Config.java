@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import pd.codec.json.json2object.TypeMapping;
+import pd.codec.json.object2json.JsonMapping;
 
 class Config {
 
@@ -15,19 +16,15 @@ class Config {
 
     public final TypeMapping typeMapping;
 
-    public LinkedHashMap<Class<?>, IFuncConvertToJson> encoders = new LinkedHashMap<>();
+    public final JsonMapping jsonMapping;
 
     public Config(IJsonFactory f) {
         this.f = f;
+
         typeMapping = new TypeMapping();
         typeMapping.register(List.class, ArrayList.class);
         typeMapping.register(Map.class, LinkedHashMap.class);
-    }
 
-    public <T> IFuncConvertToJson<T> registerEncoder(Class<T> surfacedClass, IFuncConvertToJson<T> func) {
-        if (func == null) {
-            throw new NullPointerException();
-        }
-        return encoders.put(surfacedClass, func);
+        jsonMapping = new JsonMapping();
     }
 }
