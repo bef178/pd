@@ -7,6 +7,9 @@ import java.util.List;
  */
 public interface IFileAccessor {
 
+    /**
+     * Return `true` if a general file exists.<br/>
+     */
     boolean exists(String path);
 
     boolean isDirectory(String path);
@@ -14,18 +17,20 @@ public interface IFileAccessor {
     boolean isRegularFile(String path);
 
     /**
-     * Return file basename(s) under this directory.<br/>
-     * As `ls` in `bash`<br/>
-     * Follows symbol links.
+     * Return paths of general files with this prefix; will stop after directory separator.<br/>
+     * <br/>
+     * e.g.<br/>
+     * - list2("d") => ["d/"]<br/>
+     * - list2("d/") => ["d/d/", "d/f"]<br/>
+     * - list2("f") => ["f"]<br/>
+     * - list2("lo") => ["lo/", "long/", "lower"]<br/>
      */
-    List<String> listDirectory(String path);
+    List<String> list2(String pathPrefix);
 
     /**
-     * return file name(s) under this directory
+     * find -type f
      */
-    List<String> listDirectory2(String path);
-
-    List<String> listRegularFiles(String path, int level);
+    List<String> findRegularFiles(String pathPrefix);
 
     /**
      * mkdir, mkdir -p
@@ -38,7 +43,9 @@ public interface IFileAccessor {
     boolean removeDirectory(String path, boolean parents);
 
     /**
-     * rm, rm -rf
+     * Return `true` if the file does not exist or is removed.<br/>
+     * <br/>
+     * rm -f, rm -rf
      */
     boolean remove(String path, boolean recursive);
 

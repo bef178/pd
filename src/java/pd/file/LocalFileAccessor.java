@@ -8,15 +8,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FileAccessor implements IFileAccessor {
+public class LocalFileAccessor implements IFileAccessor {
 
-    private static final FileAccessor one = new FileAccessor();
+    private static final LocalFileAccessor one = new LocalFileAccessor();
 
-    public static FileAccessor singleton() {
+    public static LocalFileAccessor singleton() {
         return one;
     }
 
@@ -36,6 +37,34 @@ public class FileAccessor implements IFileAccessor {
     }
 
     @Override
+    public List<String> list2(String pathPrefix) {
+        String path;
+        if (pathPrefix.equals("/")) {
+            path = "/";
+        } else {
+            int lastIndex = pathPrefix.lastIndexOf('/');
+            if (lastIndex > 0) {
+                path = pathPrefix.substring(0, lastIndex);
+            } else {
+                path = "";
+            }
+        }
+        try (Stream<Path> stream = Files.list(Paths.get(path))) {
+            return stream.map(a -> {
+                        if (Files.isDirectory(a)) {
+                            return a + "/";
+                        } else {
+                            return a.toString();
+                        }
+                    })
+                    .filter(a -> a.startsWith(pathPrefix))
+                    .sorted(PathExtension::compareTo)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     public List<String> listDirectory(String path) {
         File f = new File(path);
         String[] names;
@@ -50,7 +79,6 @@ public class FileAccessor implements IFileAccessor {
         return Arrays.asList(names);
     }
 
-    @Override
     public List<String> listDirectory2(String path) {
         try (Stream<Path> stream = Files.list(Paths.get(path))) {
             return stream.map(Path::toString).collect(Collectors.toList());
@@ -60,12 +88,18 @@ public class FileAccessor implements IFileAccessor {
     }
 
     @Override
-    public List<String> listRegularFiles(String path, int depth) {
+    public List<String> findRegularFiles(String pathPrefix) {
+        List<String> queue = list2(pathPrefix);
+        List<String> files = new LinkedList<>();
+        for (String path : queue) {
+            files.addAll(findRegularFiles(path, -1));
+        }
+        return files.stream().sorted(PathExtension::compareTo).collect(Collectors.toList());
+    }
+
+    public List<String> findRegularFiles(String path, int depth) {
         if (!exists(path)) {
             return null;
-        }
-        if (depth < 0) {
-            return Collections.emptyList();
         }
         if (isRegularFile(path)) {
             return Collections.singletonList(path);
@@ -78,7 +112,7 @@ public class FileAccessor implements IFileAccessor {
             if (depth == 1) {
                 return paths.stream().filter(this::isRegularFile).collect(Collectors.toList());
             } else {
-                return paths.stream().flatMap(s -> listRegularFiles(s, depth - 1).stream())
+                return paths.stream().flatMap(s -> findRegularFiles(s, depth - 1).stream())
                         .collect(Collectors.toList());
             }
         }
@@ -120,13 +154,14 @@ public class FileAccessor implements IFileAccessor {
 
     @Override
     public boolean remove(String path, boolean recursive) {
+        if (!exists(path)) {
+            return true;
+        }
         if (isRegularFile(path)) {
-            try {
-                Files.delete(Paths.get(path));
-                return true;
-            } catch (IOException e) {
-                return false;
+            if (recursive) {
+                throw new IllegalArgumentException("do you mean remove file recursively?");
             }
+            return removeRegularFile(path);
         } else if (isDirectory(path)) {
             if (recursive) {
                 List<String> paths = listDirectory2(path);
@@ -140,6 +175,24 @@ public class FileAccessor implements IFileAccessor {
             }
         }
         return false;
+    }
+
+    /**
+     * Return `true` if the file does not exist or is removed.<br/>
+     */
+    public boolean removeRegularFile(String path) {
+        if (!exists(path)) {
+            return true;
+        }
+        if (!isRegularFile(path)) {
+            return false;
+        }
+        try {
+            Files.delete(Paths.get(path));
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     @Override

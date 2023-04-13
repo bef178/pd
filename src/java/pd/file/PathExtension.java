@@ -230,4 +230,41 @@ public class PathExtension {
         }
         return sb.toString();
     }
+
+    public static int compareTo(String path, String another) {
+        if (path == null || another == null) {
+            throw new IllegalArgumentException();
+        }
+        if (path.endsWith("/")) {
+            if (!another.endsWith("/")) {
+                return -1;
+            }
+        } else {
+            if (another.endsWith("/")) {
+                return 1;
+            }
+        }
+        int i = 0;
+        while (i < path.length() && i < another.length()) {
+            int ch = path.charAt(i);
+            int ch2 = another.charAt(i);
+            if (ch != ch2) {
+                if (ch == '/') {
+                    return -1;
+                } else if (ch2 == '/') {
+                    return 1;
+                } else {
+                    return ch - ch2;
+                }
+            }
+            i++;
+        }
+        if (path.length() == another.length()) {
+            return 0;
+        } else if (i == path.length()) {
+            return -1;
+        } else {
+            return 1;
+        }
+    }
 }
