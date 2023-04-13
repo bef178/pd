@@ -1,4 +1,4 @@
-package blackbox;
+package pd.file;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,9 +8,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import pd.util.PathUtil;
-
-public class Test_PathUtil {
+public class Test_PathExtension {
 
     @Test
     public void test_basename() {
@@ -26,7 +24,7 @@ public class Test_PathUtil {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = PathUtil.basename(input);
+            String actual = PathExtension.basename(input);
             assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
@@ -34,7 +32,7 @@ public class Test_PathUtil {
     @Test
     public void test_basename_fail() {
         assertThrows(IllegalArgumentException.class, () -> {
-            PathUtil.basename("");
+            PathExtension.basename("");
         });
     }
 
@@ -52,7 +50,7 @@ public class Test_PathUtil {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = PathUtil.dirname(input);
+            String actual = PathExtension.dirname(input);
             assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
@@ -70,17 +68,17 @@ public class Test_PathUtil {
         for (Map.Entry<String, String> testcase : testcases.entrySet()) {
             String input = testcase.getKey();
             String expected = testcase.getValue();
-            String actual = PathUtil.normalize(input);
+            String actual = PathExtension.normalize(input);
             assertEquals(expected, actual, String.format("input `%s`", input));
         }
     }
 
     @Test
     public void test_resolve() {
-        assertEquals("a/b", PathUtil.resolve("a", "b"));
-        assertEquals("/b", PathUtil.resolve("a", "/b"));
-        assertEquals("a///b", PathUtil.resolve("a//", "b"));
-        assertEquals("a//b/c", PathUtil.resolve("a/", "b", "c"));
-        assertEquals("//c", PathUtil.resolve("a/", "b", "//c"));
+        assertEquals("a/b", PathExtension.resolve("a", "b"));
+        assertEquals("/b", PathExtension.resolve("a", "/b"));
+        assertEquals("a///b", PathExtension.resolve("a//", "b"));
+        assertEquals("a//b/c", PathExtension.resolve("a/", "b", "c"));
+        assertEquals("//c", PathExtension.resolve("a/", "b", "//c"));
     }
 }

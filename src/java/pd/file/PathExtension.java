@@ -8,18 +8,12 @@ import java.util.LinkedList;
  * <br/>
  * @see <a href="https://tools.ietf.org/rfc/rfc3986.txt">rfc3986</a><br/>
  */
-public class PathAccessor {
-
-    private static final PathAccessor one = new PathAccessor();
-
-    public static PathAccessor singleton() {
-        return one;
-    }
+public class PathExtension {
 
     /**
      * get the last component of a path; trailing '/'(s) will be ignored
      */
-    public String basename(String path) {
+    public static String basename(String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -47,7 +41,7 @@ public class PathAccessor {
     /**
      * strip the last component of a path; trailing '/'(s) will be ignored
      */
-    public String dirname(String path) {
+    public static String dirname(String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -76,7 +70,7 @@ public class PathAccessor {
         return path.substring(0, endIndex);
     }
 
-    public String extname(String path) {
+    public static String extname(String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -88,7 +82,7 @@ public class PathAccessor {
         return path.substring(i + 1);
     }
 
-    public boolean isAbsolutePath(String path) {
+    public static boolean isAbsolutePath(String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -98,7 +92,7 @@ public class PathAccessor {
     /**
      * will ignore the possible absolute path in the middle
      */
-    public String join(String path, String... more) {
+    public static String join(String path, String... more) {
         // not use Paths. it will trim "//" to "/"
         // return Paths.get(path, more).toString();
         if (path == null || path.isEmpty()) {
@@ -119,7 +113,7 @@ public class PathAccessor {
      * <br/>
      * return e.g. "/a/b/c" or "./a/b/c" or "../a/b/c"
      */
-    public String normalize(String path) {
+    public static String normalize(String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -130,7 +124,7 @@ public class PathAccessor {
         return String.join("/", normalize(path.split("/")));
     }
 
-    private String[] normalize(String[] a) {
+    private static String[] normalize(String[] a) {
         assert a != null;
 
         LinkedList<String> segments = new LinkedList<>();
@@ -183,7 +177,7 @@ public class PathAccessor {
     /**
      * "/a/b/c", "/d" => "../../../d"
      */
-    public String relativize(String from, String to) {
+    public static String relativize(String from, String to) {
         if (from == null || from.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -196,7 +190,7 @@ public class PathAccessor {
         return String.join("/", relativize(from.split("/"), to.split("/")));
     }
 
-    private String[] relativize(String[] from, String[] to) {
+    private static String[] relativize(String[] from, String[] to) {
         assert from != null;
         assert to != null;
 
@@ -218,7 +212,7 @@ public class PathAccessor {
         return a;
     }
 
-    public String resolve(String path, String... more) {
+    public static String resolve(String path, String... more) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }

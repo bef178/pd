@@ -113,7 +113,7 @@ public class FileAccessor implements IFileAccessor {
             return false;
         }
         if (parents) {
-            removeDirectory(PathAccessor.singleton().dirname(path), true);
+            removeDirectory(PathExtension.dirname(path), true);
         }
         return true;
     }
@@ -157,7 +157,7 @@ public class FileAccessor implements IFileAccessor {
             }
             List<String> names = listDirectory(path);
             for (String basename : names) {
-                if (!copy(PathAccessor.singleton().join(path, basename), PathAccessor.singleton().join(dstPath, basename), true)) {
+                if (!copy(PathExtension.join(path, basename), PathExtension.join(dstPath, basename), true)) {
                     return false;
                 }
             }
@@ -177,7 +177,7 @@ public class FileAccessor implements IFileAccessor {
         } else if (isDirectory(path)) {
             List<String> names = listDirectory(path);
             for (String basename : names) {
-                if (!move(PathAccessor.singleton().join(path, basename), PathAccessor.singleton().join(dstPath, basename))) {
+                if (!move(PathExtension.join(path, basename), PathExtension.join(dstPath, basename))) {
                     return false;
                 }
             }
@@ -204,7 +204,7 @@ public class FileAccessor implements IFileAccessor {
 
     @Override
     public boolean save(String path, byte[] bytes) {
-        String dirname = PathAccessor.singleton().dirname(path);
+        String dirname = PathExtension.dirname(path);
         if (!exists(dirname)) {
             if (!makeDirectory(dirname, true)) {
                 return false;

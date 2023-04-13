@@ -13,7 +13,7 @@ import pd.codec.json.IJsonArray;
 import pd.codec.json.IJsonNumber;
 import pd.codec.json.IJsonObject;
 import pd.fenc.ParsingException;
-import pd.util.PathUtil;
+import pd.file.PathExtension;
 
 public class JsonToObjectConverter {
 
@@ -113,7 +113,7 @@ public class JsonToObjectConverter {
             Class<?> elementClass = actualClass.getComponentType();
             Object array = Array.newInstance(elementClass, jsonArray.size());
             for (int i = 0; i < jsonArray.size(); i++) {
-                String elementPath = PathUtil.resolve(fieldPath, "[" + i + "]");
+                String elementPath = PathExtension.resolve(fieldPath, "[" + i + "]");
                 Array.set(array, i, convert(jsonArray.get(i), elementClass, elementPath));
             }
             return (T) array;
@@ -126,7 +126,7 @@ public class JsonToObjectConverter {
             constructor.setAccessible(true);
             List<Object> instance = (List<Object>) constructor.newInstance();
             for (int i = 0; i < jsonArray.size(); i++) {
-                String elementPath = PathUtil.resolve(fieldPath, "[" + i + "]");
+                String elementPath = PathExtension.resolve(fieldPath, "[" + i + "]");
                 instance.add(convert(jsonArray.get(i), Object.class, elementPath));
             }
             return (T) instance;
@@ -140,7 +140,7 @@ public class JsonToObjectConverter {
             Constructor<?> constructor = actualClass.getDeclaredConstructor();
             Map<String, Object> instance = (Map<String, Object>) constructor.newInstance();
             for (Map.Entry<String, IJson> entry : jsonObject.entrySet()) {
-                String valuePath = PathUtil.resolve(fieldPath, "{" + entry.getKey() + "}");
+                String valuePath = PathExtension.resolve(fieldPath, "{" + entry.getKey() + "}");
                 instance.put(entry.getKey(), convert(entry.getValue(), Object.class, valuePath));
             }
             return (T) instance;
@@ -154,7 +154,7 @@ public class JsonToObjectConverter {
             String fieldName = field.getName();
             if (jsonObject.containsKey(fieldName)) {
                 field.setAccessible(true);
-                field.set(instance, convert(jsonObject.get(fieldName), field.getType(), PathUtil.resolve(fieldPath, fieldName)));
+                field.set(instance, convert(jsonObject.get(fieldName), field.getType(), PathExtension.resolve(fieldPath, fieldName)));
             }
         }
         return (T) instance;
