@@ -1,6 +1,6 @@
 package pd.fenc;
 
-import pd.util.AsciiUtil;
+import pd.util.AsciiExtension;
 
 /**
  * It often requires "pre-reading" few symbols to speculate which token parser should be invoked.<br>
@@ -60,7 +60,7 @@ public class CharReader implements IReader {
     public void eatWhitespaces() {
         while (hasNext()) {
             int ch = next();
-            if (!AsciiUtil.isWhitespace(ch)) {
+            if (!AsciiExtension.isWhitespace(ch)) {
                 moveBack();
                 return;
             }

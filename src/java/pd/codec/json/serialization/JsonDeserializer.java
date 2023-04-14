@@ -15,7 +15,7 @@ import pd.fenc.IWriter;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.fenc.Util;
-import pd.util.AsciiUtil;
+import pd.util.AsciiExtension;
 
 public class JsonDeserializer {
 
@@ -240,7 +240,7 @@ public class JsonDeserializer {
                         return f.createJsonString(sb.toString());
                     } else if (ch == '\\') {
                         state = 2;
-                    } else if (AsciiUtil.isControl(ch)) {
+                    } else if (AsciiExtension.isControl(ch)) {
                         throw new ParsingException(String.format("unexpected unicode(%d)", ch));
                     } else {
                         sb.appendCodePoint(ch);

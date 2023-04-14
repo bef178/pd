@@ -5,7 +5,7 @@ package pd.util;
  * <br/>
  * naming: Util consisting of static methods<br/>
  */
-public class AsciiUtil {
+public class AsciiExtension {
 
     public static final int HT = '\t';
     public static final int LF = '\n';
@@ -139,7 +139,7 @@ public class AsciiUtil {
         return ch;
     }
 
-    private AsciiUtil() {
+    private AsciiExtension() {
         // private dummy
     }
 }

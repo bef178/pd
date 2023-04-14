@@ -6,12 +6,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
-import pd.util.AsciiUtil;
+import pd.util.AsciiExtension;
 
 public final class Util {
 
     public static int checkAscii(int value) {
-        if (AsciiUtil.isAscii(value)) {
+        if (AsciiExtension.isAscii(value)) {
             return value;
         }
         throw new ParsingException(
@@ -41,7 +41,7 @@ public final class Util {
     }
 
     public static int checkPrintableAscii(int value) {
-        if (AsciiUtil.isPrintable(value)) {
+        if (AsciiExtension.isPrintable(value)) {
             return value;
         }
         throw new ParsingException(

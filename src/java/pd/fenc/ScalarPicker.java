@@ -1,8 +1,8 @@
 package pd.fenc;
 
 import static pd.fenc.IReader.EOF;
-import static pd.util.AsciiUtil.isAlpha;
-import static pd.util.AsciiUtil.isDigit;
+import static pd.util.AsciiExtension.isAlpha;
+import static pd.util.AsciiExtension.isDigit;
 import static pd.util.Int32ArrayExtension.contains;
 
 public class ScalarPicker extends NumberPicker {

@@ -13,7 +13,7 @@ import pd.codec.json.IJsonNumber;
 import pd.codec.json.IJsonObject;
 import pd.codec.json.IJsonString;
 import pd.fenc.ParsingException;
-import pd.util.AsciiUtil;
+import pd.util.AsciiExtension;
 
 public class JsonSerializer {
 
@@ -149,7 +149,7 @@ public class JsonSerializer {
                     sb.append('\\').append('t');
                     break;
                 default:
-                    if (AsciiUtil.isControl(ch)) {
+                    if (AsciiExtension.isControl(ch)) {
                         int[] a = new int[2];
                         HexCodec.encode1byte((byte) ch, a, 0);
                         sb.append('\\').append('u').append('0').append('0').append((char) a[0]).append((char) a[1]);
