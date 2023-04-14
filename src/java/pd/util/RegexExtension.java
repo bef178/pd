@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RegexUtil {
+public class RegexExtension {
 
     public static List<String> match(String regex, String s) {
         Matcher m = Pattern.compile(regex, Pattern.MULTILINE).matcher(s);
