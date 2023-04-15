@@ -8,6 +8,9 @@ public enum MonthOfYear {
     private static final MonthOfYear[] values = MonthOfYear.values();
 
     public static final MonthOfYear fromOrdinal(int ordinal) {
-        return values[ordinal];
+        if (ordinal >= 0 && ordinal < values.length) {
+            return values[ordinal];
+        }
+        return null;
     }
 }

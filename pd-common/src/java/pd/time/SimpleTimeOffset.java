@@ -1,11 +1,13 @@
 package pd.time;
 
-import java.io.Serializable;;
+import java.io.Serializable;
+
+import static pd.time.TimeExtension.MILLISECONDS_PER_SECOND;
 
 /**
- * offset between two timestamps, resolution of 1 millisecond
+ * offset between two timestamps, in milliseconds
  */
-public class TimeOffset implements Comparable<TimeOffset>, Serializable {
+public class SimpleTimeOffset implements Comparable<SimpleTimeOffset>, Serializable {
 
     /**
      *
@@ -15,7 +17,7 @@ public class TimeOffset implements Comparable<TimeOffset>, Serializable {
     /**
      * null is less
      */
-    public static int compare(TimeOffset one, TimeOffset another) {
+    public static int compare(SimpleTimeOffset one, SimpleTimeOffset another) {
         if (one == another) {
             return 0;
         }
@@ -30,16 +32,16 @@ public class TimeOffset implements Comparable<TimeOffset>, Serializable {
 
     private final long offsetMilliseconds;
 
-    public TimeOffset(long offsetMilliseconds) {
+    public SimpleTimeOffset(long offsetMilliseconds) {
         this.offsetMilliseconds = offsetMilliseconds;
     }
 
-    public TimeOffset(long startMilliseconds, long endMilliseconds) {
+    public SimpleTimeOffset(long startMilliseconds, long endMilliseconds) {
         this(endMilliseconds - startMilliseconds);
     }
 
     @Override
-    public int compareTo(TimeOffset o) {
+    public int compareTo(SimpleTimeOffset o) {
         return compare(this, o);
     }
 
@@ -49,7 +51,7 @@ public class TimeOffset implements Comparable<TimeOffset>, Serializable {
             return true;
         }
         if (obj != null && obj.getClass() == this.getClass()) {
-            return ((TimeOffset) obj).offsetMilliseconds == this.offsetMilliseconds;
+            return ((SimpleTimeOffset) obj).offsetMilliseconds == this.offsetMilliseconds;
         }
         return false;
     }
@@ -65,7 +67,6 @@ public class TimeOffset implements Comparable<TimeOffset>, Serializable {
 
     @Override
     public String toString() {
-        int MILLISECONDS_PER_SECOND = 1000;
         long seconds = offsetMilliseconds / MILLISECONDS_PER_SECOND;
         int millisecondOfSecond = (int) (offsetMilliseconds % MILLISECONDS_PER_SECOND);
         return String.format("P%ld.%03d", seconds, millisecondOfSecond);

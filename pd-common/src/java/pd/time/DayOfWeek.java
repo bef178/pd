@@ -12,9 +12,4 @@ public enum DayOfWeek {
         }
         return null;
     }
-
-    public DayOfWeek addDays(long days) {
-        int dayOfWeek = Ctime.daysToDayOfWeek(days);
-        return fromOrdinal(dayOfWeek);
-    }
 }
