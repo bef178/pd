@@ -37,10 +37,10 @@ class DateExtension {
             throw new IllegalArgumentException();
         }
 
-        long i = daysSinceEpoch - (Y1 * 30 + 7);
+        long i = daysSinceEpoch - (Y1 * 31 + 8);
 
         int n400 = (int) (i / Y400);
-        i -= Y400 * n400;
+        i -= (long) Y400 * n400;
         if (i < 0) {
             n400--;
             i += Y400;
@@ -63,11 +63,8 @@ class DateExtension {
             n1--;
         }
         j -= Y1 * n1;
-        if (n1 > 0) {
-            j--;
-        }
 
-        int year = 2000 + 400 * n400 + 100 * n100 + 4 * n4 + n1;
+        int year = 2001 + 400 * n400 + 100 * n100 + 4 * n4 + n1;
         if (j < 0) {
             year--;
             j += findNumDaysInThatYear(year);

@@ -46,7 +46,7 @@ public class Test_TimeExtension {
 
         Random random = new Random(System.nanoTime());
         for (int i = 0; i < 50000000; i++) {
-            test_findTimeComponents(random.nextInt());
+            test_findTimeComponents(random.nextLong());
         }
     }
 

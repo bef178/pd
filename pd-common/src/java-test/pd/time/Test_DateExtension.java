@@ -13,7 +13,10 @@ public class Test_DateExtension {
     public void test_toDayOfYear() {
         Random random = new Random(System.nanoTime());
         for (int i = 0; i < 50000000; i++) {
-            long daysSinceEpoch = random.nextInt();
+            long daysSinceEpoch = random.nextLong();
+            if (daysSinceEpoch < LocalDate.MIN.toEpochDay() || daysSinceEpoch >= LocalDate.MAX.toEpochDay()) {
+                continue;
+            }
             LocalDate d = LocalDate.ofEpochDay(daysSinceEpoch);
             long expected = d.getDayOfYear() - 1;
             long actual = DateExtension.toDayOfYear(d.getYear(), d.getMonthValue() - 1, d.getDayOfMonth() - 1);
