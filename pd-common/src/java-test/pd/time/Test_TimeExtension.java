@@ -21,31 +21,20 @@ public class Test_TimeExtension {
         assertEquals(0, components[TimeExtension.INDEX_MINUTE_OF_HOUR]);
         assertEquals(0, components[TimeExtension.INDEX_SECOND_OF_MINUTE]);
         assertEquals(0, components[TimeExtension.INDEX_MILLISECOND_OF_SECOND]);
+        assertEquals(0, components[TimeExtension.INDEX_WEEK_OF_YEAR]);
         assertEquals(4, components[TimeExtension.INDEX_DAY_OF_WEEK]);
     }
 
     @Test
-    public void test_findTimeComponents_20210606() {
-        int[] components = TimeExtension.findTimeComponents(1622947550000L);
-        assertEquals(2021, components[TimeExtension.INDEX_YEAR_OF_TIME]);
-        assertEquals(6, components[TimeExtension.INDEX_MONTH_OF_YEAR] + 1);
-        assertEquals(6, components[TimeExtension.INDEX_DAY_OF_MONTH] + 1);
-        assertEquals(2, components[TimeExtension.INDEX_HOUR_OF_DAY]);
-        assertEquals(45, components[TimeExtension.INDEX_MINUTE_OF_HOUR]);
-        assertEquals(50, components[TimeExtension.INDEX_SECOND_OF_MINUTE]);
-        assertEquals(0, components[TimeExtension.INDEX_MILLISECOND_OF_SECOND]);
-        assertEquals(0, components[TimeExtension.INDEX_DAY_OF_WEEK]);
+    public void test_findTimeComponents_sample() {
+        test_findTimeComponents(654280699561200000L);
+        test_findTimeComponents(654280699564800000L);
     }
 
     @Test
-    public void test_findTimeComponents() {
-        test_findTimeComponents(-1741415316);
-        test_findTimeComponents(1594910582);
-        test_findTimeComponents(-614716713);
-        test_findTimeComponents(647727371);
-
+    public void test_findTimeComponents_random50m() {
         Random random = new Random(System.nanoTime());
-        for (int i = 0; i < 50000000; i++) {
+        for (int i = 0; i < 50_000_000; i++) {
             test_findTimeComponents(random.nextLong());
         }
     }

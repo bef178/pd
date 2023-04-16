@@ -31,60 +31,68 @@ class DateExtension {
             31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
     };
 
-    static void findDate(long daysSinceEpoch, int[] outComponents) {
+    static void findDatePart(final long daysSinceEpoch, int[] outComponents) {
         // year must in the range of int32
         if (daysSinceEpoch < DAYS_MIN || daysSinceEpoch >= DAYS_MAX) {
             throw new IllegalArgumentException();
         }
 
-        long i = daysSinceEpoch - (Y1 * 31 + 8);
-
-        int n400 = (int) (i / Y400);
-        i -= (long) Y400 * n400;
-        if (i < 0) {
-            n400--;
-            i += Y400;
-        }
-        assert i >= 0 && i < Y400;
-
-        int j = (int) i;
-
-        int n100 = j / Y100;
-        if (n100 == 4) {
-            n100--;
-        }
-        j -= Y100 * n100;
-
-        int n4 = j / Y4;
-        j -= Y4 * n4;
-
-        int n1 = j / Y1;
-        if (n1 == 4) {
-            n1--;
-        }
-        j -= Y1 * n1;
-
-        int year = 2001 + 400 * n400 + 100 * n100 + 4 * n4 + n1;
-        if (j < 0) {
-            year--;
-            j += findNumDaysInThatYear(year);
+        int year;
+        int days;
+        {
+            // 2001 is the most recent year which after Y400
+            year = 2001;
+            long i = daysSinceEpoch - (Y1 * 31 + 8);
+            int n400 = (int) (i / Y400);
+            i -= (long) Y400 * n400;
+            if (i < 0) {
+                n400--;
+                i += Y400;
+            }
+            year += 400 * n400;
+            days = (int) i;
         }
 
-        final int dayOfYear = j;
+        {
+            int n100 = days / Y100;
+            if (n100 == 4) {
+                n100--;
+            }
+            year += 100 * n100;
+            days -= Y100 * n100;
+        }
+
+        {
+            int n4 = days / Y4;
+            year += 4 * n4;
+            days -= Y4 * n4;
+        }
+
+        {
+            int n1 = days / Y1;
+            if (n1 == 4) {
+                n1--;
+            }
+            year += n1;
+            days -= Y1 * n1;
+        }
+
+        final int dayOfYear = days;
 
         final int weekOfYear = (findDayOfWeek(daysSinceEpoch - dayOfYear) + dayOfYear) / 7;
         final int dayOfWeek = findDayOfWeek(daysSinceEpoch);
 
-        int[] monthDays = findMonthDaysInThatYear(year);
-
-        int m = 0;
-        while (j >= monthDays[m]) {
-            j -= monthDays[m];
-            m++;
+        final int monthOfYear;
+        final int dayOfMonth;
+        {
+            int[] monthDays = findMonthDaysInThatYear(year);
+            int m = 0;
+            while (days >= monthDays[m]) {
+                days -= monthDays[m++];
+            }
+            monthOfYear = m;
+            dayOfMonth = days;
         }
-
-        final int monthOfYear = m;
-        final int dayOfMonth = j;
 
         safeOutput(outComponents, INDEX_YEAR_OF_TIME, year);
         safeOutput(outComponents, INDEX_DAY_OF_YEAR, dayOfYear);

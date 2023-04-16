@@ -62,13 +62,15 @@ public class TimeExtension {
     static final int MILLISECONDS_PER_MINUTE = 60 * 1000;
     static final int MILLISECONDS_PER_SECOND = 1000;
 
-    public static int[] findTimeComponents(long millisecondsSinceEpoch) {
-        int[] components = new int[11];
-        findTimeComponents(millisecondsSinceEpoch, components);
-        return components;
+    public static int[] createTimeComponents() {
+        return new int[11];
     }
 
-    public static void findTimeComponents(long millisecondsSinceEpoch, int[] outComponents) {
+    public static int[] findTimeComponents(long millisecondsSinceEpoch) {
+        return findTimeComponents(millisecondsSinceEpoch, createTimeComponents());
+    }
+
+    public static int[] findTimeComponents(long millisecondsSinceEpoch, int[] outComponents) {
         // unnecessary to check data range
 
         long daysSinceEpoch = millisecondsSinceEpoch / MILLISECONDS_PER_DAY;
@@ -80,23 +82,36 @@ public class TimeExtension {
 
         safeOutput(outComponents, INDEX_MILLISECOND_OF_DAY, millisecondOfDay);
 
-        findDate(daysSinceEpoch, outComponents);
-        findDayTime(millisecondOfDay, outComponents);
+        findDatePart(daysSinceEpoch, outComponents);
+        findTimePart(millisecondOfDay, outComponents);
+
+        return outComponents;
     }
 
-    public static void findDate(long daysSinceEpoch, int[] outComponents) {
-        DateExtension.findDate(daysSinceEpoch, outComponents);
+    public static void findDatePart(long daysSinceEpoch, int[] outComponents) {
+        DateExtension.findDatePart(daysSinceEpoch, outComponents);
     }
 
-    public static void findDayTime(int millisecondOfDay, int[] outComponents) {
+    public static void findTimePart(int millisecondOfDay, int[] outComponents) {
         if (millisecondOfDay < 0 || millisecondOfDay >= MILLISECONDS_PER_DAY) {
             throw new IllegalArgumentException();
         }
 
-        safeOutput(outComponents, INDEX_HOUR_OF_DAY, (millisecondOfDay / MILLISECONDS_PER_HOUR) % 24);
-        safeOutput(outComponents, INDEX_MINUTE_OF_HOUR, (millisecondOfDay / MILLISECONDS_PER_MINUTE) % 60);
-        safeOutput(outComponents, INDEX_SECOND_OF_MINUTE, (millisecondOfDay / MILLISECONDS_PER_SECOND) % 60);
-        safeOutput(outComponents, INDEX_MILLISECOND_OF_SECOND, millisecondOfDay % MILLISECONDS_PER_SECOND);
+        int milliseconds = millisecondOfDay;
+
+        final int hourOfDay = milliseconds / MILLISECONDS_PER_HOUR;
+        milliseconds -= hourOfDay * MILLISECONDS_PER_HOUR;
+        safeOutput(outComponents, INDEX_HOUR_OF_DAY, hourOfDay);
+
+        final int minuteOfHour = milliseconds / MILLISECONDS_PER_MINUTE;
+        milliseconds -= minuteOfHour * MILLISECONDS_PER_MINUTE;
+        safeOutput(outComponents, INDEX_MINUTE_OF_HOUR, minuteOfHour);
+
+        final int secondOfMinute = milliseconds / MILLISECONDS_PER_SECOND;
+        milliseconds -= secondOfMinute * MILLISECONDS_PER_SECOND;
+        safeOutput(outComponents, INDEX_SECOND_OF_MINUTE, secondOfMinute);
+
+        safeOutput(outComponents, INDEX_MILLISECOND_OF_SECOND, milliseconds);
     }
 
     static boolean safeOutput(int[] outComponents, int index, int value) {
