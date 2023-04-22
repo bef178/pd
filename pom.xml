@@ -10,5 +10,6 @@
 
     <modules>
         <module>pd-common</module>
+        <module>pd-csv</module>
     </modules>
 </project>
