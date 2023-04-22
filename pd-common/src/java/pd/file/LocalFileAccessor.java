@@ -21,12 +21,10 @@ public class LocalFileAccessor implements IFileAccessor {
         return one;
     }
 
-    @Override
     public boolean exists(String path) {
         return Files.exists(Paths.get(path));
     }
 
-    @Override
     public boolean isDirectory(String path) {
         return Files.isDirectory(Paths.get(path));
     }
@@ -88,7 +86,7 @@ public class LocalFileAccessor implements IFileAccessor {
     }
 
     @Override
-    public List<String> findRegularFiles(String pathPrefix) {
+    public List<String> listAllRegularFiles(String pathPrefix) {
         List<String> queue = list2(pathPrefix);
         List<String> files = new LinkedList<>();
         for (String path : queue) {

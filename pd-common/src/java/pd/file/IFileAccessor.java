@@ -7,17 +7,10 @@ import java.util.List;
  */
 public interface IFileAccessor {
 
-    /**
-     * Return `true` if a general file exists.<br/>
-     */
-    boolean exists(String path);
-
-    boolean isDirectory(String path);
-
     boolean isRegularFile(String path);
 
     /**
-     * Return paths of general files with this prefix; will stop after directory separator.<br/>
+     * find paths of those directory files and regular files starting with `pathPrefix`; will stop at first directory separator<br/>
      * <br/>
      * e.g.<br/>
      * - list2("d") => ["d/"]<br/>
@@ -30,7 +23,7 @@ public interface IFileAccessor {
     /**
      * find -type f
      */
-    List<String> findRegularFiles(String pathPrefix);
+    List<String> listAllRegularFiles(String pathPrefix);
 
     /**
      * mkdir, mkdir -p
@@ -43,7 +36,7 @@ public interface IFileAccessor {
     boolean removeDirectory(String path, boolean parents);
 
     /**
-     * Return `true` if the file does not exist or is removed.<br/>
+     * return `true` if the file does not exist or is removed<br/>
      * <br/>
      * rm -f, rm -rf
      */

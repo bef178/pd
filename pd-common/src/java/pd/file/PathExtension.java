@@ -10,14 +10,19 @@ import java.util.LinkedList;
  */
 public class PathExtension {
 
-    /**
-     * get the last component of a path; trailing '/'(s) will be ignored
-     */
     public static String basename(String path) {
+        return basename(path, null);
+    }
+
+    /**
+     * strip directory and suffix from path; trailing '/'(s) will be ignored
+     */
+    public static String basename(String path, String suffix) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
 
+        int startIndex = 0;
         int endIndex = -1;
         for (int i = path.length() - 1; i >= 0; i--) {
             int ch = path.charAt(i);
@@ -29,17 +34,29 @@ public class PathExtension {
                 }
             } else {
                 if (ch == '/') {
-                    return path.substring(i + 1, endIndex);
+                    startIndex = i + 1;
+                    break;
                 } else {
                     // ignored: found partial, go ahead
                 }
             }
         }
-        return endIndex == -1 ? "/" : path.substring(0, endIndex);
+
+        if (endIndex == -1) {
+            return  "/";
+        }
+
+        if (suffix != null && !suffix.isEmpty()) {
+            int i = path.lastIndexOf(suffix, endIndex);
+            if (i > startIndex) {
+                endIndex = i;
+            }
+        }
+        return path.substring(startIndex, endIndex);
     }
 
     /**
-     * strip the last component of a path; trailing '/'(s) will be ignored
+     * strip last component from path; trailing '/'(s) will be ignored
      */
     public static String dirname(String path) {
         if (path == null || path.isEmpty()) {
@@ -77,7 +94,7 @@ public class PathExtension {
 
         int i = path.lastIndexOf('.');
         if (i == -1) {
-            return null;
+            return "";
         }
         return path.substring(i + 1);
     }

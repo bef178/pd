@@ -10,35 +10,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Test_LocalFileAccessor {
 
-    private static final LocalFileAccessor fileAccessor = LocalFileAccessor.singleton();
+    private static final LocalFileAccessor accessor = LocalFileAccessor.singleton();
 
     @Test
     public void test_list2() {
-        List<String> paths = fileAccessor.list2("");
+        List<String> paths = accessor.list2("");
         assertNotNull(paths);
-        assertTrue(paths.contains("Makefile"));
+        assertTrue(paths.contains("pom.xml"));
         assertTrue(paths.contains("src/"));
     }
 
     @Test
     public void test_listDirectory() {
-        List<String> paths = fileAccessor.listDirectory(".");
+        List<String> paths = accessor.listDirectory(".");
         assertNotNull(paths);
-        assertTrue(paths.contains("Makefile"));
+        assertTrue(paths.contains("pom.xml"));
         assertTrue(paths.contains("src"));
 
-        paths = fileAccessor.listDirectory("./Makefile");
+        paths = accessor.listDirectory("./pom.xml");
         assertNull(paths);
     }
 
     @Test
     public void test_listDirectory2() {
-        List<String> paths = fileAccessor.listDirectory2(".");
+        List<String> paths = accessor.listDirectory2(".");
         assertNotNull(paths);
-        assertTrue(paths.contains("./Makefile"));
+        assertTrue(paths.contains("./pom.xml"));
         assertTrue(paths.contains("./src"));
 
-        paths = fileAccessor.listDirectory2("./Makefile");
+        paths = accessor.listDirectory2("./pom.xml");
         assertNull(paths);
     }
 }
