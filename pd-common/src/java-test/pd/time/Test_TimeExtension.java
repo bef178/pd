@@ -51,4 +51,10 @@ public class Test_TimeExtension {
         assertEquals(expected.getNano() / 1000000, components[TimeExtension.INDEX_MILLISECOND_OF_SECOND]);
         assertEquals((expected.getDayOfWeek().ordinal() + 1) % 7, components[TimeExtension.INDEX_DAY_OF_WEEK]);
     }
+
+    @Test
+    public void test_toUtcString() {
+        long milliseconds = 1622947550000L;
+        assertEquals("2021-06-06T02:45:50.000Z", TimeExtension.toUtcString(milliseconds));
+    }
 }

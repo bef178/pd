@@ -62,6 +62,8 @@ public class TimeExtension {
     static final int MILLISECONDS_PER_MINUTE = 60 * 1000;
     static final int MILLISECONDS_PER_SECOND = 1000;
 
+    public static final String UTC_TIME_FORMAT = "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ";
+
     public static int[] createTimeComponents() {
         return new int[11];
     }
@@ -140,6 +142,26 @@ public class TimeExtension {
                 + minute * MILLISECONDS_PER_MINUTE
                 + second * MILLISECONDS_PER_SECOND
                 + millisecond;
+    }
+
+    public static String toUtcString(long millisecondsSinceEpoch) {
+        return toUtcString(millisecondsSinceEpoch, UTC_TIME_FORMAT);
+    }
+
+    public static String toUtcString(long millisecondsSinceEpoch, String format) {
+        int[] components = findTimeComponents(millisecondsSinceEpoch);
+        return toUtcString(components, format);
+    }
+
+    public static String toUtcString(int[] components, String format) {
+        return String.format(format,
+                components[INDEX_YEAR_OF_TIME],
+                components[INDEX_MONTH_OF_YEAR] + 1,
+                components[INDEX_DAY_OF_MONTH] + 1,
+                components[INDEX_HOUR_OF_DAY],
+                components[INDEX_MINUTE_OF_HOUR],
+                components[INDEX_SECOND_OF_MINUTE],
+                components[INDEX_MILLISECOND_OF_SECOND]);
     }
 
     private TimeExtension() {
