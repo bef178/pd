@@ -11,6 +11,7 @@
     <modules>
         <module>pd-common</module>
         <module>pd-csv</module>
+        <module>pd-json</module>
         <module>pd-xml</module>
     </modules>
 </project>
