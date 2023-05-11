@@ -1,13 +1,10 @@
-package pd.log;
-
-import static pd.log.Util.evaluateMessage;
-import static pd.log.Util.getHostname;
-import static pd.log.Util.writeLine;
+package pd.logger;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 
+import pd.fenc.CurvePattern;
 import pd.time.SimpleTime;
 
 public class ConsoleLogger implements ILogger {
@@ -40,7 +37,7 @@ public class ConsoleLogger implements ILogger {
         }
         Writer w = level.ordinal() < LogLevel.INFO.ordinal() ? errWriter : outWriter;
         try {
-            writeLine(w, ",", SimpleTime.now().getMillisecondsSinceEpoch(), getHostname(), level, evaluateMessage(message, messageArguments));
+            LoggerUtil.writeLine(w, ",", SimpleTime.now().getMillisecondsSinceEpoch(), LoggerUtil.getHostname(), level, CurvePattern.format(message, messageArguments));
             w.flush();
         } catch (IOException e) {
             e.printStackTrace();

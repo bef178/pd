@@ -20,19 +20,28 @@ public class ResourceExtension {
         }
     }
 
-    public static Properties resourceAsProperties(String resourceName) {
+    public static Properties resourceAsProperties(String resourceName) throws IOException {
         assert resourceName != null;
         Properties properties = new Properties();
         try (InputStream stream = resourceAsStream(resourceName)) {
             properties.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return properties;
         }
-        return properties;
+    }
+
+    public static Properties resourceAsPropertiesNoThrow(String resourceName) {
+        try {
+            return resourceAsProperties(resourceName);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     public static InputStream resourceAsStream(String resourceName) {
-        return Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        return classLoader != null
+                ? classLoader.getResourceAsStream(resourceName)
+                : ClassLoader.getSystemResourceAsStream(resourceName);
     }
 
     public static String resourceAsString(String resourceName) {

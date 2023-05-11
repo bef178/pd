@@ -1,4 +1,4 @@
-package pd.log;
+package pd.logger;
 
 public enum LogLevel {
     ERROR, // recoverable unexpected exception and unrecoverable fatal error

@@ -1,4 +1,4 @@
-package pd.log;
+package pd.logger;
 
 import java.io.Closeable;
 import java.io.IOException;
