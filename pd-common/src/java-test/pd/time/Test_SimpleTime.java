@@ -24,6 +24,6 @@ public class Test_SimpleTime {
                 .setTimeZone(SimpleTimeZone.parse("+0800")).build()
                 .rebase(SimpleTimeZone.UTC);
         assertEquals("2019-04-28T10:56:53.818Z", date.toString());
-        assertEquals(milliseconds, date.getMillisecondsSinceEpoch());
+        assertEquals(milliseconds, date.findMillisecondsSinceEpoch());
     }
 }

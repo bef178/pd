@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 public class Test_Logger {
 
     @Test
-    public void test_ILogger() {
-        LoggerManager.getLogger().logInfo("asdf");
+    public void test_Logger() {
+        LoggerManager.singleton().getLogger().logInfo("asdf");
     }
 }

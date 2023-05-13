@@ -11,10 +11,17 @@ public enum LogLevel {
 
     private static final LogLevel[] values = LogLevel.values();
 
-    public static final LogLevel fromOrdinal(int ordinal) {
+    public static LogLevel fromOrdinal(int ordinal) {
         if (ordinal >= 0 && ordinal < values.length) {
             return values[ordinal];
         }
         return null;
+    }
+
+    public static LogLevel fromLiteral(String name) {
+        if (name == null) {
+            return null;
+        }
+        return LogLevel.valueOf(name.toUpperCase()); // let it throw
     }
 }

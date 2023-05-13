@@ -1,19 +1,21 @@
-package pd.logger;
+package pd.logger.impl;
 
 import java.io.Closeable;
 
+import pd.logger.Logger;
+import pd.logger.LogLevel;
 import pd.time.SimpleTime;
 
 public class PerformanceLogger implements Closeable {
 
-    private final ILogger logger;
+    private final Logger logger;
 
     private final String tag;
 
     private long startTimestamp;
     private long endTimestamp;
 
-    public PerformanceLogger(ILogger logger, String tag) {
+    public PerformanceLogger(Logger logger, String tag) {
         this.logger = logger;
         this.tag = tag;
         restart();
@@ -22,7 +24,7 @@ public class PerformanceLogger implements Closeable {
     @Override
     public void close() {
         if (endTimestamp == 0) {
-            endTimestamp = SimpleTime.now().getMillisecondsSinceEpoch();
+            endTimestamp = SimpleTime.now().findMillisecondsSinceEpoch();
         }
 
         if (logger != null) {
@@ -31,6 +33,6 @@ public class PerformanceLogger implements Closeable {
     }
 
     public void restart() {
-        startTimestamp = SimpleTime.now().getMillisecondsSinceEpoch();
+        startTimestamp = SimpleTime.now().findMillisecondsSinceEpoch();
     }
 }

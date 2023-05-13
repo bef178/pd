@@ -1,8 +1,9 @@
-package pd.logger;
+package pd.logger.impl;
 
 import java.io.IOException;
 import java.io.Writer;
 
+import pd.logger.LogLevel;
 import pd.time.TimeExtension;
 
 public class LoggerUtil {
@@ -21,9 +22,9 @@ public class LoggerUtil {
     /**
      * actual logger would call this to write
      */
-    public static void writeLine(Writer w, String fieldSeparator, long timestamp, String hostname, LogLevel level,
-            String message) throws IOException {
+    public static void writeLine(Writer w, long timestamp, String hostname, LogLevel level, String message) throws IOException {
         // TODO csv
+        final String fieldSeparator = ",";
         w.write(TimeExtension.toUtcString(timestamp) + fieldSeparator + hostname + fieldSeparator +
                 level.toString() + fieldSeparator + message + '\n');
     }

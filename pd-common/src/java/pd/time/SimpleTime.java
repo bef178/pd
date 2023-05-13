@@ -36,9 +36,9 @@ public class SimpleTime {
     }
 
     public static SimpleTime now() {
-        long localMilliseconds = System.currentTimeMillis();
-        long offsetMilliseconds = java.util.TimeZone.getDefault().getRawOffset();
-        return new SimpleTime(localMilliseconds, offsetMilliseconds);
+        long millisecondsSinceEpoch = System.currentTimeMillis();
+//        long offsetMilliseconds = java.util.TimeZone.getDefault().getRawOffset();
+        return new SimpleTime(millisecondsSinceEpoch, SimpleTimeZone.UTC);
     }
 
     private final long localMilliseconds;
@@ -134,15 +134,15 @@ public class SimpleTime {
         return localTimeComponents[index];
     }
 
-    public long getLocalMilliseconds() {
-        return localMilliseconds;
-    }
-
-    public long getMillisecondsSinceEpoch() {
+    public long findMillisecondsSinceEpoch() {
         if (getTimeZone() == null) {
             throw new UnsupportedOperationException("Time zone not set");
         }
         return localMilliseconds - getTimeZone().getOffsetMilliseconds();
+    }
+
+    public long getLocalMilliseconds() {
+        return localMilliseconds;
     }
 
     public SimpleTimeZone getTimeZone() {
@@ -168,8 +168,7 @@ public class SimpleTime {
         if (timeZone == null) {
             throw new IllegalArgumentException();
         }
-        return new SimpleTime(getMillisecondsSinceEpoch() + timeZone.getOffsetMilliseconds(),
-                timeZone);
+        return new SimpleTime(findMillisecondsSinceEpoch() + timeZone.getOffsetMilliseconds(), timeZone);
     }
 
     @Override
