@@ -2,6 +2,7 @@ package pd.fenc;
 
 import static pd.fenc.IReader.EOF;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -105,8 +106,7 @@ public class CurvePattern {
     }
 
     /**
-     * "a/{cusId}/b({accId})/c{camId}", "a/1/b(2)/c3" => { "cusId": "1", "accId": "2", "camId": "3"
-     * }
+     * "a/{cusId}/b({accId})/c{camId}", "a/1/b(2)/c3" => { "cusId": "1", "accId": "2", "camId": "3" }
      */
     public static Map<String, String> match(String pattern, String s) {
         String[] cuts = cutPattern(pattern);
@@ -114,6 +114,10 @@ public class CurvePattern {
 
         if (!s.startsWith(cuts[0]) || !s.endsWith(cuts[cuts.length - 1])) {
             return null;
+        }
+
+        if (cuts.length == 1) {
+            return Collections.emptyMap();
         }
 
         int[] a = new int[cuts.length];
@@ -216,7 +220,7 @@ public class CurvePattern {
     }
 
     /**
-     * - capturing groups cannot contact<br/>
+     * - capturing groups cannot be neighboring<br/>
      * - capturing groups cannot have the same name<br/>
      * - capturing group name is a valid identifier<br/>
      */

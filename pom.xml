@@ -14,5 +14,6 @@
         <module>pd-csv</module>
         <module>pd-json</module>
         <module>pd-xml</module>
+        <module>pd-server</module>
     </modules>
 </project>
