@@ -1,14 +1,14 @@
-package pd.injano.demo.controller;
+package pd.injector.demo.controller;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import pd.injano.annotation.FromProperty;
-import pd.injano.annotation.Managed;
-import pd.injano.annotation.OnConstructed;
-import pd.injano.demo.DemoApplication;
+import pd.injector.annotation.FromProperty;
+import pd.injector.annotation.Managed;
+import pd.injector.annotation.OnConstructed;
+import pd.injector.demo.DemoApplication;
 
 @RestController
 public class DemoController {

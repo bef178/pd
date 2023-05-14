@@ -1,4 +1,4 @@
-package pd.injano;
+package pd.injector;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -6,18 +6,14 @@ import java.util.Comparator;
 
 class PrioritizedMemberMethod {
 
-    public static final Comparator<PrioritizedMemberMethod> comparator = new Comparator<PrioritizedMemberMethod>() {
-
-        @Override
-        public int compare(PrioritizedMemberMethod o1, PrioritizedMemberMethod o2) {
-            int d = o1.priority - o2.priority;
-            if (d != 0) {
-                return d;
-            }
-            return Comparator.comparing(String::toString).compare(
-                    o1.instance.getClass().getCanonicalName(),
-                    o2.instance.getClass().getCanonicalName());
+    public static final Comparator<PrioritizedMemberMethod> comparator = (o1, o2) -> {
+        int d = o1.priority - o2.priority;
+        if (d != 0) {
+            return d;
         }
+        return Comparator.comparing(String::toString).compare(
+                o1.instance.getClass().getCanonicalName(),
+                o2.instance.getClass().getCanonicalName());
     };
 
     public Method method;

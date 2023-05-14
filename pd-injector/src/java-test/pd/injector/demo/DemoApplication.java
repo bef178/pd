@@ -1,9 +1,9 @@
-package pd.injano.demo;
+package pd.injector.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import pd.injano.Injector;
+import pd.injector.Injector;
 
 @SpringBootApplication
 public class DemoApplication {

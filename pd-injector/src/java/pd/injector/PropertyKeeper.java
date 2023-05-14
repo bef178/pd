@@ -1,10 +1,10 @@
-package pd.injano;
+package pd.injector;
 
 import java.io.InputStreamReader;
 import java.util.Properties;
-import static pd.injano.util.Util.resourceAsReader;
+import static pd.injector.util.Util.resourceAsReader;
 
-class PropertyHolder {
+class PropertyKeeper {
 
     private final Properties cache = new Properties();
 

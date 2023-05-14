@@ -1,4 +1,4 @@
-package pd.injano.annotation;
+package pd.injector.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

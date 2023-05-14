@@ -1,4 +1,4 @@
-package pd.injano;
+package pd.injector;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -12,12 +12,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
-import pd.injano.annotation.FromProperty;
-import pd.injano.annotation.Managed;
-import pd.injano.annotation.OnConstructed;
+import pd.injector.annotation.FromProperty;
+import pd.injector.annotation.Managed;
+import pd.injector.annotation.OnConstructed;
 
 @Slf4j
-class InstanceHolder {
+class InstanceKeeper {
 
     // className => classInstance
     private final Map<String, Object> cache = new ConcurrentHashMap<>();
@@ -51,11 +51,11 @@ class InstanceHolder {
         }
     }
 
-    public void injectClassFields(PropertyHolder propertyHolder) {
-        injectClassFields(cache.values(), propertyHolder);
+    public void injectClassFields(PropertyKeeper propertyKeeper) {
+        injectClassFields(cache.values(), propertyKeeper);
     }
 
-    public void injectClassFields(Collection<Object> instances, PropertyHolder propertyHolder) {
+    public void injectClassFields(Collection<Object> instances, PropertyKeeper propertyKeeper) {
         List<PrioritizedMemberField> all = new LinkedList<>();
         for (Object instance : instances) {
             for (Field field : instance.getClass().getDeclaredFields()) {
@@ -86,10 +86,10 @@ class InstanceHolder {
             FromProperty annoFromProperty = a.field.getAnnotation(FromProperty.class);
             if (annoFromProperty != null) {
                 String propertyKey = annoFromProperty.value();
-                if (!propertyHolder.containsKey(propertyKey)) {
+                if (!propertyKeeper.containsKey(propertyKey)) {
                     throw new IllegalArgumentException("Failed to find property \"" + propertyKey + "\"");
                 }
-                a.assign(propertyHolder.getProperty(propertyKey));
+                a.assign(propertyKeeper.getProperty(propertyKey));
                 continue;
             }
 

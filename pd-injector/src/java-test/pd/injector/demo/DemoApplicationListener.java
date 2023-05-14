@@ -1,6 +1,6 @@
-package pd.injano.demo;
+package pd.injector.demo;
 
-import static pd.injano.demo.DemoApplication.injector;
+import static pd.injector.demo.DemoApplication.injector;
 
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;

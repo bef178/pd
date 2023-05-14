@@ -1,4 +1,4 @@
-package pd.injano;
+package pd.injector;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -9,13 +9,13 @@ import java.util.stream.Collectors;
 
 import org.reflections.Reflections;
 
-import pd.injano.annotation.Managed;
+import pd.injector.annotation.Managed;
 
 public class Injector {
 
-    private final PropertyHolder propertyHolder = new PropertyHolder();
+    private final PropertyKeeper propertyKeeper = new PropertyKeeper();
 
-    private final InstanceHolder instanceHolder = new InstanceHolder();
+    private final InstanceKeeper instanceKeeper = new InstanceKeeper();
 
     private final String basePackageName;
 
@@ -30,13 +30,13 @@ public class Injector {
 
     public void loadProperties() {
         String name = "application.properties";
-        propertyHolder.load(name);
+        propertyKeeper.load(name);
         String activeProfile = System.getenv("INJANO_ACTIVE_PROFILE");
         if (activeProfile == null) {
-            activeProfile = propertyHolder.getProperty("injano.active_profile");
+            activeProfile = propertyKeeper.getProperty("injano.active_profile");
         }
         if (activeProfile != null) {
-            propertyHolder.load("application-" + activeProfile + ".properties");
+            propertyKeeper.load("application-" + activeProfile + ".properties");
         }
     }
 
@@ -46,9 +46,9 @@ public class Injector {
     }
 
     private void scan(Collection<Class<?>> managedClasses) {
-        instanceHolder.instantiateClasses(managedClasses);
-        instanceHolder.injectClassFields(propertyHolder);
-        instanceHolder.invokeCallbacks();
+        instanceKeeper.instantiateClasses(managedClasses);
+        instanceKeeper.injectClassFields(propertyKeeper);
+        instanceKeeper.invokeCallbacks();
     }
 
     private List<Class<?>> sort(Set<Class<?>> classes) {
@@ -68,11 +68,11 @@ public class Injector {
     }
 
     public void injectClassFields(Object target) {
-        instanceHolder.injectClassFields(Collections.singletonList(target), propertyHolder);
+        instanceKeeper.injectClassFields(Collections.singletonList(target), propertyKeeper);
     }
 
     public void dispose() {
-        instanceHolder.clear();
-        propertyHolder.clear();
+        instanceKeeper.clear();
+        propertyKeeper.clear();
     }
 }

@@ -15,5 +15,6 @@
         <module>pd-json</module>
         <module>pd-xml</module>
         <module>pd-server</module>
+        <module>pd-injector</module>
     </modules>
 </project>
