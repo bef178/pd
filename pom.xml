@@ -16,5 +16,6 @@
         <module>pd-xml</module>
         <module>pd-server</module>
         <module>pd-injector</module>
+        <module>pd-aws</module>
     </modules>
 </project>

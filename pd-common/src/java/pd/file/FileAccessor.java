@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Abstracts file management operations.
  */
-public interface IFileAccessor {
+public interface FileAccessor {
 
     boolean isRegularFile(String path);
 
