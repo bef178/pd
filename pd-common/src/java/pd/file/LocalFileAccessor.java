@@ -56,7 +56,7 @@ public class LocalFileAccessor implements FileAccessor {
                         }
                     })
                     .filter(a -> a.startsWith(pathPrefix))
-                    .sorted(PathExtension::compareTo)
+                    .sorted(PathExtension::compare)
                     .collect(Collectors.toList());
         } catch (IOException e) {
             return null;
@@ -92,7 +92,7 @@ public class LocalFileAccessor implements FileAccessor {
         for (String path : queue) {
             files.addAll(findRegularFiles(path, -1));
         }
-        return files.stream().sorted(PathExtension::compareTo).collect(Collectors.toList());
+        return files.stream().sorted(PathExtension::compare).collect(Collectors.toList());
     }
 
     public List<String> findRegularFiles(String path, int depth) {
@@ -116,6 +116,21 @@ public class LocalFileAccessor implements FileAccessor {
         }
         // ignore files of other types
         return Collections.emptyList();
+    }
+
+    public List<FileStat> statAllRegularFiles(String path) {
+        return listAllRegularFiles(path).stream().map(a -> {
+            FileStat stat = new FileStat();
+            stat.path = a;
+            try {
+                Path p = Paths.get(a);
+                stat.size = Files.size(p);
+                stat.lastModifiedTime = Files.getLastModifiedTime(p).toInstant().toEpochMilli();
+            } catch (IOException e) {
+                // dummy
+            }
+            return stat;
+        }).collect(Collectors.toList());
     }
 
     @Override

@@ -71,7 +71,7 @@ public class HexCodec {
             case 13:
             case 14:
             case 15:
-                return value + 'A';
+                return value - 10 + 'A';
             default:
                 break;
         }

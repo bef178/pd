@@ -6,6 +6,7 @@ import java.util.LinkedList;
 /**
  * manipulate string that represent path<br/>
  * <br/>
+ *
  * @see <a href="https://tools.ietf.org/rfc/rfc3986.txt">rfc3986</a><br/>
  */
 public class PathExtension {
@@ -43,7 +44,7 @@ public class PathExtension {
         }
 
         if (endIndex == -1) {
-            return  "/";
+            return "/";
         }
 
         if (suffix != null && !suffix.isEmpty()) {
@@ -248,10 +249,12 @@ public class PathExtension {
         return sb.toString();
     }
 
-    public static int compareTo(String path, String another) {
+    public static int compare(String path, String another) {
         if (path == null || another == null) {
             throw new IllegalArgumentException();
         }
+
+        // directory first
         if (path.endsWith("/")) {
             if (!another.endsWith("/")) {
                 return -1;
@@ -261,8 +264,27 @@ public class PathExtension {
                 return 1;
             }
         }
+
+        int[] endIndexes;
+        {
+            endIndexes = new int[] { path.length(), another.length() };
+            int i = endIndexes[0] - 1;
+            int j = endIndexes[1] - 1;
+            while (i >= 0 && j >= 0) {
+                if (path.charAt(i) != another.charAt(j)) {
+                    break;
+                }
+                if (path.charAt(i) == '.') {
+                    endIndexes[0] = i;
+                    endIndexes[1] = j;
+                }
+                i--;
+                j--;
+            }
+        }
+
         int i = 0;
-        while (i < path.length() && i < another.length()) {
+        while (i < endIndexes[0] && i < endIndexes[1]) {
             int ch = path.charAt(i);
             int ch2 = another.charAt(i);
             if (ch != ch2) {
@@ -276,9 +298,9 @@ public class PathExtension {
             }
             i++;
         }
-        if (path.length() == another.length()) {
+        if (endIndexes[0] == endIndexes[1]) {
             return 0;
-        } else if (i == path.length()) {
+        } else if (i == endIndexes[0]) {
             return -1;
         } else {
             return 1;
