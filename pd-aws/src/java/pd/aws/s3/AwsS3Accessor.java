@@ -51,7 +51,7 @@ public class AwsS3Accessor implements FileAccessor {
         return s3Objects != null && s3Objects.get(0) != null;
     }
 
-    private List<S3Object> listS3Objects(String pathPrefix, int limit) {
+    public List<S3Object> listS3Objects(String pathPrefix, int limit) {
         if (limit <= 0) {
             return Collections.emptyList();
         }
