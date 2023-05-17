@@ -17,13 +17,13 @@ public class DemoApplicationListener implements ApplicationListener<ApplicationE
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ApplicationEnvironmentPreparedEvent) {
             injector.loadProperties();
-            log.info("injano: properties loaded");
+            log.info("injector: properties loaded");
         } else if (event instanceof ApplicationPreparedEvent) {
             injector.scan();
-            log.info("injano: scanned");
+            log.info("injector: scanned");
         } else if (event instanceof ApplicationStartedEvent) {
             injector.dispose();
-            log.info("injano: disposed");
+            log.info("injector: disposed");
         }
     }
 }
