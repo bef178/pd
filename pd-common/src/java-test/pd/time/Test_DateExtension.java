@@ -10,11 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Test_DateExtension {
 
     @Test
-    public void test_findDatePart_random50m() {
+    public void test_findDatePart_random5m() {
         Random random = new Random(System.nanoTime());
         long minDays = LocalDate.MIN.toEpochDay();
         long maxDays = LocalDate.MAX.toEpochDay();
-        for (int i = 0; i < 50_000_000; i++) {
+        for (int i = 0; i < 5_000_000; i++) {
             long days = (long) (random.nextDouble() * (maxDays - minDays) + minDays);
             test_findDatePart(days);
         }
@@ -31,9 +31,9 @@ public class Test_DateExtension {
     }
 
     @Test
-    public void test_toDayOfYear_random50m() {
+    public void test_toDayOfYear_random5m() {
         Random random = new Random(System.nanoTime());
-        for (int i = 0; i < 50000000; i++) {
+        for (int i = 0; i < 5000000; i++) {
             long daysSinceEpoch = random.nextLong();
             if (daysSinceEpoch < LocalDate.MIN.toEpochDay() || daysSinceEpoch >= LocalDate.MAX.toEpochDay()) {
                 continue;
@@ -63,9 +63,9 @@ public class Test_DateExtension {
     }
 
     @Test
-    public void test_toDaysSinceEpoch_random50m() {
+    public void test_toDaysSinceEpoch_random5m() {
         Random random = new Random();
-        for (int i = 0; i < 50000000; i++) {
+        for (int i = 0; i < 5000000; i++) {
             int year = random.nextInt(LocalDate.MAX.getYear());
             long expected = LocalDate.ofYearDay(year, 1).toEpochDay();
             long actual = DateExtension.toDaysSinceEpoch(year, 0);

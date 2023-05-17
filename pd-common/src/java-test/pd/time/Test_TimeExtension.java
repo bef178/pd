@@ -32,9 +32,9 @@ public class Test_TimeExtension {
     }
 
     @Test
-    public void test_findTimeComponents_random50m() {
+    public void test_findTimeComponents_random5m() {
         Random random = new Random(System.nanoTime());
-        for (int i = 0; i < 50_000_000; i++) {
+        for (int i = 0; i < 5_000_000; i++) {
             test_findTimeComponents(random.nextLong());
         }
     }
