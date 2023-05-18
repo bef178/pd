@@ -132,13 +132,7 @@ public class Main {
     public static String md5sum(byte[] bytes) {
         MessageDigest md5 = MessageDigest.getInstance("MD5");
         byte[] digest = md5.digest(bytes);
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < digest.length; i++) {
-            int[] a = new int[2];
-            HexCodec.encode1byte(digest[i], a, 0);
-            sb.appendCodePoint(a[0]).appendCodePoint(a[1]);
-        }
-        return sb.toString().toLowerCase();
+        return HexCodec.toHexString(digest, false);
     }
 
     private static List<Map.Entry<String, String>> pickParams(String[] args) {

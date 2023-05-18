@@ -1,5 +1,7 @@
 package pd.codec;
 
+import pd.util.AsciiExtension;
+
 public class HexCodec {
 
     /**
@@ -48,10 +50,25 @@ public class HexCodec {
      * (byte) 0x61 => ['6','1']
      */
     public static void encode1byte(byte byteValue, int[] dst, int start) {
-        dst[start] = (byte) encode4bit((byteValue >> 4) & 0x0F);
-        dst[start + 1] = (byte) encode4bit(byteValue & 0x0F);
+        int out1st = (byte) encode4bit((byteValue >> 4) & 0x0F);
+        int out2nd = (byte) encode4bit(byteValue & 0x0F);
+        dst[start] = out1st;
+        dst[start + 1] = out2nd;
     }
 
+    public static StringBuilder encode1byte(byte byteValue, boolean toUpperCase, StringBuilder sb) {
+        int out1st = (byte) encode4bit((byteValue >> 4) & 0x0F);
+        int out2nd = (byte) encode4bit(byteValue & 0x0F);
+        if (!toUpperCase) {
+            out1st = AsciiExtension.toLower(out1st);
+            out2nd = AsciiExtension.toLower(out2nd);
+        }
+        return sb.appendCodePoint(out1st).appendCodePoint(out2nd);
+    }
+
+    /**
+     * return [0-9A-F]
+     */
     private static int encode4bit(int value) {
         switch (value) {
             case 0:
@@ -76,5 +93,13 @@ public class HexCodec {
                 break;
         }
         throw new IllegalArgumentException();
+    }
+
+    public static String toHexString(byte[] bytes, boolean toUpperCase) {
+        StringBuilder sb = new StringBuilder();
+        for (byte aByte : bytes) {
+            encode1byte(aByte, toUpperCase, sb);
+        }
+        return sb.toString();
     }
 }
