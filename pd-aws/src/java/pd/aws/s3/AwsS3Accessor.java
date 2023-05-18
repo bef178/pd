@@ -3,7 +3,6 @@ package pd.aws.s3;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -100,13 +99,14 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public List<String> listAllRegularFiles(String pathPrefix) {
-        return listAllS3Objects(pathPrefix).stream()
+    public List<String> listAllRegularFiles(String path) {
+        return listAllS3Objects(path).stream()
                 .map(S3Object::key)
+                .filter(a -> a.equals(path) || a.startsWith(path + "/"))
                 .collect(Collectors.toList());
     }
 
-    private List<S3Object> listAllS3Objects(String pathPrefix) {
+    public List<S3Object> listAllS3Objects(String pathPrefix) {
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucket)
                 .prefix(pathPrefix)
@@ -119,39 +119,38 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public boolean makeDirectory(String path, boolean parents) {
-        return true;
-    }
-
-    @Override
-    public boolean removeDirectory(String path, boolean parents) {
-        return true;
-    }
-
-    @Override
     public boolean remove(String path, boolean recursive) {
         if (path == null) {
             throw new IllegalArgumentException("path should not be null");
         }
-        if (!path.endsWith("/")) {
-            if (recursive) {
-                throw new IllegalArgumentException("do you mean remove regular file recursively?");
-            }
-            return removeRegularFile(path);
-        } else {
-            if (recursive) {
-                while (true) {
-                    List<S3Object> s3Objects = listS3Objects(path, 1000);
-                    if (s3Objects == null || s3Objects.isEmpty()) {
-                        break;
-                    }
-                    removeS3Objects(s3Objects);
-                }
-                return true;
+        if (isRegularFile(path)) {
+            // "abc/" could be a valid S3 key
+            removeRegularFile(path);
+        }
+        if (recursive) {
+            if (path.endsWith("/")) {
+                return removeDirectoryRecursively(path);
             } else {
-                return removeDirectory(path, false);
+                return removeDirectoryRecursively(path + "/");
             }
         }
+        return true;
+    }
+
+    public boolean removeDirectoryRecursively(String path) {
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        while (true) {
+            List<S3Object> s3Objects = listS3Objects(path, 1000);
+            if (s3Objects == null || s3Objects.isEmpty()) {
+                break;
+            }
+            if (!removeS3Objects(s3Objects)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean removeRegularFile(String path) {
@@ -161,13 +160,6 @@ public class AwsS3Accessor implements FileAccessor {
                 .build();
         DeleteObjectResponse response = s3Client.deleteObject(request);
         return response.sdkHttpResponse().isSuccessful();
-    }
-
-    public boolean removeRegularFiles(String... paths) {
-        if (paths.length == 1) {
-            return removeRegularFile(paths[0]);
-        }
-        return removeRegularFiles(Arrays.asList(paths));
     }
 
     public boolean removeRegularFiles(Collection<String> paths) {
@@ -217,7 +209,7 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public boolean move(String path, String dstPath) {
+    public boolean move(String path, String dstPath, boolean recursive) {
         return false;
     }
 

@@ -10,7 +10,12 @@ public interface FileAccessor {
     boolean isRegularFile(String path);
 
     /**
-     * find paths of those directory files and regular files starting with `pathPrefix`; will stop at first directory separator<br/>
+     * Extends `pathPrefix`, stopping at either directory separator `/` or EOF.<br/>
+     * `pathPrefix` could be empty.<br/>
+     * `.` and `..` has no special meaning in result values.<br/>
+     * Result values are complete paths, not basenames.<br/>
+     * Result values ending with `/` probably represent a directory (AWS S3 is the exception); those not ending with `/` always represent a regular file.<br/>
+     * Result values are deduplicated and sorted.<br/>
      * <br/>
      * e.g.<br/>
      * - list2("d") => ["d/"]<br/>
@@ -21,33 +26,30 @@ public interface FileAccessor {
     List<String> list2(String pathPrefix);
 
     /**
-     * find -type f
+     * `path` identifies a regular file or a directory<br/>
      */
-    List<String> listAllRegularFiles(String pathPrefix);
+    List<String> listAllRegularFiles(String path);
 
     /**
-     * mkdir, mkdir -p
-     */
-    boolean makeDirectory(String path, boolean parents);
-
-    /**
-     * rmdir, rmdir -p
-     */
-    boolean removeDirectory(String path, boolean parents);
-
-    /**
-     * return `true` if the file does not exist or is removed<br/>
+     * remove a regular file or directory<br/>
+     * `path` identifies a regular file or a directory<br/>
      * <br/>
-     * rm -f, rm -rf
+     * a.k.a. `rm -f, rm -rf`
      */
     boolean remove(String path, boolean recursive);
 
     /**
-     * cp, cp -rf
+     * Remove the regular file identified by `path`.<br/>
+     * Return `true` iff the regular file finally does not exist.<br/>
+     */
+    boolean removeRegularFile(String path);
+
+    /**
+     * cp -f, cp -rf
      */
     boolean copy(String path, String dstPath, boolean recursive);
 
-    boolean move(String path, String dstPath);
+    boolean move(String path, String dstPath, boolean recursive);
 
     byte[] load(String path);
 

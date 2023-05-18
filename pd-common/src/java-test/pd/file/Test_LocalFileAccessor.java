@@ -15,9 +15,26 @@ public class Test_LocalFileAccessor {
     @Test
     public void test_list2() {
         List<String> paths = accessor.list2("");
-        assertNotNull(paths);
         assertTrue(paths.contains("pom.xml"));
         assertTrue(paths.contains("src/"));
+    }
+
+    @Test
+    public void test_list2_2() {
+        List<String> paths = accessor.list2("src");
+        assertTrue(paths.contains("src/"));
+    }
+
+    @Test
+    public void test_list2_3() {
+        List<String> paths = accessor.list2("src/j");
+        assertTrue(paths.contains("src/java/"));
+    }
+
+    @Test
+    public void test_listAllRegularFiles() {
+        List<String> paths = accessor.listAllRegularFiles("src");
+        assertTrue(paths.contains("src/java/pd/file/LocalFileAccessor.java"));
     }
 
     @Test
@@ -40,5 +57,20 @@ public class Test_LocalFileAccessor {
 
         paths = accessor.listDirectory2("./pom.xml");
         assertNull(paths);
+
+        paths = accessor.listDirectory2("");
+        assertNotNull(paths);
+        assertTrue(paths.contains("pom.xml"));
+        assertTrue(paths.contains("src"));
+
+        paths = accessor.listDirectory2("pom.xml");
+        assertNull(paths);
+    }
+
+    @Test
+    public void test_listRegularFiles() {
+        List<String> paths = accessor.listRegularFiles("", 2);
+        assertTrue(paths.contains("pom.xml"));
+        assertTrue(paths.contains("out/pd-common-1.0-SNAPSHOT.jar"));
     }
 }
