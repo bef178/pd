@@ -1,6 +1,5 @@
 package pd.app.fdup;
 
-import java.security.MessageDigest;
 import java.util.AbstractMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -9,8 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import lombok.SneakyThrows;
-import pd.codec.HexCodec;
+import pd.codec.Md5Codec;
 import pd.fenc.CurvePattern;
 import pd.file.FileStat;
 import pd.file.LocalFileAccessor;
@@ -82,7 +80,7 @@ public class Main {
             Map<String, List<FileStat>> sameHashFiles = new LinkedHashMap<>();
             for (FileStat stat : a) {
                 byte[] bytes = accessor.load(stat.path);
-                String checksum = md5sum(bytes);
+                String checksum = Md5Codec.md5sum(bytes);
                 if (!sameHashFiles.containsKey(checksum)) {
                     sameHashFiles.put(checksum, new LinkedList<>());
                 }
@@ -126,13 +124,6 @@ public class Main {
                 stderr("unknown command `{}`", command);
                 break;
         }
-    }
-
-    @SneakyThrows
-    public static String md5sum(byte[] bytes) {
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
-        byte[] digest = md5.digest(bytes);
-        return HexCodec.toHexString(digest, false);
     }
 
     private static List<Map.Entry<String, String>> pickParams(String[] args) {
