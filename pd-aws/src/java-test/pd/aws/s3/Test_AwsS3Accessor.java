@@ -1,5 +1,6 @@
 package pd.aws.s3;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
 
@@ -7,6 +8,7 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import pd.util.ResourceExtension;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,5 +33,16 @@ public class Test_AwsS3Accessor {
         assertNotNull(paths);
         assertTrue(paths.contains("test/"));
         assertTrue(paths.contains("prod/"));
+    }
+
+    @Test
+    public void test_save() {
+        byte[] bytes = "for-test".getBytes(StandardCharsets.UTF_8);
+        assertTrue(accessor.save("test/for-test.txt", bytes));
+
+        byte[] actual = accessor.load("test/for-test.txt");
+        assertArrayEquals(bytes, actual);
+
+        assertTrue(accessor.removeRegularFile("test/for-test.txt"));
     }
 }

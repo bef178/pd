@@ -102,7 +102,13 @@ public class AwsS3Accessor implements FileAccessor {
     public List<String> listAllRegularFiles(String path) {
         return listAllS3Objects(path).stream()
                 .map(S3Object::key)
-                .filter(a -> a.equals(path) || a.startsWith(path + "/"))
+                .filter(a -> {
+                    if (path.endsWith("/")) {
+                        return a.startsWith(path);
+                    } else {
+                        return a.equals(path) || a.startsWith(path + "/");
+                    }
+                })
                 .collect(Collectors.toList());
     }
 
