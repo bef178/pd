@@ -1,4 +1,5 @@
 lib/
+maven-repo/
 out/
 target/
 .*
