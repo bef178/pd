@@ -65,7 +65,7 @@ public class Main {
                 .collect(Collectors.groupingBy(a -> a.size))
                 .entrySet()
                 .stream()
-                .sorted((a, b) -> Math.toIntExact(a.getKey() - b.getKey()))
+                .sorted((a, b) -> (a.getKey() <= b.getKey() ? -1 : 1))
                 .filter(a -> a.getKey() > 0)
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
