@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -70,7 +71,7 @@ public class Test_LocalFileAccessor {
     @Test
     public void test_listRegularFiles() {
         List<String> paths = accessor.listRegularFiles("", 2);
+        assertEquals(1, paths.size());
         assertTrue(paths.contains("pom.xml"));
-        assertTrue(paths.contains("out/pd-common-1.0-SNAPSHOT.jar"));
     }
 }
