@@ -70,7 +70,7 @@ public class Test_LocalFileAccessor {
 
     @Test
     public void test_listRegularFiles() {
-        List<String> paths = accessor.listRegularFiles("", 2);
+        List<String> paths = accessor.listRegularFiles("", 1);
         assertEquals(1, paths.size());
         assertTrue(paths.contains("pom.xml"));
     }
