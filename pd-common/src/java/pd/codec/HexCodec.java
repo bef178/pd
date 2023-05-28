@@ -46,8 +46,9 @@ public class HexCodec {
     }
 
     /**
-     * consume 1 byte and produce 2 int32<br/>
+     * consume 1 byte and produce 2 ascii using upper case letter<br/>
      * (byte) 0x61 => ['6','1']
+     * (byte) 0x5B => ['5','B']
      */
     public static void encode1byte(byte byteValue, int[] dst, int start) {
         int out1st = (byte) encode4bit((byteValue >> 4) & 0x0F);
@@ -56,14 +57,25 @@ public class HexCodec {
         dst[start + 1] = out2nd;
     }
 
-    public static StringBuilder encode1byte(byte byteValue, boolean toUpperCase, StringBuilder sb) {
-        int out1st = (byte) encode4bit((byteValue >> 4) & 0x0F);
-        int out2nd = (byte) encode4bit(byteValue & 0x0F);
-        if (!toUpperCase) {
+    public static StringBuilder encode1byte(byte byteValue, StringBuilder sb, boolean upperCase) {
+        int out1st = encode4BitHi(byteValue);
+        int out2nd = encode4BitLo(byteValue);
+        if (upperCase) {
+            out1st = AsciiExtension.toUpper(out1st);
+            out2nd = AsciiExtension.toUpper(out2nd);
+        } else {
             out1st = AsciiExtension.toLower(out1st);
             out2nd = AsciiExtension.toLower(out2nd);
         }
         return sb.appendCodePoint(out1st).appendCodePoint(out2nd);
+    }
+
+    public static int encode4BitHi(int byteValue) {
+        return encode4bit((byteValue >> 4) & 0x0F);
+    }
+
+    public static int encode4BitLo(int byteValue) {
+        return encode4bit(byteValue & 0x0F);
     }
 
     /**
@@ -95,10 +107,10 @@ public class HexCodec {
         throw new IllegalArgumentException();
     }
 
-    public static String toHexString(byte[] bytes, boolean toUpperCase) {
+    public static String toHexString(byte[] bytes, boolean upperCase) {
         StringBuilder sb = new StringBuilder();
         for (byte aByte : bytes) {
-            encode1byte(aByte, toUpperCase, sb);
+            encode1byte(aByte, sb, upperCase);
         }
         return sb.toString();
     }

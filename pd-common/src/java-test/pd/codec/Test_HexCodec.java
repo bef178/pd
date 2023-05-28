@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import pd.codec.HexCodec;
-
 public class Test_HexCodec {
 
     @Test
