@@ -1,7 +1,6 @@
 package pd.aws.s3;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -14,14 +13,13 @@ import java.util.stream.Collectors;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import pd.aws.s3.AwsS3Accessor;
 import pd.fenc.CurvePattern;
 import pd.file.LocalFileAccessor;
 
 @Slf4j
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Map<String, String> params;
         Map<String, String> configParams;
         try {
@@ -135,7 +133,7 @@ public class Main {
 
         localFiles.parallelStream().forEach(localFile -> {
             String s3Key = localFile.replaceFirst(localDirectory, remoteDirectory);
-            accessor.save(s3Key, new File(localFile));
+            accessor.uploadTo(s3Key, localFile);
         });
         return 0;
     }
@@ -180,10 +178,10 @@ public class Main {
         return 0;
     }
 
-    public static int uploadToRemoteFile(AwsS3Accessor accessor, String remoteFile, String localParity) throws IOException {
+    public static int uploadToRemoteFile(AwsS3Accessor accessor, String remoteFile, String localParity) {
         stdout("uploadToRemoteFile: {} => remote:{}", localParity, remoteFile);
 
-        boolean isSuccessful = accessor.save(remoteFile, new File(localParity));
+        boolean isSuccessful = accessor.uploadTo(remoteFile, localParity);
         if (isSuccessful) {
             stdout("uploaded");
         } else {

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import pd.file.FileAccessor;
+import pd.file.LocalFileAccessor;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -238,12 +239,21 @@ public class AwsS3Accessor implements FileAccessor {
         return response.sdkHttpResponse().isSuccessful();
     }
 
-    public boolean save(String path, File file) {
+    public boolean download(String s3Key, String localPath) {
+        byte[] bytes = load(s3Key);
+        if (bytes == null) {
+            return false;
+        }
+        LocalFileAccessor.singleton().save(localPath, bytes);
+        return true;
+    }
+
+    public boolean uploadTo(String s3Key, String localPath) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
-                .key(path)
+                .key(s3Key)
                 .build();
-        PutObjectResponse response = s3Client.putObject(request, RequestBody.fromFile(file));
+        PutObjectResponse response = s3Client.putObject(request, RequestBody.fromFile(new File(localPath)));
         return response.sdkHttpResponse().isSuccessful();
     }
 }
