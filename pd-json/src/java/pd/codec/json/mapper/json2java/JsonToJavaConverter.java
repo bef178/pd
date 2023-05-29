@@ -1,4 +1,4 @@
-package pd.codec.json.mapper.json2javaobject;
+package pd.codec.json.mapper.json2java;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -8,21 +8,21 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
-import pd.codec.json.datatype.IJson;
-import pd.codec.json.datatype.IJsonArray;
-import pd.codec.json.datatype.IJsonObject;
+import pd.codec.json.datatype.Json;
+import pd.codec.json.datatype.JsonArray;
+import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
 import pd.file.PathExtension;
 
-public class JsonToJavaObjectConverter {
+public class JsonToJavaConverter {
 
-    public final JsonToJavaObjectConfig config;
+    public final JsonToJavaConfig config;
 
-    public JsonToJavaObjectConverter(JsonToJavaObjectConfig config) {
+    public JsonToJavaConverter(JsonToJavaConfig config) {
         this.config = config;
     }
 
-    public <T> T convert(IJson json, Class<T> targetClass) {
+    public <T> T convert(Json json, Class<T> targetClass) {
         try {
             return convert(json, "/", targetClass);
         } catch (Exception e) {
@@ -31,7 +31,7 @@ public class JsonToJavaObjectConverter {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convert(IJson json, String path, Class<T> targetClass)
+    private <T> T convert(Json json, String path, Class<T> targetClass)
             throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException {
 
@@ -69,10 +69,10 @@ public class JsonToJavaObjectConverter {
             throw new ParsingException("E: cannot instantiate an abstract class: " + mappedClass.getName());
         }
 
-        if (mappedClass.isAssignableFrom(IJsonArray.class)) {
+        if (mappedClass.isAssignableFrom(JsonArray.class)) {
             return (T) json.asJsonArray();
         } else if (mappedClass.isArray()) {
-            IJsonArray jsonArray = json.asJsonArray();
+            JsonArray jsonArray = json.asJsonArray();
             Class<?> elementClass = mappedClass.getComponentType();
             Object array = Array.newInstance(elementClass, jsonArray.size());
             for (int i = 0; i < jsonArray.size(); i++) {
@@ -81,7 +81,7 @@ public class JsonToJavaObjectConverter {
             }
             return (T) array;
         } else if (List.class.isAssignableFrom(mappedClass)) {
-            IJsonArray jsonArray = json.asJsonArray();
+            JsonArray jsonArray = json.asJsonArray();
             Constructor<?> constructor = mappedClass.getDeclaredConstructor();
             constructor.setAccessible(true);
             List<Object> list = (List<Object>) constructor.newInstance();
@@ -92,13 +92,13 @@ public class JsonToJavaObjectConverter {
             return (T) list;
         }
 
-        if (mappedClass.isAssignableFrom(IJsonObject.class)) {
+        if (mappedClass.isAssignableFrom(JsonObject.class)) {
             return (T) json.asJsonObject();
         } else if (Map.class.isAssignableFrom(mappedClass)) {
-            IJsonObject jsonObject = json.asJsonObject();
+            JsonObject jsonObject = json.asJsonObject();
             Constructor<?> constructor = mappedClass.getDeclaredConstructor();
             Map<String, Object> map = (Map<String, Object>) constructor.newInstance();
-            for (Map.Entry<String, IJson> entry : jsonObject.entrySet()) {
+            for (Map.Entry<String, Json> entry : jsonObject.entrySet()) {
                 String path1 = PathExtension.resolve(path, "{" + entry.getKey() + "}");
                 map.put(entry.getKey(), convert(entry.getValue(), path1, Object.class));
             }
@@ -106,7 +106,7 @@ public class JsonToJavaObjectConverter {
         }
 
         // not array, not list, not map: that is a "normal" object
-        IJsonObject jsonObject = json.asJsonObject();
+        JsonObject jsonObject = json.asJsonObject();
         Constructor<?> constructor = mappedClass.getDeclaredConstructor();
         Object object = constructor.newInstance();
         for (Field field : mappedClass.getFields()) {
@@ -121,7 +121,7 @@ public class JsonToJavaObjectConverter {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> inferMappedClass(IJson json) {
+    private <T> Class<? extends T> inferMappedClass(Json json) {
         switch (json.getJsonType()) {
             case NULL:
                 return null;
@@ -144,7 +144,7 @@ public class JsonToJavaObjectConverter {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T inferBoxedPrimitiveOrStringInstance(IJson json, Class<? extends T> mappedClass) {
+    private <T> T inferBoxedPrimitiveOrStringInstance(Json json, Class<? extends T> mappedClass) {
         if (mappedClass == int.class || mappedClass == Integer.class) {
             return (T) (Integer) json.asJsonNumber().getInt32();
         } else if (mappedClass == long.class || mappedClass == Long.class) {

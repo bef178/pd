@@ -1,13 +1,13 @@
 package pd.codec.json.parser;
 
 import pd.codec.HexCodec;
-import pd.codec.json.datatype.IJson;
-import pd.codec.json.datatype.IJsonArray;
-import pd.codec.json.datafactory.IJsonFactory;
-import pd.codec.json.datatype.IJsonNull;
-import pd.codec.json.datatype.IJsonNumber;
-import pd.codec.json.datatype.IJsonObject;
-import pd.codec.json.datatype.IJsonString;
+import pd.codec.json.datatype.Json;
+import pd.codec.json.datatype.JsonArray;
+import pd.codec.json.datafactory.JsonFactory;
+import pd.codec.json.datatype.JsonNull;
+import pd.codec.json.datatype.JsonNumber;
+import pd.codec.json.datatype.JsonObject;
+import pd.codec.json.datatype.JsonString;
 import pd.fenc.CharReader;
 import pd.fenc.IReader;
 import pd.fenc.IWriter;
@@ -18,16 +18,16 @@ import pd.util.AsciiExtension;
 
 public class JsonDeserializer {
 
-    private final IJsonFactory f;
+    private final JsonFactory f;
 
-    public JsonDeserializer(IJsonFactory factory) {
+    public JsonDeserializer(JsonFactory factory) {
         this.f = factory;
     }
 
     /**
-     * `String` => `IJson`<br/>
+     * `String` => `Json`<br/>
      */
-    public IJson deserialize(String jsonText) {
+    public Json deserialize(String jsonText) {
         if (jsonText == null) {
             return null;
         }
@@ -35,7 +35,7 @@ public class JsonDeserializer {
         return deserializeToJson(src);
     }
 
-    private IJson deserializeToJson(CharReader src) {
+    private Json deserializeToJson(CharReader src) {
         int ch = src.hasNext() ? src.next() : IReader.EOF;
         switch (ch) {
             case 'n':
@@ -74,8 +74,8 @@ public class JsonDeserializer {
         }
     }
 
-    private IJsonArray deserializeToJsonArray(CharReader src) {
-        IJsonArray jsonArray = f.createJsonArray();
+    private JsonArray deserializeToJsonArray(CharReader src) {
+        JsonArray jsonArray = f.createJsonArray();
         int state = 0;
         while (true) {
             switch (state) {
@@ -131,7 +131,7 @@ public class JsonDeserializer {
         }
     }
 
-    private IJson deserializeToJsonFalse(CharReader src) {
+    private Json deserializeToJsonFalse(CharReader src) {
         src.eatOrThrow('f');
         src.eatOrThrow('a');
         src.eatOrThrow('l');
@@ -141,7 +141,7 @@ public class JsonDeserializer {
 
     }
 
-    private IJsonNull deserializeToJsonNull(CharReader src) {
+    private JsonNull deserializeToJsonNull(CharReader src) {
         src.eatOrThrow('n');
         src.eatOrThrow('u');
         src.eatOrThrow('l');
@@ -149,15 +149,15 @@ public class JsonDeserializer {
         return f.getJsonNull();
     }
 
-    private IJsonNumber deserializeToJsonNumber(CharReader src) {
+    private JsonNumber deserializeToJsonNumber(CharReader src) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         new ScalarPicker().pickFloat(src, dst);
         return f.createJsonNumber().set(sb.toString());
     }
 
-    private IJsonObject deserializeToJsonObject(CharReader src) {
-        IJsonObject jsonObject = f.createJsonObject();
+    private JsonObject deserializeToJsonObject(CharReader src) {
+        JsonObject jsonObject = f.createJsonObject();
         int state = 0;
         while (true) {
             switch (state) {
@@ -189,7 +189,7 @@ public class JsonDeserializer {
                     src.eatWhitespaces();
                     src.eatOrThrow(':');
                     src.eatWhitespaces();
-                    IJson pValue = deserializeToJson(src);
+                    Json pValue = deserializeToJson(src);
 
                     jsonObject.put(pKey, pValue);
                     src.eatWhitespaces();
@@ -217,7 +217,7 @@ public class JsonDeserializer {
         }
     }
 
-    private IJsonString deserializeToJsonString(CharReader src) {
+    private JsonString deserializeToJsonString(CharReader src) {
         // state machine go!
         int state = 0;
         StringBuilder sb = new StringBuilder();
@@ -303,7 +303,7 @@ public class JsonDeserializer {
         }
     }
 
-    private IJson deserializeToJsonTrue(CharReader src) {
+    private Json deserializeToJsonTrue(CharReader src) {
         src.eatOrThrow('t');
         src.eatOrThrow('r');
         src.eatOrThrow('u');

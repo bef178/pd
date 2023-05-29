@@ -2,7 +2,7 @@ package pd.codec.json.datatype;
 
 import pd.codec.json.JsonType;
 
-public interface IJsonNumber extends IJson {
+public interface JsonNumber extends Json {
 
     default float getFloat32() {
         return (float) getFloat64();
@@ -23,9 +23,9 @@ public interface IJsonNumber extends IJson {
         return JsonType.NUMBER;
     }
 
-    IJsonNumber set(double value);
+    JsonNumber set(double value);
 
-    IJsonNumber set(long value);
+    JsonNumber set(long value);
 
-    IJsonNumber set(String raw);
+    JsonNumber set(String raw);
 }

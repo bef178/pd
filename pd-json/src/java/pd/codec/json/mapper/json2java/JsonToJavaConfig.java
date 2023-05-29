@@ -1,21 +1,20 @@
-package pd.codec.json.mapper.json2javaobject;
+package pd.codec.json.mapper.json2java;
 
 import java.util.LinkedHashMap;
 
-import lombok.Data;
-import pd.codec.json.datatype.IJson;
+import pd.codec.json.datatype.Json;
 
-public class JsonToJavaObjectConfig {
+public class JsonToJavaConfig {
 
-//    private final LinkedHashMap<RefKey<?>, IMapToJavaType<?>> refs = new LinkedHashMap<>();
-    private final LinkedHashMap<Class<?>, IMapToJavaType<?>> refs = new LinkedHashMap<>();
+//    private final LinkedHashMap<RefKey<?>, MapToJavaType<?>> refs = new LinkedHashMap<>();
+    private final LinkedHashMap<Class<?>, MapToJavaType<?>> refs = new LinkedHashMap<>();
 
-    <T> Class<? extends T> find(IJson json, String path, Class<T> targetClass) {
+    <T> Class<? extends T> find(Json json, String path, Class<T> targetClass) {
         if (path == null || targetClass == null) {
             throw new IllegalArgumentException();
         }
 
-        IMapToJavaType<T> func = findMapper(targetClass);
+        MapToJavaType<T> func = findMapper(targetClass);
         if (func != null) {
             return func.map(json, path, targetClass); // TODO should do try-catch?
         }
@@ -23,15 +22,15 @@ public class JsonToJavaObjectConfig {
     }
 
 //    @SuppressWarnings("unchecked")
-//    private <T> IMapToJavaType<T> findFunc(String path, Class<T> targetClass) {
-//        Map.Entry<RefKey<?>, IMapToJavaType<?>> entry;
+//    private <T> MapToJavaType<T> findFunc(String path, Class<T> targetClass) {
+//        Map.Entry<RefKey<?>, MapToJavaType<?>> entry;
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == targetClass)
 //                .filter(a -> a.getKey().pathPattern != null && matchesFieldPath(a.getKey().pathPattern, path))
 //                .max(Comparator.comparingInt(a -> findFieldPathScore(a.getKey().pathPattern, path)))
 //                .orElse(null);
 //        if (entry != null) {
-//            return (IMapToJavaType<T>) entry.getValue();
+//            return (MapToJavaType<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == null)
@@ -39,7 +38,7 @@ public class JsonToJavaObjectConfig {
 //                .max(Comparator.comparingInt(a -> findFieldPathScore(a.getKey().pathPattern, path)))
 //                .orElse(null);
 //        if (entry != null) {
-//            return (IMapToJavaType<T>) entry.getValue();
+//            return (MapToJavaType<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == targetClass)
@@ -47,7 +46,7 @@ public class JsonToJavaObjectConfig {
 //                .findFirst()
 //                .orElse(null);
 //        if (entry != null) {
-//            return (IMapToJavaType<T>) entry.getValue();
+//            return (MapToJavaType<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == null)
@@ -55,21 +54,21 @@ public class JsonToJavaObjectConfig {
 //                .findFirst()
 //                .orElse(null);
 //        if (entry != null) {
-//            return (IMapToJavaType<T>) entry.getValue();
+//            return (MapToJavaType<T>) entry.getValue();
 //        }
 //        return null;
 //    }
 
     @SuppressWarnings("unchecked")
-    private <T> IMapToJavaType<T> findMapper(Class<T> targetClass) {
-        return (IMapToJavaType<T>) refs.get(targetClass);
+    private <T> MapToJavaType<T> findMapper(Class<T> targetClass) {
+        return (MapToJavaType<T>) refs.get(targetClass);
     }
 
     public <T> void register(Class<T> targetClass, Class<? extends T> implClass) {
         register(targetClass, (json, p, t) -> implClass);
     }
 
-    public <T> void register(Class<T> targetClass, IMapToJavaType<T> mapper) {
+    public <T> void register(Class<T> targetClass, MapToJavaType<T> mapper) {
         if (mapper == null) {
             throw new NullPointerException();
         }

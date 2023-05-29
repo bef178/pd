@@ -5,13 +5,13 @@ import java.util.Map.Entry;
 import java.util.PrimitiveIterator.OfInt;
 
 import pd.codec.HexCodec;
-import pd.codec.json.datatype.IJson;
-import pd.codec.json.datatype.IJsonArray;
-import pd.codec.json.datatype.IJsonBoolean;
-import pd.codec.json.datatype.IJsonNull;
-import pd.codec.json.datatype.IJsonNumber;
-import pd.codec.json.datatype.IJsonObject;
-import pd.codec.json.datatype.IJsonString;
+import pd.codec.json.datatype.Json;
+import pd.codec.json.datatype.JsonArray;
+import pd.codec.json.datatype.JsonBoolean;
+import pd.codec.json.datatype.JsonNull;
+import pd.codec.json.datatype.JsonNumber;
+import pd.codec.json.datatype.JsonObject;
+import pd.codec.json.datatype.JsonString;
 import pd.fenc.ParsingException;
 import pd.util.AsciiExtension;
 
@@ -24,33 +24,33 @@ public class JsonSerializer {
     }
 
     /**
-     * `IJson` => `String`<br/>
+     * `Json` => `String`<br/>
      */
-    public String serialize(IJson json) {
+    public String serialize(Json json) {
         StringBuilder sb = new StringBuilder();
         serializeJson(json, 0, sb);
         return sb.toString();
     }
 
-    private void serializeJson(IJson json, int numIndents, StringBuilder sb) {
-        if (json instanceof IJsonNull) {
+    private void serializeJson(Json json, int numIndents, StringBuilder sb) {
+        if (json instanceof JsonNull) {
             sb.append("null");
-        } else if (json instanceof IJsonBoolean) {
-            sb.append(((IJsonBoolean) json).getBoolean());
-        } else if (json instanceof IJsonNumber) {
-            sb.append((IJsonNumber) json);
-        } else if (json instanceof IJsonString) {
-            serializeJsonString(((IJsonString) json).getString(), sb);
-        } else if (json instanceof IJsonArray) {
-            serializeJsonArray((IJsonArray) json, numIndents, sb);
-        } else if (json instanceof IJsonObject) {
-            serializeJsonObject((IJsonObject) json, numIndents, sb);
+        } else if (json instanceof JsonBoolean) {
+            sb.append(((JsonBoolean) json).getBoolean());
+        } else if (json instanceof JsonNumber) {
+            sb.append((JsonNumber) json);
+        } else if (json instanceof JsonString) {
+            serializeJsonString(((JsonString) json).getString(), sb);
+        } else if (json instanceof JsonArray) {
+            serializeJsonArray((JsonArray) json, numIndents, sb);
+        } else if (json instanceof JsonObject) {
+            serializeJsonObject((JsonObject) json, numIndents, sb);
         } else {
             throw new ParsingException();
         }
     }
 
-    private void serializeJsonArray(IJsonArray jsonArray, int numIndents, StringBuilder sb) {
+    private void serializeJsonArray(JsonArray jsonArray, int numIndents, StringBuilder sb) {
 
         sb.append('[');
 
@@ -60,7 +60,7 @@ public class JsonSerializer {
 
         numIndents++;
 
-        Iterator<IJson> it = jsonArray.iterator();
+        Iterator<Json> it = jsonArray.iterator();
         while (it.hasNext()) {
             serializeMarginAndIndents(numIndents, sb);
             serializeJson(it.next(), numIndents, sb);
@@ -79,7 +79,7 @@ public class JsonSerializer {
         sb.append(']');
     }
 
-    private void serializeJsonObject(IJsonObject jsonObject, int numIndents, StringBuilder sb) {
+    private void serializeJsonObject(JsonObject jsonObject, int numIndents, StringBuilder sb) {
 
         sb.append('{');
 
@@ -89,11 +89,11 @@ public class JsonSerializer {
 
         numIndents++;
 
-        Iterator<Entry<String, IJson>> it = jsonObject.entrySet().iterator();
+        Iterator<Entry<String, Json>> it = jsonObject.entrySet().iterator();
         while (it.hasNext()) {
-            Entry<String, IJson> entry = it.next();
+            Entry<String, Json> entry = it.next();
             String key = entry.getKey();
-            IJson value = entry.getValue();
+            Json value = entry.getValue();
 
             if (value == null) {
                 continue;

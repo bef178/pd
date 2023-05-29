@@ -2,7 +2,7 @@ package pd.codec.json.datatype;
 
 import pd.codec.json.JsonType;
 
-public interface IJsonBoolean extends IJson {
+public interface JsonBoolean extends Json {
 
     boolean getBoolean();
 
@@ -11,5 +11,5 @@ public interface IJsonBoolean extends IJson {
         return JsonType.BOOLEAN;
     }
 
-    IJsonBoolean set(boolean value);
+    JsonBoolean set(boolean value);
 }

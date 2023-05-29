@@ -2,9 +2,9 @@ package pd.codec.json.datafactory;
 
 import java.util.Objects;
 
-import pd.codec.json.datatype.IJsonBoolean;
+import pd.codec.json.datatype.JsonBoolean;
 
-final class SimpleJsonBoolean implements IJsonBoolean {
+final class SimpleJsonBoolean implements JsonBoolean {
 
     /**
      *
@@ -29,8 +29,8 @@ final class SimpleJsonBoolean implements IJsonBoolean {
         if (o == null) {
             return false;
         }
-        if (o instanceof IJsonBoolean) {
-            IJsonBoolean another = (IJsonBoolean) o;
+        if (o instanceof JsonBoolean) {
+            JsonBoolean another = (JsonBoolean) o;
             return Objects.equals(another.getBoolean(), getBoolean());
         }
         return false;

@@ -1,4 +1,4 @@
-package pd.codec.json.mapper.javaobject2json;
+package pd.codec.json.mapper.java2json;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -6,30 +6,30 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
-import pd.codec.json.datatype.IJson;
-import pd.codec.json.datatype.IJsonArray;
-import pd.codec.json.datatype.IJsonBoolean;
-import pd.codec.json.datafactory.IJsonFactory;
-import pd.codec.json.datatype.IJsonNumber;
-import pd.codec.json.datatype.IJsonObject;
+import pd.codec.json.datafactory.JsonFactory;
+import pd.codec.json.datatype.Json;
+import pd.codec.json.datatype.JsonArray;
+import pd.codec.json.datatype.JsonBoolean;
+import pd.codec.json.datatype.JsonNumber;
+import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
 
-public class JavaObjectToJsonConverter {
+public class JavaToJsonConverter {
 
-    private final IJsonFactory f;
+    private final JsonFactory f;
 
-    private final JavaObjectToJsonConfig config;
+    private final JavaToJsonConfig config;
 
-    public JavaObjectToJsonConverter(IJsonFactory factory, JavaObjectToJsonConfig config) {
+    public JavaToJsonConverter(JsonFactory factory, JavaToJsonConfig config) {
         this.f = factory;
         this.config = config;
     }
 
     /**
-     * `Object` => `IJson`<br/>
+     * `Object` => `Json`<br/>
      * adopt public fields only<br/>
      */
-    public IJson convert(Object o) {
+    public Json convert(Object o) {
         if (o == null) {
             return f.getJsonNull();
         }
@@ -43,8 +43,8 @@ public class JavaObjectToJsonConverter {
             }
         }
 
-        if (o instanceof IJson) {
-            return (IJson) o;
+        if (o instanceof Json) {
+            return (Json) o;
         }
 
         if (o instanceof Integer) {
@@ -74,7 +74,7 @@ public class JavaObjectToJsonConverter {
         }
 
         if (o.getClass().isArray()) {
-            IJsonArray jsonArray = f.createJsonArray();
+            JsonArray jsonArray = f.createJsonArray();
             for (int i = 0; i < Array.getLength(o); i++) {
                 Object element = Array.get(o, i);
                 jsonArray.add(convert(element));
@@ -82,7 +82,7 @@ public class JavaObjectToJsonConverter {
             return jsonArray;
         } else if (o instanceof List) {
             List<?> list = (List<?>) o;
-            IJsonArray jsonArray = f.createJsonArray();
+            JsonArray jsonArray = f.createJsonArray();
             for (Object element : list) {
                 jsonArray.add(convert(element));
             }
@@ -91,7 +91,7 @@ public class JavaObjectToJsonConverter {
 
         if (o instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) o;
-            IJsonObject jsonObject = f.createJsonObject();
+            JsonObject jsonObject = f.createJsonObject();
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String key = entry.getKey().toString();
                 jsonObject.put(key, convert(entry.getValue()));
@@ -99,7 +99,7 @@ public class JavaObjectToJsonConverter {
             return jsonObject;
         } else {
             // a non-container object
-            IJsonObject jsonObject = f.createJsonObject();
+            JsonObject jsonObject = f.createJsonObject();
             // public fields only
             for (Field field : o.getClass().getFields()) {
                 int fieldModifiers = field.getModifiers();
@@ -117,7 +117,7 @@ public class JavaObjectToJsonConverter {
         }
     }
 
-    private IJson convertField(Field field, Object o) throws IllegalArgumentException, IllegalAccessException {
+    private Json convertField(Field field, Object o) throws IllegalArgumentException, IllegalAccessException {
         Class<?> fieldType = field.getType();
         if (fieldType.isPrimitive()) {
             if (fieldType == int.class) {
@@ -147,15 +147,15 @@ public class JavaObjectToJsonConverter {
         return convert(field.get(o));
     }
 
-    public IJsonNumber convert(long value) {
+    public JsonNumber convert(long value) {
         return f.createJsonNumber(value);
     }
 
-    public IJsonNumber convert(double value) {
+    public JsonNumber convert(double value) {
         return f.createJsonNumber(value);
     }
 
-    public IJsonBoolean convert(boolean value) {
+    public JsonBoolean convert(boolean value) {
         return f.createJsonBoolean(value);
     }
 }

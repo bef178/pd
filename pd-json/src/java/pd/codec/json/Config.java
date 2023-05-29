@@ -5,28 +5,28 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import pd.codec.json.datafactory.IJsonFactory;
-import pd.codec.json.mapper.json2javaobject.JsonToJavaObjectConfig;
-import pd.codec.json.mapper.javaobject2json.JavaObjectToJsonConfig;
+import pd.codec.json.datafactory.JsonFactory;
+import pd.codec.json.mapper.json2java.JsonToJavaConfig;
+import pd.codec.json.mapper.java2json.JavaToJsonConfig;
 import pd.codec.json.parser.SerializationConfig;
 
 class Config {
 
-    public final IJsonFactory f;
+    public final JsonFactory f;
 
     public final SerializationConfig serializationConfig = new SerializationConfig();
 
-    public final JsonToJavaObjectConfig jsonToJavaObjectConfig;
+    public final JsonToJavaConfig jsonToJavaConfig;
 
-    public final JavaObjectToJsonConfig javaObjectToJsonConfig;
+    public final JavaToJsonConfig javaToJsonConfig;
 
-    public Config(IJsonFactory factory) {
+    public Config(JsonFactory factory) {
         this.f = factory;
 
-        jsonToJavaObjectConfig = new JsonToJavaObjectConfig();
-        jsonToJavaObjectConfig.register(List.class, ArrayList.class);
-        jsonToJavaObjectConfig.register(Map.class, LinkedHashMap.class);
+        jsonToJavaConfig = new JsonToJavaConfig();
+        jsonToJavaConfig.register(List.class, ArrayList.class);
+        jsonToJavaConfig.register(Map.class, LinkedHashMap.class);
 
-        javaObjectToJsonConfig = new JavaObjectToJsonConfig();
+        javaToJsonConfig = new JavaToJsonConfig();
     }
 }

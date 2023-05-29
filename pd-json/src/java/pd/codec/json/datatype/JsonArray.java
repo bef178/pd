@@ -4,7 +4,7 @@ import java.util.List;
 
 import pd.codec.json.JsonType;
 
-public interface IJsonArray extends IJson, List<IJson> {
+public interface JsonArray extends Json, List<Json> {
 
     @Override
     default JsonType getJsonType() {
@@ -14,28 +14,28 @@ public interface IJsonArray extends IJson, List<IJson> {
     /**
      * @return this
      */
-    IJsonArray append(IJson value);
+    JsonArray append(Json value);
 
-    IJson get(int index);
+    Json get(int index);
 
-    IJson getAndRemove(int index);
+    Json getAndRemove(int index);
 
     /**
      * index in [0, size()]
      *
      * @return this
      */
-    IJsonArray insert(int index, IJson value);
+    JsonArray insert(int index, Json value);
 
     /**
      * @return this
      */
-    IJsonArray remove(int index);
+    JsonArray remove(int index);
 
     /**
      * @return this
      */
-    IJsonArray set(int index, IJson value);
+    JsonArray set(int index, Json value);
 
     @Override
     int size();

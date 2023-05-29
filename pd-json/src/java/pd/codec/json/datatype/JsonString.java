@@ -2,7 +2,7 @@ package pd.codec.json.datatype;
 
 import pd.codec.json.JsonType;
 
-public interface IJsonString extends IJson {
+public interface JsonString extends Json {
 
     @Override
     default JsonType getJsonType() {
@@ -11,5 +11,5 @@ public interface IJsonString extends IJson {
 
     String getString();
 
-    IJsonString set(String value);
+    JsonString set(String value);
 }

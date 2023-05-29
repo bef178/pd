@@ -1,15 +1,14 @@
 package pd.codec.json;
 
 import org.junit.jupiter.api.Test;
-import pd.codec.json.datafactory.IJsonFactory;
-import pd.codec.json.JsonCodec;
+import pd.codec.json.datafactory.JsonFactory;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class Test_IJsonNumber {
+public class Test_JsonNumber {
 
-    private static final IJsonFactory f = JsonCodec.f;
+    private static final JsonFactory f = JsonCodec.f;
 
     @Test
     public void test_IJsonNumber_isRoundNumber() {

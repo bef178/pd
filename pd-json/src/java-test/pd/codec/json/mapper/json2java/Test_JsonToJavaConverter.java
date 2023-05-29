@@ -1,23 +1,23 @@
-package pd.codec.json.mapper.json2javaobject;
+package pd.codec.json.mapper.json2java;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
-import pd.codec.json.datafactory.IJsonFactory;
-import pd.codec.json.datatype.IJsonObject;
+import pd.codec.json.datafactory.JsonFactory;
+import pd.codec.json.datatype.JsonObject;
 import pd.codec.json.JsonCodec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class Test_JsonToJavaObjectConverter {
+public class Test_JsonToJavaConverter {
 
-    private static final IJsonFactory f = JsonCodec.f;
+    private static final JsonFactory f = JsonCodec.f;
 
     @Test
     public void test_convertToDefaultObject() {
-        IJsonObject jsonObject = f.createJsonObject()
+        JsonObject jsonObject = f.createJsonObject()
                 .set("a", f.createJsonArray()
                         .append(f.createJsonString("ae1")))
                 .set("b", f.createJsonBoolean(true))
@@ -26,7 +26,7 @@ public class Test_JsonToJavaObjectConverter {
                 .set("m", f.createJsonObject()
                         .set("mk1", f.createJsonString("mv1")))
                 .set("s", f.createJsonString("s1"));
-        Object o = JsonCodec.singleton().convertToJavaObject(jsonObject, Object.class);
+        Object o = JsonCodec.singleton().convertToJavaInstance(jsonObject, Object.class);
 
         assertEquals(LinkedHashMap.class, o.getClass());
         @SuppressWarnings("unchecked")

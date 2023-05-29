@@ -1,9 +1,9 @@
 package pd.codec.json.datafactory;
 
-import pd.codec.json.datatype.IJsonNumber;
+import pd.codec.json.datatype.JsonNumber;
 import pd.fenc.TextNumber;
 
-final class SimpleJsonNumber extends TextNumber implements IJsonNumber {
+final class SimpleJsonNumber extends TextNumber implements JsonNumber {
 
     /**
      *

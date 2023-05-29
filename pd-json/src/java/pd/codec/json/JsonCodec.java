@@ -1,18 +1,18 @@
 package pd.codec.json;
 
-import pd.codec.json.datafactory.IJsonFactory;
-import pd.codec.json.datatype.IJson;
-import pd.codec.json.mapper.javaobject2json.IMapToJson;
-import pd.codec.json.mapper.json2javaobject.IMapToJavaType;
-import pd.codec.json.mapper.json2javaobject.JsonToJavaObjectConverter;
-import pd.codec.json.mapper.javaobject2json.JavaObjectToJsonConverter;
+import pd.codec.json.datafactory.JsonFactory;
+import pd.codec.json.datatype.Json;
+import pd.codec.json.mapper.java2json.MapToJsonInstance;
+import pd.codec.json.mapper.json2java.MapToJavaType;
+import pd.codec.json.mapper.json2java.JsonToJavaConverter;
+import pd.codec.json.mapper.java2json.JavaToJsonConverter;
 import pd.codec.json.parser.JsonDeserializer;
 import pd.codec.json.parser.JsonSerializer;
 import pd.codec.json.parser.SerializationConfig;
 
 public final class JsonCodec {
 
-    public static final IJsonFactory f = IJsonFactory.getFactory();
+    public static final JsonFactory f = JsonFactory.getFactory();
 
     private static final JsonCodec one = new JsonCodec().freeze();
 
@@ -28,23 +28,23 @@ public final class JsonCodec {
         if (configFrozen) {
             throw new RuntimeException("not configurable");
         }
-        config.jsonToJavaObjectConfig.register(declaredClass, actualClass);
+        config.jsonToJavaConfig.register(declaredClass, actualClass);
         return this;
     }
 
-    public <T> JsonCodec config(Class<T> declaredClass, IMapToJavaType<T> mapper) {
+    public <T> JsonCodec config(Class<T> declaredClass, MapToJavaType<T> mapper) {
         if (configFrozen) {
             throw new RuntimeException("not configurable");
         }
-        config.jsonToJavaObjectConfig.register(declaredClass, mapper);
+        config.jsonToJavaConfig.register(declaredClass, mapper);
         return this;
     }
 
-    public JsonCodec config(Class<?> declaredClass, IMapToJson mapper) {
+    public JsonCodec config(Class<?> declaredClass, MapToJsonInstance mapper) {
         if (configFrozen) {
             throw new RuntimeException("not configurable");
         }
-        config.javaObjectToJsonConfig.register(declaredClass, mapper);
+        config.javaToJsonConfig.register(declaredClass, mapper);
         return this;
     }
 
@@ -72,29 +72,29 @@ public final class JsonCodec {
         return this;
     }
 
-    public String serialize(IJson json) {
+    public String serialize(Json json) {
         return new JsonSerializer(config.serializationConfig).serialize(json);
     }
 
-    public IJson deserialize(String s) {
+    public Json deserialize(String s) {
         return new JsonDeserializer(config.f).deserialize(s);
     }
 
-    public IJson convertToJson(Object object) {
-        return new JavaObjectToJsonConverter(config.f, config.javaObjectToJsonConfig).convert(object);
+    public Json convertToJsonInstance(Object object) {
+        return new JavaToJsonConverter(config.f, config.javaToJsonConfig).convert(object);
     }
 
-    public <T> T convertToJavaObject(IJson json, Class<T> targetClass) {
-        return new JsonToJavaObjectConverter(config.jsonToJavaObjectConfig).convert(json, targetClass);
+    public <T> T convertToJavaInstance(Json json, Class<T> targetClass) {
+        return new JsonToJavaConverter(config.jsonToJavaConfig).convert(json, targetClass);
     }
 
     public String encode(Object object) {
-        IJson json = convertToJson(object);
+        Json json = convertToJsonInstance(object);
         return serialize(json);
     }
 
     public <T> T decode(String s, Class<T> surfacedClass) {
-        IJson json = deserialize(s);
-        return convertToJavaObject(json, surfacedClass);
+        Json json = deserialize(s);
+        return convertToJavaInstance(json, surfacedClass);
     }
 }

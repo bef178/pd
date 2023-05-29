@@ -4,26 +4,26 @@ import java.util.Map;
 
 import pd.codec.json.JsonType;
 
-public interface IJsonObject extends IJson, Map<String, IJson> {
+public interface JsonObject extends Json, Map<String, Json> {
 
     @Override
     default JsonType getJsonType() {
         return JsonType.OBJECT;
     }
 
-    IJson get(String key);
+    Json get(String key);
 
-    IJson getAndRemove(String key);
-
-    /**
-     * @return this
-     */
-    IJsonObject remove(String key);
+    Json getAndRemove(String key);
 
     /**
      * @return this
      */
-    IJsonObject set(String key, IJson value);
+    JsonObject remove(String key);
+
+    /**
+     * @return this
+     */
+    JsonObject set(String key, Json value);
 
     @Override
     int size();

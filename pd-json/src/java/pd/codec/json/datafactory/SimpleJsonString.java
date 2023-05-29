@@ -2,9 +2,9 @@ package pd.codec.json.datafactory;
 
 import java.util.Objects;
 
-import pd.codec.json.datatype.IJsonString;
+import pd.codec.json.datatype.JsonString;
 
-final class SimpleJsonString implements IJsonString {
+final class SimpleJsonString implements JsonString {
 
     /**
      *
@@ -29,8 +29,8 @@ final class SimpleJsonString implements IJsonString {
         if (o == null) {
             return false;
         }
-        if (o instanceof IJsonString) {
-            IJsonString another = (IJsonString) o;
+        if (o instanceof JsonString) {
+            JsonString another = (JsonString) o;
             return Objects.equals(another.getString(), getString());
         }
         return false;

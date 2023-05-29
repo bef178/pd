@@ -6,17 +6,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import pd.codec.json.datatype.IJson;
-import pd.codec.json.datatype.IJsonObject;
+import pd.codec.json.datatype.Json;
+import pd.codec.json.datatype.JsonObject;
 
-final class SimpleJsonObject extends LinkedHashMap<String, IJson> implements IJsonObject {
+final class SimpleJsonObject extends LinkedHashMap<String, Json> implements JsonObject {
 
     /**
      *
      */
     private static final long serialVersionUID = 1L;
 
-    private static final Comparator<Map.Entry<String, IJson>> comparator = Map.Entry.comparingByKey();
+    private static final Comparator<Map.Entry<String, Json>> comparator = Map.Entry.comparingByKey();
 
     public SimpleJsonObject() {
         super();
@@ -36,38 +36,38 @@ final class SimpleJsonObject extends LinkedHashMap<String, IJson> implements IJs
         return false;
     }
 
-    public boolean equalsIgnoreOrder(Map<String, IJson> o) {
+    public boolean equalsIgnoreOrder(Map<String, Json> o) {
         if (o == this) {
             return true;
         }
         if (o == null) {
             return false;
         }
-        List<Map.Entry<String, IJson>> l = new ArrayList<>(o.entrySet());
+        List<Map.Entry<String, Json>> l = new ArrayList<>(o.entrySet());
         l.sort(comparator);
-        List<Map.Entry<String, IJson>> a = new ArrayList<>(entrySet());
+        List<Map.Entry<String, Json>> a = new ArrayList<>(entrySet());
         a.sort(comparator);
         return l.equals(a);
     }
 
     @Override
-    public IJson get(String key) {
+    public Json get(String key) {
         return super.get(key);
     }
 
     @Override
-    public IJson getAndRemove(String key) {
+    public Json getAndRemove(String key) {
         return super.remove(key);
     }
 
     @Override
-    public IJsonObject remove(String key) {
+    public JsonObject remove(String key) {
         super.remove(key);
         return this;
     }
 
     @Override
-    public SimpleJsonObject set(String key, IJson value) {
+    public SimpleJsonObject set(String key, Json value) {
         super.put(key, value);
         return this;
     }

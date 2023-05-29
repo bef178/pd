@@ -4,41 +4,41 @@ import java.io.Serializable;
 
 import pd.codec.json.JsonType;
 
-public interface IJson extends Serializable {
+public interface Json extends Serializable {
 
-    default IJsonArray asJsonArray() {
+    default JsonArray asJsonArray() {
         return getJsonType() == JsonType.ARRAY
-                ? IJsonArray.class.cast(this)
+                ? JsonArray.class.cast(this)
                 : null;
     }
 
-    default IJsonBoolean asJsonBoolean() {
+    default JsonBoolean asJsonBoolean() {
         return getJsonType() == JsonType.BOOLEAN
-                ? IJsonBoolean.class.cast(this)
+                ? JsonBoolean.class.cast(this)
                 : null;
     }
 
-    default IJsonNull asJsonNull() {
+    default JsonNull asJsonNull() {
         return getJsonType() == JsonType.NULL
-                ? IJsonNull.class.cast(this)
+                ? JsonNull.class.cast(this)
                 : null;
     }
 
-    default IJsonNumber asJsonNumber() {
+    default JsonNumber asJsonNumber() {
         return getJsonType() == JsonType.NUMBER
-                ? IJsonNumber.class.cast(this)
+                ? JsonNumber.class.cast(this)
                 : null;
     }
 
-    default IJsonObject asJsonObject() {
+    default JsonObject asJsonObject() {
         return getJsonType() == JsonType.OBJECT
-                ? IJsonObject.class.cast(this)
+                ? JsonObject.class.cast(this)
                 : null;
     }
 
-    default IJsonString asJsonString() {
+    default JsonString asJsonString() {
         return getJsonType() == JsonType.STRING
-                ? IJsonString.class.cast(this)
+                ? JsonString.class.cast(this)
                 : null;
     }
 

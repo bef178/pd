@@ -4,29 +4,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import pd.codec.json.datafactory.IJsonFactory;
-import pd.codec.json.datatype.IJson;
+import pd.codec.json.datafactory.JsonFactory;
+import pd.codec.json.datatype.Json;
 import pd.fun.Cat;
 
 public class Test_JsonCodec {
 
     private static final JsonCodec jsonCodec = JsonCodec.singleton();
 
-    private static final IJsonFactory f = JsonCodec.f;
+    private static final JsonFactory f = JsonCodec.f;
 
-    private static final IJson json;
+    private static final Json json;
     private static final String jsonText;
 
-    static final IJson json2;
+    static final Json json2;
     static final String json2Text;
 
-    private static final IJson json3;
+    private static final Json json3;
     private static final String json3Text;
 
-    private static final IJson json4;
+    private static final Json json4;
     private static final String json4Text;
 
-    private static final IJson json5;
+    private static final Json json5;
     private static final Cat cat5;
 
     static {
@@ -104,11 +104,11 @@ public class Test_JsonCodec {
 
     @Test
     public void test_JsonCodec_convertToJson() {
-        assertEquals(json5, jsonCodec.convertToJson(cat5));
+        assertEquals(json5, jsonCodec.convertToJsonInstance(cat5));
     }
 
     public void test_JsonCodec_convertToObject() {
-        assertEquals(cat5, jsonCodec.convertToJavaObject(json5, Cat.class));
+        assertEquals(cat5, jsonCodec.convertToJavaInstance(json5, Cat.class));
     }
 
     @Test

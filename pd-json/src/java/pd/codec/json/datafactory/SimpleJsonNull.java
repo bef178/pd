@@ -1,8 +1,8 @@
 package pd.codec.json.datafactory;
 
-import pd.codec.json.datatype.IJsonNull;
+import pd.codec.json.datatype.JsonNull;
 
-final class SimpleJsonNull implements IJsonNull {
+final class SimpleJsonNull implements JsonNull {
 
     /**
      *

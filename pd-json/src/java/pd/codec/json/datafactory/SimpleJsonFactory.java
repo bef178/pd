@@ -1,6 +1,6 @@
 package pd.codec.json.datafactory;
 
-final class SimpleJsonFactory implements IJsonFactory {
+final class SimpleJsonFactory implements JsonFactory {
 
     private static SimpleJsonFactory one = new SimpleJsonFactory();
 
