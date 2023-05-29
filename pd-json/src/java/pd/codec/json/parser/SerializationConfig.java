@@ -50,6 +50,9 @@ public class SerializationConfig {
     }
 
     public void setOption(Option option, String value) {
+        if (value == null) {
+            throw new NullPointerException("value should not be null");
+        }
         SerializationConfig config = this;
         switch (option) {
             case MARGIN:

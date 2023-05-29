@@ -20,55 +20,43 @@ public final class JsonCodec {
         return one;
     }
 
-    private final Config config = new Config(f);
+    private final Config config;
 
-    private boolean configFrozen = false;
+    public JsonCodec() {
+        this(new Config());
+    }
 
-    public <T> JsonCodec config(Class<T> declaredClass, Class<? extends T> actualClass) {
-        if (configFrozen) {
-            throw new RuntimeException("not configurable");
-        }
-        config.jsonToJavaConfig.register(declaredClass, actualClass);
+    public JsonCodec(Config config) {
+        this.config = config;
+    }
+
+    public JsonCodec configureJavaToJsonMapper(Class<?> targetClass, MapToJsonInstance mapper) {
+        config.configureToJsonMapper(targetClass, mapper);
         return this;
     }
 
-    public <T> JsonCodec config(Class<T> declaredClass, MapToJavaType<T> mapper) {
-        if (configFrozen) {
-            throw new RuntimeException("not configurable");
-        }
-        config.jsonToJavaConfig.register(declaredClass, mapper);
+    public <T> JsonCodec configureJsonToJavaMapper(Class<T> targetClass, Class<? extends T> actualClass) {
+        config.configureJsonToJavaMapper(targetClass, actualClass);
         return this;
     }
 
-    public JsonCodec config(Class<?> declaredClass, MapToJsonInstance mapper) {
-        if (configFrozen) {
-            throw new RuntimeException("not configurable");
-        }
-        config.javaToJsonConfig.register(declaredClass, mapper);
+    public <T> JsonCodec configureJsonToJavaMapper(Class<T> targetClass, MapToJavaType<T> mapper) {
+        config.configureJsonToJavaMapper(targetClass, mapper);
         return this;
     }
 
-    public JsonCodec config(SerializationConfig.Style style) {
-        if (configFrozen) {
-            throw new RuntimeException("not configurable");
-        }
-        config.serializationConfig.init(style);
+    public JsonCodec configureParser(SerializationConfig.Style style) {
+        config.configureParser(style);
         return this;
     }
 
-    public JsonCodec config(SerializationConfig.Option option, String value) {
-        if (configFrozen) {
-            throw new RuntimeException("not configurable");
-        }
-        if (value == null) {
-            throw new NullPointerException("value should not be null");
-        }
-        config.serializationConfig.setOption(option, value);
+    public JsonCodec configureParser(SerializationConfig.Option option, String value) {
+        config.configureParser(option, value);
         return this;
     }
 
     public JsonCodec freeze() {
-        configFrozen = true;
+        config.freeze();
         return this;
     }
 
