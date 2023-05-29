@@ -1,6 +1,7 @@
 package pd.app.fdup;
 
 import java.util.AbstractMap;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,7 +66,7 @@ public class Main {
                 .collect(Collectors.groupingBy(a -> a.size))
                 .entrySet()
                 .stream()
-                .sorted((a, b) -> (a.getKey() <= b.getKey() ? -1 : 1))
+                .sorted(Comparator.comparingLong(Map.Entry::getKey))
                 .filter(a -> a.getKey() > 0)
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
