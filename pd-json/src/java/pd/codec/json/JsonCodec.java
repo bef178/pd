@@ -2,10 +2,10 @@ package pd.codec.json;
 
 import pd.codec.json.datafactory.JsonFactory;
 import pd.codec.json.datatype.Json;
-import pd.codec.json.mapper.java2json.MapToJsonInstance;
-import pd.codec.json.mapper.json2java.MapToJavaType;
-import pd.codec.json.mapper.json2java.JsonToJavaConverter;
 import pd.codec.json.mapper.java2json.JavaToJsonConverter;
+import pd.codec.json.mapper.java2json.MapToJsonInstance;
+import pd.codec.json.mapper.json2java.JsonToJavaConverter;
+import pd.codec.json.mapper.json2java.MapToJavaType;
 import pd.codec.json.parser.JsonDeserializer;
 import pd.codec.json.parser.JsonSerializer;
 import pd.codec.json.parser.SerializationConfig;
@@ -72,29 +72,29 @@ public final class JsonCodec {
         return this;
     }
 
-    public String serialize(Json json) {
-        return new JsonSerializer(config.serializationConfig).serialize(json);
+    public String serialize(Object object) {
+        Json json = serializeToJson(object);
+        return serializeJson(json);
     }
 
-    public Json deserialize(String s) {
-        return new JsonDeserializer(config.f).deserialize(s);
-    }
-
-    public Json convertToJsonInstance(Object object) {
+    public Json serializeToJson(Object object) {
         return new JavaToJsonConverter(config.f, config.javaToJsonConfig).convert(object);
     }
 
-    public <T> T convertToJavaInstance(Json json, Class<T> targetClass) {
+    public String serializeJson(Json json) {
+        return new JsonSerializer(config.serializationConfig).serialize(json);
+    }
+
+    public <T> T deserialize(String s, Class<T> targetClass) {
+        Json json = deserializeToJson(s);
+        return deserializeJson(json, targetClass);
+    }
+
+    public Json deserializeToJson(String s) {
+        return new JsonDeserializer(config.f).deserialize(s);
+    }
+
+    public <T> T deserializeJson(Json json, Class<T> targetClass) {
         return new JsonToJavaConverter(config.jsonToJavaConfig).convert(json, targetClass);
-    }
-
-    public String encode(Object object) {
-        Json json = convertToJsonInstance(object);
-        return serialize(json);
-    }
-
-    public <T> T decode(String s, Class<T> surfacedClass) {
-        Json json = deserialize(s);
-        return convertToJavaInstance(json, surfacedClass);
     }
 }

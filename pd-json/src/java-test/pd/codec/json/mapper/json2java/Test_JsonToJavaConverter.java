@@ -26,7 +26,7 @@ public class Test_JsonToJavaConverter {
                 .set("m", f.createJsonObject()
                         .set("mk1", f.createJsonString("mv1")))
                 .set("s", f.createJsonString("s1"));
-        Object o = JsonCodec.singleton().convertToJavaInstance(jsonObject, Object.class);
+        Object o = JsonCodec.singleton().deserializeJson(jsonObject, Object.class);
 
         assertEquals(LinkedHashMap.class, o.getClass());
         @SuppressWarnings("unchecked")

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import pd.codec.json.datafactory.JsonFactory;
-import pd.codec.json.mapper.json2java.JsonToJavaConfig;
 import pd.codec.json.mapper.java2json.JavaToJsonConfig;
+import pd.codec.json.mapper.json2java.JsonToJavaConfig;
 import pd.codec.json.parser.SerializationConfig;
 
 class Config {

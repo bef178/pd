@@ -24,9 +24,9 @@ public class Test_JsonFactory {
                 .set("nn", factory.getJsonNull())
                 .set("bb", factory.createJsonBoolean(true));
         String jsonText = "{\"ss\":\"hello\",\"ii\":77,\"ff\":5.5,\"ll\":[\"vava\",\"vbvb\"],\"nn\":null,\"bb\":true}";
-        assertEquals(jsonText, jsonCodec.serialize(json));
+        assertEquals(jsonText, jsonCodec.serializeJson(json));
 
-        JsonObject json2 = jsonCodec.deserialize(jsonText).asJsonObject();
-        assertEquals(jsonText, jsonCodec.serialize(json2));
+        JsonObject json2 = jsonCodec.deserializeToJson(jsonText).asJsonObject();
+        assertEquals(jsonText, jsonCodec.serializeJson(json2));
     }
 }

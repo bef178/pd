@@ -104,50 +104,50 @@ public class Test_JsonCodec {
 
     @Test
     public void test_JsonCodec_convertToJson() {
-        assertEquals(json5, jsonCodec.convertToJsonInstance(cat5));
+        assertEquals(json5, jsonCodec.serializeToJson(cat5));
     }
 
     public void test_JsonCodec_convertToObject() {
-        assertEquals(cat5, jsonCodec.convertToJavaInstance(json5, Cat.class));
+        assertEquals(cat5, jsonCodec.deserializeJson(json5, Cat.class));
     }
 
     @Test
     public void test_JsonCodec_deserialize() {
-        assertEquals(json, jsonCodec.deserialize(jsonText));
+        assertEquals(json, jsonCodec.deserializeToJson(jsonText));
     }
 
     @Test
     public void test_JsonCodec_deserialize2() {
-        assertEquals(json2, jsonCodec.deserialize(json2Text));
+        assertEquals(json2, jsonCodec.deserializeToJson(json2Text));
     }
 
     @Test
     public void test_JsonCodec_deserialize3_struct() {
-        assertEquals(json3, jsonCodec.deserialize(json3Text));
+        assertEquals(json3, jsonCodec.deserializeToJson(json3Text));
     }
 
     @Test
     public void test_JsonCodec_deserialize4_sequence() {
-        assertEquals(json4, jsonCodec.deserialize(json4Text));
+        assertEquals(json4, jsonCodec.deserializeToJson(json4Text));
     }
 
     @Test
     public void test_JsonCodec_serialize() {
-        assertEquals(jsonText, jsonCodec.serialize(json));
+        assertEquals(jsonText, jsonCodec.serializeJson(json));
     }
 
     @Test
     public void test_JsonCodec_serialize2() {
-        assertEquals(json2Text, jsonCodec.serialize(json2));
+        assertEquals(json2Text, jsonCodec.serializeJson(json2));
     }
 
     @Test
     public void test_JsonCodec_serialize3_struct() {
-        assertEquals(json3Text, jsonCodec.serialize(json3));
+        assertEquals(json3Text, jsonCodec.serializeJson(json3));
     }
 
     @Test
     public void test_JsonCodec_serialize4_sequence() {
-        assertEquals(json4Text, jsonCodec.serialize(json4));
+        assertEquals(json4Text, jsonCodec.serializeJson(json4));
     }
 }
