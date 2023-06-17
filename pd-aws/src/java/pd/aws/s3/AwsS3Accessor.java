@@ -216,7 +216,7 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public boolean move(String path, String dstPath, boolean recursive) {
+    public boolean move(String path, String dstPath) {
         return false;
     }
 

@@ -272,6 +272,12 @@ public class LocalFileAccessor implements FileAccessor {
         }
     }
 
+    /**
+     * cp f f1      // OK<br/>
+     * cp -r f f1   // OK<br/>
+     * cp d d1      // cp: -r not specified; omitting directory 'd'<br/>
+     * cp -r d d1   // OK<br/>
+     */
     @Override
     public boolean copy(String path, String dstPath, boolean recursive) {
         if (isRegularFile(path)) {
@@ -297,7 +303,7 @@ public class LocalFileAccessor implements FileAccessor {
     }
 
     @Override
-    public boolean move(String path, String dstPath, boolean recursive) {
+    public boolean move(String path, String dstPath) {
         if (isRegularFile(path)) {
             try {
                 Files.move(Paths.get(path), Paths.get(dstPath));
@@ -308,7 +314,7 @@ public class LocalFileAccessor implements FileAccessor {
         } else if (isDirectory(path)) {
             List<String> names = listDirectory(path);
             for (String basename : names) {
-                if (!move(PathExtension.join(path, basename), PathExtension.join(dstPath, basename), recursive)) {
+                if (!move(PathExtension.join(path, basename), PathExtension.join(dstPath, basename))) {
                     return false;
                 }
             }

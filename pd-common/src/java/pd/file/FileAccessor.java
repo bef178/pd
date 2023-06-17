@@ -49,7 +49,7 @@ public interface FileAccessor {
      */
     boolean copy(String path, String dstPath, boolean recursive);
 
-    boolean move(String path, String dstPath, boolean recursive);
+    boolean move(String path, String dstPath);
 
     byte[] load(String path);
 
