@@ -110,7 +110,7 @@ public class PathExtension {
     /**
      * will ignore the possible absolute path in the middle
      */
-    public static String join(String path, String... more) {
+    public static String join(String path, Iterable<String> more) {
         // not use Paths. it will trim "//" to "/"
         // return Paths.get(path, more).toString();
         if (path == null || path.isEmpty()) {
@@ -124,6 +124,10 @@ public class PathExtension {
             sb.append('/').append(another);
         }
         return sb.toString();
+    }
+
+    public static String join(String path, String... more) {
+        return join(path, Arrays.asList(more));
     }
 
     /**
