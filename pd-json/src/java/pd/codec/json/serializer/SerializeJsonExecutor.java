@@ -1,6 +1,8 @@
 package pd.codec.json.serializer;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.PrimitiveIterator.OfInt;
 
@@ -93,19 +95,13 @@ class SerializeJsonExecutor {
 
         numIndents++;
 
-        Iterator<Entry<String, Json>> it = jsonObject.entrySet().iterator();
+        List<Entry<String, Json>> l = new LinkedList<>(jsonObject.entrySet());
+        l.removeIf(a -> a.getValue() == null || a.getValue() instanceof JsonNull && !config.exportsNull);
+        Iterator<Entry<String, Json>> it = l.iterator();
         while (it.hasNext()) {
             Entry<String, Json> entry = it.next();
             String key = entry.getKey();
             Json value = entry.getValue();
-
-            if (value == null) {
-                continue;
-            } else if (value instanceof JsonNull) {
-                if (!config.exportsNull) {
-                    continue;
-                }
-            }
 
             serializeMarginAndIndents(numIndents, sb);
 
