@@ -116,7 +116,7 @@ public class BasicTest {
                 .set("nn", jsonFactory.getJsonNull())
                 .set("bb", jsonFactory.createJsonBoolean(true))
                 .set("oo", jsonFactory.createJsonObject());
-        String jsonText = "{\"ss\":\"ss\",\"ii\":77,\"ff\":5.5,\"aa\":[\"xx\",\"yy\"],\"nn\":null,\"bb\":true,\"oo\":{}}";
+        String jsonText = "{\"ss\":\"ss\",\"ii\":77,\"ff\":5.5,\"aa\":[\"xx\",\"yy\"],\"bb\":true,\"oo\":{}}";
 
         assertEquals(jsonText, new JsonSerializer().serializeJson(json));
 

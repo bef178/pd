@@ -101,6 +101,10 @@ class SerializeJsonExecutor {
 
             if (value == null) {
                 continue;
+            } else if (value instanceof JsonNull) {
+                if (!config.exportsNull) {
+                    continue;
+                }
             }
 
             serializeMarginAndIndents(numIndents, sb);

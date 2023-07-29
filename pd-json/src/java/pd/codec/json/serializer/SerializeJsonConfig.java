@@ -10,6 +10,8 @@ public class SerializeJsonConfig {
     public String colonPrefix = "";
     public String colonSuffix = "";
 
+    public boolean exportsNull = false;
+
     public SerializeJsonConfig() {
         this(Style.CHEATSHEET);
     }
