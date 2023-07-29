@@ -26,6 +26,11 @@ public class JsonSerializer {
         this.serializeJsonConfig = serializeJsonConfig;
     }
 
+    public JsonSerializer configSerializeStyle(SerializeJsonConfig.Style style) {
+        serializeJsonConfig.loadStyle(style);
+        return this;
+    }
+
     public String serialize(Object object) {
         Json json = serializeToJson(object);
         return serializeJson(json);

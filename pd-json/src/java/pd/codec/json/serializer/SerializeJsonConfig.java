@@ -45,7 +45,7 @@ public class SerializeJsonConfig {
     private void loadMultilinesStyle() {
         SerializeJsonConfig config = this;
         config.margin = "";
-        config.indent = "    ";
+        config.indent = "  ";
         config.eol = "\n";
         config.colonPrefix = "";
         config.colonSuffix = " ";
