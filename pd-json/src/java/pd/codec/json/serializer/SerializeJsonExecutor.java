@@ -1,4 +1,4 @@
-package pd.codec.json.parser;
+package pd.codec.json.serializer;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -15,16 +15,20 @@ import pd.codec.json.datatype.JsonString;
 import pd.fenc.ParsingException;
 import pd.util.AsciiExtension;
 
-public class JsonSerializer {
+class SerializeJsonExecutor {
 
-    private final SerializationConfig config;
+    private final SerializeJsonConfig config;
 
-    public JsonSerializer(SerializationConfig config) {
+    public SerializeJsonExecutor() {
+        this(new SerializeJsonConfig());
+    }
+
+    public SerializeJsonExecutor(SerializeJsonConfig config) {
         this.config = config;
     }
 
     /**
-     * `Json` => `String`<br/>
+     * `Json` => `String`
      */
     public String serialize(Json json) {
         StringBuilder sb = new StringBuilder();
@@ -38,7 +42,7 @@ public class JsonSerializer {
         } else if (json instanceof JsonBoolean) {
             sb.append(((JsonBoolean) json).getBoolean());
         } else if (json instanceof JsonNumber) {
-            sb.append((JsonNumber) json);
+            sb.append(json);
         } else if (json instanceof JsonString) {
             serializeJsonString(((JsonString) json).getString(), sb);
         } else if (json instanceof JsonArray) {

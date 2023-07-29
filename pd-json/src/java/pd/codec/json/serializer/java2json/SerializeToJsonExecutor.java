@@ -1,4 +1,4 @@
-package pd.codec.json.mapper.java2json;
+package pd.codec.json.serializer.java2json;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -14,14 +14,14 @@ import pd.codec.json.datatype.JsonNumber;
 import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
 
-public class JavaToJsonConverter {
+public class SerializeToJsonExecutor {
 
-    private final JsonFactory f;
+    private final JsonFactory jsonFactory;
 
-    private final JavaToJsonConfig config;
+    private final SerializeToJsonConfig config;
 
-    public JavaToJsonConverter(JsonFactory factory, JavaToJsonConfig config) {
-        this.f = factory;
+    public SerializeToJsonExecutor(JsonFactory jsonFactory, SerializeToJsonConfig config) {
+        this.jsonFactory = jsonFactory;
         this.config = config;
     }
 
@@ -31,7 +31,7 @@ public class JavaToJsonConverter {
      */
     public Json convert(Object o) {
         if (o == null) {
-            return f.getJsonNull();
+            return jsonFactory.getJsonNull();
         }
 
         // intercept
@@ -48,33 +48,33 @@ public class JavaToJsonConverter {
         }
 
         if (o instanceof Integer) {
-            return f.createJsonNumber((Integer) o);
+            return jsonFactory.createJsonNumber((Integer) o);
         } else if (o instanceof Long) {
-            return f.createJsonNumber((Long) o);
+            return jsonFactory.createJsonNumber((Long) o);
         } else if (o instanceof Byte) {
-            return f.createJsonNumber((Byte) o);
+            return jsonFactory.createJsonNumber((Byte) o);
         } else if (o instanceof Short) {
-            return f.createJsonNumber((Short) o);
+            return jsonFactory.createJsonNumber((Short) o);
         } else if (o instanceof Character) {
-            return f.createJsonNumber((Character) o);
+            return jsonFactory.createJsonNumber((Character) o);
         }
 
         if (o instanceof Float) {
-            return f.createJsonNumber((Float) o);
+            return jsonFactory.createJsonNumber((Float) o);
         } else if (o instanceof Double) {
-            return f.createJsonNumber((Double) o);
+            return jsonFactory.createJsonNumber((Double) o);
         }
 
         if (o instanceof Boolean) {
-            return f.createJsonBoolean((Boolean) o);
+            return jsonFactory.createJsonBoolean((Boolean) o);
         }
 
         if (o instanceof String) {
-            return f.createJsonString((String) o);
+            return jsonFactory.createJsonString((String) o);
         }
 
         if (o.getClass().isArray()) {
-            JsonArray jsonArray = f.createJsonArray();
+            JsonArray jsonArray = jsonFactory.createJsonArray();
             for (int i = 0; i < Array.getLength(o); i++) {
                 Object element = Array.get(o, i);
                 jsonArray.add(convert(element));
@@ -82,7 +82,7 @@ public class JavaToJsonConverter {
             return jsonArray;
         } else if (o instanceof List) {
             List<?> list = (List<?>) o;
-            JsonArray jsonArray = f.createJsonArray();
+            JsonArray jsonArray = jsonFactory.createJsonArray();
             for (Object element : list) {
                 jsonArray.add(convert(element));
             }
@@ -91,7 +91,7 @@ public class JavaToJsonConverter {
 
         if (o instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) o;
-            JsonObject jsonObject = f.createJsonObject();
+            JsonObject jsonObject = jsonFactory.createJsonObject();
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String key = entry.getKey().toString();
                 jsonObject.put(key, convert(entry.getValue()));
@@ -99,7 +99,7 @@ public class JavaToJsonConverter {
             return jsonObject;
         } else {
             // a non-container object
-            JsonObject jsonObject = f.createJsonObject();
+            JsonObject jsonObject = jsonFactory.createJsonObject();
             // public fields only
             for (Field field : o.getClass().getFields()) {
                 int fieldModifiers = field.getModifiers();
@@ -148,14 +148,14 @@ public class JavaToJsonConverter {
     }
 
     public JsonNumber convert(long value) {
-        return f.createJsonNumber(value);
+        return jsonFactory.createJsonNumber(value);
     }
 
     public JsonNumber convert(double value) {
-        return f.createJsonNumber(value);
+        return jsonFactory.createJsonNumber(value);
     }
 
     public JsonBoolean convert(boolean value) {
-        return f.createJsonBoolean(value);
+        return jsonFactory.createJsonBoolean(value);
     }
 }

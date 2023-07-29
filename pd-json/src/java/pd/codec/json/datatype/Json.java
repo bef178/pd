@@ -8,37 +8,37 @@ public interface Json extends Serializable {
 
     default JsonArray asJsonArray() {
         return getJsonType() == JsonType.ARRAY
-                ? JsonArray.class.cast(this)
+                ? (JsonArray) this
                 : null;
     }
 
     default JsonBoolean asJsonBoolean() {
         return getJsonType() == JsonType.BOOLEAN
-                ? JsonBoolean.class.cast(this)
+                ? (JsonBoolean) this
                 : null;
     }
 
     default JsonNull asJsonNull() {
         return getJsonType() == JsonType.NULL
-                ? JsonNull.class.cast(this)
+                ? (JsonNull) this
                 : null;
     }
 
     default JsonNumber asJsonNumber() {
         return getJsonType() == JsonType.NUMBER
-                ? JsonNumber.class.cast(this)
+                ? (JsonNumber) this
                 : null;
     }
 
     default JsonObject asJsonObject() {
         return getJsonType() == JsonType.OBJECT
-                ? JsonObject.class.cast(this)
+                ? (JsonObject) this
                 : null;
     }
 
     default JsonString asJsonString() {
         return getJsonType() == JsonType.STRING
-                ? JsonString.class.cast(this)
+                ? (JsonString) this
                 : null;
     }
 

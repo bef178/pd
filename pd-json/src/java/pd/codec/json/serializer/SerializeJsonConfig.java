@@ -1,8 +1,8 @@
-package pd.codec.json.parser;
+package pd.codec.json.serializer;
 
 import pd.fenc.ParsingException;
 
-public class SerializationConfig {
+public class SerializeJsonConfig {
 
     public String margin = "";
     public String indent = "";
@@ -10,29 +10,29 @@ public class SerializationConfig {
     public String colonPrefix = "";
     public String colonSuffix = "";
 
-    public SerializationConfig() {
+    public SerializeJsonConfig() {
         this(Style.CHEATSHEET);
     }
 
-    public SerializationConfig(Style style) {
-        init(style);
+    public SerializeJsonConfig(Style style) {
+        loadStyle(style);
     }
 
-    public void init(Style style) {
+    public void loadStyle(Style style) {
         switch (style) {
             case CHEATSHEET:
-                mountCheatsheetStyle();
+                loadCheatsheetStyle();
                 break;
             case MULTILINES:
-                mountMultilinesStyle();
+                loadMultilinesStyle();
                 break;
             default:
                 throw new ParsingException();
         }
     }
 
-    private void mountCheatsheetStyle() {
-        SerializationConfig config = this;
+    private void loadCheatsheetStyle() {
+        SerializeJsonConfig config = this;
         config.margin = "";
         config.indent = "";
         config.eol = "";
@@ -40,8 +40,8 @@ public class SerializationConfig {
         config.colonSuffix = "";
     }
 
-    private void mountMultilinesStyle() {
-        SerializationConfig config = this;
+    private void loadMultilinesStyle() {
+        SerializeJsonConfig config = this;
         config.margin = "";
         config.indent = "    ";
         config.eol = "\n";
@@ -49,12 +49,12 @@ public class SerializationConfig {
         config.colonSuffix = " ";
     }
 
-    public void setOption(Option option, String value) {
+    public void setOption(Option optionKey, String value) {
         if (value == null) {
             throw new NullPointerException("value should not be null");
         }
-        SerializationConfig config = this;
-        switch (option) {
+        SerializeJsonConfig config = this;
+        switch (optionKey) {
             case MARGIN:
                 config.margin = value;
                 break;
@@ -71,7 +71,7 @@ public class SerializationConfig {
                 config.colonSuffix = value;
                 break;
             default:
-                throw new RuntimeException("unknown option: " + option.name());
+                throw new RuntimeException("unknown option: " + optionKey.name());
         }
     }
 

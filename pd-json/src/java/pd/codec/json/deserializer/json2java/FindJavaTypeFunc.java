@@ -1,8 +1,8 @@
-package pd.codec.json.mapper.json2java;
+package pd.codec.json.deserializer.json2java;
 
 import pd.codec.json.datatype.Json;
 
 @FunctionalInterface
-public interface MapToJavaType<T> {
+public interface FindJavaTypeFunc<T> {
     Class<? extends T> map(Json json, String path, Class<T> targetClass);
 }

@@ -1,20 +1,28 @@
-package pd.codec.json.mapper.json2java;
+package pd.codec.json.deserializer.json2java;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import pd.codec.json.datatype.Json;
 
-public class JsonToJavaConfig {
+public class DeserializeJsonConfig {
 
-//    private final LinkedHashMap<RefKey<?>, MapToJavaType<?>> refs = new LinkedHashMap<>();
-    private final LinkedHashMap<Class<?>, MapToJavaType<?>> refs = new LinkedHashMap<>();
+//    private final LinkedHashMap<RefKey<?>, FindJavaTypeFunc<?>> refs = new LinkedHashMap<>();
+    private final LinkedHashMap<Class<?>, FindJavaTypeFunc<?>> refs = new LinkedHashMap<>();
+
+    public DeserializeJsonConfig() {
+        register(List.class, ArrayList.class);
+        register(Map.class, LinkedHashMap.class);
+    }
 
     <T> Class<? extends T> find(Json json, String path, Class<T> targetClass) {
         if (path == null || targetClass == null) {
             throw new IllegalArgumentException();
         }
 
-        MapToJavaType<T> func = findMapper(targetClass);
+        FindJavaTypeFunc<T> func = findMapper(targetClass);
         if (func != null) {
             return func.map(json, path, targetClass); // TODO should do try-catch?
         }
@@ -22,15 +30,15 @@ public class JsonToJavaConfig {
     }
 
 //    @SuppressWarnings("unchecked")
-//    private <T> MapToJavaType<T> findFunc(String path, Class<T> targetClass) {
-//        Map.Entry<RefKey<?>, MapToJavaType<?>> entry;
+//    private <T> FindJavaTypeFunc<T> findFunc(String path, Class<T> targetClass) {
+//        Map.Entry<RefKey<?>, FindJavaTypeFunc<?>> entry;
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == targetClass)
 //                .filter(a -> a.getKey().pathPattern != null && matchesFieldPath(a.getKey().pathPattern, path))
 //                .max(Comparator.comparingInt(a -> findFieldPathScore(a.getKey().pathPattern, path)))
 //                .orElse(null);
 //        if (entry != null) {
-//            return (MapToJavaType<T>) entry.getValue();
+//            return (FindJavaTypeFunc<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == null)
@@ -38,7 +46,7 @@ public class JsonToJavaConfig {
 //                .max(Comparator.comparingInt(a -> findFieldPathScore(a.getKey().pathPattern, path)))
 //                .orElse(null);
 //        if (entry != null) {
-//            return (MapToJavaType<T>) entry.getValue();
+//            return (FindJavaTypeFunc<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == targetClass)
@@ -46,7 +54,7 @@ public class JsonToJavaConfig {
 //                .findFirst()
 //                .orElse(null);
 //        if (entry != null) {
-//            return (MapToJavaType<T>) entry.getValue();
+//            return (FindJavaTypeFunc<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == null)
@@ -54,21 +62,21 @@ public class JsonToJavaConfig {
 //                .findFirst()
 //                .orElse(null);
 //        if (entry != null) {
-//            return (MapToJavaType<T>) entry.getValue();
+//            return (FindJavaTypeFunc<T>) entry.getValue();
 //        }
 //        return null;
 //    }
 
     @SuppressWarnings("unchecked")
-    private <T> MapToJavaType<T> findMapper(Class<T> targetClass) {
-        return (MapToJavaType<T>) refs.get(targetClass);
+    private <T> FindJavaTypeFunc<T> findMapper(Class<T> targetClass) {
+        return (FindJavaTypeFunc<T>) refs.get(targetClass);
     }
 
     public <T> void register(Class<T> targetClass, Class<? extends T> implClass) {
         register(targetClass, (json, p, t) -> implClass);
     }
 
-    public <T> void register(Class<T> targetClass, MapToJavaType<T> mapper) {
+    public <T> void register(Class<T> targetClass, FindJavaTypeFunc<T> mapper) {
         if (mapper == null) {
             throw new NullPointerException();
         }

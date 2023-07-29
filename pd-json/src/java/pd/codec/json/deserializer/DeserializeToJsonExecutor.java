@@ -1,9 +1,9 @@
-package pd.codec.json.parser;
+package pd.codec.json.deserializer;
 
 import pd.codec.HexCodec;
+import pd.codec.json.datafactory.JsonFactory;
 import pd.codec.json.datatype.Json;
 import pd.codec.json.datatype.JsonArray;
-import pd.codec.json.datafactory.JsonFactory;
 import pd.codec.json.datatype.JsonNull;
 import pd.codec.json.datatype.JsonNumber;
 import pd.codec.json.datatype.JsonObject;
@@ -16,12 +16,12 @@ import pd.fenc.ScalarPicker;
 import pd.fenc.Util;
 import pd.util.AsciiExtension;
 
-public class JsonDeserializer {
+class DeserializeToJsonExecutor {
 
-    private final JsonFactory f;
+    private final JsonFactory jsonFactory;
 
-    public JsonDeserializer(JsonFactory factory) {
-        this.f = factory;
+    public DeserializeToJsonExecutor(JsonFactory jsonFactory) {
+        this.jsonFactory = jsonFactory;
     }
 
     /**
@@ -75,7 +75,7 @@ public class JsonDeserializer {
     }
 
     private JsonArray deserializeToJsonArray(CharReader src) {
-        JsonArray jsonArray = f.createJsonArray();
+        JsonArray jsonArray = jsonFactory.createJsonArray();
         int state = 0;
         while (true) {
             switch (state) {
@@ -137,7 +137,7 @@ public class JsonDeserializer {
         src.eatOrThrow('l');
         src.eatOrThrow('s');
         src.eatOrThrow('e');
-        return f.createJsonBoolean(false);
+        return jsonFactory.createJsonBoolean(false);
 
     }
 
@@ -146,18 +146,18 @@ public class JsonDeserializer {
         src.eatOrThrow('u');
         src.eatOrThrow('l');
         src.eatOrThrow('l');
-        return f.getJsonNull();
+        return jsonFactory.getJsonNull();
     }
 
     private JsonNumber deserializeToJsonNumber(CharReader src) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         new ScalarPicker().pickFloat(src, dst);
-        return f.createJsonNumber().set(sb.toString());
+        return jsonFactory.createJsonNumber().set(sb.toString());
     }
 
     private JsonObject deserializeToJsonObject(CharReader src) {
-        JsonObject jsonObject = f.createJsonObject();
+        JsonObject jsonObject = jsonFactory.createJsonObject();
         int state = 0;
         while (true) {
             switch (state) {
@@ -236,7 +236,7 @@ public class JsonDeserializer {
                     int ch = src.hasNext() ? src.next() : IReader.EOF;
                     if (ch == '\"') {
                         // consume the end delimiter and exit
-                        return f.createJsonString(sb.toString());
+                        return jsonFactory.createJsonString(sb.toString());
                     } else if (ch == '\\') {
                         state = 2;
                     } else if (AsciiExtension.isControl(ch)) {
@@ -308,6 +308,6 @@ public class JsonDeserializer {
         src.eatOrThrow('r');
         src.eatOrThrow('u');
         src.eatOrThrow('e');
-        return f.createJsonBoolean(true);
+        return jsonFactory.createJsonBoolean(true);
     }
 }

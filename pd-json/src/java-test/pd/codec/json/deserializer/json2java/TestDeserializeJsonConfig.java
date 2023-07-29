@@ -1,4 +1,4 @@
-package pd.codec.json.mapper.json2java;
+package pd.codec.json.deserializer.json2java;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,11 +12,11 @@ import pd.fun.Dog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class Test_JsonToJavaConfig {
+public class TestDeserializeJsonConfig {
 
     @Test
     public void test_findByClass() {
-        JsonToJavaConfig config = new JsonToJavaConfig();
+        DeserializeJsonConfig config = new DeserializeJsonConfig();
         config.register(List.class, ArrayList.class);
         config.register(Map.class, LinkedHashMap.class);
 
@@ -26,7 +26,7 @@ public class Test_JsonToJavaConfig {
 
     @Test
     public void test_findByClassWithPathPattern() {
-        JsonToJavaConfig config = new JsonToJavaConfig();
+        DeserializeJsonConfig config = new DeserializeJsonConfig();
         config.register(Object.class, (json, p, c) -> {
             if (p.equals("/animals/[1]")) {
                 return Cat.class;

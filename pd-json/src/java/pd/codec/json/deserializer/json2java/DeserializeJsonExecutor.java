@@ -1,4 +1,4 @@
-package pd.codec.json.mapper.json2java;
+package pd.codec.json.deserializer.json2java;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -14,11 +14,11 @@ import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
 import pd.file.PathExtension;
 
-public class JsonToJavaConverter {
+public class DeserializeJsonExecutor {
 
-    public final JsonToJavaConfig config;
+    public final DeserializeJsonConfig config;
 
-    public JsonToJavaConverter(JsonToJavaConfig config) {
+    public DeserializeJsonExecutor(DeserializeJsonConfig config) {
         this.config = config;
     }
 
