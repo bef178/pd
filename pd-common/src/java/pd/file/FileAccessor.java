@@ -10,12 +10,12 @@ public interface FileAccessor {
     boolean isRegularFile(String path);
 
     /**
-     * Extends `pathPrefix`, stopping at either directory separator `/` or EOF.<br/>
+     * List paths starting with `pathPrefix` and not beyond `/`.<br/>
      * `pathPrefix` could be empty.<br/>
-     * `.` and `..` has no special meaning in result values.<br/>
-     * Result values are complete paths, not basenames.<br/>
-     * Result values ending with `/` probably represent a directory (AWS S3 is the exception); those not ending with `/` always represent a regular file.<br/>
+     * Result values are full paths, not base names.<br/>
      * Result values are deduplicated and sorted.<br/>
+     * If result value ends with `/`, it probably represents a directory; if not, it represents a regular file.<br/>
+     * `.` and `..` has no special meanings in result path.<br/>
      * <br/>
      * e.g.<br/>
      * - list2("d") => ["d/"]<br/>

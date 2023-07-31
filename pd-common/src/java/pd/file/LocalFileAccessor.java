@@ -142,8 +142,8 @@ public class LocalFileAccessor implements FileAccessor {
     }
 
     /**
-     * List the basenames of directories and regular files under this directory.<br/>
-     * Will return null if `path` does not identify a directory.<br/>
+     * List the base names of directories and regular files directly under this directory.<br/>
+     * Return null if `path` does not identify a directory.<br/>
      */
     public List<String> listDirectory(String path) {
         File f = new File(path);
@@ -159,6 +159,10 @@ public class LocalFileAccessor implements FileAccessor {
         return Arrays.asList(names);
     }
 
+    /**
+     * List full paths of directories and regular files directly under this directory.<br/>
+     * Return null if `path` does not identify a directory.<br/>
+     */
     public List<String> listDirectory2(String path) {
         try (Stream<Path> stream = Files.list(Paths.get(path))) {
             return stream.map(Path::toString).collect(Collectors.toList());
