@@ -137,7 +137,11 @@ public class Main {
             if (i == -1) {
                 params.add(new AbstractMap.SimpleImmutableEntry<>(arg.substring(2), ""));
             } else {
-                params.add(new AbstractMap.SimpleImmutableEntry<>(arg.substring(2, i), arg.substring(i + 1)));
+                String value = arg.substring(i + 1);
+                if (value.startsWith("\"") && value.endsWith("\"")) {
+                    value = value.substring(1, value.length() - 1);
+                }
+                params.add(new AbstractMap.SimpleImmutableEntry<>(arg.substring(2, i), value));
             }
         }
         return params;
