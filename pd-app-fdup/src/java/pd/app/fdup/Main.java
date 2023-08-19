@@ -1,6 +1,5 @@
 package pd.app.fdup;
 
-import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -9,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import pd.codec.GetOpt;
 import pd.codec.Md5Codec;
 import pd.fenc.CurvePattern;
 import pd.file.FileStat;
@@ -25,15 +25,28 @@ public class Main {
     public static void main(String[] args) {
         List<Map.Entry<String, String>> params;
         try {
-            params = pickParams(args);
+            params = GetOpt.parse("--command:", args);
         } catch (Exception e) {
             stderr("{}", e);
             System.exit(1);
             return;
         }
 
-        List<String> paths = params.stream().filter(a -> Objects.equals(a.getKey(), "input-file")).map(Map.Entry::getValue).collect(Collectors.toList());
-        String command = params.stream().filter(a -> Objects.equals(a.getKey(), "command")).map(Map.Entry::getValue).reduce((a, b) -> b).orElse("");
+        String command = params.stream()
+                .filter(a -> Objects.equals(a.getKey(), "--command"))
+                .map(Map.Entry::getValue)
+                .reduce((a, b) -> b)
+                .orElse("");
+        List<String> paths = params.stream()
+                .filter(a -> Objects.equals(a.getKey(), "!opt"))
+                .map(a -> {
+                    String path = a.getValue();
+                    if (path.startsWith("\"") && path.endsWith("\"")) {
+                        path = path.substring(1, path.length() - 1);
+                    }
+                    return path;
+                })
+                .collect(Collectors.toList());
 
         switch (command) {
             case COMMAND_LIST:
@@ -64,8 +77,7 @@ public class Main {
 
         List<List<FileStat>> sizeGroupedFiles = stats.stream()
                 .collect(Collectors.groupingBy(a -> a.size))
-                .entrySet()
-                .stream()
+                .entrySet().stream()
                 .sorted(Comparator.comparingLong(Map.Entry::getKey))
                 .filter(a -> a.getKey() > 0)
                 .map(Map.Entry::getValue)
@@ -125,26 +137,6 @@ public class Main {
                 stderr("unknown command `{}`", command);
                 break;
         }
-    }
-
-    private static List<Map.Entry<String, String>> pickParams(String[] args) {
-        List<Map.Entry<String, String>> params = new LinkedList<>();
-        for (String arg : args) {
-            if (!arg.startsWith("--")) {
-                throw new RuntimeException("argument should start with `--`");
-            }
-            int i = arg.indexOf('=');
-            if (i == -1) {
-                params.add(new AbstractMap.SimpleImmutableEntry<>(arg.substring(2), ""));
-            } else {
-                String value = arg.substring(i + 1);
-                if (value.startsWith("\"") && value.endsWith("\"")) {
-                    value = value.substring(1, value.length() - 1);
-                }
-                params.add(new AbstractMap.SimpleImmutableEntry<>(arg.substring(2, i), value));
-            }
-        }
-        return params;
     }
 
     private static void stdout(String message, Object... messageParams) {
