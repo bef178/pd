@@ -124,8 +124,10 @@ public class Main {
                 break;
             case COMMAND_REMOVE_DUPLICATED:
                 if (group.size() > 1) {
+                    FileStat stat = group.get(0);
+                    stdout("keep {}", stat.path);
                     for (int i = 1; i < group.size(); i++) {
-                        FileStat stat = group.get(i);
+                        stat = group.get(i);
                         if (accessor.removeRegularFile(stat.path)) {
                             stdout("removed {}", stat.path);
                         }
