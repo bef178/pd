@@ -116,11 +116,16 @@ public class PathExtension {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
-        StringBuilder sb = new StringBuilder().append(path);
+        if (more == null) {
+            throw new IllegalArgumentException();
+        }
         for (String another : more) {
             if (another == null || another.isEmpty()) {
                 throw new IllegalArgumentException();
             }
+        }
+        StringBuilder sb = new StringBuilder().append(path);
+        for (String another : more) {
             sb.append('/').append(another);
         }
         return sb.toString();

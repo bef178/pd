@@ -65,6 +65,11 @@ public class Test_PathExtension {
     }
 
     @Test
+    public void test_join() {
+        assertEquals("abc//def/ggg", PathExtension.join("abc", "/def", "ggg"));
+    }
+
+    @Test
     public void test_normalize() {
         test_normalize("abc", "./abc");
         test_normalize("././abc", "./abc");
