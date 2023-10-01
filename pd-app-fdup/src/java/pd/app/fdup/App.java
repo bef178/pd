@@ -14,7 +14,7 @@ import pd.fenc.CurvePattern;
 import pd.file.FileStat;
 import pd.file.LocalFileAccessor;
 
-public class Main {
+public class App {
 
     public static final String COMMAND_LIST = "list";
     public static final String COMMAND_LIST_DUPLICATED = "list-duplicated";
@@ -125,11 +125,11 @@ public class Main {
             case COMMAND_REMOVE_DUPLICATED:
                 if (group.size() > 1) {
                     FileStat stat = group.get(0);
-                    stdout("keep {}", stat.path);
+                    stdout("o {}", stat.path);
                     for (int i = 1; i < group.size(); i++) {
                         stat = group.get(i);
                         if (accessor.removeRegularFile(stat.path)) {
-                            stdout("removed {}", stat.path);
+                            stdout("x {}", stat.path);
                         }
                     }
                     stdout("");

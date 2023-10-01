@@ -109,7 +109,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>pd.app.fdup.Main</mainClass>
+                            <mainClass>pd.app.fdup.App</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
