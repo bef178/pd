@@ -3,6 +3,8 @@ package pd.codec;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 
+import pd.fenc.InstallmentByteBuffer;
+
 public class PercentCodec {
 
     private static final BitSet UNRESERVED = new BitSet(128);
@@ -26,26 +28,6 @@ public class PercentCodec {
 
     static boolean shouldEncode(byte byteValue) {
         return byteValue < 0 || !UNRESERVED.get(byteValue);
-    }
-
-    /**
-     * consume 1 or 3 int32 and produce 1 byte<br/>
-     * return number of consumed int32
-     */
-    public static int decode1byte(int[] a, int i, byte[] dst, int start) {
-        if (a[i] == '%') {
-            if (dst != null) {
-                int hiByte = a[i + 1];
-                int loByte = a[i + 2];
-                dst[start] = HexCodec.decode1byte(hiByte, loByte);
-            }
-            return 3;
-        } else {
-            if (dst != null) {
-                dst[start] = (byte) a[i];
-            }
-            return 1;
-        }
     }
 
     /**
@@ -91,5 +73,42 @@ public class PercentCodec {
 
     public static String encode(String s) {
         return encode(s, new StringBuilder()).toString();
+    }
+
+    /**
+     * consume 1 or 3 int32 and produce 1 byte<br/>
+     * return number of consumed int32
+     */
+    public static int decode1byte(int[] a, int i, byte[] dst, int start) {
+        if (a[i] == '%') {
+            if (dst != null) {
+                int hiByte = a[i + 1];
+                int loByte = a[i + 2];
+                dst[start] = HexCodec.decode1byte(hiByte, loByte);
+            }
+            return 3;
+        } else {
+            if (dst != null) {
+                dst[start] = (byte) a[i];
+            }
+            return 1;
+        }
+    }
+
+    public static byte[] decodeToBytes(String s) {
+        InstallmentByteBuffer byteBuffer = new InstallmentByteBuffer();
+        byte[] dst = new byte[1];
+        int[] unicodes = s.codePoints().toArray();
+        int i = 0;
+        while (i < unicodes.length) {
+            int numConsumed = PercentCodec.decode1byte(unicodes, i, dst, 0);
+            i += numConsumed;
+            byteBuffer.push(dst[0] & 0xFF);
+        }
+        return byteBuffer.copyBytes();
+    }
+
+    public static String decode(String s) {
+        return new String(decodeToBytes(s), StandardCharsets.UTF_8);
     }
 }

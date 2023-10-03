@@ -8,9 +8,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import pd.codec.UriQueryCodec;
-
-public class Test_UriQueryCodec {
+public class Test_QueryStringCodec {
 
     private static final List<SimpleImmutableEntry<String, String>> queryList;
     private static final String queryString;
@@ -25,12 +23,12 @@ public class Test_UriQueryCodec {
     }
 
     @Test
-    public void test_parse() {
-        assertEquals(queryList, UriQueryCodec.parse(queryString));
+    public void test_serialize() {
+        assertEquals(queryStringNormalized, QueryStringCodec.serialize(queryList));
     }
 
     @Test
-    public void test_toQueryString() {
-        assertEquals(queryStringNormalized, UriQueryCodec.toQueryString(queryList));
+    public void test_deserialize() {
+        assertEquals(queryList, QueryStringCodec.deserialize(queryString));
     }
 }
