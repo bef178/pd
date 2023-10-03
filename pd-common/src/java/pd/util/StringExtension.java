@@ -54,7 +54,7 @@ public class StringExtension {
     }
 
     @SuppressWarnings("unused")
-    private static String[] split1(String s, final int delimeter) {
+    private static String[] split1(String s, final int delimiter) {
         List<String> list = new LinkedList<String>();
         int start = -1;
         int i = 0;
@@ -73,7 +73,7 @@ public class StringExtension {
             } else {
                 ch = c;
             }
-            if (ch == delimeter) {
+            if (ch == delimiter) {
                 String token = s.substring(start, i);
                 list.add(token);
                 start = -1;

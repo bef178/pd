@@ -33,22 +33,22 @@ public class Int8ArrayExtension {
 
     public static byte setBits(byte mem, int bitsMask, boolean value) {
         if (value) {
-            mem |= bitsMask;
+            mem |= (byte) bitsMask;
         } else {
-            mem &= ~bitsMask;
+            mem &= (byte) ~bitsMask;
         }
         return mem;
     }
 
     /**
-     * logical (compare to arithmetic) shift right<br/>
+     * logical (comparing to arithmetic) shift right<br/>
      * i.e. mem >>> offset
      */
     @Deprecated
-    public static byte shiftArithmeticR(byte mem, int offset) {
+    public static byte arithmeticShiftR(byte mem, int offset) {
         assert offset >= 0 && offset < BITS_PER_BYTE;
         mem >>= offset;
-        mem &= ((1 << (BITS_PER_BYTE - offset)) - 1);
+        mem &= (byte) ((1 << (BITS_PER_BYTE - offset)) - 1);
         return mem;
     }
 

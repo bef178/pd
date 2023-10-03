@@ -9,12 +9,12 @@ public class PctCodec {
     static {
         // final byte[] UNRESERVED = { '-', '_', '.', '~' };
         final byte[] GEN_DELIMS = { ':', '/', '?', '#', '[', ']', '@' };
-        for (int i = 0; i < GEN_DELIMS.length; i++) {
-            SHOULD_ENCODE.set(GEN_DELIMS[i]);
+        for (byte genDelim : GEN_DELIMS) {
+            SHOULD_ENCODE.set(genDelim);
         }
         final byte[] SUB_DELIMS = { '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=' };
-        for (int i = 0; i < SUB_DELIMS.length; i++) {
-            SHOULD_ENCODE.set(SUB_DELIMS[i]);
+        for (byte subDelim : SUB_DELIMS) {
+            SHOULD_ENCODE.set(subDelim);
         }
     }
 
