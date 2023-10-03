@@ -57,23 +57,26 @@ public class HexCodec {
         dst[start + 1] = out2nd;
     }
 
-    public static StringBuilder encode1byte(byte byteValue, StringBuilder sb, boolean upperCase) {
+    public static StringBuilder encode1byte(byte byteValue, StringBuilder sb, boolean useUpperCase) {
         int out1st = encode4BitHi(byteValue);
         int out2nd = encode4BitLo(byteValue);
-        if (upperCase) {
-            out1st = AsciiExtension.toUpper(out1st);
-            out2nd = AsciiExtension.toUpper(out2nd);
-        } else {
+        if (!useUpperCase) {
             out1st = AsciiExtension.toLower(out1st);
             out2nd = AsciiExtension.toLower(out2nd);
         }
         return sb.appendCodePoint(out1st).appendCodePoint(out2nd);
     }
 
+    /**
+     * return [0-9A-F]
+     */
     public static int encode4BitHi(int byteValue) {
         return encode4bit((byteValue >> 4) & 0x0F);
     }
 
+    /**
+     * return [0-9A-F]
+     */
     public static int encode4BitLo(int byteValue) {
         return encode4bit(byteValue & 0x0F);
     }
@@ -107,10 +110,10 @@ public class HexCodec {
         throw new IllegalArgumentException();
     }
 
-    public static String toHexString(byte[] bytes, boolean upperCase) {
+    public static String toHexString(byte[] bytes, boolean userUpperCase) {
         StringBuilder sb = new StringBuilder();
         for (byte aByte : bytes) {
-            encode1byte(aByte, sb, upperCase);
+            encode1byte(aByte, sb, userUpperCase);
         }
         return sb.toString();
     }

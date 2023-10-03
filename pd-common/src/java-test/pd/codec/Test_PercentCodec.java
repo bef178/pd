@@ -24,4 +24,11 @@ public class Test_PercentCodec {
         assertEquals(3, PercentCodec.encode1byte((byte) '|', a3, 0));
         assertArrayEquals(new int[] { '%', '7', 'C'}, a3);
     }
+
+    @Test
+    public void test_encode() {
+        assertEquals("azAZ09-._~", PercentCodec.encode("azAZ09-._~"));
+        assertEquals("%5E%60%7B%7D%7C", PercentCodec.encode("^`{}|"));
+        assertEquals("%E7%99%BE%E5%88%86%E5%8F%B7%E7%BC%96%E7%A0%81", PercentCodec.encode("百分号编码"));
+    }
 }

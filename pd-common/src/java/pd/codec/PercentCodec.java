@@ -1,5 +1,6 @@
 package pd.codec;
 
+import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 
 public class PercentCodec {
@@ -64,5 +65,31 @@ public class PercentCodec {
             }
             return 1;
         }
+    }
+
+    public static int encode1byte(byte byteValue, StringBuilder sb) {
+        if (shouldEncode(byteValue)) {
+            if (sb != null) {
+                sb.append('%');
+                HexCodec.encode1byte(byteValue, sb, true);
+            }
+            return 3;
+        } else {
+            if (sb != null) {
+                sb.appendCodePoint(byteValue);
+            }
+            return 1;
+        }
+    }
+
+    public static StringBuilder encode(String s, StringBuilder sb) {
+        for (byte i : s.getBytes(StandardCharsets.UTF_8)) {
+            encode1byte(i, sb);
+        }
+        return sb;
+    }
+
+    public static String encode(String s) {
+        return encode(s, new StringBuilder()).toString();
     }
 }
