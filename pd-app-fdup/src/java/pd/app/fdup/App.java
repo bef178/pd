@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import pd.codec.GetOpt;
-import pd.codec.Md5Codec;
+import pd.codec.Md5Digest;
 import pd.fenc.CurvePattern;
 import pd.file.FileStat;
 import pd.file.LocalFileAccessor;
@@ -93,7 +93,7 @@ public class App {
             Map<String, List<FileStat>> sameHashFiles = new LinkedHashMap<>();
             for (FileStat stat : a) {
                 byte[] bytes = accessor.load(stat.path);
-                String checksum = Md5Codec.md5sum(bytes);
+                String checksum = Md5Digest.md5sum(bytes);
                 if (!sameHashFiles.containsKey(checksum)) {
                     sameHashFiles.put(checksum, new LinkedList<>());
                 }
