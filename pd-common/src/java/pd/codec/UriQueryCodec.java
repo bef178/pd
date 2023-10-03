@@ -26,7 +26,7 @@ public final class UriQueryCodec {
         byte[] buffer = new byte[1];
         InstallmentByteBuffer dst = new InstallmentByteBuffer();
         while (i < ucs4.length) {
-            int numConsumed = PctCodec.decode1byte(ucs4, i, buffer, 0);
+            int numConsumed = PercentCodec.decode1byte(ucs4, i, buffer, 0);
             i += numConsumed;
             dst.push(buffer[0] & 0xFF);
         }
@@ -39,7 +39,7 @@ public final class UriQueryCodec {
         int[] buffer = new int[3];
         StringBuilder sb = new StringBuilder();
         while (i < utf8.length) {
-            int numProduced = PctCodec.encode1byte(utf8[i], buffer, 0);
+            int numProduced = PercentCodec.encode1byte(utf8[i], buffer, 0);
             i++;
             for (int j = 0; j < numProduced; j++) {
                 sb.appendCodePoint(buffer[j]);

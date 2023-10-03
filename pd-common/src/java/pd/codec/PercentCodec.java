@@ -2,20 +2,29 @@ package pd.codec;
 
 import java.util.BitSet;
 
-public class PctCodec {
+public class PercentCodec {
 
-    private static final BitSet SHOULD_ENCODE = new BitSet(256);
+    private static final BitSet UNRESERVED = new BitSet(128);
 
     static {
-        // final byte[] UNRESERVED = { '-', '_', '.', '~' };
-        final byte[] GEN_DELIMS = { ':', '/', '?', '#', '[', ']', '@' };
-        for (byte genDelim : GEN_DELIMS) {
-            SHOULD_ENCODE.set(genDelim);
+        // reminder: in rfc3986, reserved + unreserved != ascii
+        for (int i = 'A'; i <= 'Z'; i++) {
+            UNRESERVED.set(i);
         }
-        final byte[] SUB_DELIMS = { '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=' };
-        for (byte subDelim : SUB_DELIMS) {
-            SHOULD_ENCODE.set(subDelim);
+        for (int i = 'a'; i <= 'z'; i++) {
+            UNRESERVED.set(i);
         }
+        for (int i = '0'; i <= '9'; i++) {
+            UNRESERVED.set(i);
+        }
+        UNRESERVED.set('-');
+        UNRESERVED.set('.');
+        UNRESERVED.set('_');
+        UNRESERVED.set('~');
+    }
+
+    static boolean shouldEncode(byte byteValue) {
+        return byteValue < 0 || !UNRESERVED.get(byteValue);
     }
 
     /**
@@ -43,17 +52,17 @@ public class PctCodec {
      * return number of produced bytes
      */
     public static int encode1byte(byte byteValue, int[] dst, int start) {
-        if (byteValue >= 0x20 && byteValue < 0x7F && !SHOULD_ENCODE.get(byteValue)) {
-            if (dst != null) {
-                dst[start] = byteValue;
-            }
-            return 1;
-        } else {
+        if (shouldEncode(byteValue)) {
             if (dst != null) {
                 dst[start++] = '%';
                 HexCodec.encode1byte(byteValue, dst, start);
             }
             return 3;
+        } else {
+            if (dst != null) {
+                dst[start] = byteValue;
+            }
+            return 1;
         }
     }
 }
