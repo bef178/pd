@@ -16,6 +16,10 @@ public class Md5Digest {
         return md5.digest(bytes);
     }
 
+    public static String md5sum(byte[] bytes) {
+        return HexCodec.toHexString(md5(bytes), false);
+    }
+
     public static String md5sum(String s) {
         return HexCodec.toHexString(md5(s.getBytes(StandardCharsets.UTF_8)), false);
     }
