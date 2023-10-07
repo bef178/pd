@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import pd.codec.GetOpt;
 import pd.codec.Md5Digest;
-import pd.fenc.CurvePattern;
+import pd.fenc.CurlyBracketPatternExtension;
 import pd.file.FileStat;
 import pd.file.LocalFileAccessor;
 
@@ -142,10 +142,10 @@ public class App {
     }
 
     private static void stdout(String message, Object... messageParams) {
-        System.out.println(CurvePattern.format(message, messageParams));
+        System.out.println(CurlyBracketPatternExtension.format(message, messageParams));
     }
 
     private static void stderr(String message, Object... messageParams) {
-        System.err.println(CurvePattern.format(message, messageParams));
+        System.err.println(CurlyBracketPatternExtension.format(message, messageParams));
     }
 }

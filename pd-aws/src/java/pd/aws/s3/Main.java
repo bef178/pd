@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import pd.fenc.CurvePattern;
+import pd.fenc.CurlyBracketPatternExtension;
 import pd.file.LocalFileAccessor;
 
 @Slf4j
@@ -239,10 +239,10 @@ public class Main {
     }
 
     private static void stdout(String message, Object... messageParams) {
-        System.out.println(CurvePattern.format(message, messageParams));
+        System.out.println(CurlyBracketPatternExtension.format(message, messageParams));
     }
 
     private static void stderr(String message, Object... messageParams) {
-        System.err.println(CurvePattern.format(message, messageParams));
+        System.err.println(CurlyBracketPatternExtension.format(message, messageParams));
     }
 }

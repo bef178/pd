@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import pd.fenc.CurvePattern;
+import pd.fenc.CurlyBracketPatternExtension;
 import pd.logger.LogLevel;
 import pd.time.SimpleTime;
 import pd.time.TimeExtension;
@@ -44,7 +44,7 @@ public class FileLogger extends ThreadedLogger {
         long timestamp = logEntry.timestamp;
         String hostname = logEntry.hostname;
         LogLevel level = logEntry.logLevel;
-        String message = CurvePattern.format(logEntry.message, logEntry.messageParams);
+        String message = CurlyBracketPatternExtension.format(logEntry.message, logEntry.messageParams);
 
         File dir = new File(fileRoot);
         if (!dir.exists()) {

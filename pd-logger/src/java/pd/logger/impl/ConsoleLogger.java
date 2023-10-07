@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import pd.fenc.CurvePattern;
+import pd.fenc.CurlyBracketPatternExtension;
 import pd.logger.Logger;
 import pd.logger.LogLevel;
 import pd.time.SimpleTime;
@@ -39,7 +39,7 @@ public class ConsoleLogger implements Logger {
         }
         Writer w = level.ordinal() < LogLevel.INFO.ordinal() ? errWriter : outWriter;
         try {
-            LoggerUtil.writeLine(w, SimpleTime.now().findMillisecondsSinceEpoch(), LoggerUtil.getHostname(), level, CurvePattern.format(message, messageParams));
+            LoggerUtil.writeLine(w, SimpleTime.now().findMillisecondsSinceEpoch(), LoggerUtil.getHostname(), level, CurlyBracketPatternExtension.format(message, messageParams));
             w.flush();
         } catch (IOException e) {
             e.printStackTrace();

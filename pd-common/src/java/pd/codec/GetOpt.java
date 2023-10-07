@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pd.fenc.CurvePattern;
+import pd.fenc.CurlyBracketPatternExtension;
 
 /**
  * This is a restricted limited variant of POSIX getopt. Option configurations are controlled by an option string as well.<br/>
@@ -81,7 +81,7 @@ public class GetOpt {
                 continue;
             }
 
-            throw new IllegalArgumentException(CurvePattern.format("Unrecognized option {}", optConfig));
+            throw new IllegalArgumentException(CurlyBracketPatternExtension.format("Unrecognized option {}", optConfig));
         }
         return this;
     }
@@ -118,7 +118,7 @@ public class GetOpt {
                     if (it.hasNext()) {
                         result.add(new AbstractMap.SimpleImmutableEntry<>(arg, it.next()));
                     } else {
-                        throw new RuntimeException(CurvePattern.format("Option {} requires an argument but there is none", arg));
+                        throw new RuntimeException(CurlyBracketPatternExtension.format("Option {} requires an argument but there is none", arg));
                     }
                 } else {
                     result.add(new AbstractMap.SimpleImmutableEntry<>(arg, null));
@@ -135,7 +135,7 @@ public class GetOpt {
                     if (optRequiresArg) {
                         result.add(new AbstractMap.SimpleImmutableEntry<>(a0, arg.substring(assignmentIndex + 1)));
                     } else {
-                        throw new RuntimeException(CurvePattern.format("Option {} requires no argument but there is one", a0));
+                        throw new RuntimeException(CurlyBracketPatternExtension.format("Option {} requires no argument but there is one", a0));
                     }
                     continue;
                 }
@@ -149,7 +149,7 @@ public class GetOpt {
                     if (optRequiresArg) {
                         result.add(new AbstractMap.SimpleImmutableEntry<>(a0, arg.substring(2)));
                     } else {
-                        throw new RuntimeException(CurvePattern.format("Option {} requires no argument but there is one", a0));
+                        throw new RuntimeException(CurlyBracketPatternExtension.format("Option {} requires no argument but there is one", a0));
                     }
                     continue;
                 }

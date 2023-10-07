@@ -1,7 +1,5 @@
 package pd.fenc;
 
-import static pd.fenc.IReader.EOF;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -18,7 +16,9 @@ import java.util.Set;
  * https://www.python.org/dev/peps/pep-0498/
  * pattern in c-printf called "format specifiers"
  */
-public class CurvePattern {
+public class CurlyBracketPatternExtension {
+
+    public static final int EOF = -1;
 
     /**
      * use '{}' as formatting anchor
@@ -54,14 +54,13 @@ public class CurvePattern {
                             state = 3;
                             break;
                         default:
-                            state = 0;
                             sb.appendCodePoint(ch);
                             break;
                     }
                     break;
                 }
                 case 1: {
-                    // escaped
+                    // seen BACKSLASH '\\'
                     int ch = it.hasNext() ? it.nextInt() : EOF;
                     switch (ch) {
                         case EOF:
@@ -76,27 +75,23 @@ public class CurvePattern {
                             break;
                         default:
                             String actual = new String(Character.toChars(ch));
-                            throw new ParsingException(String.format("E: unrecognized \"\\%s\"", actual));
+                            throw new ParsingException(String.format("E: unexpected \"\\%s\"", actual));
                     }
                     break;
                 }
                 case 2: {
-                    // seen '{'
+                    // seen OPENING_CURLY_BRACKET '{'
                     int ch = it.hasNext() ? it.nextInt() : EOF;
-                    switch (ch) {
-                        case '}':
-                            state = 0;
-                            if (argsIndex < args.length) {
-                                sb.append(args[argsIndex++]);
-                            } else {
-                                sb.append("{}");
-                            }
-                            break;
-                        default:
-                            state = 0;
-                            sb.append('{');
-                            sb.appendCodePoint(ch);
-                            break;
+                    state = 0;
+                    if (ch == '}') {
+                        if (argsIndex < args.length) {
+                            sb.append(args[argsIndex++]);
+                        } else {
+                            sb.append("{}");
+                        }
+                    } else {
+                        String actual = new String(Character.toChars(ch));
+                        throw new ParsingException(String.format("E: unexpected \"{%s\", expecting \"{}\"", actual));
                     }
                     break;
                 }
@@ -141,7 +136,7 @@ public class CurvePattern {
     }
 
     /**
-     * cut `pattern` into pieces, where odd index being normal String and even index for keys
+     * cut `pattern` into pieces, where odd index being normal String and even index being key
      */
     private static String[] cutPattern(String pattern) {
         List<String> cuts = new LinkedList<>();

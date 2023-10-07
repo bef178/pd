@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import pd.fenc.CurvePattern;
+import pd.fenc.CurlyBracketPatternExtension;
 import pd.server.demo.httpechoservice.controller.Controller;
 import pd.server.http.HttpRequestContext;
 
@@ -48,7 +48,7 @@ public class RouteRegistry {
         List<RouteEntry> slot = registry.get(request.httpMethod);
         if (slot != null) {
             for (RouteEntry entry : slot) {
-                Map<String, String> pathParams = CurvePattern.match(entry.requestPathPattern, requestPath);
+                Map<String, String> pathParams = CurlyBracketPatternExtension.match(entry.requestPathPattern, requestPath);
                 if (pathParams != null) {
                     RouteResult result = new RouteResult();
                     result.controller = entry.controller;
