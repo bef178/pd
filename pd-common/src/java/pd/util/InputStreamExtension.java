@@ -4,16 +4,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PrimitiveIterator;
+
+import pd.fenc.ParsingException;
 
 public class InputStreamExtension {
 
-    public static byte[] readAllBytes(InputStream stream) throws IOException {
+    public static byte[] readAllBytes(InputStream inputStream) throws IOException {
         final int CHUNK_SIZE = 4096;
         List<byte[]> buffers = new LinkedList<>();
         int size = 0;
         while (true) {
             byte[] buffer = new byte[CHUNK_SIZE];
-            int nRead = stream.read(buffer);
+            int nRead = inputStream.read(buffer);
             if (nRead == -1) {
                 break;
             }
@@ -32,6 +35,45 @@ public class InputStreamExtension {
             }
         }
         return result;
+    }
+
+    public static PrimitiveIterator.OfInt toIterator(InputStream inputStream) {
+
+        return new PrimitiveIterator.OfInt() {
+
+            private final int NOT_SET = -2;
+
+            private int nextValue = NOT_SET;
+
+            @Override
+            public boolean hasNext() {
+                if (nextValue == NOT_SET) {
+                    try {
+                        nextValue = inputStream.read();
+                    } catch (IOException e) {
+                        throw new ParsingException(e);
+                    }
+                }
+                return nextValue != -1;
+            }
+
+            @Override
+            public int nextInt() {
+                if (nextValue == NOT_SET) {
+                    try {
+                        nextValue = inputStream.read();
+                    } catch (IOException e) {
+                        throw new ParsingException(e);
+                    }
+                }
+                if (nextValue == -1) {
+                    throw new ParsingException("E: no next");
+                }
+                int result = nextValue;
+                nextValue = NOT_SET;
+                return result;
+            }
+        };
     }
 
     private InputStreamExtension() {
