@@ -2,6 +2,7 @@ package pd.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PrimitiveIterator;
@@ -20,19 +21,18 @@ public class InputStreamExtension {
             if (nRead == -1) {
                 break;
             }
-            buffers.add(buffer);
+            if (nRead == CHUNK_SIZE) {
+                buffers.add(buffer);
+            } else {
+                buffers.add(Arrays.copyOfRange(buffer, 0, nRead));
+            }
             size += nRead;
         }
         byte[] result = new byte[size];
         int start = 0;
         for (byte[] buffer : buffers) {
-            if (start + CHUNK_SIZE < size) {
-                System.arraycopy(buffer, 0, result, start, CHUNK_SIZE);
-                start += CHUNK_SIZE;
-            } else {
-                System.arraycopy(buffer, 0, result, start, size - start);
-                start = size;
-            }
+            System.arraycopy(buffer, 0, result, start, buffer.length);
+            start += buffer.length;
         }
         return result;
     }
