@@ -1,6 +1,6 @@
 package pd.fenc;
 
-import static pd.fenc.IReader.EOF;
+import static pd.fenc.Int32Provider.EOF;
 
 import java.io.Closeable;
 import java.io.IOException;

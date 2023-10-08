@@ -1,6 +1,6 @@
 package pd.codec;
 
-import static pd.fenc.IReader.EOF;
+import static pd.fenc.Int32Provider.EOF;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;

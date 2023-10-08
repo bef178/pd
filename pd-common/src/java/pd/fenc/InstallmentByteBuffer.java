@@ -10,7 +10,7 @@ public class InstallmentByteBuffer implements IWriter {
     /**
      * not a java.io.Reader<br/>
      */
-    public class Reader implements IReader {
+    public class Reader implements Int32Provider {
 
         public static final int SEEK_SET = 0;
         public static final int SEEK_CUR = 1;

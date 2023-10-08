@@ -1,6 +1,6 @@
 package pd.server.http;
 
-import static pd.fenc.IReader.EOF;
+import static pd.fenc.Int32Provider.EOF;
 import static pd.util.AsciiExtension.CR;
 import static pd.util.AsciiExtension.HT;
 import static pd.util.AsciiExtension.LF;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import pd.fenc.CharReader;
-import pd.fenc.IReader;
+import pd.fenc.Int32Provider;
 import pd.fenc.InstallmentByteBuffer;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
@@ -53,7 +53,7 @@ public class HttpMessageParser {
     }
 
     public HttpMessageParser(InputStream input, int capacity) {
-        this.src = new CharReader(IReader.asciiStream(input)) {
+        this.src = new CharReader(Int32Provider.asciiStream(input)) {
 
             @Override
             public int next() {

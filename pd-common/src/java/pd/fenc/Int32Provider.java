@@ -12,13 +12,13 @@ import java.util.PrimitiveIterator.OfInt;
  * value can be octet(byte), ascii, surrogate, unicode, ..., any int32<br>
  * better to add a check before taking the value<br/>
  */
-public interface IReader {
+public interface Int32Provider {
 
     public static final int EOF = -1;
 
-    public static IReader asciiStream(InputStream input) {
+    public static Int32Provider asciiStream(InputStream input) {
 
-        return new IReader() {
+        return new Int32Provider() {
 
             private int pos = 0;
 
@@ -49,19 +49,19 @@ public interface IReader {
         };
     }
 
-    public static IReader octetStream(byte[] src) {
+    public static Int32Provider octetStream(byte[] src) {
         return octetStream(src, 0, src.length);
     }
 
     /**
      * wrap to an int32 stream having value in [0, 0xFF]
      */
-    public static IReader octetStream(byte[] src, int i, int j) {
+    public static Int32Provider octetStream(byte[] src, int i, int j) {
         assert src != null;
         assert i >= 0;
         assert j > i && j < src.length;
 
-        return new IReader() {
+        return new Int32Provider() {
 
             private int offset = i;
 
@@ -82,9 +82,9 @@ public interface IReader {
         };
     }
 
-    public static IReader octetStream(InputStream input) {
+    public static Int32Provider octetStream(InputStream input) {
 
-        return new IReader() {
+        return new Int32Provider() {
 
             private int pos = 0;
 
@@ -118,15 +118,15 @@ public interface IReader {
     /**
      * wrap to an int32 stream having value in [0, 0x10FFFF]
      */
-    public static IReader unicodeStream(CharSequence cs) {
+    public static Int32Provider unicodeStream(CharSequence cs) {
         // pain: two or more intermediate objects
         // gain: existing facilities and avoid seldom O(n) on chatAt(i)
         return unicodeStream(cs.codePoints().iterator());
     }
 
-    public static IReader unicodeStream(OfInt it) {
+    public static Int32Provider unicodeStream(OfInt it) {
 
-        return new IReader() {
+        return new Int32Provider() {
 
             private int pos = 0;
 

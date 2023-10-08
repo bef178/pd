@@ -2,7 +2,7 @@ package pd.fenc;
 
 import pd.util.Int32ArrayExtension;
 
-import static pd.fenc.IReader.EOF;
+import static pd.fenc.Int32Provider.EOF;
 import static pd.util.AsciiExtension.isAlpha;
 import static pd.util.AsciiExtension.isDigit;
 

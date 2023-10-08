@@ -2,7 +2,7 @@ package pd.codec;
 
 import static pd.fenc.Util.checkPrintableAscii;
 
-import pd.fenc.IReader;
+import pd.fenc.Int32Provider;
 import pd.fenc.IWriter;
 
 public class Typeset {
@@ -13,7 +13,7 @@ public class Typeset {
         }
     }
 
-    private static void appendBytes(IReader src, int srcSize, IWriter dst) {
+    private static void appendBytes(Int32Provider src, int srcSize, IWriter dst) {
         for (int i = 0; i < srcSize; i++) {
             if (!src.hasNext()) {
                 break;
@@ -22,7 +22,7 @@ public class Typeset {
         }
     }
 
-    public static void appendBytes(IReader src, IWriter dst, int numBytesPerLine,
+    public static void appendBytes(Int32Provider src, IWriter dst, int numBytesPerLine,
             int startingOffset, byte[] prefix, byte[] suffix) {
         if (prefix == null) {
             prefix = new byte[0];

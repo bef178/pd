@@ -7,7 +7,7 @@ import pd.util.AsciiExtension;
  * While, we know stream cannot move backward physically.<br/>
  * This reader caches few recent-meet characters thus supports "as-if" move backward.<br/>
  */
-public class CharReader implements IReader {
+public class CharReader implements Int32Provider {
 
     private class Recent {
 
@@ -36,17 +36,17 @@ public class CharReader implements IReader {
         }
     }
 
-    private final IReader src;
+    private final Int32Provider src;
 
     private final Recent recent = new Recent(2);
 
     private int backOffset;
 
     public CharReader(CharSequence cs) {
-        this(IReader.unicodeStream(cs));
+        this(Int32Provider.unicodeStream(cs));
     }
 
-    public CharReader(IReader src) {
+    public CharReader(Int32Provider src) {
         this.src = src;
         this.backOffset = 0;
     }
@@ -127,7 +127,7 @@ public class CharReader implements IReader {
     }
 
     public boolean tryEat(String expecteds) {
-        IReader it = IReader.unicodeStream(expecteds);
+        Int32Provider it = Int32Provider.unicodeStream(expecteds);
         while (it.hasNext()) {
             int expected = it.next();
             if (!tryEat(expected)) {
