@@ -14,21 +14,11 @@ public class ParsingException extends RuntimeException {
     }
 
     public ParsingException(int actual) {
-        this(String.format("unexpected [%s]", actual == EOF
-                ? "EOF"
-                : Character.toChars(actual).toString()));
-    }
-
-    public ParsingException(int expected, int actual) {
-        this(Util.codepointToString(expected), Util.codepointToString(actual));
+        this(String.format("E: unexpected `%s`", actual == EOF ? "EOF" : Util.codepointToString(actual)));
     }
 
     public ParsingException(String message) {
         super(message);
-    }
-
-    public ParsingException(String expected, String actual) {
-        this(String.format("expected [%s] while actual [%s]", expected, actual));
     }
 
     public ParsingException(Throwable cause) {

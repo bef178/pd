@@ -8,11 +8,11 @@ import pd.codec.json.datatype.JsonNull;
 import pd.codec.json.datatype.JsonNumber;
 import pd.codec.json.datatype.JsonObject;
 import pd.codec.json.datatype.JsonString;
-import pd.fenc.CharReader;
-import pd.fenc.Int32Provider;
 import pd.fenc.IWriter;
+import pd.fenc.Int32Provider;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
+import pd.fenc.UnicodeProvider;
 import pd.fenc.Util;
 import pd.util.AsciiExtension;
 
@@ -31,21 +31,21 @@ class DeserializeToJsonExecutor {
         if (jsonText == null) {
             return null;
         }
-        CharReader src = new CharReader(jsonText);
+        UnicodeProvider src = new UnicodeProvider(jsonText);
         return deserializeToJson(src);
     }
 
-    private Json deserializeToJson(CharReader src) {
+    private Json deserializeToJson(UnicodeProvider src) {
         int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
         switch (ch) {
             case 'n':
-                src.moveBack();
+                src.back();
                 return deserializeToJsonNull(src);
             case 't':
-                src.moveBack();
+                src.back();
                 return deserializeToJsonTrue(src);
             case 'f':
-                src.moveBack();
+                src.back();
                 return deserializeToJsonFalse(src);
             case '0':
             case '1':
@@ -58,23 +58,23 @@ class DeserializeToJsonExecutor {
             case '8':
             case '9':
             case '-':
-                src.moveBack();
+                src.back();
                 return deserializeToJsonNumber(src);
             case '\"':
-                src.moveBack();
+                src.back();
                 return deserializeToJsonString(src);
             case '[':
-                src.moveBack();
+                src.back();
                 return deserializeToJsonArray(src);
             case '{':
-                src.moveBack();
+                src.back();
                 return deserializeToJsonObject(src);
             default:
                 throw new ParsingException();
         }
     }
 
-    private JsonArray deserializeToJsonArray(CharReader src) {
+    private JsonArray deserializeToJsonArray(UnicodeProvider src) {
         JsonArray jsonArray = jsonFactory.createJsonArray();
         int state = 0;
         while (true) {
@@ -85,7 +85,7 @@ class DeserializeToJsonExecutor {
                         throw new ParsingException(
                                 String.format("expected '[', actual [%s]", Util.codepointToString(ch)));
                     }
-                    src.eatWhitespaces();
+                    src.eatWhitespacesIfAny();
                     state = 1;
                     break;
                 }
@@ -96,7 +96,7 @@ class DeserializeToJsonExecutor {
                         case ']':
                             return jsonArray;
                         default:
-                            src.moveBack();
+                            src.back();
                             state = 2;
                             break;
                     }
@@ -105,7 +105,7 @@ class DeserializeToJsonExecutor {
                 case 2: {
                     // a json
                     jsonArray.append(deserializeToJson(src));
-                    src.eatWhitespaces();
+                    src.eatWhitespacesIfAny();
                     state = 3;
                     break;
                 }
@@ -116,7 +116,7 @@ class DeserializeToJsonExecutor {
                         case ']':
                             return jsonArray;
                         case ',':
-                            src.eatWhitespaces();
+                            src.eatWhitespacesIfAny();
                             state = 2;
                             break;
                         default:
@@ -131,32 +131,32 @@ class DeserializeToJsonExecutor {
         }
     }
 
-    private Json deserializeToJsonFalse(CharReader src) {
-        src.eatOrThrow('f');
-        src.eatOrThrow('a');
-        src.eatOrThrow('l');
-        src.eatOrThrow('s');
-        src.eatOrThrow('e');
+    private Json deserializeToJsonFalse(UnicodeProvider src) {
+        src.eat('f');
+        src.eat('a');
+        src.eat('l');
+        src.eat('s');
+        src.eat('e');
         return jsonFactory.createJsonBoolean(false);
 
     }
 
-    private JsonNull deserializeToJsonNull(CharReader src) {
-        src.eatOrThrow('n');
-        src.eatOrThrow('u');
-        src.eatOrThrow('l');
-        src.eatOrThrow('l');
+    private JsonNull deserializeToJsonNull(UnicodeProvider src) {
+        src.eat('n');
+        src.eat('u');
+        src.eat('l');
+        src.eat('l');
         return jsonFactory.getJsonNull();
     }
 
-    private JsonNumber deserializeToJsonNumber(CharReader src) {
+    private JsonNumber deserializeToJsonNumber(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         new ScalarPicker().pickFloat(src, dst);
         return jsonFactory.createJsonNumber().set(sb.toString());
     }
 
-    private JsonObject deserializeToJsonObject(CharReader src) {
+    private JsonObject deserializeToJsonObject(UnicodeProvider src) {
         JsonObject jsonObject = jsonFactory.createJsonObject();
         int state = 0;
         while (true) {
@@ -167,7 +167,7 @@ class DeserializeToJsonExecutor {
                         throw new ParsingException(
                                 String.format("expected '{', actual [%s]", Util.codepointToString(ch)));
                     }
-                    src.eatWhitespaces();
+                    src.eatWhitespacesIfAny();
                     state = 1;
                     break;
                 }
@@ -177,7 +177,7 @@ class DeserializeToJsonExecutor {
                         case '}':
                             return jsonObject;
                         default:
-                            src.moveBack();
+                            src.back();
                             state = 2;
                             break;
                     }
@@ -186,13 +186,13 @@ class DeserializeToJsonExecutor {
                 case 2: {
                     // deserializeJsonKeyValue()
                     String pKey = deserializeToJsonString(src).getString();
-                    src.eatWhitespaces();
-                    src.eatOrThrow(':');
-                    src.eatWhitespaces();
+                    src.eatWhitespacesIfAny();
+                    src.eat(':');
+                    src.eatWhitespacesIfAny();
                     Json pValue = deserializeToJson(src);
 
                     jsonObject.put(pKey, pValue);
-                    src.eatWhitespaces();
+                    src.eatWhitespacesIfAny();
                     state = 3;
                     break;
                 }
@@ -202,7 +202,7 @@ class DeserializeToJsonExecutor {
                         case '}':
                             return jsonObject;
                         case ',':
-                            src.eatWhitespaces();
+                            src.eatWhitespacesIfAny();
                             state = 2;
                             break;
                         default:
@@ -217,7 +217,7 @@ class DeserializeToJsonExecutor {
         }
     }
 
-    private JsonString deserializeToJsonString(CharReader src) {
+    private JsonString deserializeToJsonString(UnicodeProvider src) {
         // state machine go!
         int state = 0;
         StringBuilder sb = new StringBuilder();
@@ -303,11 +303,11 @@ class DeserializeToJsonExecutor {
         }
     }
 
-    private Json deserializeToJsonTrue(CharReader src) {
-        src.eatOrThrow('t');
-        src.eatOrThrow('r');
-        src.eatOrThrow('u');
-        src.eatOrThrow('e');
+    private Json deserializeToJsonTrue(UnicodeProvider src) {
+        src.eat('t');
+        src.eat('r');
+        src.eat('u');
+        src.eat('e');
         return jsonFactory.createJsonBoolean(true);
     }
 }

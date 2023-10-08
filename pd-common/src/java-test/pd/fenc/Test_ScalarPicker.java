@@ -10,13 +10,13 @@ public class Test_ScalarPicker {
 
     @Test
     public void test_pickDottedIdentifier() {
-        CharReader src = new CharReader("a.b.c=");
+        UnicodeProvider src = new UnicodeProvider("a.b.c=");
         assertEquals("a.b.c", picker.pickDottedIdentifier(src));
     }
 
     @Test
     public void test_pickString() {
-        CharReader src = new CharReader("hel\\lo world");
+        UnicodeProvider src = new UnicodeProvider("hel\\lo world");
         assertEquals("hel\\lo", picker.pickString(src, ' '));
         assertEquals(' ', src.next());
     }

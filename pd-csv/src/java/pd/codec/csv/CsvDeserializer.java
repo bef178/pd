@@ -3,9 +3,9 @@ package pd.codec.csv;
 import java.util.LinkedList;
 import java.util.List;
 
-import pd.fenc.CharReader;
 import pd.fenc.Int32Provider;
 import pd.fenc.ParsingException;
+import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 
 class CsvDeserializer {
@@ -13,7 +13,7 @@ class CsvDeserializer {
     static final String CRLF = new String(new char[] { AsciiExtension.CR, AsciiExtension.LF });
 
     public static List<String> deserialize(String csvText) {
-        CharReader src = new CharReader(csvText);
+        UnicodeProvider src = new UnicodeProvider(csvText);
         List<String> fields = new LinkedList<>();
         while (true) {
             String field = pickField(src);
@@ -26,8 +26,8 @@ class CsvDeserializer {
                     fields.add(field);
                     break;
                 default:
-                    src.moveBack();
-                    if (!src.tryEat(CRLF)) {
+                    src.back();
+                    if (!src.tryEatAll(CRLF)) {
                         throw new ParsingException("E: unexpected token");
                     }
                     fields.add(field);
@@ -36,7 +36,7 @@ class CsvDeserializer {
         }
     }
 
-    private static String pickField(CharReader src) {
+    private static String pickField(UnicodeProvider src) {
         final int STATE_READY = 0;
         final int STATE_QUOTED = 1;
         final int STATE_QUOTED2 = 2;
@@ -57,7 +57,7 @@ class CsvDeserializer {
                         case AsciiExtension.COMMA:
                         case AsciiExtension.CR:
                         case AsciiExtension.LF:
-                            src.moveBack();
+                            src.back();
                             return sb.toString();
                         default:
                             sb.appendCodePoint(ch);
@@ -93,7 +93,7 @@ class CsvDeserializer {
                         case AsciiExtension.COMMA:
                         case AsciiExtension.CR:
                         case AsciiExtension.LF:
-                            src.moveBack();
+                            src.back();
                             return sb.toString();
                         default:
                             throw new ParsingException("E: unexpected `" + new String(Character.toChars(ch)) + "`");
@@ -110,7 +110,7 @@ class CsvDeserializer {
                         case AsciiExtension.COMMA:
                         case AsciiExtension.CR:
                         case AsciiExtension.LF:
-                            src.moveBack();
+                            src.back();
                             return sb.toString();
                         default:
                             sb.appendCodePoint(ch);

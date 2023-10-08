@@ -1,24 +1,24 @@
 package pd.server.http;
 
-import static pd.fenc.Int32Provider.EOF;
-import static pd.util.AsciiExtension.CR;
-import static pd.util.AsciiExtension.HT;
-import static pd.util.AsciiExtension.LF;
-import static pd.util.AsciiExtension.SP;
-
 import java.io.InputStream;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import pd.fenc.CharReader;
-import pd.fenc.Int32Provider;
 import pd.fenc.InstallmentByteBuffer;
+import pd.fenc.Int32Provider;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
+import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 import pd.util.Int32ArrayExtension;
+
+import static pd.fenc.Int32Provider.EOF;
+import static pd.util.AsciiExtension.CR;
+import static pd.util.AsciiExtension.HT;
+import static pd.util.AsciiExtension.LF;
+import static pd.util.AsciiExtension.SP;
 
 public class HttpMessageParser {
 
@@ -31,7 +31,7 @@ public class HttpMessageParser {
 
     private static final String CRLF = "\r\n";
 
-    private final CharReader src;
+    private final UnicodeProvider src;
 
     // for PU log
     private final InstallmentByteBuffer raw = new InstallmentByteBuffer();
@@ -53,7 +53,7 @@ public class HttpMessageParser {
     }
 
     public HttpMessageParser(InputStream inputStream, int capacity) {
-        this.src = new CharReader(Int32Provider.wrap(inputStream)) {
+        this.src = new UnicodeProvider(Int32Provider.wrap(inputStream)) {
             @Override
             public int next() {
                 int ch = super.next();
@@ -90,18 +90,18 @@ public class HttpMessageParser {
 
         httpVersion = pickHttpVersion(src);
 
-        if (!src.tryEat(CRLF)) {
+        if (!src.tryEatAll(CRLF)) {
             throw new ParsingException(ERR_INVALID_HTTP_FORMAT);
         }
 
         httpHeaders = pickHttpHeaders(src);
 
-        if (!src.tryEat(CRLF)) {
+        if (!src.tryEatAll(CRLF)) {
             throw new ParsingException(ERR_INVALID_HTTP_FORMAT);
         }
     }
 
-    private Map.Entry<String, String> pickHttpHeaderEntry(CharReader it) {
+    private Map.Entry<String, String> pickHttpHeaderEntry(UnicodeProvider it) {
         StringBuilder sb = new StringBuilder();
         String key = null;
         int state = 0;
@@ -114,7 +114,7 @@ public class HttpMessageParser {
                         sb.appendCodePoint(ch);
                         state = 1;
                     } else if (ch == CR) {
-                        it.moveBack();
+                        it.back();
                         return null;
                     } else {
                         throw new ParsingException(ERR_INVALID_HTTP_HEADER);
@@ -162,7 +162,7 @@ public class HttpMessageParser {
         }
     }
 
-    private List<Map.Entry<String, String>> pickHttpHeaders(CharReader it) {
+    private List<Map.Entry<String, String>> pickHttpHeaders(UnicodeProvider it) {
         List<Map.Entry<String, String>> httpHeaders = new LinkedList<>();
         while (true) {
             Map.Entry<String, String> entry = pickHttpHeaderEntry(it);
@@ -174,12 +174,12 @@ public class HttpMessageParser {
         return httpHeaders;
     }
 
-    private String pickHttpMethod(CharReader it) {
+    private String pickHttpMethod(UnicodeProvider it) {
         return new ScalarPicker().pickString(it, ' ');
     }
 
-    private String pickHttpVersion(CharReader it) {
-        if (!it.tryEat("HTTP/")) {
+    private String pickHttpVersion(UnicodeProvider it) {
+        if (!it.tryEatAll("HTTP/")) {
             throw new ParsingException(ERR_INVALID_HTTP_VERSION);
         }
 
@@ -206,7 +206,7 @@ public class HttpMessageParser {
      * "#" => "" <br/>
      * EOF => null <br/>
      */
-    private String pickUriFragment(CharReader it) {
+    private String pickUriFragment(UnicodeProvider it) {
         if (!it.tryEat('#')) {
             return null;
         }
@@ -215,7 +215,7 @@ public class HttpMessageParser {
             int ch = it.hasNext() ? it.next() : EOF;
             if (ch == EOF || ch == ' ') {
                 if (ch != EOF) {
-                    it.moveBack();
+                    it.back();
                 }
                 break;
             } else if (!AsciiExtension.isVisible(ch)) {
@@ -230,14 +230,14 @@ public class HttpMessageParser {
     /**
      * stop in front of any terminator
      */
-    private String pickUriPath(CharReader it) {
+    private String pickUriPath(UnicodeProvider it) {
         int[] terminators = new int[] { '?', '#', ' ' };
         StringBuilder sb = new StringBuilder();
         while (true) {
             int ch = it.hasNext() ? it.next() : EOF;
             if (Int32ArrayExtension.contains(terminators, ch)) {
                 if (ch != EOF) {
-                    it.moveBack();
+                    it.back();
                 }
                 break;
             } else if (!AsciiExtension.isVisible(ch)) {
@@ -253,7 +253,7 @@ public class HttpMessageParser {
      * "" => null<br/>
      * "?" => empty<br/>
      */
-    private List<Map.Entry<String, String>> pickUriQuery(CharReader it) {
+    private List<Map.Entry<String, String>> pickUriQuery(UnicodeProvider it) {
         if (!it.tryEat('?')) {
             return null;
         }
@@ -273,7 +273,7 @@ public class HttpMessageParser {
      * charset: visible ascii<br/>
      * a&a=&a=a
      */
-    private Map.Entry<String, String> pickUriQueryEntry(CharReader it) {
+    private Map.Entry<String, String> pickUriQueryEntry(UnicodeProvider it) {
         int[] terminators = new int[] { '#', ' ' };
         StringBuilder sb = new StringBuilder();
         String key = null;
@@ -285,7 +285,7 @@ public class HttpMessageParser {
                     int ch = it.hasNext() ? it.next() : EOF;
                     if (Int32ArrayExtension.contains(terminators, ch)) {
                         if (ch != EOF) {
-                            it.moveBack();
+                            it.back();
                         }
                         return null;
                     } else if (!AsciiExtension.isVisible(ch)) {
@@ -304,7 +304,7 @@ public class HttpMessageParser {
                     int ch = it.hasNext() ? it.next() : EOF;
                     if (Int32ArrayExtension.contains(terminators, ch)) {
                         if (ch != EOF) {
-                            it.moveBack();
+                            it.back();
                         }
                         key = sb.toString();
                         return new SimpleImmutableEntry<>(key, "");
@@ -327,7 +327,7 @@ public class HttpMessageParser {
                     int ch = it.hasNext() ? it.next() : EOF;
                     if (Int32ArrayExtension.contains(terminators, ch)) {
                         if (ch != EOF) {
-                            it.moveBack();
+                            it.back();
                         }
                         return new SimpleImmutableEntry<>(key, "");
                     } else if (!AsciiExtension.isVisible(ch)) {
@@ -345,7 +345,7 @@ public class HttpMessageParser {
                     int ch = it.hasNext() ? it.next() : EOF;
                     if (Int32ArrayExtension.contains(terminators, ch)) {
                         if (ch != EOF) {
-                            it.moveBack();
+                            it.back();
                         }
                         return new SimpleImmutableEntry<>(key, sb.toString());
                     } else if (!AsciiExtension.isVisible(ch)) {

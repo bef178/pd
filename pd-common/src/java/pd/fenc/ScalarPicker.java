@@ -8,7 +8,7 @@ import static pd.util.AsciiExtension.isDigit;
 
 public class ScalarPicker extends NumberPicker {
 
-    public String pickBackSlashEscapedString(CharReader src, int terminator) {
+    public String pickBackSlashEscapedString(UnicodeProvider src, int terminator) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         if (!tryPickBackSlashEscapedString(src, dst, terminator)) {
@@ -17,7 +17,7 @@ public class ScalarPicker extends NumberPicker {
         return sb.toString();
     }
 
-    public String pickDottedIdentifier(CharReader src) {
+    public String pickDottedIdentifier(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         while (true) {
             if (!pickIdentifier(src, IWriter.unicodeStream(sb))) {
@@ -30,7 +30,7 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public String pickIdentifier(CharReader src) {
+    public String pickIdentifier(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         if (!pickIdentifier(src, IWriter.unicodeStream(sb))) {
             throw new ParsingException();
@@ -42,7 +42,7 @@ public class ScalarPicker extends NumberPicker {
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
      * if fail, src.next() will be the illegal character
      */
-    private boolean pickIdentifier(CharReader src, IWriter dst) {
+    private boolean pickIdentifier(UnicodeProvider src, IWriter dst) {
         int stat = 0;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -52,7 +52,7 @@ public class ScalarPicker extends NumberPicker {
                         dst.push(ch);
                         stat = 1;
                     } else {
-                        src.moveBack();
+                        src.back();
                         return false;
                     }
                     break;
@@ -60,7 +60,7 @@ public class ScalarPicker extends NumberPicker {
                     if (isAlpha(ch) || ch == '_' || isDigit(ch)) {
                         dst.push(ch);
                     } else {
-                        src.moveBack();
+                        src.back();
                         return true;
                     }
                     break;
@@ -70,7 +70,7 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public String pickString(CharReader src, int... closingSymbols) {
+    public String pickString(UnicodeProvider src, int... closingSymbols) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
         if (!tryPickString(src, dst, closingSymbols)) {
@@ -86,7 +86,7 @@ public class ScalarPicker extends NumberPicker {
      * - `terminator` can be `EOF`<br/>
      * Will fail in front of `EOF`<br/>
      */
-    public boolean tryPickBackSlashEscapedString(CharReader src, IWriter dst, int terminator) {
+    public boolean tryPickBackSlashEscapedString(UnicodeProvider src, IWriter dst, int terminator) {
         boolean isEscaping = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -98,7 +98,7 @@ public class ScalarPicker extends NumberPicker {
                 isEscaping = true;
             } else if (ch == terminator) {
                 if (ch != EOF) {
-                    src.moveBack();
+                    src.back();
                 }
                 return true;
             } else if (ch == EOF) {
@@ -110,12 +110,12 @@ public class ScalarPicker extends NumberPicker {
         }
     }
 
-    public boolean tryPickString(CharReader src, IWriter dst, int... terminators) {
+    public boolean tryPickString(UnicodeProvider src, IWriter dst, int... terminators) {
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
             if (Int32ArrayExtension.contains(terminators, ch)) {
                 if (ch != EOF) {
-                    src.moveBack();
+                    src.back();
                 }
                 return true;
             } else if (ch == EOF) {
