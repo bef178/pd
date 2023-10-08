@@ -43,7 +43,7 @@ public class CharReader implements Int32Provider {
     private int backOffset;
 
     public CharReader(CharSequence cs) {
-        this(Int32Provider.unicodeStream(cs));
+        this(Int32Provider.wrap(cs));
     }
 
     public CharReader(Int32Provider src) {
@@ -127,7 +127,7 @@ public class CharReader implements Int32Provider {
     }
 
     public boolean tryEat(String expecteds) {
-        Int32Provider it = Int32Provider.unicodeStream(expecteds);
+        Int32Provider it = Int32Provider.wrap(expecteds);
         while (it.hasNext()) {
             int expected = it.next();
             if (!tryEat(expected)) {

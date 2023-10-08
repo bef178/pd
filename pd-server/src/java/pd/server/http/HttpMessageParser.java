@@ -52,9 +52,8 @@ public class HttpMessageParser {
         this(input, 64 * 1024);
     }
 
-    public HttpMessageParser(InputStream input, int capacity) {
-        this.src = new CharReader(Int32Provider.asciiStream(input)) {
-
+    public HttpMessageParser(InputStream inputStream, int capacity) {
+        this.src = new CharReader(Int32Provider.wrap(inputStream)) {
             @Override
             public int next() {
                 int ch = super.next();
