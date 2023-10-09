@@ -4,32 +4,25 @@ import static pd.fenc.Int32Provider.EOF;
 
 public class NumberPicker {
 
-    /**
-     * exponent := ('E' / 'e') int
-     */
-    void pickExponent(UnicodeProvider src, IWriter dst) {
-        int ch = src.hasNext() ? src.next() : EOF;
-        if (ch == 'E' || ch == 'e') {
-            dst.push(ch);
-            pickInt(src, dst);
-            return;
-        }
-        String actual = new String(Character.toChars(ch));
-        throw new ParsingException(String.format("unexpected [%s], expecting [E] or [e]", actual));
+    public String pickFloatToken(UnicodeProvider src) {
+        StringBuilder sb = new StringBuilder();
+        IWriter dst = IWriter.unicodeStream(sb);
+        pickFloatToken(src, dst);
+        return sb.toString();
     }
 
     /**
      * a number has 3 parts: integer, fraction and exponent
      */
-    public void pickFloat(UnicodeProvider src, IWriter dst) {
-        pickInt(src, dst);
+    void pickFloatToken(UnicodeProvider src, IWriter dst) {
+        pickIntToken(src, dst);
 
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == EOF) {
             return;
         } else if (ch == '.') {
             src.back();
-            pickFraction(src, dst);
+            pickFractionPart(src, dst);
         } else {
             src.back();
         }
@@ -39,7 +32,7 @@ public class NumberPicker {
             return;
         } else if (ch == 'E' || ch == 'e') {
             src.back();
-            pickExponent(src, dst);
+            pickExponentPart(src, dst);
         } else {
             src.back();
         }
@@ -53,23 +46,17 @@ public class NumberPicker {
     }
 
     public float pickFloat32(UnicodeProvider src) {
-        StringBuilder sb = new StringBuilder();
-        pickFloat(src, IWriter.unicodeStream(sb));
-        return Float.parseFloat(sb.toString());
+        return Float.parseFloat(pickFloatToken(src));
     }
 
     public double pickFloat64(UnicodeProvider src) {
-        StringBuilder sb = new StringBuilder();
-        pickFloat(src, IWriter.unicodeStream(sb));
-        return Double.parseDouble(sb.toString());
+        return Double.parseDouble(pickFloatToken(src));
     }
 
     /**
-     * fraction := '.' 1*digit<br/>
-     * <br/>
-     * specially, "0.0" is valid<br/>
+     * fraction := '.' 1*digit
      */
-    void pickFraction(UnicodeProvider src, IWriter dst) {
+    void pickFractionPart(UnicodeProvider src, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -132,9 +119,30 @@ public class NumberPicker {
     }
 
     /**
+     * exponent := ('E' / 'e') int
+     */
+    void pickExponentPart(UnicodeProvider src, IWriter dst) {
+        int ch = src.hasNext() ? src.next() : EOF;
+        if (ch == 'E' || ch == 'e') {
+            dst.push(ch);
+            pickIntToken(src, dst);
+            return;
+        }
+        String actual = new String(Character.toChars(ch));
+        throw new ParsingException(String.format("unexpected [%s], expecting [E] or [e]", actual));
+    }
+
+    public String pickIntToken(UnicodeProvider src) {
+        StringBuilder sb = new StringBuilder();
+        IWriter dst = IWriter.unicodeStream(sb);
+        pickIntToken(src, dst);
+        return sb.toString();
+    }
+
+    /**
      * pick a valid 10-based integer of string form, per intuition
      */
-    void pickInt(UnicodeProvider src, IWriter dst) {
+    void pickIntToken(UnicodeProvider src, IWriter dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -216,20 +224,14 @@ public class NumberPicker {
     }
 
     public int pickInt32(UnicodeProvider src) {
-        StringBuilder sb = new StringBuilder();
-        pickInt(src, IWriter.unicodeStream(sb));
-        return Integer.parseInt(sb.toString());
+        return Integer.parseInt(pickIntToken(src));
     }
 
     public long pickInt64(UnicodeProvider src) {
-        StringBuilder sb = new StringBuilder();
-        pickInt(src, IWriter.unicodeStream(sb));
-        return Long.parseLong(sb.toString());
+        return Long.parseLong(pickIntToken(src));
     }
 
     public Number pickNumber(UnicodeProvider src) {
-        StringBuilder sb = new StringBuilder();
-        pickFloat(src, IWriter.unicodeStream(sb));
-        return new TextNumber(sb.toString());
+        return new TextNumber(pickFloatToken(src));
     }
 }

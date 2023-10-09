@@ -8,7 +8,6 @@ import pd.codec.json.datatype.JsonNull;
 import pd.codec.json.datatype.JsonNumber;
 import pd.codec.json.datatype.JsonObject;
 import pd.codec.json.datatype.JsonString;
-import pd.fenc.IWriter;
 import pd.fenc.Int32Provider;
 import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
@@ -150,10 +149,8 @@ class DeserializeToJsonExecutor {
     }
 
     private JsonNumber deserializeToJsonNumber(UnicodeProvider src) {
-        StringBuilder sb = new StringBuilder();
-        IWriter dst = IWriter.unicodeStream(sb);
-        new NumberPicker().pickFloat(src, dst);
-        return jsonFactory.createJsonNumber().set(sb.toString());
+        String floatToken = new NumberPicker().pickFloatToken(src);
+        return jsonFactory.createJsonNumber().set(floatToken);
     }
 
     private JsonObject deserializeToJsonObject(UnicodeProvider src) {
