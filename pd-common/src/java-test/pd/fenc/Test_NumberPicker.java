@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 public class Test_NumberPicker {
 
-    private ScalarPicker picker = new ScalarPicker();
+    private NumberPicker picker = new NumberPicker();
 
     @Test
     public void test_parseInt() {

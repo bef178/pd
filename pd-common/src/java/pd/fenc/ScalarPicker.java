@@ -6,7 +6,7 @@ import static pd.fenc.Int32Provider.EOF;
 import static pd.util.AsciiExtension.isAlpha;
 import static pd.util.AsciiExtension.isDigit;
 
-public class ScalarPicker extends NumberPicker {
+public class ScalarPicker {
 
     public String pickBackSlashEscapedString(UnicodeProvider src, int terminator) {
         StringBuilder sb = new StringBuilder();
@@ -40,7 +40,7 @@ public class ScalarPicker extends NumberPicker {
 
     /**
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
-     * if fail, src.next() will be the illegal character
+     * if failed, src.next() will be the illegal character
      */
     private boolean pickIdentifier(UnicodeProvider src, IWriter dst) {
         int stat = 0;

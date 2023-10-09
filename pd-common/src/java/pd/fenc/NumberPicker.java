@@ -2,7 +2,7 @@ package pd.fenc;
 
 import static pd.fenc.Int32Provider.EOF;
 
-class NumberPicker {
+public class NumberPicker {
 
     /**
      * exponent := ('E' / 'e') int

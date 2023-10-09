@@ -10,8 +10,8 @@ import pd.codec.json.datatype.JsonObject;
 import pd.codec.json.datatype.JsonString;
 import pd.fenc.IWriter;
 import pd.fenc.Int32Provider;
+import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
-import pd.fenc.ScalarPicker;
 import pd.fenc.UnicodeProvider;
 import pd.fenc.Util;
 import pd.util.AsciiExtension;
@@ -152,7 +152,7 @@ class DeserializeToJsonExecutor {
     private JsonNumber deserializeToJsonNumber(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         IWriter dst = IWriter.unicodeStream(sb);
-        new ScalarPicker().pickFloat(src, dst);
+        new NumberPicker().pickFloat(src, dst);
         return jsonFactory.createJsonNumber().set(sb.toString());
     }
 
