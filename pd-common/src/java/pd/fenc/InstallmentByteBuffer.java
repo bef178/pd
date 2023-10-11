@@ -5,7 +5,7 @@ import static pd.fenc.Util.checkByte;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class InstallmentByteBuffer implements IWriter {
+public class InstallmentByteBuffer {
 
     /**
      * not a java.io.Reader<br/>
@@ -118,11 +118,6 @@ public class InstallmentByteBuffer implements IWriter {
         return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
     }
 
-    @Override
-    public int position() {
-        return size;
-    }
-
     public InstallmentByteBuffer push(byte[] a) {
         return push(a, 0, a.length);
     }
@@ -158,11 +153,9 @@ public class InstallmentByteBuffer implements IWriter {
         return this;
     }
 
-    @Override
-    public InstallmentByteBuffer push(int ch) {
-        checkByte(ch);
+    public InstallmentByteBuffer push(byte byteValue) {
         setupCapacity(size + 1);
-        put(size++, (byte) ch);
+        put(size++, byteValue);
         return this;
     }
 

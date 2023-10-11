@@ -103,7 +103,7 @@ public class PercentCodec {
         while (i < unicodes.length) {
             int numConsumed = PercentCodec.decode1byte(unicodes, i, dst, 0);
             i += numConsumed;
-            byteBuffer.push(dst[0] & 0xFF);
+            byteBuffer.push(dst[0]);
         }
         return byteBuffer.copyBytes();
     }

@@ -60,7 +60,7 @@ public class HttpMessageParser {
                 if (raw.size() > capacity) {
                     throw new ParsingException("Request too long");
                 }
-                raw.push(ch);
+                raw.push((byte) ch);
                 return ch;
             }
         };
