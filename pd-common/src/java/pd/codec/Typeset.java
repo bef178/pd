@@ -3,17 +3,17 @@ package pd.codec;
 import static pd.fenc.Util.checkPrintableAscii;
 
 import pd.fenc.Int32Provider;
-import pd.fenc.IWriter;
+import pd.fenc.Int32Pusher;
 
 public class Typeset {
 
-    private static void appendBytes(byte[] a, IWriter dst) {
+    private static void appendBytes(byte[] a, Int32Pusher dst) {
         for (int i : a) {
             dst.push(checkPrintableAscii(i & 0xFF));
         }
     }
 
-    private static void appendBytes(Int32Provider src, int srcSize, IWriter dst) {
+    private static void appendBytes(Int32Provider src, int srcSize, Int32Pusher dst) {
         for (int i = 0; i < srcSize; i++) {
             if (!src.hasNext()) {
                 break;
@@ -22,7 +22,7 @@ public class Typeset {
         }
     }
 
-    public static void appendBytes(Int32Provider src, IWriter dst, int numBytesPerLine,
+    public static void appendBytes(Int32Provider src, Int32Pusher dst, int numBytesPerLine,
             int startingOffset, byte[] prefix, byte[] suffix) {
         if (prefix == null) {
             prefix = new byte[0];

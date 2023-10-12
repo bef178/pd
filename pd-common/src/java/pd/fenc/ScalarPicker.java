@@ -10,7 +10,7 @@ public class ScalarPicker {
 
     public String pickBackSlashEscapedString(UnicodeProvider src, int terminator) {
         StringBuilder sb = new StringBuilder();
-        IWriter dst = IWriter.unicodeStream(sb);
+        Int32Pusher dst = Int32Pusher.wrap(sb);
         if (!tryPickBackSlashEscapedString(src, dst, terminator)) {
             throw new ParsingException();
         }
@@ -20,7 +20,7 @@ public class ScalarPicker {
     public String pickDottedIdentifier(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         while (true) {
-            if (!pickIdentifier(src, IWriter.unicodeStream(sb))) {
+            if (!pickIdentifier(src, Int32Pusher.wrap(sb))) {
                 throw new ParsingException();
             }
             if (!src.hasNext() || src.next() != '.') {
@@ -32,7 +32,7 @@ public class ScalarPicker {
 
     public String pickIdentifier(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
-        if (!pickIdentifier(src, IWriter.unicodeStream(sb))) {
+        if (!pickIdentifier(src, Int32Pusher.wrap(sb))) {
             throw new ParsingException();
         }
         return sb.toString();
@@ -42,7 +42,7 @@ public class ScalarPicker {
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
      * if failed, src.next() will be the illegal character
      */
-    private boolean pickIdentifier(UnicodeProvider src, IWriter dst) {
+    private boolean pickIdentifier(UnicodeProvider src, Int32Pusher dst) {
         int stat = 0;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -72,7 +72,7 @@ public class ScalarPicker {
 
     public String pickString(UnicodeProvider src, int... closingSymbols) {
         StringBuilder sb = new StringBuilder();
-        IWriter dst = IWriter.unicodeStream(sb);
+        Int32Pusher dst = Int32Pusher.wrap(sb);
         if (!tryPickString(src, dst, closingSymbols)) {
             throw new ParsingException("Unexpected EOF");
         }
@@ -86,7 +86,7 @@ public class ScalarPicker {
      * - `terminator` can be `EOF`<br/>
      * Will fail in front of `EOF`<br/>
      */
-    public boolean tryPickBackSlashEscapedString(UnicodeProvider src, IWriter dst, int terminator) {
+    public boolean tryPickBackSlashEscapedString(UnicodeProvider src, Int32Pusher dst, int terminator) {
         boolean isEscaping = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -110,7 +110,7 @@ public class ScalarPicker {
         }
     }
 
-    public boolean tryPickString(UnicodeProvider src, IWriter dst, int... terminators) {
+    public boolean tryPickString(UnicodeProvider src, Int32Pusher dst, int... terminators) {
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
             if (Int32ArrayExtension.contains(terminators, ch)) {

@@ -6,7 +6,7 @@ public class NumberPicker {
 
     public String pickFloatToken(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
-        IWriter dst = IWriter.unicodeStream(sb);
+        Int32Pusher dst = Int32Pusher.wrap(sb);
         pickFloatToken(src, dst);
         return sb.toString();
     }
@@ -14,7 +14,7 @@ public class NumberPicker {
     /**
      * a number has 3 parts: integer, fraction and exponent
      */
-    void pickFloatToken(UnicodeProvider src, IWriter dst) {
+    void pickFloatToken(UnicodeProvider src, Int32Pusher dst) {
         pickIntToken(src, dst);
 
         int ch = src.hasNext() ? src.next() : EOF;
@@ -56,7 +56,7 @@ public class NumberPicker {
     /**
      * fraction := '.' 1*digit
      */
-    void pickFractionPart(UnicodeProvider src, IWriter dst) {
+    void pickFractionPart(UnicodeProvider src, Int32Pusher dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -121,7 +121,7 @@ public class NumberPicker {
     /**
      * exponent := ('E' / 'e') int
      */
-    void pickExponentPart(UnicodeProvider src, IWriter dst) {
+    void pickExponentPart(UnicodeProvider src, Int32Pusher dst) {
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == 'E' || ch == 'e') {
             dst.push(ch);
@@ -134,7 +134,7 @@ public class NumberPicker {
 
     public String pickIntToken(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
-        IWriter dst = IWriter.unicodeStream(sb);
+        Int32Pusher dst = Int32Pusher.wrap(sb);
         pickIntToken(src, dst);
         return sb.toString();
     }
@@ -142,7 +142,7 @@ public class NumberPicker {
     /**
      * pick a valid 10-based integer of string form, per intuition
      */
-    void pickIntToken(UnicodeProvider src, IWriter dst) {
+    void pickIntToken(UnicodeProvider src, Int32Pusher dst) {
         int state = 0;
         while (true) {
             switch (state) {
