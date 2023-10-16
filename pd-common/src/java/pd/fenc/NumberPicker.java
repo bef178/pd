@@ -4,6 +4,8 @@ import static pd.fenc.Int32Provider.EOF;
 
 public class NumberPicker {
 
+    private final ScalarPicker scalarPicker = ScalarPicker.singleton();
+
     public String pickFloatToken(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         Int32Pusher dst = Int32Pusher.wrap(sb);
@@ -61,7 +63,7 @@ public class NumberPicker {
         while (true) {
             switch (state) {
                 case 0: {
-                    src.eat('.');
+                    scalarPicker.eat(src, '.');
                     dst.push('.');
                     state = 1;
                     break;

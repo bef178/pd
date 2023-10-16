@@ -5,10 +5,13 @@ import java.util.List;
 
 import pd.fenc.Int32Provider;
 import pd.fenc.ParsingException;
+import pd.fenc.ScalarPicker;
 import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 
 class CsvDeserializer {
+
+    static final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
     static final String CRLF = new String(new char[] { AsciiExtension.CR, AsciiExtension.LF });
 
@@ -27,7 +30,7 @@ class CsvDeserializer {
                     break;
                 default:
                     src.back();
-                    if (!src.tryEatAll(CRLF)) {
+                    if (!scalarPicker.tryEatAll(src, CRLF)) {
                         throw new ParsingException("E: unexpected token");
                     }
                     fields.add(field);

@@ -1,5 +1,8 @@
 package pd.fenc;
 
+import java.util.PrimitiveIterator;
+
+import pd.util.AsciiExtension;
 import pd.util.Int32ArrayExtension;
 
 import static pd.fenc.Int32Provider.EOF;
@@ -133,6 +136,50 @@ public class ScalarPicker {
                 return false;
             } else {
                 dst.push(ch);
+            }
+        }
+    }
+
+    public void eat(UnicodeProvider src, int expected) {
+        if (!tryEat(src, expected)) {
+            throw new ParsingException(String.format(
+                    "E: expected `%s`, actual `%s`", Util.codepointToString(expected), Util.codepointToString(src.peek())));
+        }
+    }
+
+    /**
+     * will stop in front of unexpected value
+     */
+    public boolean tryEat(UnicodeProvider src, int expected) {
+        if (src.hasNext()) {
+            if (src.next() == expected) {
+                return true;
+            } else {
+                src.back();
+                return false;
+            }
+        } else {
+            return expected == EOF;
+        }
+    }
+
+    public boolean tryEatAll(UnicodeProvider src, String s) {
+        PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
+        while (ofInt.hasNext()) {
+            int expected = ofInt.nextInt();
+            if (!tryEat(src, expected)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void eatWhitespacesIfAny(UnicodeProvider src) {
+        while (src.hasNext()) {
+            int ch = src.next();
+            if (!AsciiExtension.isWhitespace(ch)) {
+                src.back();
+                return;
             }
         }
     }

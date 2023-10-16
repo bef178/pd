@@ -1,9 +1,5 @@
 package pd.fenc;
 
-import java.util.PrimitiveIterator;
-
-import pd.util.AsciiExtension;
-
 public class UnicodeProvider implements Int32Provider {
 
     private final Int32Provider src;
@@ -69,53 +65,6 @@ public class UnicodeProvider implements Int32Provider {
             return result;
         } else {
             return EOF;
-        }
-    }
-
-    public void eat(int expected) {
-        if (!tryEat(expected)) {
-            throw new ParsingException(String.format(
-                    "E: expected `%s`, actual `%s`", Util.codepointToString(expected), Util.codepointToString(peek())));
-        }
-    }
-
-    /**
-     * will stop in front of unexpected value
-     */
-    public boolean tryEat(int expected) {
-        if (hasNext()) {
-            if (next() == expected) {
-                return true;
-            } else {
-                back();
-                return false;
-            }
-        } else {
-            return expected == EOF;
-        }
-    }
-
-    public boolean tryEatAll(String s) {
-        return tryEatAll(s.codePoints().iterator());
-    }
-
-    public boolean tryEatAll(PrimitiveIterator.OfInt ofInt) {
-        while (ofInt.hasNext()) {
-            int expected = ofInt.nextInt();
-            if (!tryEat(expected)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public void eatWhitespacesIfAny() {
-        while (hasNext()) {
-            int ch = next();
-            if (!AsciiExtension.isWhitespace(ch)) {
-                back();
-                return;
-            }
         }
     }
 }

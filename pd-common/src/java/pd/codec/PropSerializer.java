@@ -14,7 +14,7 @@ public class PropSerializer {
 
     public static Entry<String, String> deserialize(UnicodeProvider src) {
 
-        src.eatWhitespacesIfAny();
+        scalarPicker.eatWhitespacesIfAny(src);
 
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == '#') {
@@ -25,22 +25,22 @@ public class PropSerializer {
 
         String key = scalarPicker.pickDottedIdentifier(src);
 
-        src.eatWhitespacesIfAny();
+        scalarPicker.eatWhitespacesIfAny(src);
 
-        src.eat('=');
+        scalarPicker.eat(src, '=');
 
-        src.eatWhitespacesIfAny();
+        scalarPicker.eatWhitespacesIfAny(src);
 
         ch = src.hasNext() ? src.next() : EOF;
         if (ch == '\"') {
             String value = scalarPicker.pickBackSlashEscapedString(src, '\"');
             src.next();
-            src.eatWhitespacesIfAny();
-            src.eat(EOF);
+            scalarPicker.eatWhitespacesIfAny(src);
+            scalarPicker.eat(src, EOF);
             return new SimpleImmutableEntry<String, String>(key, value);
         } else {
             src.back();
-            src.eatWhitespacesIfAny();
+            scalarPicker.eatWhitespacesIfAny(src);
             String value = scalarPicker.pickBackSlashEscapedString(src, EOF);
             return new SimpleImmutableEntry<String, String>(key, value);
         }

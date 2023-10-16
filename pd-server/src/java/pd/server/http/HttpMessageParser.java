@@ -78,7 +78,7 @@ public class HttpMessageParser {
     public void parseHttpRequestMessageHead() {
         httpMethod = pickHttpMethod(src);
 
-        if (!src.tryEat(' ')) {
+        if (!scalarPicker.tryEat(src, ' ')) {
             throw new ParsingException(ERR_INVALID_HTTP_FORMAT);
         }
 
@@ -86,19 +86,19 @@ public class HttpMessageParser {
         requestQuery = pickUriQuery(src);
         requestFragment = pickUriFragment(src);
 
-        if (!src.tryEat(' ')) {
+        if (!scalarPicker.tryEat(src, ' ')) {
             throw new ParsingException(ERR_INVALID_HTTP_FORMAT);
         }
 
         httpVersion = pickHttpVersion(src);
 
-        if (!src.tryEatAll(CRLF)) {
+        if (!scalarPicker.tryEatAll(src, CRLF)) {
             throw new ParsingException(ERR_INVALID_HTTP_FORMAT);
         }
 
         httpHeaders = pickHttpHeaders(src);
 
-        if (!src.tryEatAll(CRLF)) {
+        if (!scalarPicker.tryEatAll(src, CRLF)) {
             throw new ParsingException(ERR_INVALID_HTTP_FORMAT);
         }
     }
@@ -181,7 +181,7 @@ public class HttpMessageParser {
     }
 
     private String pickHttpVersion(UnicodeProvider it) {
-        if (!it.tryEatAll("HTTP/")) {
+        if (!scalarPicker.tryEatAll(it, "HTTP/")) {
             throw new ParsingException(ERR_INVALID_HTTP_VERSION);
         }
 
@@ -191,7 +191,7 @@ public class HttpMessageParser {
             throw new ParsingException(ERR_INVALID_HTTP_VERSION);
         }
         sb.appendCodePoint(ch);
-        if (!it.tryEat('.')) {
+        if (!scalarPicker.tryEat(it, '.')) {
             throw new ParsingException(ERR_INVALID_HTTP_VERSION);
         }
         sb.append('.');
@@ -209,7 +209,7 @@ public class HttpMessageParser {
      * EOF => null <br/>
      */
     private String pickUriFragment(UnicodeProvider it) {
-        if (!it.tryEat('#')) {
+        if (!scalarPicker.tryEat(it, '#')) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
@@ -256,7 +256,7 @@ public class HttpMessageParser {
      * "?" => empty<br/>
      */
     private List<Map.Entry<String, String>> pickUriQuery(UnicodeProvider it) {
-        if (!it.tryEat('?')) {
+        if (!scalarPicker.tryEat(it, '?')) {
             return null;
         }
         List<Map.Entry<String, String>> query = new LinkedList<>();

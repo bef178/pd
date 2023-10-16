@@ -11,6 +11,7 @@ import pd.codec.json.datatype.JsonString;
 import pd.fenc.Int32Provider;
 import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
+import pd.fenc.ScalarPicker;
 import pd.fenc.UnicodeProvider;
 import pd.fenc.Util;
 import pd.util.AsciiExtension;
@@ -18,6 +19,8 @@ import pd.util.AsciiExtension;
 class DeserializeToJsonExecutor {
 
     private final JsonFactory jsonFactory;
+
+    private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
     public DeserializeToJsonExecutor(JsonFactory jsonFactory) {
         this.jsonFactory = jsonFactory;
@@ -84,7 +87,7 @@ class DeserializeToJsonExecutor {
                         throw new ParsingException(
                                 String.format("expected '[', actual [%s]", Util.codepointToString(ch)));
                     }
-                    src.eatWhitespacesIfAny();
+                    scalarPicker.eatWhitespacesIfAny(src);
                     state = 1;
                     break;
                 }
@@ -104,7 +107,7 @@ class DeserializeToJsonExecutor {
                 case 2: {
                     // a json
                     jsonArray.append(deserializeToJson(src));
-                    src.eatWhitespacesIfAny();
+                    scalarPicker.eatWhitespacesIfAny(src);
                     state = 3;
                     break;
                 }
@@ -115,7 +118,7 @@ class DeserializeToJsonExecutor {
                         case ']':
                             return jsonArray;
                         case ',':
-                            src.eatWhitespacesIfAny();
+                            scalarPicker.eatWhitespacesIfAny(src);
                             state = 2;
                             break;
                         default:
@@ -131,20 +134,20 @@ class DeserializeToJsonExecutor {
     }
 
     private Json deserializeToJsonFalse(UnicodeProvider src) {
-        src.eat('f');
-        src.eat('a');
-        src.eat('l');
-        src.eat('s');
-        src.eat('e');
+        scalarPicker.eat(src, 'f');
+        scalarPicker.eat(src, 'a');
+        scalarPicker.eat(src, 'l');
+        scalarPicker.eat(src, 's');
+        scalarPicker.eat(src, 'e');
         return jsonFactory.createJsonBoolean(false);
 
     }
 
     private JsonNull deserializeToJsonNull(UnicodeProvider src) {
-        src.eat('n');
-        src.eat('u');
-        src.eat('l');
-        src.eat('l');
+        scalarPicker.eat(src, 'n');
+        scalarPicker.eat(src, 'u');
+        scalarPicker.eat(src, 'l');
+        scalarPicker.eat(src, 'l');
         return jsonFactory.getJsonNull();
     }
 
@@ -164,7 +167,7 @@ class DeserializeToJsonExecutor {
                         throw new ParsingException(
                                 String.format("expected '{', actual [%s]", Util.codepointToString(ch)));
                     }
-                    src.eatWhitespacesIfAny();
+                    scalarPicker.eatWhitespacesIfAny(src);
                     state = 1;
                     break;
                 }
@@ -183,13 +186,13 @@ class DeserializeToJsonExecutor {
                 case 2: {
                     // deserializeJsonKeyValue()
                     String pKey = deserializeToJsonString(src).getString();
-                    src.eatWhitespacesIfAny();
-                    src.eat(':');
-                    src.eatWhitespacesIfAny();
+                    scalarPicker.eatWhitespacesIfAny(src);
+                    scalarPicker.eat(src, ':');
+                    scalarPicker.eatWhitespacesIfAny(src);
                     Json pValue = deserializeToJson(src);
 
                     jsonObject.put(pKey, pValue);
-                    src.eatWhitespacesIfAny();
+                    scalarPicker.eatWhitespacesIfAny(src);
                     state = 3;
                     break;
                 }
@@ -199,7 +202,7 @@ class DeserializeToJsonExecutor {
                         case '}':
                             return jsonObject;
                         case ',':
-                            src.eatWhitespacesIfAny();
+                            scalarPicker.eatWhitespacesIfAny(src);
                             state = 2;
                             break;
                         default:
@@ -301,10 +304,10 @@ class DeserializeToJsonExecutor {
     }
 
     private Json deserializeToJsonTrue(UnicodeProvider src) {
-        src.eat('t');
-        src.eat('r');
-        src.eat('u');
-        src.eat('e');
+        scalarPicker.eat(src, 't');
+        scalarPicker.eat(src, 'r');
+        scalarPicker.eat(src, 'u');
+        scalarPicker.eat(src, 'e');
         return jsonFactory.createJsonBoolean(true);
     }
 }
