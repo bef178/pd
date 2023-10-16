@@ -10,8 +10,9 @@ import static pd.fenc.Int32Provider.EOF;
 
 public class PropSerializer {
 
+    private static final ScalarPicker scalarPicker = ScalarPicker.singleton();
+
     public static Entry<String, String> deserialize(UnicodeProvider src) {
-        ScalarPicker picker = new ScalarPicker();
 
         src.eatWhitespacesIfAny();
 
@@ -22,7 +23,7 @@ public class PropSerializer {
         }
         src.back();
 
-        String key = picker.pickDottedIdentifier(src);
+        String key = scalarPicker.pickDottedIdentifier(src);
 
         src.eatWhitespacesIfAny();
 
@@ -32,7 +33,7 @@ public class PropSerializer {
 
         ch = src.hasNext() ? src.next() : EOF;
         if (ch == '\"') {
-            String value = picker.pickBackSlashEscapedString(src, '\"');
+            String value = scalarPicker.pickBackSlashEscapedString(src, '\"');
             src.next();
             src.eatWhitespacesIfAny();
             src.eat(EOF);
@@ -40,7 +41,7 @@ public class PropSerializer {
         } else {
             src.back();
             src.eatWhitespacesIfAny();
-            String value = picker.pickBackSlashEscapedString(src, EOF);
+            String value = scalarPicker.pickBackSlashEscapedString(src, EOF);
             return new SimpleImmutableEntry<String, String>(key, value);
         }
     }

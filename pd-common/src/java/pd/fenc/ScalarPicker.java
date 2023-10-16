@@ -8,6 +8,16 @@ import static pd.util.AsciiExtension.isDigit;
 
 public class ScalarPicker {
 
+    private static final ScalarPicker one = new ScalarPicker();
+
+    public static ScalarPicker singleton() {
+        return one;
+    }
+
+    private ScalarPicker() {
+        // dummy
+    }
+
     public String pickBackSlashEscapedString(UnicodeProvider src, int terminator) {
         StringBuilder sb = new StringBuilder();
         Int32Pusher dst = Int32Pusher.wrap(sb);

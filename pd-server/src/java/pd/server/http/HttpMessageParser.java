@@ -33,6 +33,8 @@ public class HttpMessageParser {
 
     private final UnicodeProvider src;
 
+    private final ScalarPicker scalarPicker = ScalarPicker.singleton();
+
     // for PU log
     private final InstallmentByteBuffer raw = new InstallmentByteBuffer();
 
@@ -175,7 +177,7 @@ public class HttpMessageParser {
     }
 
     private String pickHttpMethod(UnicodeProvider it) {
-        return new ScalarPicker().pickString(it, ' ');
+        return scalarPicker.pickString(it, ' ');
     }
 
     private String pickHttpVersion(UnicodeProvider it) {
