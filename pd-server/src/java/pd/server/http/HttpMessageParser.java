@@ -92,13 +92,13 @@ public class HttpMessageParser {
 
         httpVersion = pickHttpVersion(src);
 
-        if (!scalarPicker.tryEatAll(src, CRLF)) {
+        if (!scalarPicker.tryEat(src, CRLF)) {
             throw new ParsingException(ERR_INVALID_HTTP_FORMAT);
         }
 
         httpHeaders = pickHttpHeaders(src);
 
-        if (!scalarPicker.tryEatAll(src, CRLF)) {
+        if (!scalarPicker.tryEat(src, CRLF)) {
             throw new ParsingException(ERR_INVALID_HTTP_FORMAT);
         }
     }
@@ -181,7 +181,7 @@ public class HttpMessageParser {
     }
 
     private String pickHttpVersion(UnicodeProvider it) {
-        if (!scalarPicker.tryEatAll(it, "HTTP/")) {
+        if (!scalarPicker.tryEat(it, "HTTP/")) {
             throw new ParsingException(ERR_INVALID_HTTP_VERSION);
         }
 

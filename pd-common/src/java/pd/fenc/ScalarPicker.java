@@ -163,7 +163,15 @@ public class ScalarPicker {
         }
     }
 
-    public boolean tryEatAll(UnicodeProvider src, String s) {
+    public void eat(UnicodeProvider src, String s) {
+        PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
+        while (ofInt.hasNext()) {
+            int expected = ofInt.nextInt();
+            eat(src, expected);
+        }
+    }
+
+    public boolean tryEat(UnicodeProvider src, String s) {
         PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
         while (ofInt.hasNext()) {
             int expected = ofInt.nextInt();

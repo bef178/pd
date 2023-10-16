@@ -30,7 +30,7 @@ class CsvDeserializer {
                     break;
                 default:
                     src.back();
-                    if (!scalarPicker.tryEatAll(src, CRLF)) {
+                    if (!scalarPicker.tryEat(src, CRLF)) {
                         throw new ParsingException("E: unexpected token");
                     }
                     fields.add(field);

@@ -134,20 +134,13 @@ class DeserializeToJsonExecutor {
     }
 
     private Json deserializeToJsonFalse(UnicodeProvider src) {
-        scalarPicker.eat(src, 'f');
-        scalarPicker.eat(src, 'a');
-        scalarPicker.eat(src, 'l');
-        scalarPicker.eat(src, 's');
-        scalarPicker.eat(src, 'e');
+        scalarPicker.eat(src, "false");
         return jsonFactory.createJsonBoolean(false);
 
     }
 
     private JsonNull deserializeToJsonNull(UnicodeProvider src) {
-        scalarPicker.eat(src, 'n');
-        scalarPicker.eat(src, 'u');
-        scalarPicker.eat(src, 'l');
-        scalarPicker.eat(src, 'l');
+        scalarPicker.eat(src, "null");
         return jsonFactory.getJsonNull();
     }
 
@@ -304,10 +297,7 @@ class DeserializeToJsonExecutor {
     }
 
     private Json deserializeToJsonTrue(UnicodeProvider src) {
-        scalarPicker.eat(src, 't');
-        scalarPicker.eat(src, 'r');
-        scalarPicker.eat(src, 'u');
-        scalarPicker.eat(src, 'e');
+        scalarPicker.eat(src, "true");
         return jsonFactory.createJsonBoolean(true);
     }
 }
