@@ -8,13 +8,14 @@ import pd.codec.json.datatype.JsonNull;
 import pd.codec.json.datatype.JsonNumber;
 import pd.codec.json.datatype.JsonObject;
 import pd.codec.json.datatype.JsonString;
-import pd.fenc.Int32Provider;
 import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.fenc.UnicodeProvider;
 import pd.fenc.Util;
 import pd.util.AsciiExtension;
+
+import static pd.fenc.ScalarPicker.EOF;
 
 class DeserializeToJsonExecutor {
 
@@ -38,7 +39,7 @@ class DeserializeToJsonExecutor {
     }
 
     private Json deserializeToJson(UnicodeProvider src) {
-        int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+        int ch = src.hasNext() ? src.next() : EOF;
         switch (ch) {
             case 'n':
                 src.back();
@@ -82,7 +83,7 @@ class DeserializeToJsonExecutor {
         while (true) {
             switch (state) {
                 case 0: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     if (ch != '[') {
                         throw new ParsingException(
                                 String.format("expected '[', actual [%s]", Util.codepointToString(ch)));
@@ -93,7 +94,7 @@ class DeserializeToJsonExecutor {
                 }
                 case 1: {
                     // a json or the end
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case ']':
                             return jsonArray;
@@ -113,7 +114,7 @@ class DeserializeToJsonExecutor {
                 }
                 case 3: {
                     // a comma or the end
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case ']':
                             return jsonArray;
@@ -155,7 +156,7 @@ class DeserializeToJsonExecutor {
         while (true) {
             switch (state) {
                 case 0: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     if (ch != '{') {
                         throw new ParsingException(
                                 String.format("expected '{', actual [%s]", Util.codepointToString(ch)));
@@ -165,7 +166,7 @@ class DeserializeToJsonExecutor {
                     break;
                 }
                 case 1: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '}':
                             return jsonObject;
@@ -190,7 +191,7 @@ class DeserializeToJsonExecutor {
                     break;
                 }
                 case 3: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '}':
                             return jsonObject;
@@ -217,7 +218,7 @@ class DeserializeToJsonExecutor {
         while (true) {
             switch (state) {
                 case 0: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     if (ch != '\"') {
                         throw new ParsingException(
                                 String.format("expected '\"', actual [%s]", Util.codepointToString(ch)));
@@ -226,7 +227,7 @@ class DeserializeToJsonExecutor {
                     break;
                 }
                 case 1: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     if (ch == '\"') {
                         // consume the end delimiter and exit
                         return jsonFactory.createJsonString(sb.toString());
@@ -241,7 +242,7 @@ class DeserializeToJsonExecutor {
                 }
                 case 2: {
                     // escaping
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '\"':
                             state = 1;

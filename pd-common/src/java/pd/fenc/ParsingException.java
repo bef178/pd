@@ -1,7 +1,5 @@
 package pd.fenc;
 
-import static pd.fenc.Int32Provider.EOF;
-
 public class ParsingException extends RuntimeException {
 
     /**
@@ -14,7 +12,7 @@ public class ParsingException extends RuntimeException {
     }
 
     public ParsingException(int actual) {
-        this(String.format("E: unexpected `%s`", actual == EOF ? "EOF" : Util.codepointToString(actual)));
+        this(String.format("E: unexpected value `0x%X`", actual));
     }
 
     public ParsingException(String message) {

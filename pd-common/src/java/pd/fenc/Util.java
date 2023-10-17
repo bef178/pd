@@ -1,12 +1,12 @@
 package pd.fenc;
 
-import static pd.fenc.Int32Provider.EOF;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
 import pd.util.AsciiExtension;
+
+import static pd.fenc.ScalarPicker.EOF;
 
 public final class Util {
 

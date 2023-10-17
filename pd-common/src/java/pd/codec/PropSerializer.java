@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import pd.fenc.ScalarPicker;
 import pd.fenc.UnicodeProvider;
 
-import static pd.fenc.Int32Provider.EOF;
+import static pd.fenc.ScalarPicker.EOF;
 
 public class PropSerializer {
 

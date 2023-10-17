@@ -2,6 +2,8 @@ package pd.fenc;
 
 public class UnicodeProvider implements Int32Provider {
 
+    private static final int EOF = -1;
+
     private final Int32Provider src;
 
     private final Recent recent = new Recent(2);

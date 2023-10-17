@@ -14,7 +14,7 @@ import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 import pd.util.Int32ArrayExtension;
 
-import static pd.fenc.Int32Provider.EOF;
+import static pd.fenc.ScalarPicker.EOF;
 import static pd.util.AsciiExtension.CR;
 import static pd.util.AsciiExtension.HT;
 import static pd.util.AsciiExtension.LF;

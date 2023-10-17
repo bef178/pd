@@ -7,8 +7,6 @@ import pd.util.InputStreamExtension;
 
 public interface Int32Provider {
 
-    int EOF = -1;
-
     boolean hasNext();
 
     int next();

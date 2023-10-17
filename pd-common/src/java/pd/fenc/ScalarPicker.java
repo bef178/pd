@@ -5,11 +5,12 @@ import java.util.PrimitiveIterator;
 import pd.util.AsciiExtension;
 import pd.util.Int32ArrayExtension;
 
-import static pd.fenc.Int32Provider.EOF;
 import static pd.util.AsciiExtension.isAlpha;
 import static pd.util.AsciiExtension.isDigit;
 
 public class ScalarPicker {
+
+    public static final int EOF = -1;
 
     private static final ScalarPicker one = new ScalarPicker();
 

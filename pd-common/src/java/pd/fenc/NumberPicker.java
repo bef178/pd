@@ -1,6 +1,6 @@
 package pd.fenc;
 
-import static pd.fenc.Int32Provider.EOF;
+import static pd.fenc.ScalarPicker.EOF;
 
 public class NumberPicker {
 

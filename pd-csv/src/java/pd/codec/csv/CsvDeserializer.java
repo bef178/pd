@@ -3,11 +3,12 @@ package pd.codec.csv;
 import java.util.LinkedList;
 import java.util.List;
 
-import pd.fenc.Int32Provider;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
+
+import static pd.fenc.ScalarPicker.EOF;
 
 class CsvDeserializer {
 
@@ -20,9 +21,9 @@ class CsvDeserializer {
         List<String> fields = new LinkedList<>();
         while (true) {
             String field = pickField(src);
-            int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+            int ch = src.hasNext() ? src.next() : EOF;
             switch (ch) {
-                case Int32Provider.EOF:
+                case EOF:
                     fields.add(field);
                     return fields;
                 case AsciiExtension.COMMA:
@@ -50,9 +51,9 @@ class CsvDeserializer {
         while (true) {
             switch (state) {
                 case STATE_READY: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
-                        case Int32Provider.EOF:
+                        case EOF:
                             return sb.toString();
                         case AsciiExtension.DOUBLE_QUOTE:
                             state = STATE_QUOTED;
@@ -70,9 +71,9 @@ class CsvDeserializer {
                     break;
                 }
                 case STATE_QUOTED: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
-                        case Int32Provider.EOF:
+                        case EOF:
                             throw new ParsingException("E: unexpected EOF");
                         case AsciiExtension.DOUBLE_QUOTE:
                             state = STATE_QUOTED2;
@@ -85,9 +86,9 @@ class CsvDeserializer {
                 }
                 case STATE_QUOTED2: {
                     // might be the end of field or start of escaping
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
-                        case Int32Provider.EOF:
+                        case EOF:
                             return sb.toString();
                         case AsciiExtension.DOUBLE_QUOTE:
                             state = STATE_QUOTED;
@@ -104,9 +105,9 @@ class CsvDeserializer {
                     break;
                 }
                 case STATE_UNQUOTED: {
-                    int ch = src.hasNext() ? src.next() : Int32Provider.EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
-                        case Int32Provider.EOF:
+                        case EOF:
                             return sb.toString();
                         case AsciiExtension.DOUBLE_QUOTE:
                             throw new ParsingException("E: unexpected `\"`");
