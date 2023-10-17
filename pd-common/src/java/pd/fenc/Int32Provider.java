@@ -14,10 +14,31 @@ public interface Int32Provider {
     int position();
 
     /**
-     * values in [0,0xFF]
+     * values in [-0x80,0x7F]
      */
     static Int32Provider wrap(InputStream inputStream) {
-        return wrap(InputStreamExtension.toIterator(inputStream));
+        OfInt ofInt = InputStreamExtension.toIterator(inputStream);
+        return new Int32Provider() {
+
+            private int pos = 0;
+
+            @Override
+            public boolean hasNext() {
+                return ofInt.hasNext();
+            }
+
+            @Override
+            public int next() {
+                int value = (byte) ofInt.nextInt();
+                pos++;
+                return value;
+            }
+
+            @Override
+            public int position() {
+                return pos;
+            }
+        };
     }
 
     /**
@@ -27,20 +48,19 @@ public interface Int32Provider {
         return wrap(cs.codePoints().iterator());
     }
 
-    static Int32Provider wrap(OfInt it) {
-
+    static Int32Provider wrap(OfInt ofInt) {
         return new Int32Provider() {
 
             private int pos = 0;
 
             @Override
             public boolean hasNext() {
-                return it.hasNext();
+                return ofInt.hasNext();
             }
 
             @Override
             public int next() {
-                int value = it.nextInt();
+                int value = ofInt.nextInt();
                 pos++;
                 return value;
             }
