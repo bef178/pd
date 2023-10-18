@@ -1,9 +1,11 @@
 package pd.fenc;
 
+import java.io.InputStream;
+
 /**
  * limited backable int32 provider
  */
-public class Int32Feeder implements Int32Provider {
+public class Int32Feeder extends Int32Provider {
 
     private final Int32Provider src;
 
@@ -11,11 +13,15 @@ public class Int32Feeder implements Int32Provider {
 
     private int nBack;
 
+    public Int32Feeder(InputStream inputStream) {
+        this(Int32Provider.wrap(inputStream));
+    }
+
     public Int32Feeder(CharSequence cs) {
         this(Int32Provider.wrap(cs));
     }
 
-    public Int32Feeder(Int32Provider src) {
+    Int32Feeder(Int32Provider src) {
         this.src = src;
         this.nBack = 0;
     }

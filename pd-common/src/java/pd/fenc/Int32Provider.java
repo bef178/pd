@@ -5,13 +5,13 @@ import java.util.PrimitiveIterator.OfInt;
 
 import pd.util.InputStreamExtension;
 
-public interface Int32Provider {
+abstract class Int32Provider {
 
-    boolean hasNext();
+    abstract boolean hasNext();
 
-    int next();
+    abstract int next();
 
-    int position();
+    abstract int position();
 
     /**
      * values in [-0x80,0x7F]

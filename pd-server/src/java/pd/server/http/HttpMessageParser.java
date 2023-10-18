@@ -8,7 +8,6 @@ import java.util.Map;
 
 import pd.fenc.InstallmentByteBuffer;
 import pd.fenc.Int32Feeder;
-import pd.fenc.Int32Provider;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.util.AsciiExtension;
@@ -55,7 +54,7 @@ public class HttpMessageParser {
     }
 
     public HttpMessageParser(InputStream inputStream, int capacity) {
-        this.src = new Int32Feeder(Int32Provider.wrap(inputStream)) {
+        this.src = new Int32Feeder(inputStream) {
             @Override
             public int next() {
                 int ch = super.next();

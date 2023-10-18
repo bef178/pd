@@ -1,20 +1,11 @@
 package pd.fenc;
 
-import static pd.fenc.Util.checkByte;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class InstallmentByteBuffer {
 
-    /**
-     * not a java.io.Reader<br/>
-     */
-    public class Reader implements Int32Provider {
-
-        public static final int SEEK_SET = 0;
-        public static final int SEEK_CUR = 1;
-        public static final int SEEK_END = 2;
+    public class Provider extends Int32Provider {
 
         private int pos = 0;
 
@@ -23,57 +14,17 @@ public class InstallmentByteBuffer {
             return pos >= 0 && pos < size();
         }
 
-        public void moveBack() {
-            seek(size - 1);
-        }
-
+        /**
+         * values in [-0x80,0x7F]
+         */
         @Override
         public int next() {
-            if (hasNext()) {
-                return InstallmentByteBuffer.this.get(pos++) & 0xFF;
-            }
-            return -1;
-        }
-
-        public int peek() {
-            if (hasNext()) {
-                return InstallmentByteBuffer.this.get(pos) & 0xFF;
-            }
-            return -1;
+            return InstallmentByteBuffer.this.get(pos++);
         }
 
         @Override
         public int position() {
             return pos;
-        }
-
-        public void seek(int pos) {
-            if (pos >= 0 && pos < size) {
-                this.pos = pos;
-                return;
-            }
-            throw new IndexOutOfBoundsException();
-        }
-
-        public void seek(int whence, int offset) {
-            switch (whence) {
-                case SEEK_SET:
-                    whence = 0;
-                    break;
-                case SEEK_CUR:
-                    whence = pos;
-                    break;
-                case SEEK_END:
-                    whence = size;
-                    break;
-                default:
-                    throw new IllegalArgumentException();
-            }
-            seek(whence + offset);
-        }
-
-        public int size() {
-            return InstallmentByteBuffer.this.size();
         }
     }
 
@@ -114,7 +65,7 @@ public class InstallmentByteBuffer {
         return bytes;
     }
 
-    private int get(int pos) {
+    private byte get(int pos) {
         return savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK];
     }
 
@@ -163,8 +114,8 @@ public class InstallmentByteBuffer {
         savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK] = b;
     }
 
-    public Reader reader() {
-        return new Reader();
+    public Provider provider() {
+        return new Provider();
     }
 
     private void setupCapacity(int newCapacity) {
