@@ -1,8 +1,9 @@
 package pd.fenc;
 
-public class UnicodeProvider implements Int32Provider {
-
-    private static final int EOF = -1;
+/**
+ * limited backable int32 provider
+ */
+public class Int32Feeder implements Int32Provider {
 
     private final Int32Provider src;
 
@@ -10,11 +11,11 @@ public class UnicodeProvider implements Int32Provider {
 
     private int nBack;
 
-    public UnicodeProvider(CharSequence cs) {
+    public Int32Feeder(CharSequence cs) {
         this(Int32Provider.wrap(cs));
     }
 
-    public UnicodeProvider(Int32Provider src) {
+    public Int32Feeder(Int32Provider src) {
         this.src = src;
         this.nBack = 0;
     }
@@ -34,9 +35,6 @@ public class UnicodeProvider implements Int32Provider {
             return recent.get(-nBack--);
         }
         int value = src.next(); // let it throw if no next value
-        if (value < 0 || value > 0x10FFFF) {
-            throw new ParsingException(String.format("E: upstream should value in [0,0x10FFFF], actual `%d`", value));
-        }
         recent.add(value);
         return value;
     }
@@ -58,15 +56,5 @@ public class UnicodeProvider implements Int32Provider {
         }
         nBack++;
         return true;
-    }
-
-    public int peek() {
-        if (hasNext()) {
-            int result = next();
-            back();
-            return result;
-        } else {
-            return EOF;
-        }
     }
 }

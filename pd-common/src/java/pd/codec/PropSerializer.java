@@ -3,8 +3,8 @@ package pd.codec;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 
+import pd.fenc.Int32Feeder;
 import pd.fenc.ScalarPicker;
-import pd.fenc.UnicodeProvider;
 
 import static pd.fenc.ScalarPicker.EOF;
 
@@ -12,7 +12,7 @@ public class PropSerializer {
 
     private static final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public static Entry<String, String> deserialize(UnicodeProvider src) {
+    public static Entry<String, String> deserialize(Int32Feeder src) {
 
         scalarPicker.eatWhitespacesIfAny(src);
 

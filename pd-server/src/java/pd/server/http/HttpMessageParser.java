@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import pd.fenc.InstallmentByteBuffer;
+import pd.fenc.Int32Feeder;
 import pd.fenc.Int32Provider;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
-import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 import pd.util.Int32ArrayExtension;
 
@@ -31,7 +31,7 @@ public class HttpMessageParser {
 
     private static final String CRLF = "\r\n";
 
-    private final UnicodeProvider src;
+    private final Int32Feeder src;
 
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
@@ -55,7 +55,7 @@ public class HttpMessageParser {
     }
 
     public HttpMessageParser(InputStream inputStream, int capacity) {
-        this.src = new UnicodeProvider(Int32Provider.wrap(inputStream)) {
+        this.src = new Int32Feeder(Int32Provider.wrap(inputStream)) {
             @Override
             public int next() {
                 int ch = super.next();
@@ -103,7 +103,7 @@ public class HttpMessageParser {
         }
     }
 
-    private Map.Entry<String, String> pickHttpHeaderEntry(UnicodeProvider it) {
+    private Map.Entry<String, String> pickHttpHeaderEntry(Int32Feeder it) {
         StringBuilder sb = new StringBuilder();
         String key = null;
         int state = 0;
@@ -164,7 +164,7 @@ public class HttpMessageParser {
         }
     }
 
-    private List<Map.Entry<String, String>> pickHttpHeaders(UnicodeProvider it) {
+    private List<Map.Entry<String, String>> pickHttpHeaders(Int32Feeder it) {
         List<Map.Entry<String, String>> httpHeaders = new LinkedList<>();
         while (true) {
             Map.Entry<String, String> entry = pickHttpHeaderEntry(it);
@@ -176,11 +176,11 @@ public class HttpMessageParser {
         return httpHeaders;
     }
 
-    private String pickHttpMethod(UnicodeProvider it) {
+    private String pickHttpMethod(Int32Feeder it) {
         return scalarPicker.pickString(it, ' ');
     }
 
-    private String pickHttpVersion(UnicodeProvider it) {
+    private String pickHttpVersion(Int32Feeder it) {
         if (!scalarPicker.tryEat(it, "HTTP/")) {
             throw new ParsingException(ERR_INVALID_HTTP_VERSION);
         }
@@ -208,7 +208,7 @@ public class HttpMessageParser {
      * "#" => "" <br/>
      * EOF => null <br/>
      */
-    private String pickUriFragment(UnicodeProvider it) {
+    private String pickUriFragment(Int32Feeder it) {
         if (!scalarPicker.tryEat(it, '#')) {
             return null;
         }
@@ -232,7 +232,7 @@ public class HttpMessageParser {
     /**
      * stop in front of any terminator
      */
-    private String pickUriPath(UnicodeProvider it) {
+    private String pickUriPath(Int32Feeder it) {
         int[] terminators = new int[] { '?', '#', ' ' };
         StringBuilder sb = new StringBuilder();
         while (true) {
@@ -255,7 +255,7 @@ public class HttpMessageParser {
      * "" => null<br/>
      * "?" => empty<br/>
      */
-    private List<Map.Entry<String, String>> pickUriQuery(UnicodeProvider it) {
+    private List<Map.Entry<String, String>> pickUriQuery(Int32Feeder it) {
         if (!scalarPicker.tryEat(it, '?')) {
             return null;
         }
@@ -275,7 +275,7 @@ public class HttpMessageParser {
      * charset: visible ascii<br/>
      * a&a=&a=a
      */
-    private Map.Entry<String, String> pickUriQueryEntry(UnicodeProvider it) {
+    private Map.Entry<String, String> pickUriQueryEntry(Int32Feeder it) {
         int[] terminators = new int[] { '#', ' ' };
         StringBuilder sb = new StringBuilder();
         String key = null;

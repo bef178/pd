@@ -10,13 +10,13 @@ public class Test_ScalarPicker {
 
     @Test
     public void test_pickDottedIdentifier() {
-        UnicodeProvider src = new UnicodeProvider("a.b.c=");
+        Int32Feeder src = new Int32Feeder("a.b.c=");
         assertEquals("a.b.c", scalarPicker.pickDottedIdentifier(src));
     }
 
     @Test
     public void test_pickString() {
-        UnicodeProvider src = new UnicodeProvider("hel\\lo world");
+        Int32Feeder src = new Int32Feeder("hel\\lo world");
         assertEquals("hel\\lo", scalarPicker.pickString(src, ' '));
         assertEquals(' ', src.next());
     }

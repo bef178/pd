@@ -5,7 +5,7 @@ import java.util.List;
 
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
-import pd.fenc.UnicodeProvider;
+import pd.fenc.Int32Feeder;
 import pd.util.AsciiExtension;
 
 import static pd.fenc.ScalarPicker.EOF;
@@ -17,7 +17,7 @@ class CsvDeserializer {
     static final String CRLF = new String(new char[] { AsciiExtension.CR, AsciiExtension.LF });
 
     public static List<String> deserialize(String csvText) {
-        UnicodeProvider src = new UnicodeProvider(csvText);
+        Int32Feeder src = new Int32Feeder(csvText);
         List<String> fields = new LinkedList<>();
         while (true) {
             String field = pickField(src);
@@ -40,7 +40,7 @@ class CsvDeserializer {
         }
     }
 
-    private static String pickField(UnicodeProvider src) {
+    private static String pickField(Int32Feeder src) {
         final int STATE_READY = 0;
         final int STATE_QUOTED = 1;
         final int STATE_QUOTED2 = 2;

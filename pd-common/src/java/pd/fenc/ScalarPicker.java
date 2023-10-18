@@ -22,7 +22,7 @@ public class ScalarPicker {
         // dummy
     }
 
-    public String pickBackSlashEscapedString(UnicodeProvider src, int terminator) {
+    public String pickBackSlashEscapedString(Int32Feeder src, int terminator) {
         StringBuilder sb = new StringBuilder();
         Int32Pusher dst = Int32Pusher.wrap(sb);
         if (!tryPickBackSlashEscapedString(src, dst, terminator)) {
@@ -31,7 +31,7 @@ public class ScalarPicker {
         return sb.toString();
     }
 
-    public String pickDottedIdentifier(UnicodeProvider src) {
+    public String pickDottedIdentifier(Int32Feeder src) {
         StringBuilder sb = new StringBuilder();
         while (true) {
             if (!pickIdentifier(src, Int32Pusher.wrap(sb))) {
@@ -44,7 +44,7 @@ public class ScalarPicker {
         }
     }
 
-    public String pickIdentifier(UnicodeProvider src) {
+    public String pickIdentifier(Int32Feeder src) {
         StringBuilder sb = new StringBuilder();
         if (!pickIdentifier(src, Int32Pusher.wrap(sb))) {
             throw new ParsingException();
@@ -56,7 +56,7 @@ public class ScalarPicker {
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
      * if failed, src.next() will be the illegal character
      */
-    private boolean pickIdentifier(UnicodeProvider src, Int32Pusher dst) {
+    private boolean pickIdentifier(Int32Feeder src, Int32Pusher dst) {
         int stat = 0;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -84,7 +84,7 @@ public class ScalarPicker {
         }
     }
 
-    public String pickString(UnicodeProvider src, int... closingSymbols) {
+    public String pickString(Int32Feeder src, int... closingSymbols) {
         StringBuilder sb = new StringBuilder();
         Int32Pusher dst = Int32Pusher.wrap(sb);
         if (!tryPickString(src, dst, closingSymbols)) {
@@ -100,7 +100,7 @@ public class ScalarPicker {
      * - `terminator` can be `EOF`<br/>
      * Will fail in front of `EOF`<br/>
      */
-    public boolean tryPickBackSlashEscapedString(UnicodeProvider src, Int32Pusher dst, int terminator) {
+    public boolean tryPickBackSlashEscapedString(Int32Feeder src, Int32Pusher dst, int terminator) {
         boolean isEscaping = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -124,7 +124,7 @@ public class ScalarPicker {
         }
     }
 
-    public boolean tryPickString(UnicodeProvider src, Int32Pusher dst, int... terminators) {
+    public boolean tryPickString(Int32Feeder src, Int32Pusher dst, int... terminators) {
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
             if (Int32ArrayExtension.contains(terminators, ch)) {
@@ -141,17 +141,22 @@ public class ScalarPicker {
         }
     }
 
-    public void eat(UnicodeProvider src, int expected) {
+    public void eat(Int32Feeder src, int expected) {
         if (!tryEat(src, expected)) {
-            throw new ParsingException(String.format(
-                    "E: expected `%s`, actual `%s`", Util.codepointToString(expected), Util.codepointToString(src.peek())));
+            if (src.hasNext()) {
+                int value = src.next();
+                src.back();
+                throw new ParsingException(String.format("E: expected `0x%X`, actual `0x%X`", expected, value));
+            } else {
+                throw new ParsingException(String.format("E: expected `0x%X`, actual `EOF`", expected));
+            }
         }
     }
 
     /**
      * will stop in front of unexpected value
      */
-    public boolean tryEat(UnicodeProvider src, int expected) {
+    public boolean tryEat(Int32Feeder src, int expected) {
         if (src.hasNext()) {
             if (src.next() == expected) {
                 return true;
@@ -164,7 +169,7 @@ public class ScalarPicker {
         }
     }
 
-    public void eat(UnicodeProvider src, String s) {
+    public void eat(Int32Feeder src, String s) {
         PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
         while (ofInt.hasNext()) {
             int expected = ofInt.nextInt();
@@ -172,7 +177,7 @@ public class ScalarPicker {
         }
     }
 
-    public boolean tryEat(UnicodeProvider src, String s) {
+    public boolean tryEat(Int32Feeder src, String s) {
         PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
         while (ofInt.hasNext()) {
             int expected = ofInt.nextInt();
@@ -183,7 +188,7 @@ public class ScalarPicker {
         return true;
     }
 
-    public void eatWhitespacesIfAny(UnicodeProvider src) {
+    public void eatWhitespacesIfAny(Int32Feeder src) {
         while (src.hasNext()) {
             int ch = src.next();
             if (!AsciiExtension.isWhitespace(ch)) {
