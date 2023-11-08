@@ -42,10 +42,13 @@ public class Test_PathExtension {
         test_dirname("abc", ".");
         test_dirname("abc//", ".");
         test_dirname("abc/../def", "abc/..");
-        test_dirname("/abc", "/");
-        test_dirname("/", "/");
         test_dirname("abc//.///", "abc");
         test_dirname(".", ".");
+        test_dirname("..", ".");
+        test_dirname("/usr/lib", "/usr");
+        test_dirname("/usr/", "/");
+        test_dirname("/usr", "/");
+        test_dirname("/", "/");
     }
 
     private void test_dirname(String input, String expected) {
