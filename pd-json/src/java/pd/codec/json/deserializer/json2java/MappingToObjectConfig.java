@@ -7,12 +7,12 @@ import java.util.Map;
 
 import pd.codec.json.datatype.Json;
 
-public class DeserializeJsonConfig {
+public class MappingToObjectConfig {
 
 //    private final LinkedHashMap<RefKey<?>, FindJavaTypeFunc<?>> refs = new LinkedHashMap<>();
     private final LinkedHashMap<Class<?>, FindJavaTypeFunc<?>> refs = new LinkedHashMap<>();
 
-    public DeserializeJsonConfig() {
+    public MappingToObjectConfig() {
         register(List.class, ArrayList.class);
         register(Map.class, LinkedHashMap.class);
     }

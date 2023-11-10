@@ -2,7 +2,7 @@ package pd.codec.json.serializer;
 
 import pd.fenc.ParsingException;
 
-public class SerializeJsonConfig {
+public class SerializingConfig {
 
     public String margin = "";
     public String indent = "";
@@ -12,11 +12,11 @@ public class SerializeJsonConfig {
 
     public boolean exportsNull = false;
 
-    public SerializeJsonConfig() {
+    public SerializingConfig() {
         this(Style.CHEATSHEET);
     }
 
-    public SerializeJsonConfig(Style style) {
+    public SerializingConfig(Style style) {
         loadStyle(style);
     }
 
@@ -34,7 +34,7 @@ public class SerializeJsonConfig {
     }
 
     private void loadCheatsheetStyle() {
-        SerializeJsonConfig config = this;
+        SerializingConfig config = this;
         config.margin = "";
         config.indent = "";
         config.eol = "";
@@ -43,7 +43,7 @@ public class SerializeJsonConfig {
     }
 
     private void loadMultilinesStyle() {
-        SerializeJsonConfig config = this;
+        SerializingConfig config = this;
         config.margin = "";
         config.indent = "  ";
         config.eol = "\n";
@@ -55,7 +55,7 @@ public class SerializeJsonConfig {
         if (value == null) {
             throw new NullPointerException("value should not be null");
         }
-        SerializeJsonConfig config = this;
+        SerializingConfig config = this;
         switch (optionKey) {
             case MARGIN:
                 config.margin = value;

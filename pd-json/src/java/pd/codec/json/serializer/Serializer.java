@@ -17,15 +17,11 @@ import pd.codec.json.datatype.JsonString;
 import pd.fenc.ParsingException;
 import pd.util.AsciiExtension;
 
-class SerializeJsonExecutor {
+public class Serializer {
 
-    private final SerializeJsonConfig config;
+    private final SerializingConfig config;
 
-    public SerializeJsonExecutor() {
-        this(new SerializeJsonConfig());
-    }
-
-    public SerializeJsonExecutor(SerializeJsonConfig config) {
+    public Serializer(SerializingConfig config) {
         this.config = config;
     }
 

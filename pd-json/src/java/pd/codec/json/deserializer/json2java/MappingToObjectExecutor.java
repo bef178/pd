@@ -14,11 +14,11 @@ import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
 import pd.file.PathExtension;
 
-public class DeserializeJsonExecutor {
+public class MappingToObjectExecutor {
 
-    public final DeserializeJsonConfig config;
+    public final MappingToObjectConfig config;
 
-    public DeserializeJsonExecutor(DeserializeJsonConfig config) {
+    public MappingToObjectExecutor(MappingToObjectConfig config) {
         this.config = config;
     }
 

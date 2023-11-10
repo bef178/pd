@@ -14,13 +14,13 @@ import pd.codec.json.datatype.JsonNumber;
 import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
 
-public class SerializeToJsonExecutor {
+public class MappingToJsonExecutor {
 
     private final JsonFactory jsonFactory;
 
-    private final SerializeToJsonConfig config;
+    private final MappingToJsonConfig config;
 
-    public SerializeToJsonExecutor(JsonFactory jsonFactory, SerializeToJsonConfig config) {
+    public MappingToJsonExecutor(JsonFactory jsonFactory, MappingToJsonConfig config) {
         this.jsonFactory = jsonFactory;
         this.config = config;
     }

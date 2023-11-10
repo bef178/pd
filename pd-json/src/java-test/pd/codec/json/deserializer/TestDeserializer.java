@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import pd.codec.json.AirJson;
 import pd.codec.json.datafactory.JsonFactory;
 import pd.codec.json.datatype.JsonObject;
 import pd.fun.Cat;
@@ -21,38 +22,38 @@ import static pd.codec.json.BasicTest.json4Text;
 import static pd.codec.json.BasicTest.json5;
 import static pd.codec.json.BasicTest.jsonText;
 
-public class TestJsonDeserializer {
+public class TestDeserializer {
 
-    JsonDeserializer jsonDeserializer = new JsonDeserializer();
+    AirJson airJson = new AirJson();
 
     @Test
-    public void test_JsonCodec_convertToObject() {
-        assertEquals(cat5, jsonDeserializer.deserializeJson(json5, Cat.class));
+    public void test_mapToObject() {
+        assertEquals(cat5, airJson.mapToObject(json5, Cat.class));
     }
 
     @Test
-    public void test_JsonCodec_deserialize() {
-        assertEquals(json, jsonDeserializer.deserializeToJson(jsonText));
+    public void test_deserialize() {
+        assertEquals(json, airJson.deserialize(jsonText));
     }
 
     @Test
-    public void test_JsonCodec_deserialize2() {
-        assertEquals(json2, jsonDeserializer.deserializeToJson(json2Text));
+    public void test_deserialize2() {
+        assertEquals(json2, airJson.deserialize(json2Text));
     }
 
     @Test
-    public void test_JsonCodec_deserialize3_struct() {
-        assertEquals(json3, jsonDeserializer.deserializeToJson(json3Text));
+    public void test_deserialize3_struct() {
+        assertEquals(json3, airJson.deserialize(json3Text));
     }
 
     @Test
-    public void test_JsonCodec_deserialize4_sequence() {
-        assertEquals(json4, jsonDeserializer.deserializeToJson(json4Text));
+    public void test_deserialize4_sequence() {
+        assertEquals(json4, airJson.deserialize(json4Text));
     }
 
     @Test
     public void testDeserializeToDefaultObject() {
-        JsonFactory jsonFactory = jsonDeserializer.getJsonFactory();
+        JsonFactory jsonFactory = airJson.getJsonFactory();
         JsonObject jsonObject = jsonFactory.createJsonObject()
                 .set("a", jsonFactory.createJsonArray()
                         .append(jsonFactory.createJsonString("ae1")))
@@ -63,7 +64,7 @@ public class TestJsonDeserializer {
                         .set("ok1", jsonFactory.createJsonString("op1")))
                 .set("s", jsonFactory.createJsonString("s1"));
 
-        Object o = jsonDeserializer.deserializeJson(jsonObject, Object.class);
+        Object o = airJson.mapToObject(jsonObject, Object.class);
 
         assertEquals(LinkedHashMap.class, o.getClass());
 

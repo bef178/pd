@@ -12,11 +12,11 @@ import pd.fun.Dog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestDeserializeJsonConfig {
+public class TestMappingToObjectConfig {
 
     @Test
     public void test_findByClass() {
-        DeserializeJsonConfig config = new DeserializeJsonConfig();
+        MappingToObjectConfig config = new MappingToObjectConfig();
         config.register(List.class, ArrayList.class);
         config.register(Map.class, LinkedHashMap.class);
 
@@ -26,7 +26,7 @@ public class TestDeserializeJsonConfig {
 
     @Test
     public void test_findByClassWithPathPattern() {
-        DeserializeJsonConfig config = new DeserializeJsonConfig();
+        MappingToObjectConfig config = new MappingToObjectConfig();
         config.register(Object.class, (json, p, c) -> {
             if (p.equals("/animals/[1]")) {
                 return Cat.class;

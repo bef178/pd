@@ -1,16 +1,14 @@
 package pd.codec.json;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertSame;
-
 import org.junit.jupiter.api.Test;
 import pd.codec.json.datafactory.JsonFactory;
 import pd.codec.json.datatype.Json;
 import pd.codec.json.datatype.JsonObject;
-import pd.codec.json.deserializer.JsonDeserializer;
-import pd.codec.json.serializer.JsonSerializer;
 import pd.fun.Cat;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class BasicTest {
 
@@ -118,10 +116,10 @@ public class BasicTest {
                 .set("oo", jsonFactory.createJsonObject());
         String jsonText = "{\"ss\":\"ss\",\"ii\":77,\"ff\":5.5,\"aa\":[\"xx\",\"yy\"],\"bb\":true,\"oo\":{}}";
 
-        assertEquals(jsonText, new JsonSerializer().serializeJson(json));
+        assertEquals(jsonText, new AirJson().serialize(json));
 
-        JsonObject echo = new JsonDeserializer().deserializeToJson(jsonText).asJsonObject();
-        assertEquals(jsonText, new JsonSerializer().serializeJson(echo));
+        JsonObject echo = new AirJson().deserialize(jsonText).asJsonObject();
+        assertEquals(jsonText, new AirJson().serialize(echo));
 
         assertEquals(json, echo);
     }

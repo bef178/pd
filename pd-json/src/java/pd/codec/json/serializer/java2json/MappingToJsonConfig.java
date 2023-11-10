@@ -2,7 +2,7 @@ package pd.codec.json.serializer.java2json;
 
 import java.util.LinkedHashMap;
 
-public class SerializeToJsonConfig {
+public class MappingToJsonConfig {
 
     public final LinkedHashMap<Class<?>, FindJsonInstanceFunc> refs = new LinkedHashMap<>();
 

@@ -17,24 +17,24 @@ import pd.util.AsciiExtension;
 
 import static pd.fenc.ScalarPicker.EOF;
 
-class DeserializeToJsonExecutor {
+public class Deserializer {
 
     private final JsonFactory jsonFactory;
 
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public DeserializeToJsonExecutor(JsonFactory jsonFactory) {
+    public Deserializer(JsonFactory jsonFactory) {
         this.jsonFactory = jsonFactory;
     }
 
     /**
      * `String` => `Json`<br/>
      */
-    public Json deserialize(String jsonText) {
-        if (jsonText == null) {
+    public Json deserialize(String s) {
+        if (s == null) {
             return null;
         }
-        Int32Feeder src = new Int32Feeder(jsonText);
+        Int32Feeder src = new Int32Feeder(s);
         return deserializeToJson(src);
     }
 
