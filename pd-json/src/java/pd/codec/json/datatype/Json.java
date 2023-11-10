@@ -2,8 +2,6 @@ package pd.codec.json.datatype;
 
 import java.io.Serializable;
 
-import pd.codec.json.JsonType;
-
 public interface Json extends Serializable {
 
     default JsonArray asJsonArray() {
@@ -43,4 +41,8 @@ public interface Json extends Serializable {
     }
 
     JsonType getJsonType();
+
+    enum JsonType {
+        OBJECT, ARRAY, STRING, NUMBER, BOOLEAN, NULL;
+    }
 }

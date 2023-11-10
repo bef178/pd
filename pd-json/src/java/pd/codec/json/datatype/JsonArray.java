@@ -2,8 +2,6 @@ package pd.codec.json.datatype;
 
 import java.util.List;
 
-import pd.codec.json.JsonType;
-
 public interface JsonArray extends Json, List<Json> {
 
     @Override

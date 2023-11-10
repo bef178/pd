@@ -1,7 +1,5 @@
 package pd.codec.json.datatype;
 
-import pd.codec.json.JsonType;
-
 public interface JsonNumber extends Json {
 
     default float getFloat32() {

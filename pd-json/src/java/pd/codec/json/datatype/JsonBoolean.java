@@ -1,7 +1,5 @@
 package pd.codec.json.datatype;
 
-import pd.codec.json.JsonType;
-
 public interface JsonBoolean extends Json {
 
     boolean getBoolean();

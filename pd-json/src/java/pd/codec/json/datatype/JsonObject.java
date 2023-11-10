@@ -2,8 +2,6 @@ package pd.codec.json.datatype;
 
 import java.util.Map;
 
-import pd.codec.json.JsonType;
-
 public interface JsonObject extends Json, Map<String, Json> {
 
     @Override
