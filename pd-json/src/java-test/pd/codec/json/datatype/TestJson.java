@@ -1,16 +1,20 @@
-package pd.codec.json;
+package pd.codec.json.datatype;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import pd.codec.json.AirJson;
 import pd.codec.json.datafactory.JsonFactory;
 import pd.codec.json.datatype.Json;
 import pd.codec.json.datatype.JsonObject;
 import pd.fun.Cat;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BasicTest {
+public class TestJson {
 
     private static final JsonFactory jsonFactory = JsonFactory.getFactory();
 
@@ -116,7 +120,7 @@ public class BasicTest {
                 .set("oo", jsonFactory.createJsonObject());
         String jsonText = "{\"ss\":\"ss\",\"ii\":77,\"ff\":5.5,\"aa\":[\"xx\",\"yy\"],\"bb\":true,\"oo\":{}}";
 
-        assertEquals(jsonText, new AirJson().serialize(json));
+        Assertions.assertEquals(jsonText, new AirJson().serialize(json));
 
         JsonObject echo = new AirJson().deserialize(jsonText).asJsonObject();
         assertEquals(jsonText, new AirJson().serialize(echo));
@@ -159,7 +163,16 @@ public class BasicTest {
     }
 
     @Test
-    public void testJsonSequenceEquals() {
+    public void testJsonStringEquals() {
+        Json json = jsonFactory.createJsonString("yes");
+        Json json2 = jsonFactory.createJsonString("yes");
+        assertNotSame(json, json2);
+        assertEquals(json, json2);
+        assertEquals(json.hashCode(), json2.hashCode());
+    }
+
+    @Test
+    public void testJsonArrayEquals() {
         Json json = jsonFactory.createJsonArray()
                 .append(jsonFactory.createJsonString("a"))
                 .append(jsonFactory.createJsonNumber(2));
@@ -172,16 +185,7 @@ public class BasicTest {
     }
 
     @Test
-    public void testJsonStringEquals() {
-        Json json = jsonFactory.createJsonString("yes");
-        Json json2 = jsonFactory.createJsonString("yes");
-        assertNotSame(json, json2);
-        assertEquals(json, json2);
-        assertEquals(json.hashCode(), json2.hashCode());
-    }
-
-    @Test
-    public void testJsonStructEquals() {
+    public void testJsonObjectEquals() {
         Json json = jsonFactory.createJsonObject()
                 .set("a", jsonFactory.createJsonString("1"))
                 .set("b", jsonFactory.createJsonNumber(2));
@@ -191,6 +195,12 @@ public class BasicTest {
         assertNotSame(json, json2);
         assertEquals(json, json2);
         assertEquals(json.hashCode(), json2.hashCode());
+    }
+
+    @Test
+    public void test_JsonNumber_isRoundNumber() {
+        assertTrue(jsonFactory.createJsonNumber(4294967296L).isRoundNumber());
+        assertFalse(jsonFactory.createJsonNumber(5.000001).isRoundNumber());
     }
 
     @Test

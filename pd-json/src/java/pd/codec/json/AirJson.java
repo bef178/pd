@@ -1,16 +1,15 @@
 package pd.codec.json;
 
 import lombok.Getter;
-import lombok.Setter;
 import pd.codec.json.datafactory.JsonFactory;
 import pd.codec.json.datatype.Json;
 import pd.codec.json.deserializer.Deserializer;
-import pd.codec.json.deserializer.json2java.MappingToObjectConfig;
-import pd.codec.json.deserializer.json2java.MappingToObjectExecutor;
+import pd.codec.json.generalizer.Generalizer;
+import pd.codec.json.generalizer.GeneralizingConfig;
 import pd.codec.json.serializer.Serializer;
 import pd.codec.json.serializer.SerializingConfig;
-import pd.codec.json.serializer.java2json.MappingToJsonConfig;
-import pd.codec.json.serializer.java2json.MappingToJsonExecutor;
+import pd.codec.json.specializer.Specializer;
+import pd.codec.json.specializer.SpecializingConfig;
 
 public class AirJson {
 
@@ -21,14 +20,21 @@ public class AirJson {
     }
 
     @Getter
-    @Setter
-    private JsonFactory jsonFactory = JsonFactory.getFactory();
+    private final JsonFactory jsonFactory;
 
     private final SerializingConfig serializingConfig = new SerializingConfig();
 
-    private final MappingToJsonConfig mappingToJsonConfig = new MappingToJsonConfig();
+    private final GeneralizingConfig generalizingConfig = new GeneralizingConfig();
 
-    private final MappingToObjectConfig mappingToObjectConfig = new MappingToObjectConfig();
+    private final SpecializingConfig specializingConfig = new SpecializingConfig();
+
+    public AirJson() {
+        this(JsonFactory.getFactory());
+    }
+
+    public AirJson(JsonFactory jsonFactory) {
+        this.jsonFactory = jsonFactory;
+    }
 
     public AirJson configSerializingStyle(SerializingConfig.Style style) {
         serializingConfig.loadStyle(style);
@@ -40,7 +46,7 @@ public class AirJson {
     }
 
     public Json mapToJson(Object o) {
-        return new MappingToJsonExecutor(jsonFactory, mappingToJsonConfig).convert(o);
+        return new Generalizer(jsonFactory, generalizingConfig).convert(o);
     }
 
     public <T> T deserialize(String s, Class<T> targetClass) {
@@ -52,6 +58,6 @@ public class AirJson {
     }
 
     public <T> T mapToObject(Json json, Class<T> targetClass) {
-        return new MappingToObjectExecutor(mappingToObjectConfig).convert(json, targetClass);
+        return new Specializer(specializingConfig).convert(json, targetClass);
     }
 }

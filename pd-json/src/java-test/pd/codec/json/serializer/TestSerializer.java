@@ -4,16 +4,16 @@ import org.junit.jupiter.api.Test;
 import pd.codec.json.AirJson;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static pd.codec.json.BasicTest.cat5;
-import static pd.codec.json.BasicTest.json;
-import static pd.codec.json.BasicTest.json2;
-import static pd.codec.json.BasicTest.json2Text;
-import static pd.codec.json.BasicTest.json3;
-import static pd.codec.json.BasicTest.json3Text;
-import static pd.codec.json.BasicTest.json4;
-import static pd.codec.json.BasicTest.json4Text;
-import static pd.codec.json.BasicTest.json5;
-import static pd.codec.json.BasicTest.jsonText;
+import static pd.codec.json.datatype.TestJson.cat5;
+import static pd.codec.json.datatype.TestJson.json;
+import static pd.codec.json.datatype.TestJson.json2;
+import static pd.codec.json.datatype.TestJson.json2Text;
+import static pd.codec.json.datatype.TestJson.json3;
+import static pd.codec.json.datatype.TestJson.json3Text;
+import static pd.codec.json.datatype.TestJson.json4;
+import static pd.codec.json.datatype.TestJson.json4Text;
+import static pd.codec.json.datatype.TestJson.json5;
+import static pd.codec.json.datatype.TestJson.jsonText;
 
 public class TestSerializer {
 

@@ -1,7 +1,8 @@
-package pd.codec.json.serializer.java2json;
+package pd.codec.json.generalizer;
 
 import pd.codec.json.datatype.Json;
 
-public interface FindJsonInstanceFunc {
+public interface MapToJsonFunc {
+
     Json map(Class<?> targetClass, Object instance);
 }

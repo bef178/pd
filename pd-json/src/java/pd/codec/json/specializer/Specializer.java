@@ -1,4 +1,4 @@
-package pd.codec.json.deserializer.json2java;
+package pd.codec.json.specializer;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -14,11 +14,11 @@ import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
 import pd.file.PathExtension;
 
-public class MappingToObjectExecutor {
+public class Specializer {
 
-    public final MappingToObjectConfig config;
+    public final SpecializingConfig config;
 
-    public MappingToObjectExecutor(MappingToObjectConfig config) {
+    public Specializer(SpecializingConfig config) {
         this.config = config;
     }
 
@@ -30,6 +30,9 @@ public class MappingToObjectExecutor {
         }
     }
 
+    /**
+     * convert Json things to Java things
+     */
     @SuppressWarnings("unchecked")
     private <T> T convert(Json json, String path, Class<T> targetClass)
             throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,

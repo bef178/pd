@@ -1,4 +1,4 @@
-package pd.codec.json.serializer.java2json;
+package pd.codec.json.generalizer;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -14,19 +14,19 @@ import pd.codec.json.datatype.JsonNumber;
 import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
 
-public class MappingToJsonExecutor {
+public class Generalizer {
 
     private final JsonFactory jsonFactory;
 
-    private final MappingToJsonConfig config;
+    private final GeneralizingConfig config;
 
-    public MappingToJsonExecutor(JsonFactory jsonFactory, MappingToJsonConfig config) {
+    public Generalizer(JsonFactory jsonFactory, GeneralizingConfig config) {
         this.jsonFactory = jsonFactory;
         this.config = config;
     }
 
     /**
-     * `Object` => `Json`<br/>
+     * convert Java things to Json things<br/>
      * adopt public fields only<br/>
      */
     public Json convert(Object o) {

@@ -2,7 +2,7 @@ package pd.codec.json.datafactory;
 
 final class SimpleJsonFactory implements JsonFactory {
 
-    private static SimpleJsonFactory one = new SimpleJsonFactory();
+    private static final SimpleJsonFactory one = new SimpleJsonFactory();
 
     public static SimpleJsonFactory singleton() {
         return one;

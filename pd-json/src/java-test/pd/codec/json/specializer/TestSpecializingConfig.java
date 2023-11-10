@@ -1,4 +1,4 @@
-package pd.codec.json.deserializer.json2java;
+package pd.codec.json.specializer;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,11 +12,11 @@ import pd.fun.Dog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestMappingToObjectConfig {
+public class TestSpecializingConfig {
 
     @Test
     public void test_findByClass() {
-        MappingToObjectConfig config = new MappingToObjectConfig();
+        SpecializingConfig config = new SpecializingConfig();
         config.register(List.class, ArrayList.class);
         config.register(Map.class, LinkedHashMap.class);
 
@@ -26,7 +26,7 @@ public class TestMappingToObjectConfig {
 
     @Test
     public void test_findByClassWithPathPattern() {
-        MappingToObjectConfig config = new MappingToObjectConfig();
+        SpecializingConfig config = new SpecializingConfig();
         config.register(Object.class, (json, p, c) -> {
             if (p.equals("/animals/[1]")) {
                 return Cat.class;

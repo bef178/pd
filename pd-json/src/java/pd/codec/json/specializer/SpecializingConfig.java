@@ -1,4 +1,4 @@
-package pd.codec.json.deserializer.json2java;
+package pd.codec.json.specializer;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -7,12 +7,12 @@ import java.util.Map;
 
 import pd.codec.json.datatype.Json;
 
-public class MappingToObjectConfig {
+public class SpecializingConfig {
 
-//    private final LinkedHashMap<RefKey<?>, FindJavaTypeFunc<?>> refs = new LinkedHashMap<>();
-    private final LinkedHashMap<Class<?>, FindJavaTypeFunc<?>> refs = new LinkedHashMap<>();
+//    private final LinkedHashMap<RefKey<?>, MapToJavaTypeFunc<?>> refs = new LinkedHashMap<>();
+    private final LinkedHashMap<Class<?>, MapToJavaTypeFunc<?>> refs = new LinkedHashMap<>();
 
-    public MappingToObjectConfig() {
+    public SpecializingConfig() {
         register(List.class, ArrayList.class);
         register(Map.class, LinkedHashMap.class);
     }
@@ -22,7 +22,8 @@ public class MappingToObjectConfig {
             throw new IllegalArgumentException();
         }
 
-        FindJavaTypeFunc<T> func = findMapper(targetClass);
+        @SuppressWarnings("unchecked")
+        MapToJavaTypeFunc<T> func = (MapToJavaTypeFunc<T>) refs.get(targetClass);
         if (func != null) {
             return func.map(json, path, targetClass); // TODO should do try-catch?
         }
@@ -30,15 +31,15 @@ public class MappingToObjectConfig {
     }
 
 //    @SuppressWarnings("unchecked")
-//    private <T> FindJavaTypeFunc<T> findFunc(String path, Class<T> targetClass) {
-//        Map.Entry<RefKey<?>, FindJavaTypeFunc<?>> entry;
+//    private <T> MapToJavaTypeFunc<T> findFunc(String path, Class<T> targetClass) {
+//        Map.Entry<RefKey<?>, MapToJavaTypeFunc<?>> entry;
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == targetClass)
 //                .filter(a -> a.getKey().pathPattern != null && matchesFieldPath(a.getKey().pathPattern, path))
 //                .max(Comparator.comparingInt(a -> findFieldPathScore(a.getKey().pathPattern, path)))
 //                .orElse(null);
 //        if (entry != null) {
-//            return (FindJavaTypeFunc<T>) entry.getValue();
+//            return (MapToJavaTypeFunc<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == null)
@@ -46,7 +47,7 @@ public class MappingToObjectConfig {
 //                .max(Comparator.comparingInt(a -> findFieldPathScore(a.getKey().pathPattern, path)))
 //                .orElse(null);
 //        if (entry != null) {
-//            return (FindJavaTypeFunc<T>) entry.getValue();
+//            return (MapToJavaTypeFunc<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == targetClass)
@@ -54,7 +55,7 @@ public class MappingToObjectConfig {
 //                .findFirst()
 //                .orElse(null);
 //        if (entry != null) {
-//            return (FindJavaTypeFunc<T>) entry.getValue();
+//            return (MapToJavaTypeFunc<T>) entry.getValue();
 //        }
 //        entry = refs.entrySet().stream()
 //                .filter(a -> a.getKey().targetClass == null)
@@ -62,26 +63,21 @@ public class MappingToObjectConfig {
 //                .findFirst()
 //                .orElse(null);
 //        if (entry != null) {
-//            return (FindJavaTypeFunc<T>) entry.getValue();
+//            return (MapToJavaTypeFunc<T>) entry.getValue();
 //        }
 //        return null;
 //    }
-
-    @SuppressWarnings("unchecked")
-    private <T> FindJavaTypeFunc<T> findMapper(Class<T> targetClass) {
-        return (FindJavaTypeFunc<T>) refs.get(targetClass);
-    }
 
     public <T> void register(Class<T> targetClass, Class<? extends T> implClass) {
         register(targetClass, (json, p, t) -> implClass);
     }
 
-    public <T> void register(Class<T> targetClass, FindJavaTypeFunc<T> mapper) {
-        if (mapper == null) {
+    public <T> void register(Class<T> targetClass, MapToJavaTypeFunc<T> mapFunc) {
+        if (mapFunc == null) {
             throw new NullPointerException();
         }
         // TODO should log: swapped out `{}` => `{}`", key, old
-        refs.put(targetClass, mapper);
+        refs.put(targetClass, mapFunc);
     }
 
 //    @Data
