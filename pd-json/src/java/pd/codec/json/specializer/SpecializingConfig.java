@@ -5,29 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import pd.codec.json.datatype.Json;
-
 public class SpecializingConfig {
 
 //    private final LinkedHashMap<RefKey<?>, MapToJavaTypeFunc<?>> refs = new LinkedHashMap<>();
-    private final LinkedHashMap<Class<?>, MapToJavaTypeFunc<?>> refs = new LinkedHashMap<>();
+    public final LinkedHashMap<Class<?>, MapToJavaTypeFunc<?>> refs = new LinkedHashMap<>();
 
     public SpecializingConfig() {
         register(List.class, ArrayList.class);
         register(Map.class, LinkedHashMap.class);
-    }
-
-    <T> Class<? extends T> find(Json json, String path, Class<T> targetClass) {
-        if (path == null || targetClass == null) {
-            throw new IllegalArgumentException();
-        }
-
-        @SuppressWarnings("unchecked")
-        MapToJavaTypeFunc<T> func = (MapToJavaTypeFunc<T>) refs.get(targetClass);
-        if (func != null) {
-            return func.map(json, path, targetClass); // TODO should do try-catch?
-        }
-        return null;
     }
 
 //    @SuppressWarnings("unchecked")
@@ -68,16 +53,15 @@ public class SpecializingConfig {
 //        return null;
 //    }
 
-    public <T> void register(Class<T> targetClass, Class<? extends T> implClass) {
-        register(targetClass, (json, p, t) -> implClass);
+    public <T> void register(Class<T> srcClass, Class<? extends T> dstClass) {
+        register(srcClass, (json, p, t) -> dstClass);
     }
 
-    public <T> void register(Class<T> targetClass, MapToJavaTypeFunc<T> mapFunc) {
+    public <T> void register(Class<T> srcClass, MapToJavaTypeFunc<T> mapFunc) {
         if (mapFunc == null) {
             throw new NullPointerException();
         }
-        // TODO should log: swapped out `{}` => `{}`", key, old
-        refs.put(targetClass, mapFunc);
+        refs.put(srcClass, mapFunc);
     }
 
 //    @Data

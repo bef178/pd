@@ -46,25 +46,22 @@ public class Specializer {
             return null;
         }
 
-        Class<? extends T> mappedClass = config.find(json, path, targetClass);
-        if (mappedClass == null) {
-            if (targetClass == Object.class) {
-                mappedClass = inferMappedClass(json);
-            }
-            if (mappedClass == null) {
-                mappedClass = targetClass;
+        Class<? extends T> mappedClass = deduceMappedClassFromConfig(json, path, targetClass);
+        if (mappedClass == Object.class) {
+            mappedClass = deduceMappedClassFromJson(json);
+            if (mappedClass == null || mappedClass == Void.class) {
+                return null;
+            } else if (mappedClass.isInterface()) {
+                mappedClass = deduceMappedClassFromConfig(json, path, mappedClass);
             }
         }
 
-        Class<? extends T> mappedClass1 = config.find(json, path, mappedClass);
-        if (mappedClass1 != null) {
-            mappedClass = mappedClass1;
-        }
-
-        T result = inferBoxedPrimitiveOrStringInstance(json, mappedClass);
+        T result = mapToPrimitiveOrStringIfPossible(json, mappedClass);
         if (result != null) {
             return result;
         }
+
+        // TODO add mapToObject config
 
         if (mappedClass.isInterface()) {
             throw new ParsingException("E: cannot instantiate an interface: " + mappedClass.getName());
@@ -123,11 +120,24 @@ public class Specializer {
         return (T) object;
     }
 
+    <T> Class<? extends T> deduceMappedClassFromConfig(Json json, String path, final Class<T> tClass) {
+        @SuppressWarnings("unchecked")
+        MapToJavaTypeFunc<T> func = (MapToJavaTypeFunc<T>) config.refs.get(tClass);
+        if (func == null) {
+            return tClass;
+        }
+        Class<? extends T> dstClass = func.map(json, path, tClass);
+        if (dstClass == null) {
+            return tClass;
+        }
+        return dstClass;
+    }
+
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> inferMappedClass(Json json) {
+    private <T> Class<? extends T> deduceMappedClassFromJson(Json json) {
         switch (json.getJsonType()) {
             case NULL:
-                return null;
+                return (Class<? extends T>) Void.class;
             case BOOLEAN:
                 return (Class<? extends T>) Boolean.class;
             case NUMBER: {
@@ -147,7 +157,7 @@ public class Specializer {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T inferBoxedPrimitiveOrStringInstance(Json json, Class<? extends T> mappedClass) {
+    private <T> T mapToPrimitiveOrStringIfPossible(Json json, Class<? extends T> mappedClass) {
         if (mappedClass == int.class || mappedClass == Integer.class) {
             return (T) (Integer) json.asJsonNumber().getInt32();
         } else if (mappedClass == long.class || mappedClass == Long.class) {
