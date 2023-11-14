@@ -28,18 +28,18 @@ public abstract class MultithreadingSocketRunner extends SocketRunner {
     protected void dispatchSocket(Socket socket) {
         executor.execute(() -> {
             long startTime = SimpleTime.now().findMillisecondsSinceEpoch();
-            logger.logInfo("{}: run start: {}", socket, TimeExtension.toUtcString(startTime));
+            logger.info("{}: run start: {}", socket, TimeExtension.toUtcString(startTime));
 
             try {
                 executeSocket(socket);
             } catch (Exception e) {
-                logger.logError("{}: exception when executeSocket: {}: {}", logPrefix, e.getClass().getSimpleName(), e.getMessage());
+                logger.error("{}: exception when executeSocket: {}: {}", logPrefix, e.getClass().getSimpleName(), e.getMessage());
             } finally {
                 closeSocket(socket);
             }
 
             long endTime = SimpleTime.now().findMillisecondsSinceEpoch();
-            logger.logInfo("{}: run end: {}, latency: {}",
+            logger.info("{}: run end: {}, latency: {}",
                     socket,
                     TimeExtension.toUtcString(endTime),
                     endTime - startTime);
@@ -52,7 +52,7 @@ public abstract class MultithreadingSocketRunner extends SocketRunner {
         if (executor != null) {
             executor.shutdown();
             executor = null;
-            logger.logInfo("{}: executor shutdown", logPrefix);
+            logger.info("{}: executor shutdown", logPrefix);
         }
     }
 }

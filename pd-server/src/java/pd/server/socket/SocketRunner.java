@@ -49,16 +49,16 @@ public abstract class SocketRunner implements Runnable {
     }
 
     protected void executeSocket(Socket socket) {
-        logger.logInfo("executing socket;" + Thread.currentThread().getId());
+        logger.info("executing socket;" + Thread.currentThread().getId());
     }
 
     protected void closeSocket(Socket socket) {
-        logger.logInfo("closing socket;" + Thread.currentThread().getId());
+        logger.info("closing socket;" + Thread.currentThread().getId());
         if (socket != null && !socket.isClosed()) {
             try {
                 socket.close();
             } catch (Exception e) {
-                logger.logError("E: exception when close socket: {}", e.getMessage());
+                logger.error("E: exception when close socket: {}", e.getMessage());
             }
         }
     }
@@ -70,7 +70,7 @@ public abstract class SocketRunner implements Runnable {
 
         if (runningNotifier != null) {
             synchronized (runningNotifier) {
-                logger.logInfo("{} started", logPrefix);
+                logger.info("{} started", logPrefix);
                 runningNotifier.notify();
             }
         }
@@ -95,19 +95,19 @@ public abstract class SocketRunner implements Runnable {
                 try {
                     dispatchSocket(socket);
                 } catch (Exception e) {
-                    logger.logError("E: exception when onSocket(): {}", e.getMessage());
+                    logger.error("E: exception when onSocket(): {}", e.getMessage());
                 }
             }
         } catch (IOException e) {
-            logger.logError("E: exception: {}", e.getMessage());
+            logger.error("E: exception: {}", e.getMessage());
         }
 
         isStopped.set(true);
-        logger.logInfo("server socket stopped");
+        logger.info("server socket stopped");
     }
 
     public void stop() {
-        logger.logVerbose("stop requested");
+        logger.verbose("stop requested");
         isRunning.set(false);
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {

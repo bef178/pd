@@ -21,7 +21,7 @@ public abstract class SomeServer<T> {
                 }
 
                 if (logger != null) {
-                    logger.logWarning("W: create socket fails, IOException: {}", e.getMessage());
+                    logger.warning("W: create socket fails, IOException: {}", e.getMessage());
                 }
                 try {
                     Thread.sleep(retryInterval);
@@ -62,17 +62,17 @@ public abstract class SomeServer<T> {
 
     private void startServerSocketThread(int port) throws IOException {
         if (acceptorRunner != null && !acceptorRunner.isStopped()) {
-            logger.logError("E: socketAcceptor not stopped");
+            logger.error("E: socketAcceptor not stopped");
             return;
         }
 
         if (acceptorThread != null && acceptorThread.isAlive()) {
-            logger.logError("E: ServerSocketAcceptorThread is already running");
+            logger.error("E: ServerSocketAcceptorThread is already running");
             return;
         }
 
         ServerSocket serverSocket = createServerSocket(port, logger);
-        logger.logInfo("server socket created");
+        logger.info("server socket created");
 
         Object notifier = new Object();
 
@@ -85,14 +85,14 @@ public abstract class SomeServer<T> {
                 try {
                     request = buildRequest(socket);
                 } catch (IOException e) {
-                    logger.logError("E: exception when buildRequest: {}", e.getMessage());
+                    logger.error("E: exception when buildRequest: {}", e.getMessage());
                     return;
                 }
 
                 try {
                     executeRequest(request);
                 } catch (Exception e) {
-                    logger.logError("E: exception when executeRequest: {}: {}", e.getClass().getSimpleName(), e.getMessage());
+                    logger.error("E: exception when executeRequest: {}: {}", e.getClass().getSimpleName(), e.getMessage());
                 }
             }
         };
@@ -100,17 +100,17 @@ public abstract class SomeServer<T> {
         Thread thread = new Thread(acceptorRunner);
         thread.setName(acceptorRunner.findName() + "-" + thread.getId());
         acceptorThread = thread;
-        logger.logInfo("ServerSocketAcceptorThread [{}] created", acceptorThread.getName());
+        logger.info("ServerSocketAcceptorThread [{}] created", acceptorThread.getName());
 
         acceptorThread.start();
         synchronized (notifier) {
             try {
                 notifier.wait();
             } catch (Exception e) {
-                logger.logError("E: notifier exception: {}", e.getMessage());
+                logger.error("E: notifier exception: {}", e.getMessage());
             }
         }
-        logger.logInfo("ServerSocketAcceptorThread [{}] fully started", acceptorThread.getName());
+        logger.info("ServerSocketAcceptorThread [{}] fully started", acceptorThread.getName());
     }
 
     protected abstract T buildRequest(Socket socket) throws IOException;

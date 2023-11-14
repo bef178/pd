@@ -37,12 +37,12 @@ public class SomeApplication extends SomeServer<HttpRequestContext> {
         if (routeResult != null) {
             try {
                 Object result = routeResult.method.invoke(routeResult.controller, request, routeResult.pathParams);
-                logger.logInfo("Controller result: {}", result);
+                logger.info("Controller result: {}", result);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         } else {
-            logger.logWarning("Controller not found");
+            logger.warning("Controller not found");
         }
     }
 

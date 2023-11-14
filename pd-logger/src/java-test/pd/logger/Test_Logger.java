@@ -6,6 +6,6 @@ public class Test_Logger {
 
     @Test
     public void test_Logger() {
-        LoggerManager.singleton().getLogger().logInfo("asdf");
+        LoggerManager.singleton().getLogger().info("asdf");
     }
 }

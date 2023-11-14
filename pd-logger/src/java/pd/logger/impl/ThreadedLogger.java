@@ -24,7 +24,7 @@ public abstract class ThreadedLogger implements Closeable, Logger {
         isRunning.set(true);
         isStopped.set(false);
 
-        myLogger.logVerbose("%s: logger thread started", logPrefix);
+        myLogger.verbose("%s: logger thread started", logPrefix);
 
         synchronized (isRunning) {
             isRunning.notify();
@@ -39,14 +39,14 @@ public abstract class ThreadedLogger implements Closeable, Logger {
             try {
                 logEntry = queue.take();
             } catch (InterruptedException e) {
-                myLogger.logVerbose("%s: logger thread interrupted, %d remaining", logPrefix, queue.size());
+                myLogger.verbose("%s: logger thread interrupted, %d remaining", logPrefix, queue.size());
                 isRunning.set(false);
                 continue;
             }
             doLog(logEntry);
         }
         isStopped.set(true);
-        myLogger.logVerbose("%s: logger thread stopped, %d remaining", logPrefix, queue.size());
+        myLogger.verbose("%s: logger thread stopped, %d remaining", logPrefix, queue.size());
         myLogger.flush();
     });
 
@@ -63,12 +63,12 @@ public abstract class ThreadedLogger implements Closeable, Logger {
 
     protected void add(LogEntry logEntry) {
         if (!isRunning.get()) {
-            myLogger.logVerbose("{}: logger is not running", logPrefix);
+            myLogger.verbose("{}: logger is not running", logPrefix);
             return;
         }
 
         if (!queue.offer(logEntry)) {
-            myLogger.logVerbose("{}: fail to add log message", logPrefix);
+            myLogger.verbose("{}: fail to add log message", logPrefix);
         }
     }
 

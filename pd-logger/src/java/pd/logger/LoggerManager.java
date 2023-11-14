@@ -60,10 +60,10 @@ public class LoggerManager {
         try {
             return buildLogger(properties);
         } catch (IllegalArgumentException e) {
-            ConsoleLogger.defaultInstance.logError("E: unacceptable property: {}", e.getMessage());
+            ConsoleLogger.defaultInstance.error("E: unacceptable property: {}", e.getMessage());
             return null;
         } catch (Exception e) {
-            ConsoleLogger.defaultInstance.logError("E: {}", e.getMessage());
+            ConsoleLogger.defaultInstance.error("E: {}", e.getMessage());
             return null;
         }
     }

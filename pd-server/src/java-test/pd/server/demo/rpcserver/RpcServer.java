@@ -51,7 +51,7 @@ public class RpcServer extends SomeServer<RequestContext> {
                     requestPayload.methodArgs);
             rpcCodec.serializeResponse(result, request.ackStream);
         } catch (Exception e) {
-            logger.logError(e.getMessage());
+            logger.error(e.getMessage());
         }
     }
 
