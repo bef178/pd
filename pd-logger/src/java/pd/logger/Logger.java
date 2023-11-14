@@ -20,5 +20,7 @@ public interface Logger {
 
     void log(LogLevel level, String message, Object... messageParams);
 
+    boolean isEnabled(LogLevel level);
+
     void flush();
 }

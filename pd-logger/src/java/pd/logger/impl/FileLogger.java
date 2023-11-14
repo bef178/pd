@@ -25,7 +25,7 @@ public class FileLogger extends ThreadedLogger {
 
     @Override
     public void log(LogLevel level, String message, Object... messageParams) {
-        if (maxLogLevel == null || level.ordinal() > maxLogLevel.ordinal()) {
+        if (!isEnabled(level)) {
             return;
         }
 
@@ -37,6 +37,11 @@ public class FileLogger extends ThreadedLogger {
         logEntry.messageParams = messageParams;
 
         add(logEntry);
+    }
+
+    @Override
+    public boolean isEnabled(LogLevel level) {
+        return maxLogLevel != null && level != null && level.ordinal() <= maxLogLevel.ordinal();
     }
 
     @Override

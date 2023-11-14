@@ -34,7 +34,7 @@ public class ConsoleLogger implements Logger {
 
     @Override
     public void log(LogLevel level, String message, Object... messageParams) {
-        if (maxLogLevel == null || level.ordinal() > maxLogLevel.ordinal()) {
+        if (!isEnabled(level)) {
             return;
         }
         Writer w = level.ordinal() < LogLevel.INFO.ordinal() ? errWriter : outWriter;
@@ -44,5 +44,10 @@ public class ConsoleLogger implements Logger {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean isEnabled(LogLevel level) {
+        return maxLogLevel != null && level != null && level.ordinal() <= maxLogLevel.ordinal();
     }
 }

@@ -23,6 +23,16 @@ public class DispatchLogger implements Logger {
         }
     }
 
+    @Override
+    public boolean isEnabled(LogLevel level) {
+        for (Logger logger : subscribers) {
+            if (logger.isEnabled(level)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void addLogger(Logger logger) {
         subscribers.add(logger);
     }
