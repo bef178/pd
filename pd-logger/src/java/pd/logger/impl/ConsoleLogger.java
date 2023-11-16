@@ -4,10 +4,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import pd.fenc.CurlyBracketPatternExtension;
 import pd.logger.Logger;
 import pd.logger.LogLevel;
-import pd.time.SimpleTime;
 
 public class ConsoleLogger implements Logger {
 
@@ -33,13 +31,20 @@ public class ConsoleLogger implements Logger {
     }
 
     @Override
-    public void log(LogLevel level, String message, Object... messageParams) {
+    public void log(LogLevel level, Throwable throwable, String message, Object... messageParams) {
         if (!isEnabled(level)) {
             return;
         }
+
+        LogEntry logEntry = new LogEntry();
+        logEntry.logLevel = level;
+        logEntry.message = message;
+        logEntry.messageParams = messageParams;
+        logEntry.throwable = throwable;
+
         Writer w = level.ordinal() < LogLevel.INFO.ordinal() ? errWriter : outWriter;
         try {
-            LoggerUtil.writeLine(w, SimpleTime.now().findMillisecondsSinceEpoch(), LoggerUtil.getHostname(), level, CurlyBracketPatternExtension.format(message, messageParams));
+            LogUtil.writeLine(w, logEntry);
             w.flush();
         } catch (IOException e) {
             e.printStackTrace();

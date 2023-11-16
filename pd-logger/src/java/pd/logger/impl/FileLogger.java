@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import pd.fenc.CurlyBracketPatternExtension;
 import pd.logger.LogLevel;
-import pd.time.SimpleTime;
 import pd.time.TimeExtension;
 
 public class FileLogger extends ThreadedLogger {
@@ -24,17 +22,16 @@ public class FileLogger extends ThreadedLogger {
     }
 
     @Override
-    public void log(LogLevel level, String message, Object... messageParams) {
+    public void log(LogLevel level, Throwable throwable, String message, Object... messageParams) {
         if (!isEnabled(level)) {
             return;
         }
 
         LogEntry logEntry = new LogEntry();
-        logEntry.timestamp = SimpleTime.now().findMillisecondsSinceEpoch();
-        logEntry.hostname = LoggerUtil.getHostname();
         logEntry.logLevel = level;
         logEntry.message = message;
         logEntry.messageParams = messageParams;
+        logEntry.throwable = throwable;
 
         add(logEntry);
     }
@@ -46,11 +43,6 @@ public class FileLogger extends ThreadedLogger {
 
     @Override
     protected void doLog(LogEntry logEntry) {
-        long timestamp = logEntry.timestamp;
-        String hostname = logEntry.hostname;
-        LogLevel level = logEntry.logLevel;
-        String message = CurlyBracketPatternExtension.format(logEntry.message, logEntry.messageParams);
-
         File dir = new File(fileRoot);
         if (!dir.exists()) {
             dir.mkdirs();
@@ -58,10 +50,10 @@ public class FileLogger extends ThreadedLogger {
             throw new RuntimeException(String.format("[%s] is not directory", fileRoot));
         }
 
-        File logFile = new File(fileRoot, buildLogFileBasename(timestamp, hostname, level));
+        File logFile = new File(fileRoot, buildLogFileBasename(logEntry.timestamp, logEntry.hostname, logEntry.logLevel));
 
         try (FileWriter w = new FileWriter(logFile, true)) {
-            LoggerUtil.writeLine(w, timestamp, hostname, level, message);
+            LogUtil.writeLine(w, logEntry);
             w.flush();
         } catch (IOException e) {
             e.printStackTrace();
