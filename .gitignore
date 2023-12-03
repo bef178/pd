@@ -3,3 +3,4 @@ maven-repo/
 out/
 target/
 .*
+*.log

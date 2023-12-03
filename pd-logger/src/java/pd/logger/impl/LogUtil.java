@@ -36,7 +36,7 @@ class LogUtil {
             StringBuilder sb = new StringBuilder();
             sb.append(CurlyBracketPatternExtension.format(logEntry.message, logEntry.messageParams));
             if (logEntry.throwable != null) {
-                sb.append(' ').append(LogUtil.throwableToString(logEntry.throwable));
+                sb.append(' ').append(throwableToString(logEntry.throwable));
             }
             message = sb.toString();
         }
