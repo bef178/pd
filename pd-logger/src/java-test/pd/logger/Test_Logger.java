@@ -11,6 +11,6 @@ public class Test_Logger {
 
     @Test
     public void test_Logger_exception() {
-        LoggerManager.singleton().getLogger().info(new RuntimeException("aaa"), "asdf-{}", 123);
+        LoggerManager.singleton().getLogger().info("asdf-{}", 123, new RuntimeException("aaa"));
     }
 }

@@ -12,8 +12,19 @@ public class LogEntry {
     Object[] messageParams;
     Throwable throwable;
 
-    public LogEntry() {
-        timestamp = SimpleTime.now().findMillisecondsSinceEpoch();
-        hostname = LogUtil.getHostname();
+    public static LogEntry make(LogLevel level, String message, Object... messageParams) {
+        LogEntry logEntry = new LogEntry();
+        logEntry.timestamp = SimpleTime.now().findMillisecondsSinceEpoch();
+        logEntry.hostname = LogUtil.getHostname();
+        logEntry.logLevel = level;
+        logEntry.message = message;
+        logEntry.messageParams = messageParams;
+        if (messageParams != null && messageParams.length > 0) {
+            Object last = messageParams[messageParams.length - 1];
+            if (last instanceof Throwable) {
+                logEntry.throwable = (Throwable) last;
+            }
+        }
+        return logEntry;
     }
 }

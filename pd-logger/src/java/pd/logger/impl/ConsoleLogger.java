@@ -31,20 +31,14 @@ public class ConsoleLogger implements Logger {
     }
 
     @Override
-    public void log(LogLevel level, Throwable throwable, String message, Object... messageParams) {
+    public void log(LogLevel level, String message, Object... messageParams) {
         if (!isEnabled(level)) {
             return;
         }
 
-        LogEntry logEntry = new LogEntry();
-        logEntry.logLevel = level;
-        logEntry.message = message;
-        logEntry.messageParams = messageParams;
-        logEntry.throwable = throwable;
-
         Writer w = level.ordinal() < LogLevel.INFO.ordinal() ? errWriter : outWriter;
         try {
-            LogUtil.writeLine(w, logEntry);
+            LogUtil.writeLine(w, LogEntry.make(level, message, messageParams));
             w.flush();
         } catch (IOException e) {
             e.printStackTrace();

@@ -17,9 +17,9 @@ public class DispatchLogger implements Logger {
     }
 
     @Override
-    public void log(LogLevel level, Throwable throwable, String message, Object... messageParams) {
+    public void log(LogLevel level, String message, Object... messageParams) {
         for (Logger logger : subscribers) {
-            logger.log(level, throwable, message, messageParams);
+            logger.log(level, message, messageParams);
         }
     }
 
