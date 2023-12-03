@@ -21,16 +21,6 @@ public class ConsoleLogger implements Logger {
     }
 
     @Override
-    public void flush() {
-        try {
-            errWriter.flush();
-            outWriter.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
     public void log(LogLevel level, String message, Object... messageParams) {
         if (!isEnabled(level)) {
             return;
@@ -48,5 +38,15 @@ public class ConsoleLogger implements Logger {
     @Override
     public boolean isEnabled(LogLevel level) {
         return maxLogLevel != null && level != null && level.ordinal() <= maxLogLevel.ordinal();
+    }
+
+    @Override
+    public void flush() {
+        try {
+            errWriter.flush();
+            outWriter.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

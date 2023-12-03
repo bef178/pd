@@ -22,14 +22,6 @@ public class FileLogger extends ThreadedLogger {
     }
 
     @Override
-    public void log(LogLevel level, String message, Object... messageParams) {
-        if (!isEnabled(level)) {
-            return;
-        }
-        add(LogEntry.make(level, message, messageParams));
-    }
-
-    @Override
     public boolean isEnabled(LogLevel level) {
         return maxLogLevel != null && level != null && level.ordinal() <= maxLogLevel.ordinal();
     }
@@ -43,7 +35,7 @@ public class FileLogger extends ThreadedLogger {
             throw new RuntimeException(String.format("[%s] is not directory", fileRoot));
         }
 
-        File logFile = new File(fileRoot, buildLogFileBasename(logEntry.timestamp, logEntry.hostname, logEntry.logLevel));
+        File logFile = new File(fileRoot, buildBasename(logEntry.timestamp, logEntry.hostname, logEntry.logLevel));
 
         try (FileWriter w = new FileWriter(logFile, true)) {
             LogUtil.writeLine(w, logEntry);
@@ -53,7 +45,7 @@ public class FileLogger extends ThreadedLogger {
         }
     }
 
-    protected String buildLogFileBasename(long timestamp, String hostname, LogLevel level) {
+    protected String buildBasename(long timestamp, String hostname, LogLevel level) {
         timestamp -= timestamp % fileInterval;
         String timePart = TimeExtension.toUtcString(timestamp, "%04d%02d%02dT%02d%02d%02dZ");
         String logLevelPart = level.ordinal() <= LogLevel.WARNING.ordinal() ? "warning" : "verbose";

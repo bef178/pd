@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 
 import lombok.SneakyThrows;
@@ -14,14 +15,16 @@ import pd.time.TimeExtension;
 class LogUtil {
 
     public static String getHostname() {
-        return System.getenv("HOSTNAME");
-//        try {
-//            return InetAddress.getLocalHost().getHostName();
-//        } catch (UnknownHostException e) {
-//            return "UnknownHostExceptionHostname";
-//        } catch (Exception e) {
-//            return "ExceptionHostname";
-//        }
+        String hostname = System.getenv("HOSTNAME");
+        if (hostname != null) {
+            return hostname;
+        }
+
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static void writeLine(Writer w, LogEntry logEntry) throws IOException {

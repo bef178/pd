@@ -2,8 +2,8 @@ package pd.logger.impl;
 
 import java.util.LinkedHashSet;
 
-import pd.logger.Logger;
 import pd.logger.LogLevel;
+import pd.logger.Logger;
 
 public class Dispatcher implements Logger {
 

@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import pd.logger.LogLevel;
 import pd.logger.Logger;
 
 /**
@@ -61,16 +62,23 @@ public abstract class ThreadedLogger implements Closeable, Logger {
         }
     }
 
-    protected void add(LogEntry logEntry) {
+    @Override
+    public void log(LogLevel level, String message, Object... messageParams) {
+        if (!isEnabled(level)) {
+            return;
+        }
+
         if (!isRunning.get()) {
             myLogger.verbose("{}: logger is not running", logPrefix);
             return;
         }
 
-        if (!queue.offer(logEntry)) {
+        if (!queue.offer(LogEntry.make(level, message, messageParams))) {
             myLogger.verbose("{}: fail to add log message", logPrefix);
         }
     }
+
+    protected abstract void doLog(LogEntry logEntry);
 
     @Override
     public void close() {
@@ -97,6 +105,4 @@ public abstract class ThreadedLogger implements Closeable, Logger {
             }
         }
     }
-
-    abstract protected void doLog(LogEntry logEntry);
 }
