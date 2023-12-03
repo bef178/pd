@@ -5,16 +5,9 @@ import java.util.LinkedHashSet;
 import pd.logger.Logger;
 import pd.logger.LogLevel;
 
-public class DispatchLogger implements Logger {
+public class Dispatcher implements Logger {
 
     LinkedHashSet<Logger> subscribers = new LinkedHashSet<>();
-
-    @Override
-    public void flush() {
-        for (Logger logger : subscribers) {
-            logger.flush();
-        }
-    }
 
     @Override
     public void log(LogLevel level, String message, Object... messageParams) {
@@ -33,7 +26,15 @@ public class DispatchLogger implements Logger {
         return false;
     }
 
-    public void addLogger(Logger logger) {
+    @Override
+    public void flush() {
+        for (Logger logger : subscribers) {
+            logger.flush();
+        }
+    }
+
+    public Dispatcher addLogger(Logger logger) {
         subscribers.add(logger);
+        return this;
     }
 }
