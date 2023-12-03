@@ -4,7 +4,6 @@ public enum LogLevel {
     ERROR, // recoverable unexpected exception and unrecoverable fatal error
     WARNING, // panic, unusual state, potentially harmful
     INFO,
-    PERFORMANCE,
     VERBOSE; // debug, trace
 
     public static final LogLevel MAX_LEVEL = LogLevel.VERBOSE;

@@ -28,7 +28,7 @@ public class PerformanceLogger implements Closeable {
         }
 
         if (logger != null) {
-            logger.log(LogLevel.PERFORMANCE, null, "%s: total %ld millisecond(s)", tag, endTimestamp - startTimestamp);
+            logger.log(LogLevel.INFO, null, "%s: total %ld millisecond(s)", tag, endTimestamp - startTimestamp);
         }
     }
 
