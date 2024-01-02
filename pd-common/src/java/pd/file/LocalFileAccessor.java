@@ -14,6 +14,8 @@ import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import pd.util.PathExtension;
+
 public class LocalFileAccessor implements FileAccessor {
 
     private static final LocalFileAccessor one = new LocalFileAccessor();

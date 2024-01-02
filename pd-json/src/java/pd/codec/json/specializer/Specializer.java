@@ -12,7 +12,7 @@ import pd.codec.json.datatype.Json;
 import pd.codec.json.datatype.JsonArray;
 import pd.codec.json.datatype.JsonObject;
 import pd.fenc.ParsingException;
-import pd.file.PathExtension;
+import pd.util.PathExtension;
 
 public class Specializer {
 

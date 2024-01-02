@@ -1,11 +1,9 @@
-package pd.file;
+package pd.util;
 
 /**
  * pattern:<br/>
- * - `*` matches within a segment of path<br/>
- * as regex: <code>[^/]*</code><br/>
- * // *   - `**` matches a sequence of segments of path<br/>
- * // *     as regex: <code>.*</code><br/>
+ * - `*` matches within a segment of path, as regex: [^/]*<br/>
+ * - `**` matches whole path, as regex: .*<br/>
  */
 public class PathPattern {
 
