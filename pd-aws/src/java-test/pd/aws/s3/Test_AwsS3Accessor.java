@@ -43,6 +43,6 @@ public class Test_AwsS3Accessor {
         byte[] actual = accessor.load("test/for-test.txt");
         assertArrayEquals(bytes, actual);
 
-        assertTrue(accessor.removeRegularFile("test/for-test.txt"));
+        assertTrue(accessor.remove("test/for-test.txt"));
     }
 }

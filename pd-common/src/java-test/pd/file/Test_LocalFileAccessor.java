@@ -4,9 +4,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Test_LocalFileAccessor {
@@ -36,24 +33,5 @@ public class Test_LocalFileAccessor {
     public void test_listAll() {
         List<String> paths = accessor.listAll("src");
         assertTrue(paths.contains("src/java/pd/file/LocalFileAccessor.java"));
-    }
-
-    @Test
-    public void test_listDirectory2() {
-        List<String> paths = accessor.listDirectory2(".");
-        assertNotNull(paths);
-        assertTrue(paths.contains("./pom.xml"));
-        assertTrue(paths.contains("./src"));
-
-        paths = accessor.listDirectory2("./pom.xml");
-        assertNull(paths);
-
-        paths = accessor.listDirectory2("");
-        assertNotNull(paths);
-        assertTrue(paths.contains("pom.xml"));
-        assertTrue(paths.contains("src"));
-
-        paths = accessor.listDirectory2("pom.xml");
-        assertNull(paths);
     }
 }

@@ -157,8 +157,11 @@ public class Main {
 
     public static int removeRemoteDirectory(AwsS3Accessor accessor, String remoteDirectory) {
         stdout("removeRemoteDirectory: {}", remoteDirectory);
+        if (!remoteDirectory.endsWith("/")) {
+            remoteDirectory += "/";
+        }
 
-        boolean isSuccessful = accessor.remove(remoteDirectory, true);
+        boolean isSuccessful = accessor.removeAll(remoteDirectory);
         if (isSuccessful) {
             stdout("removed");
         } else {
@@ -194,7 +197,7 @@ public class Main {
     public static int removeRemoteFile(AwsS3Accessor accessor, String remoteFile) {
         stdout("removeRemoteFile: {}", remoteFile);
 
-        boolean isSuccessful = accessor.removeRegularFile(remoteFile);
+        boolean isSuccessful = accessor.remove(remoteFile);
         if (isSuccessful) {
             stdout("removed");
         } else {

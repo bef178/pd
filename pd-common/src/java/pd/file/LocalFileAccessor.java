@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,10 +24,6 @@ public class LocalFileAccessor implements FileAccessor {
 
     public boolean exists(String path) {
         return Files.exists(Paths.get(path));
-    }
-
-    public boolean isDirectory(String path) {
-        return Files.isDirectory(Paths.get(path));
     }
 
     @Override
@@ -125,16 +122,38 @@ public class LocalFileAccessor implements FileAccessor {
         return fileStat;
     }
 
-    /**
-     * List full paths of directories and regular files directly under this directory.<br/>
-     * Return null if `path` does not identify a directory.<br/>
-     */
-    public List<String> listDirectory2(String path) {
-        try (Stream<Path> stream = Files.list(Paths.get(path))) {
-            return stream.map(Path::toString).collect(Collectors.toList());
-        } catch (IOException e) {
-            return null;
+    @Override
+    public boolean remove(String key) {
+        return new File(key).delete();
+    }
+
+    @Override
+    public boolean removeAll(String keyPrefix) {
+        List<String> paths = list(keyPrefix);
+        if (paths == null) {
+            return false;
         }
+
+        List<File> files = paths.stream().map(File::new).collect(Collectors.toList());
+        while (!files.isEmpty()) {
+            File f = files.remove(0);
+            if (f.isDirectory()) {
+                File[] fSubFiles = f.listFiles();
+                if (fSubFiles == null || fSubFiles.length == 0) {
+                    if (!f.delete()) {
+                        return false;
+                    }
+                } else {
+                    files.add(0, f);
+                    files.addAll(0, Arrays.asList(fSubFiles));
+                }
+            } else if (f.exists()) {
+                if (!f.delete()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public List<FileStat> statAllRegularFiles(String path) {
@@ -163,79 +182,6 @@ public class LocalFileAccessor implements FileAccessor {
             } else {
                 Files.createDirectories(p);
             }
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    /**
-     * rmdir, rmdir -p
-     */
-    public boolean removeDirectory(String path, boolean parents) {
-        if (!isDirectory(path)) {
-            return false;
-        }
-        List<String> paths = listDirectory2(path);
-        if (paths == null || !paths.isEmpty()) {
-            return false;
-        }
-        if (!remove(path, false)) {
-            return false;
-        }
-        if (parents) {
-            removeDirectory(PathExtension.dirname(path), true);
-        }
-        return true;
-    }
-
-    /**
-     * rm -f, rm -rf
-     */
-    @Override
-    public boolean remove(String path, boolean recursive) {
-        if (!exists(path)) {
-            return true;
-        }
-        if (isRegularFile(path)) {
-            return removeRegularFile(path);
-        } else if (isDirectory(path)) {
-            if (!recursive) {
-                return removeDirectory(path, false);
-            }
-            return removeDirectoryRecursively(path);
-        }
-        return false;
-    }
-
-    public boolean removeDirectoryRecursively(String path) {
-        if (!exists(path)) {
-            return true;
-        }
-        if (!isDirectory(path)) {
-            return false;
-        }
-        for (String a : listDirectory2(path)) {
-            if (!removeDirectoryRecursively(a)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Return `true` if the file does not exist or is removed.<br/>
-     */
-    @Override
-    public boolean removeRegularFile(String path) {
-        if (!exists(path)) {
-            return true;
-        }
-        if (!isRegularFile(path)) {
-            return false;
-        }
-        try {
-            Files.delete(Paths.get(path));
             return true;
         } catch (IOException e) {
             return false;

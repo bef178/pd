@@ -29,18 +29,15 @@ public interface FileAccessor {
     FileStat stat(String key);
 
     /**
-     * remove a regular file or directory<br/>
-     * `path` identifies a regular file or a directory<br/>
-     * <br/>
-     * a.k.a. `rm -f, rm -rf`
+     * remove single abstract key<br/>
+     * return `true` if the operation succeeds<br/>
      */
-    boolean remove(String path, boolean recursive);
+    boolean remove(String key);
 
     /**
-     * Remove the regular file identified by `path`.<br/>
-     * Return `true` iff the regular file finally does not exist.<br/>
+     * Remove all keys starting with `keyPrefix`.<br/>
      */
-    boolean removeRegularFile(String path);
+    boolean removeAll(String keyPrefix);
 
     byte[] load(String path);
 

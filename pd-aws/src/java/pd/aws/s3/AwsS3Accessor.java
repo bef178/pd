@@ -99,6 +99,19 @@ public class AwsS3Accessor implements FileAccessor {
                 .collect(Collectors.toList());
     }
 
+    private List<S3Object> listS3Objects(String keyPrefix, int limit) {
+        if (limit <= 0) {
+            return Collections.emptyList();
+        }
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(bucket)
+                .prefix(keyPrefix)
+                .maxKeys(limit)
+                .build();
+        ListObjectsV2Response response = s3Client.listObjectsV2(request);
+        return response.contents();
+    }
+
     @Override
     public FileStat stat(String key) {
         HeadObjectRequest request = HeadObjectRequest.builder()
@@ -113,95 +126,41 @@ public class AwsS3Accessor implements FileAccessor {
         return fileStat;
     }
 
-    public List<S3Object> listS3Objects(String keyPrefix, int limit) {
-        if (limit <= 0) {
-            return Collections.emptyList();
-        }
-
-        ListObjectsV2Request request = ListObjectsV2Request.builder()
+    @Override
+    public boolean remove(String key) {
+        DeleteObjectRequest request = DeleteObjectRequest.builder()
                 .bucket(bucket)
-                .prefix(keyPrefix)
-                .maxKeys(limit)
+                .key(key)
                 .build();
-        ListObjectsV2Response response = s3Client.listObjectsV2(request);
-        return response.contents();
+        DeleteObjectResponse response = s3Client.deleteObject(request);
+        return response.sdkHttpResponse().isSuccessful();
+    }
+
+    public boolean remove(Collection<String> keys) {
+        List<ObjectIdentifier> objectIdentifiers = keys.stream()
+                .map(a -> ObjectIdentifier.builder().key(a).build())
+                .collect(Collectors.toList());
+        return removeObjectIdentifiers(objectIdentifiers);
     }
 
     @Override
-    public boolean remove(String path, boolean recursive) {
-        if (path == null) {
-            throw new IllegalArgumentException("path should not be null");
-        }
-        if (isRegularFile(path)) {
-            // "abc/" could be a valid S3 key
-            removeRegularFile(path);
-        }
-        if (recursive) {
-            if (path.endsWith("/")) {
-                return removeDirectoryRecursively(path);
-            } else {
-                return removeDirectoryRecursively(path + "/");
-            }
-        }
-        return true;
-    }
-
-    public boolean removeDirectoryRecursively(String path) {
-        if (!path.endsWith("/")) {
-            path += "/";
-        }
+    public boolean removeAll(String keyPrefix) {
         while (true) {
-            List<S3Object> s3Objects = listS3Objects(path, 1000);
+            List<S3Object> s3Objects = listS3Objects(keyPrefix, 1000);
             if (s3Objects == null || s3Objects.isEmpty()) {
                 break;
             }
-            if (!removeS3Objects(s3Objects)) {
+            List<ObjectIdentifier> objectIdentifiers = s3Objects.stream()
+                    .map(a -> ObjectIdentifier.builder().key(a.key()).build())
+                    .collect(Collectors.toList());
+            if (!removeObjectIdentifiers(objectIdentifiers)) {
                 return false;
             }
         }
         return true;
     }
 
-    public boolean removeRegularFile(String path) {
-        DeleteObjectRequest request = DeleteObjectRequest.builder()
-                .bucket(bucket)
-                .key(path)
-                .build();
-        DeleteObjectResponse response = s3Client.deleteObject(request);
-        return response.sdkHttpResponse().isSuccessful();
-    }
-
-    public boolean removeRegularFiles(Collection<String> paths) {
-        if (paths.size() == 1) {
-            return removeRegularFile(paths.iterator().next());
-        }
-
-        List<ObjectIdentifier> objectIdentifiers = paths.stream()
-                .map(a -> ObjectIdentifier.builder().key(a).build())
-                .collect(Collectors.toList());
-        return removeObjectIdentifiers(objectIdentifiers);
-    }
-
-    private boolean removeS3Objects(Collection<S3Object> s3Objects) {
-        if (s3Objects == null) {
-            throw new IllegalArgumentException();
-        }
-        if (s3Objects.isEmpty()) {
-            return true;
-        }
-        List<ObjectIdentifier> objectIdentifiers = s3Objects.stream()
-                .map(a -> ObjectIdentifier.builder().key(a.key()).build())
-                .collect(Collectors.toList());
-        return removeObjectIdentifiers(objectIdentifiers);
-    }
-
     private boolean removeObjectIdentifiers(Collection<ObjectIdentifier> objectIdentifiers) {
-        if (objectIdentifiers == null) {
-            throw new IllegalArgumentException();
-        }
-        if (objectIdentifiers.isEmpty()) {
-            return true;
-        }
         DeleteObjectsRequest request = DeleteObjectsRequest.builder()
                 .bucket(bucket)
                 .delete(Delete.builder()

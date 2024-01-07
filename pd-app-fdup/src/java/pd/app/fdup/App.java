@@ -128,7 +128,7 @@ public class App {
                     stdout("o {}", stat.key);
                     for (int i = 1; i < group.size(); i++) {
                         stat = group.get(i);
-                        if (accessor.removeRegularFile(stat.key)) {
+                        if (accessor.remove(stat.key)) {
                             stdout("x {}", stat.key);
                         }
                     }
