@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import pd.file.FileAccessor;
 import pd.file.FileStat;
-import pd.file.LocalFileAccessor;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -45,12 +44,6 @@ public class AwsS3Accessor implements FileAccessor {
                 .region(Region.of(region))
                 .endpointOverride(endpoint == null ? null : URI.create(endpoint))
                 .build();
-    }
-
-    @Override
-    public boolean isRegularFile(String path) {
-        List<S3Object> s3Objects = listS3Objects(path, 1);
-        return s3Objects != null && s3Objects.get(0) != null;
     }
 
     @Override
@@ -172,39 +165,29 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public byte[] load(String path) {
+    public byte[] load(String key) {
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucket)
-                .key(path)
+                .key(key)
                 .build();
         return s3Client.getObjectAsBytes(request).asByteArray();
     }
 
     @Override
-    public boolean save(String path, byte[] bytes) {
+    public boolean save(String key, byte[] bytes) {
+        return save(key, RequestBody.fromBytes(bytes));
+    }
+
+    private boolean save(String key, RequestBody requestBody) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
-                .key(path)
+                .key(key)
                 .build();
-        PutObjectResponse response = s3Client.putObject(request, RequestBody.fromBytes(bytes));
+        PutObjectResponse response = s3Client.putObject(request, requestBody);
         return response.sdkHttpResponse().isSuccessful();
     }
 
-    public boolean download(String s3Key, String localPath) {
-        byte[] bytes = load(s3Key);
-        if (bytes == null) {
-            return false;
-        }
-        LocalFileAccessor.singleton().save(localPath, bytes);
-        return true;
-    }
-
-    public boolean uploadTo(String s3Key, String localPath) {
-        PutObjectRequest request = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(s3Key)
-                .build();
-        PutObjectResponse response = s3Client.putObject(request, RequestBody.fromFile(new File(localPath)));
-        return response.sdkHttpResponse().isSuccessful();
+    public boolean uploadTo(String key, String localPath) {
+        return save(key, RequestBody.fromFile(new File(localPath)));
     }
 }

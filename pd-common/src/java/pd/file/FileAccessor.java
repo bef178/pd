@@ -7,8 +7,6 @@ import java.util.List;
  */
 public interface FileAccessor {
 
-    boolean isRegularFile(String path);
-
     /**
      * List next level key prefixes (stop after `/`) and keys.<br/>
      * `keyPrefix` could be empty.<br/>
@@ -39,7 +37,7 @@ public interface FileAccessor {
      */
     boolean removeAll(String keyPrefix);
 
-    byte[] load(String path);
+    byte[] load(String key);
 
-    boolean save(String path, byte[] bytes);
+    boolean save(String key, byte[] bytes);
 }

@@ -71,7 +71,8 @@ public class App {
         }
 
         List<FileStat> stats = paths.stream()
-                .flatMap(a -> accessor.statAllRegularFiles(a).stream())
+                .flatMap(a -> accessor.listAll(a).stream())
+                .map(accessor::stat)
                 .collect(Collectors.toList());
         stdout("found {} file(s)", stats.size());
 
