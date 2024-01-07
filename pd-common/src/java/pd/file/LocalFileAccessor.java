@@ -6,8 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -114,6 +112,19 @@ public class LocalFileAccessor implements FileAccessor {
         return keys.stream().sorted(PathExtension::compare).collect(Collectors.toList());
     }
 
+    @Override
+    public FileStat stat(String key) {
+        File f = new File(key);
+        if (!f.isFile()) {
+            return null;
+        }
+        FileStat fileStat = new FileStat();
+        fileStat.key = key;
+        fileStat.contentLength = f.length();
+        fileStat.lastModified = f.lastModified();
+        return fileStat;
+    }
+
     /**
      * List full paths of directories and regular files directly under this directory.<br/>
      * Return null if `path` does not identify a directory.<br/>
@@ -129,11 +140,11 @@ public class LocalFileAccessor implements FileAccessor {
     public List<FileStat> statAllRegularFiles(String path) {
         return listAll(path).stream().map(a -> {
             FileStat stat = new FileStat();
-            stat.path = a;
+            stat.key = a;
             try {
                 Path p = Paths.get(a);
-                stat.size = Files.size(p);
-                stat.lastModifiedTime = Files.getLastModifiedTime(p).toInstant().toEpochMilli();
+                stat.contentLength = Files.size(p);
+                stat.lastModified = Files.getLastModifiedTime(p).toInstant().toEpochMilli();
             } catch (IOException e) {
                 // dummy
             }

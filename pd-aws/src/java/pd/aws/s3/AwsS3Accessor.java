@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import pd.file.FileAccessor;
+import pd.file.FileStat;
 import pd.file.LocalFileAccessor;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -22,13 +23,14 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
-import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 
 public class AwsS3Accessor implements FileAccessor {
 
@@ -95,6 +97,20 @@ public class AwsS3Accessor implements FileAccessor {
                 .flatMap(a -> a.contents().stream())
                 .map(S3Object::key)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public FileStat stat(String key) {
+        HeadObjectRequest request = HeadObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+        HeadObjectResponse response = s3Client.headObject(request);
+        FileStat fileStat = new FileStat();
+        fileStat.key = key;
+        fileStat.contentLength = response.contentLength();
+        fileStat.lastModified = request.ifModifiedSince().toEpochMilli();
+        return fileStat;
     }
 
     public List<S3Object> listS3Objects(String keyPrefix, int limit) {

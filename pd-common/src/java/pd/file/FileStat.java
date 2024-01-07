@@ -2,7 +2,7 @@ package pd.file;
 
 public class FileStat {
 
-    public String path;
-    public long size;
-    public long lastModifiedTime;
+    public String key;
+    public long contentLength;
+    public long lastModified;
 }

@@ -26,6 +26,8 @@ public interface FileAccessor {
      */
     List<String> listAll(String keyPrefix);
 
+    FileStat stat(String key);
+
     /**
      * remove a regular file or directory<br/>
      * `path` identifies a regular file or a directory<br/>

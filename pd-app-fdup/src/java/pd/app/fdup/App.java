@@ -76,7 +76,7 @@ public class App {
         stdout("found {} file(s)", stats.size());
 
         List<List<FileStat>> sizeGroupedFiles = stats.stream()
-                .collect(Collectors.groupingBy(a -> a.size))
+                .collect(Collectors.groupingBy(a -> a.contentLength))
                 .entrySet().stream()
                 .sorted(Comparator.comparingLong(Map.Entry::getKey))
                 .filter(a -> a.getKey() > 0)
@@ -92,7 +92,7 @@ public class App {
 
             Map<String, List<FileStat>> sameHashFiles = new LinkedHashMap<>();
             for (FileStat stat : a) {
-                byte[] bytes = accessor.load(stat.path);
+                byte[] bytes = accessor.load(stat.key);
                 String checksum = Md5Digest.md5sum(bytes);
                 if (!sameHashFiles.containsKey(checksum)) {
                     sameHashFiles.put(checksum, new LinkedList<>());
@@ -109,7 +109,7 @@ public class App {
         switch (command) {
             case COMMAND_LIST:
                 for (FileStat stat : group) {
-                    stdout(stat.path);
+                    stdout(stat.key);
                 }
                 stdout("");
                 break;
@@ -117,7 +117,7 @@ public class App {
                 if (group.size() > 1) {
                     for (int i = 1; i < group.size(); i++) {
                         FileStat stat = group.get(i);
-                        stdout(stat.path);
+                        stdout(stat.key);
                     }
                     stdout("");
                 }
@@ -125,11 +125,11 @@ public class App {
             case COMMAND_REMOVE_DUPLICATED:
                 if (group.size() > 1) {
                     FileStat stat = group.get(0);
-                    stdout("o {}", stat.path);
+                    stdout("o {}", stat.key);
                     for (int i = 1; i < group.size(); i++) {
                         stat = group.get(i);
-                        if (accessor.removeRegularFile(stat.path)) {
-                            stdout("x {}", stat.path);
+                        if (accessor.removeRegularFile(stat.key)) {
+                            stdout("x {}", stat.key);
                         }
                     }
                     stdout("");
