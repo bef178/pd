@@ -278,57 +278,6 @@ public class LocalFileAccessor implements FileAccessor {
         }
     }
 
-    /**
-     * cp f f1      // OK<br/>
-     * cp -r f f1   // OK<br/>
-     * cp d d1      // cp: -r not specified; omitting directory 'd'<br/>
-     * cp -r d d1   // OK<br/>
-     */
-    @Override
-    public boolean copy(String path, String dstPath, boolean recursive) {
-        if (isRegularFile(path)) {
-            try {
-                Files.copy(Paths.get(path), Paths.get(dstPath));
-                return true;
-            } catch (IOException e) {
-                return false;
-            }
-        } else if (isDirectory(path)) {
-            if (!recursive) {
-                return false;
-            }
-            List<String> names = listDirectory(path);
-            for (String basename : names) {
-                if (!copy(PathExtension.join(path, basename), PathExtension.join(dstPath, basename), true)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean move(String path, String dstPath) {
-        if (isRegularFile(path)) {
-            try {
-                Files.move(Paths.get(path), Paths.get(dstPath));
-                return true;
-            } catch (IOException e) {
-                return false;
-            }
-        } else if (isDirectory(path)) {
-            List<String> names = listDirectory(path);
-            for (String basename : names) {
-                if (!move(PathExtension.join(path, basename), PathExtension.join(dstPath, basename))) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
     @Override
     public byte[] load(String path) {
         try {

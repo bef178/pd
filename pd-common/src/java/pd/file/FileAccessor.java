@@ -44,13 +44,6 @@ public interface FileAccessor {
      */
     boolean removeRegularFile(String path);
 
-    /**
-     * cp -f, cp -rf
-     */
-    boolean copy(String path, String dstPath, boolean recursive);
-
-    boolean move(String path, String dstPath);
-
     byte[] load(String path);
 
     boolean save(String path, byte[] bytes);

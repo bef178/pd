@@ -211,16 +211,6 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public boolean copy(String path, String dstPath, boolean recursive) {
-        return false;
-    }
-
-    @Override
-    public boolean move(String path, String dstPath) {
-        return false;
-    }
-
-    @Override
     public byte[] load(String path) {
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucket)
