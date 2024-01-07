@@ -14,39 +14,28 @@ public class Test_LocalFileAccessor {
     private static final LocalFileAccessor accessor = LocalFileAccessor.singleton();
 
     @Test
-    public void test_list2() {
-        List<String> paths = accessor.list2("");
+    public void test_list() {
+        List<String> paths = accessor.list("");
         assertTrue(paths.contains("pom.xml"));
         assertTrue(paths.contains("src/"));
     }
 
     @Test
-    public void test_list2_2() {
-        List<String> paths = accessor.list2("src");
+    public void test_list_2() {
+        List<String> paths = accessor.list("src");
         assertTrue(paths.contains("src/"));
     }
 
     @Test
-    public void test_list2_3() {
-        List<String> paths = accessor.list2("src/j");
+    public void test_list_3() {
+        List<String> paths = accessor.list("src/j");
         assertTrue(paths.contains("src/java/"));
     }
 
     @Test
-    public void test_listAllRegularFiles() {
-        List<String> paths = accessor.listAllRegularFiles("src");
+    public void test_listAll() {
+        List<String> paths = accessor.listAll("src");
         assertTrue(paths.contains("src/java/pd/file/LocalFileAccessor.java"));
-    }
-
-    @Test
-    public void test_listDirectory() {
-        List<String> paths = accessor.listDirectory(".");
-        assertNotNull(paths);
-        assertTrue(paths.contains("pom.xml"));
-        assertTrue(paths.contains("src"));
-
-        paths = accessor.listDirectory("./pom.xml");
-        assertNull(paths);
     }
 
     @Test
@@ -66,12 +55,5 @@ public class Test_LocalFileAccessor {
 
         paths = accessor.listDirectory2("pom.xml");
         assertNull(paths);
-    }
-
-    @Test
-    public void test_listRegularFiles() {
-        List<String> paths = accessor.listRegularFiles("", 1);
-        assertEquals(1, paths.size());
-        assertTrue(paths.contains("pom.xml"));
     }
 }

@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,27 +37,27 @@ public class LocalFileAccessor implements FileAccessor {
     }
 
     @Override
-    public List<String> list2(String pathPrefix) {
-        String path;
-        if (pathPrefix.endsWith("/")) {
-            path = pathPrefix;
-        } else {
-            int lastIndex = pathPrefix.lastIndexOf('/');
-            if (lastIndex > 0) {
-                path = pathPrefix.substring(0, lastIndex);
-            } else {
-                path = "";
-            }
-        }
-        try (Stream<Path> stream = Files.list(Paths.get(path))) {
-            return stream.map(a -> {
+    public List<String> list(String keyPrefix) {
+        String s = getUpDirectory(keyPrefix);
+        try (Stream<Path> stream = Files.list(Paths.get(s))) {
+            return stream
+                    .map(a -> {
+                        String aString = a.toString();
                         if (Files.isDirectory(a)) {
-                            return a + "/";
+                            if (aString.startsWith("./")) {
+                                return aString.substring(2) + '/';
+                            } else {
+                                return aString + "/";
+                            }
                         } else {
-                            return a.toString();
+                            if (aString.startsWith("./")) {
+                                return aString.substring(2);
+                            } else {
+                                return aString;
+                            }
                         }
                     })
-                    .filter(a -> a.startsWith(pathPrefix))
+                    .filter(a -> a.startsWith(keyPrefix))
                     .sorted(PathExtension::compare)
                     .collect(Collectors.toList());
         } catch (IOException e) {
@@ -66,99 +65,53 @@ public class LocalFileAccessor implements FileAccessor {
         }
     }
 
+    private String getUpDirectory(String keyPrefix) {
+        String s;
+        if (keyPrefix.equals(".")) {
+            s = "";
+        } else if (keyPrefix.equals("./")) {
+            s = "";
+        } else if (keyPrefix.equals("..")) {
+            s = "../";
+        } else if (keyPrefix.endsWith("/")) {
+            s = keyPrefix;
+        } else {
+            int lastIndex = keyPrefix.lastIndexOf('/');
+            if (lastIndex >= 0) {
+                s = keyPrefix.substring(0, lastIndex + 1);
+            } else {
+                s = "";
+            }
+        }
+        return s;
+    }
+
     @Override
-    public List<String> listAllRegularFiles(String path) {
-        if (true) {
-            return listRegularFiles(path, -1);
-        }
-        if (path.isEmpty()) {
-            throw new IllegalArgumentException("`path` should not be empty");
-        }
-
-        List<String> l;
-        {
-            if (path.equals(".") || path.equals("./")) {
-                l = list2("");
-            } else if (path.endsWith("/")) {
-                l = list2(path);
+    public List<String> listAll(String keyPrefix) {
+        List<String> keys = new LinkedList<>();
+        List<File> directories = new LinkedList<>();
+        for (String path : list(keyPrefix)) {
+            File f = new File(path);
+            if (f.isDirectory()) {
+                directories.add(f);
             } else {
-                List<String> a = list2(path);
-                if (a != null) {
-                    if (a.contains(path)) {
-                        // it is a file
-                        return Collections.singletonList(path);
-                    } else if (a.contains(path + "/")) {
-                        l = list2(path + "/");
+                keys.add(path);
+            }
+        }
+        while (!directories.isEmpty()) {
+            File f = directories.remove(0);
+            File[] subFiles = f.listFiles();
+            if (subFiles != null) {
+                for (File f1 : subFiles) {
+                    if (f1.isDirectory()) {
+                        directories.add(0, f1);
                     } else {
-                        throw new IllegalArgumentException("`path` should identify a regular file or directory");
+                        keys.add(0, f1.getPath());
                     }
-                } else {
-                    throw new RuntimeException("failed to list files");
                 }
             }
         }
-
-        Queue<String> queue = new LinkedList<>(l);
-        List<String> files = new LinkedList<>();
-        while (!queue.isEmpty()) {
-            String p = queue.poll();
-            if (p.endsWith("/")) {
-                l = list2(p);
-                if (l == null) {
-                    throw new RuntimeException("failed to list files");
-                }
-                queue.addAll(l);
-            } else {
-                files.add(p);
-            }
-        }
-        return files.stream().sorted(PathExtension::compare).collect(Collectors.toList());
-    }
-
-    public List<String> listRegularFiles(String path, int depth) {
-        if (!exists(path)) {
-            return null;
-        }
-        if (isRegularFile(path)) {
-            return Collections.singletonList(path);
-        }
-        if (depth == 0) {
-            return Collections.emptyList();
-        }
-        if (isDirectory(path)) {
-            List<String> paths = listDirectory2(path);
-            if (depth == 1) {
-                return paths.stream()
-                        .filter(this::isRegularFile)
-                        .sorted(PathExtension::compare)
-                        .collect(Collectors.toList());
-            } else {
-                return paths.stream()
-                        .flatMap(s -> listRegularFiles(s, depth - 1).stream())
-                        .sorted(PathExtension::compare)
-                        .collect(Collectors.toList());
-            }
-        }
-        // ignore files of other types
-        return Collections.emptyList();
-    }
-
-    /**
-     * List the base names of directories and regular files directly under this directory.<br/>
-     * Return null if `path` does not identify a directory.<br/>
-     */
-    public List<String> listDirectory(String path) {
-        File f = new File(path);
-        String[] names;
-        try {
-            names = f.list();
-        } catch (Exception e) {
-            return null;
-        }
-        if (names == null) {
-            return null;
-        }
-        return Arrays.asList(names);
+        return keys.stream().sorted(PathExtension::compare).collect(Collectors.toList());
     }
 
     /**
@@ -174,7 +127,7 @@ public class LocalFileAccessor implements FileAccessor {
     }
 
     public List<FileStat> statAllRegularFiles(String path) {
-        return listAllRegularFiles(path).stream().map(a -> {
+        return listAll(path).stream().map(a -> {
             FileStat stat = new FileStat();
             stat.path = a;
             try {

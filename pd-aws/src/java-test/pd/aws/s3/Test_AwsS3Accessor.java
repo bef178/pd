@@ -28,8 +28,8 @@ public class Test_AwsS3Accessor {
     }
 
     @Test
-    public void test_list2() {
-        List<String> paths = accessor.list2("");
+    public void test_list() {
+        List<String> paths = accessor.list("");
         assertNotNull(paths);
         assertTrue(paths.contains("test/"));
         assertTrue(paths.contains("prod/"));

@@ -3,32 +3,28 @@ package pd.file;
 import java.util.List;
 
 /**
- * Abstracts file management operations.
+ * abstract file management operations
  */
 public interface FileAccessor {
 
     boolean isRegularFile(String path);
 
     /**
-     * List paths starting with `pathPrefix` and not beyond `/`.<br/>
-     * `pathPrefix` could be empty.<br/>
-     * Result values are full paths, not base names.<br/>
-     * Result values are deduplicated and sorted.<br/>
-     * If result value ends with `/`, it probably represents a directory; if not, it represents a regular file.<br/>
-     * `.` and `..` has no special meanings in result path.<br/>
-     * <br/>
+     * List next level key prefixes (stop after `/`) and keys.<br/>
+     * `keyPrefix` could be empty.<br/>
+     * Result values are sorted and all start with `keyPrefix`.<br/>
      * e.g.<br/>
-     * - list2("d") => ["d/"]<br/>
-     * - list2("d/") => ["d/d/", "d/f"]<br/>
-     * - list2("f") => ["f"]<br/>
-     * - list2("lo") => ["lo/", "long/", "lower"]<br/>
+     * - "d" => ["d/"]<br/>
+     * - "d/" => ["d/d/", "d/f"]<br/>
+     * - "f" => ["f"]<br/>
+     * - "lo" => ["lo/", "long/", "lower"]<br/>
      */
-    List<String> list2(String pathPrefix);
+    List<String> list(String keyPrefix);
 
     /**
-     * `path` identifies a regular file or a directory<br/>
+     * List all keys starting with `keyPrefix`.<br/>
      */
-    List<String> listAllRegularFiles(String path);
+    List<String> listAll(String keyPrefix);
 
     /**
      * remove a regular file or directory<br/>

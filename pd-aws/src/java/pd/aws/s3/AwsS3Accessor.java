@@ -51,25 +51,11 @@ public class AwsS3Accessor implements FileAccessor {
         return s3Objects != null && s3Objects.get(0) != null;
     }
 
-    public List<S3Object> listS3Objects(String pathPrefix, int limit) {
-        if (limit <= 0) {
-            return Collections.emptyList();
-        }
-
-        ListObjectsV2Request request = ListObjectsV2Request.builder()
-                .bucket(bucket)
-                .prefix(pathPrefix)
-                .maxKeys(limit)
-                .build();
-        ListObjectsV2Response response = s3Client.listObjectsV2(request);
-        return response.contents();
-    }
-
     @Override
-    public List<String> list2(String pathPrefix) {
+    public List<String> list(String keyPrefix) {
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucket)
-                .prefix(pathPrefix)
+                .prefix(keyPrefix)
                 .delimiter("/")
                 .maxKeys(1000)
                 .build();
@@ -100,29 +86,29 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public List<String> listAllRegularFiles(String path) {
-        return listAllS3Objects(path).stream()
+    public List<String> listAll(String keyPrefix) {
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(bucket)
+                .prefix(keyPrefix)
+                .build();
+        return s3Client.listObjectsV2Paginator(request).stream()
+                .flatMap(a -> a.contents().stream())
                 .map(S3Object::key)
-                .filter(a -> {
-                    if (path.endsWith("/")) {
-                        return a.startsWith(path);
-                    } else {
-                        return a.equals(path) || a.startsWith(path + "/");
-                    }
-                })
                 .collect(Collectors.toList());
     }
 
-    public List<S3Object> listAllS3Objects(String pathPrefix) {
+    public List<S3Object> listS3Objects(String keyPrefix, int limit) {
+        if (limit <= 0) {
+            return Collections.emptyList();
+        }
+
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucket)
-                .prefix(pathPrefix)
+                .prefix(keyPrefix)
+                .maxKeys(limit)
                 .build();
-
-        ListObjectsV2Iterable itRequest = s3Client.listObjectsV2Paginator(request);
-        return itRequest.stream()
-                .flatMap(a -> a.contents().stream())
-                .collect(Collectors.toList());
+        ListObjectsV2Response response = s3Client.listObjectsV2(request);
+        return response.contents();
     }
 
     @Override

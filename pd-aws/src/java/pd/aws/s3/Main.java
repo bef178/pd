@@ -89,7 +89,7 @@ public class Main {
     }
 
     public static int list2(AwsS3Accessor accessor, String remotePrefix) {
-        List<String> paths = accessor.list2(remotePrefix);
+        List<String> paths = accessor.list(remotePrefix);
         stdout("{}", paths);
         return 1;
     }
@@ -101,7 +101,7 @@ public class Main {
             return 1;
         }
 
-        List<String> s3Keys = accessor.listAllRegularFiles(remoteDirectory);
+        List<String> s3Keys = accessor.listAll(remoteDirectory);
         stdout("find {} s3Key(s)", s3Keys.size());
 
         int numErrors = s3Keys.parallelStream().mapToInt(s3Key -> {
@@ -128,7 +128,7 @@ public class Main {
             return 1;
         }
 
-        List<String> localFiles = LocalFileAccessor.singleton().listAllRegularFiles(localDirectory);
+        List<String> localFiles = LocalFileAccessor.singleton().listAll(localDirectory);
         stdout("find {} localFile(s)", localFiles.size());
 
         localFiles.parallelStream().forEach(localFile -> {
