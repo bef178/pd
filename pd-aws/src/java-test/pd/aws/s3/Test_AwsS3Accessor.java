@@ -18,7 +18,7 @@ public class Test_AwsS3Accessor {
 
     @SneakyThrows
     private static AwsS3Accessor createAccessor() {
-        Properties properties = ResourceExtension.resourceAsProperties(".aws.s3.properties");
+        Properties properties = ResourceExtension.resourceAsProperties(".cloudflare.r2.properties");
         String accessKeyId = properties.getProperty("accessKeyId");
         String secretAccessKey = properties.getProperty("secretAccessKey");
         String regionName = properties.getProperty("regionName");
