@@ -32,7 +32,6 @@
     </dependencies>
 
     <build>
-        <directory>${project.basedir}/out</directory>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
