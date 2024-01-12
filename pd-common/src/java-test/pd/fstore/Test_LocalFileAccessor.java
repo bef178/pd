@@ -31,7 +31,7 @@ public class Test_LocalFileAccessor {
 
     @Test
     public void test_listAll() {
-        List<String> paths = accessor.listAll("src");
-        assertTrue(paths.contains("src/java/pd/file/LocalFileAccessor.java"));
+        List<String> paths = accessor.listAll("src/java/");
+        assertTrue(paths.contains("src/java/" + LocalFileAccessor.class.getCanonicalName().replace('.', '/') + ".java"));
     }
 }
