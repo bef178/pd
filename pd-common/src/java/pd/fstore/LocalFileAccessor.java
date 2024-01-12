@@ -1,4 +1,4 @@
-package pd.file;
+package pd.fstore;
 
 import java.io.File;
 import java.io.IOException;

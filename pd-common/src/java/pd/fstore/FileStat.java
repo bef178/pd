@@ -1,4 +1,4 @@
-package pd.file;
+package pd.fstore;
 
 public class FileStat {
 

@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import pd.fenc.CurlyBracketPatternExtension;
-import pd.file.LocalFileAccessor;
+import pd.fstore.LocalFileAccessor;
 
 @Slf4j
 public class Main {

@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 import pd.codec.GetOpt;
 import pd.codec.Md5Digest;
 import pd.fenc.CurlyBracketPatternExtension;
-import pd.file.FileStat;
-import pd.file.LocalFileAccessor;
+import pd.fstore.FileStat;
+import pd.fstore.LocalFileAccessor;
 
 public class App {
 
