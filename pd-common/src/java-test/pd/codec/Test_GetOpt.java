@@ -31,6 +31,12 @@ public class Test_GetOpt {
         Assertions.assertTrue(getOpt.options.containsKey("--a-long"));
         Assertions.assertFalse(getOpt.options.get("--a-long"));
 
+        getOpt = new GetOpt("--b_long");
+        Assertions.assertTrue(getOpt.options.containsKey("--b_long"));
+        Assertions.assertFalse(getOpt.options.get("--b_long"));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new GetOpt("--c__long"));
+
         getOpt = new GetOpt("--optionExpectingArgument:");
         Assertions.assertTrue(getOpt.options.containsKey("--optionExpectingArgument"));
         Assertions.assertTrue(getOpt.options.get("--optionExpectingArgument"));

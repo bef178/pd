@@ -14,39 +14,33 @@ import java.util.regex.Pattern;
 import pd.fenc.CurlyBracketPatternExtension;
 
 /**
- * This is a restricted limited variant of POSIX getopt. Option configurations are controlled by an option string as well.<br/>
- *
- * Option configurations are separated by comma in option string.<br/>
- * Any option requiring an argument has suffix ":" in its configuration.<br/>
- *
- * Short option configurations match regex {@link GetOpt#shortOptRegex}.<br/>
- * - Options and their arguments could be specified together, or separated by white-spaces, or by "=".<br/>
- * - multiple short options specified together is not supported.<br/>
- *
- * Long option configurations match regex {@link GetOpt#longOptRegex}.<br/>
- * - Options and their arguments could be separated by white-spaces or by "=".<br/>
- *
- * Unknown options are treated as non-option parameters.<br/>
- * Command-line arguments after "--" are treated as non-option parameters.<br/>
- *
- * Output is (String, String) pairs:<br/>
- * - Options with no arguments have `null` value.<br/>
- * - Non-options have key "!opt".<br/>
- * - Order is kept.<br/>
+ * A restricted limited variant of POSIX getopt, of which option configurations are controlled by an option string as well.<br/>
+ * <br/>
+ * With the option string,<br/>
+ *   - options are separated by comma<br/>
+ *   - any option with suffix ":" requires an argument<br/>
+ *   - short options match regex {@link GetOpt#shortOptRegex}.<br/>
+ *   - long options match regex {@link GetOpt#longOptRegex}.<br/>
+ * <br/>
+ * With command line arguments,<br/>
+ *   - a short option and its argument could be specified together, or separated by white-spaces, or separated by "="<br/>
+ *   - multiple short options should not be specified together<br/>
+ *   - a long option and its argument could be separated by white-spaces or "="<br/>
+ *   - unrecognized options are treated as non-option parameters<br/>
+ *   - arguments after "-- " are treated as non-option parameters<br/>
+ * <br/>
+ * Resulting in a list of (String, String) pairs,<br/>
+ *   - values of no-argument-options are all `null`<br/>
+ *   - keys of non-options are all `!opt`<br/>
+ *   - order of inputs is kept<br/>
  */
 public class GetOpt {
 
     public static final String shortOptRegex = "(-[A-Za-z0-9])(:?)";
     static final Pattern shortOptRegexPattern = Pattern.compile(shortOptRegex);
 
-    public static final String longOptRegex = "(--[A-Za-z0-9](-?[A-Za-z0-9]+)+)(:?)";
+    public static final String longOptRegex = "(--[A-Za-z0-9]([_-]?[A-Za-z0-9]+)+)(:?)";
     static final Pattern longOptRegexPattern = Pattern.compile(longOptRegex);
-
-    public static final GetOpt one = new GetOpt();
-
-    public static GetOpt singleton() {
-        return one;
-    }
 
     public static List<Map.Entry<String, String>> parse(String optString, String[] args) {
         return new GetOpt(optString).parse(args);
@@ -61,10 +55,7 @@ public class GetOpt {
         opt(optString);
     }
 
-    /**
-     * @return this object
-     */
-    public GetOpt opt(String optString) {
+    private void opt(String optString) {
         if (optString == null) {
             throw new IllegalArgumentException();
         }
@@ -83,7 +74,6 @@ public class GetOpt {
 
             throw new IllegalArgumentException(CurlyBracketPatternExtension.format("Unrecognized option {}", optConfig));
         }
-        return this;
     }
 
     public List<Map.Entry<String, String>> parse(String[] args) {
