@@ -110,7 +110,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>pd.aws.s3.Main</mainClass>
+                            <mainClass>pd.aws.s3.app.App</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
