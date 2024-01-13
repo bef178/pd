@@ -1,5 +1,6 @@
 package pd.util;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -35,6 +36,20 @@ public class InputStreamExtension {
             start += buffer.length;
         }
         return result;
+    }
+
+    public static void save(InputStream inputStream, String dstPath) throws IOException {
+        final int CHUNK_SIZE = 4096;
+        try (FileOutputStream outputStream = new FileOutputStream(dstPath, false)) {
+            byte[] buffer = new byte[CHUNK_SIZE];
+            while (true) {
+                int nRead = inputStream.read(buffer);
+                if (nRead == -1) {
+                    break;
+                }
+                outputStream.write(buffer, 0, nRead);
+            }
+        }
     }
 
     public static PrimitiveIterator.OfInt toIterator(InputStream inputStream) {

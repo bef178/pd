@@ -1,6 +1,8 @@
 package pd.aws.s3;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,7 +13,9 @@ import java.util.stream.Collectors;
 
 import pd.fstore.FileAccessor;
 import pd.fstore.FileStat;
+import pd.util.InputStreamExtension;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -22,6 +26,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -33,17 +38,17 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class AwsS3Accessor implements FileAccessor {
 
-    private final String bucket;
-
     private final S3Client s3Client;
 
+    private final String bucket;
+
     public AwsS3Accessor(String accessKeyId, String secretAccessKey, String region, String endpoint, String bucket) {
-        this.bucket = bucket;
         this.s3Client = S3Client.builder()
                 .credentialsProvider(() -> AwsBasicCredentials.create(accessKeyId, secretAccessKey))
                 .region(Region.of(region))
                 .endpointOverride(endpoint == null ? null : URI.create(endpoint))
                 .build();
+        this.bucket = bucket;
     }
 
     @Override
@@ -166,11 +171,21 @@ public class AwsS3Accessor implements FileAccessor {
 
     @Override
     public byte[] load(String key) {
+        return loadObject(key).asByteArray();
+    }
+
+    private ResponseBytes<GetObjectResponse> loadObject(String key) {
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
                 .build();
-        return s3Client.getObjectAsBytes(request).asByteArray();
+        return s3Client.getObjectAsBytes(request);
+    }
+
+    public void download(String key, String localParity) throws IOException {
+        try (InputStream inputStream = loadObject(key).asInputStream()) {
+            InputStreamExtension.save(inputStream, localParity);
+        }
     }
 
     @Override
@@ -187,7 +202,7 @@ public class AwsS3Accessor implements FileAccessor {
         return response.sdkHttpResponse().isSuccessful();
     }
 
-    public boolean uploadTo(String key, String localPath) {
-        return save(key, RequestBody.fromFile(new File(localPath)));
+    public boolean upload(String key, String localParity) {
+        return save(key, RequestBody.fromFile(new File(localParity)));
     }
 }

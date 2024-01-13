@@ -133,7 +133,7 @@ public class Main {
 
         localFiles.parallelStream().forEach(localFile -> {
             String s3Key = localFile.replaceFirst(localDirectory, remoteDirectory);
-            accessor.uploadTo(s3Key, localFile);
+            accessor.upload(s3Key, localFile);
         });
         return 0;
     }
@@ -184,7 +184,7 @@ public class Main {
     public static int uploadToRemoteFile(AwsS3Accessor accessor, String remoteFile, String localParity) {
         stdout("uploadToRemoteFile: {} => remote:{}", localParity, remoteFile);
 
-        boolean isSuccessful = accessor.uploadTo(remoteFile, localParity);
+        boolean isSuccessful = accessor.upload(remoteFile, localParity);
         if (isSuccessful) {
             stdout("uploaded");
         } else {
