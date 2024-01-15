@@ -10,9 +10,9 @@ public class Test_GetOpt {
 
     @Test
     public void testShortOptString() {
-        Assertions.assertTrue("-A".matches(GetOpt.shortOptRegex));
-        Assertions.assertTrue("-a:".matches(GetOpt.shortOptRegex));
-        Assertions.assertTrue("-0".matches(GetOpt.shortOptRegex));
+        Assertions.assertTrue("-A".matches(GetOpt.singleAlphanumericOptRegex));
+        Assertions.assertTrue("-a:".matches(GetOpt.singleAlphanumericOptRegex));
+        Assertions.assertTrue("-0".matches(GetOpt.singleAlphanumericOptRegex));
 
         GetOpt getOpt = new GetOpt("-A");
         Assertions.assertTrue(getOpt.options.containsKey("-A"));

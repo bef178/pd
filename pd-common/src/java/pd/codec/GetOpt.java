@@ -17,27 +17,27 @@ import pd.fenc.CurlyBracketPatternExtension;
  * A restricted limited variant of POSIX getopt, of which option configurations are controlled by an option string as well.<br/>
  * <br/>
  * With the option string,<br/>
- *   - options are separated by comma<br/>
- *   - any option with suffix ":" requires an argument<br/>
- *   - short options match regex {@link GetOpt#shortOptRegex}.<br/>
- *   - long options match regex {@link GetOpt#longOptRegex}.<br/>
+ * - options are separated by comma<br/>
+ * - any option with suffix ":" requires an argument<br/>
+ * - single-alphanumeric options match regex {@link GetOpt#singleAlphanumericOptRegex}.<br/>
+ * - long options match regex {@link GetOpt#longOptRegex}.<br/>
  * <br/>
  * With command line arguments,<br/>
- *   - a short option and its argument could be specified together, or separated by white-spaces, or separated by "="<br/>
- *   - multiple short options should not be specified together<br/>
- *   - a long option and its argument could be separated by white-spaces or "="<br/>
- *   - unrecognized options are treated as non-option parameters<br/>
- *   - arguments after "-- " are treated as non-option parameters<br/>
+ * - a single-alphanumeric option and its argument could be specified together or separated by whitespaces<br/>
+ * - multiple single-alphanumeric options should not be specified together<br/>
+ * - a long option and its argument could be separated by whitespaces or "="<br/>
+ * - unrecognized options will be treated as non-option parameters<br/>
+ * - arguments after " -- " will not be parsed and be treated as non-option parameters<br/>
  * <br/>
  * Resulting in a list of (String, String) pairs,<br/>
- *   - values of no-argument-options are all `null`<br/>
- *   - keys of non-options are all `!opt`<br/>
- *   - order of inputs is kept<br/>
+ * - values of no-argument-options are all `null`<br/>
+ * - keys of non-options are all `!opt`<br/>
+ * - order of inputs is kept<br/>
  */
 public class GetOpt {
 
-    public static final String shortOptRegex = "(-[A-Za-z0-9])(:?)";
-    static final Pattern shortOptRegexPattern = Pattern.compile(shortOptRegex);
+    public static final String singleAlphanumericOptRegex = "(-[A-Za-z0-9])(:?)";
+    static final Pattern singleAlphanumericOptRegexPattern = Pattern.compile(singleAlphanumericOptRegex);
 
     public static final String longOptRegex = "(--[A-Za-z0-9]([_-]?[A-Za-z0-9]+)+)(:?)";
     static final Pattern longOptRegexPattern = Pattern.compile(longOptRegex);
@@ -48,47 +48,69 @@ public class GetOpt {
 
     final LinkedHashMap<String, Boolean> options = new LinkedHashMap<>();
 
-    GetOpt() {
-    }
-
     GetOpt(String optString) {
         opt(optString);
     }
 
-    private void opt(String optString) {
-        if (optString == null) {
+    public GetOpt opt(String optString) {
+        if (optString == null || optString.isEmpty()) {
             throw new IllegalArgumentException();
         }
-        for (String optConfig : optString.split(",")) {
-            Matcher shortMatcher = shortOptRegexPattern.matcher(optConfig);
-            if (shortMatcher.matches()) {
-                options.put(shortMatcher.group(1), !shortMatcher.group(2).isEmpty());
-                continue;
-            }
 
-            Matcher longMatcher = longOptRegexPattern.matcher(optConfig);
-            if (longMatcher.matches()) {
-                options.put(longMatcher.group(1), !longMatcher.group(3).isEmpty());
-                continue;
+        for (String s : optString.split(",")) {
+            {
+                Matcher matcher = singleAlphanumericOptRegexPattern.matcher(s);
+                if (matcher.matches()) {
+                    String optKeyWithPrefix = matcher.group(1);
+                    boolean requiresArgument = !matcher.group(2).isEmpty();
+                    opt(optKeyWithPrefix, requiresArgument);
+                    continue;
+                }
             }
-
-            throw new IllegalArgumentException(CurlyBracketPatternExtension.format("Unrecognized option {}", optConfig));
+            {
+                Matcher matcher = longOptRegexPattern.matcher(s);
+                if (matcher.matches()) {
+                    String optKeyWithPrefix = matcher.group(1);
+                    boolean requiresArgument = !matcher.group(3).isEmpty();
+                    opt(optKeyWithPrefix, requiresArgument);
+                    continue;
+                }
+            }
+            throw new IllegalArgumentException(CurlyBracketPatternExtension.format("GetOpt: unrecognized option {}", s));
         }
+        return this;
+    }
+
+    public GetOpt opt(String optKeyWithPrefix, boolean requiresArgument) {
+        if (optKeyWithPrefix == null || optKeyWithPrefix.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+
+        if (options.containsKey(optKeyWithPrefix)) {
+            throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: duplicate option {}", optKeyWithPrefix));
+        }
+        options.put(optKeyWithPrefix, requiresArgument);
+        return this;
+    }
+
+    public GetOpt optClear() {
+        options.clear();
+        return this;
     }
 
     public List<Map.Entry<String, String>> parse(String[] args) {
         if (args == null) {
-            throw new IllegalArgumentException("Input arguments should not be null");
+            throw new IllegalArgumentException();
         }
 
         List<Map.Entry<String, String>> result = new LinkedList<>();
 
-        boolean meetsDashDash = false;
         Iterator<String> it = Arrays.stream(args).iterator();
+        boolean meetsDashDash = false;
         while (it.hasNext()) {
             String arg = it.next();
             if (arg == null) {
-                throw new IllegalArgumentException("Input arguments should not contain null");
+                throw new IllegalArgumentException();
             }
 
             if (Objects.equals(arg, "--")) {
@@ -102,13 +124,12 @@ public class GetOpt {
             }
 
             if (options.containsKey(arg)) {
-                // e.g. -u User
-                boolean optRequiresArg = options.get(arg);
-                if (optRequiresArg) {
+                // e.g. -u User --user User
+                if (options.get(arg)) {
                     if (it.hasNext()) {
                         result.add(new AbstractMap.SimpleImmutableEntry<>(arg, it.next()));
                     } else {
-                        throw new RuntimeException(CurlyBracketPatternExtension.format("Option {} requires an argument but there is none", arg));
+                        throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: option {} requires an argument but there is none", arg));
                     }
                 } else {
                     result.add(new AbstractMap.SimpleImmutableEntry<>(arg, null));
@@ -116,32 +137,34 @@ public class GetOpt {
                 continue;
             }
 
-            int assignmentIndex = arg.indexOf('=');
-            if (assignmentIndex >= 2) {
-                // e.g. -u=User -Duser=User
-                String a0 = arg.substring(0, assignmentIndex);
+            if (arg.length() > 2 && arg.charAt(0) == '-' && arg.charAt(1) != '-') {
+                // e.g. -uUser -Duser=User
+                String a0 = arg.substring(0, 2);
                 if (options.containsKey(a0)) {
-                    boolean optRequiresArg = options.get(a0);
-                    if (optRequiresArg) {
-                        result.add(new AbstractMap.SimpleImmutableEntry<>(a0, arg.substring(assignmentIndex + 1)));
+                    if (options.get(a0)) {
+                        String a1 = arg.substring(2);
+                        result.add(new AbstractMap.SimpleImmutableEntry<>(a0, a1));
                     } else {
-                        throw new RuntimeException(CurlyBracketPatternExtension.format("Option {} requires no argument but there is one", a0));
+                        throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: option {} requires no argument but there is one", a0));
                     }
                     continue;
                 }
             }
 
-            if (arg.length() > 2 && arg.charAt(0) == '-') {
-                // e.g. -uUser
-                String a0 = arg.substring(0, 2);
-                if (options.containsKey(a0)) {
-                    boolean optRequiresArg = options.get(a0);
-                    if (optRequiresArg) {
-                        result.add(new AbstractMap.SimpleImmutableEntry<>(a0, arg.substring(2)));
-                    } else {
-                        throw new RuntimeException(CurlyBracketPatternExtension.format("Option {} requires no argument but there is one", a0));
+            if (arg.length() > 2 && arg.charAt(0) == '-' && arg.charAt(1) == '-') {
+                int assignmentIndex = arg.indexOf('=');
+                if (assignmentIndex >= 0) {
+                    // e.g. --user=User
+                    String a0 = arg.substring(0, assignmentIndex);
+                    if (options.containsKey(a0)) {
+                        if (options.get(a0)) {
+                            String a1 = arg.substring(assignmentIndex + 1);
+                            result.add(new AbstractMap.SimpleImmutableEntry<>(a0, a1));
+                        } else {
+                            throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: option {} requires no argument but there is one", a0));
+                        }
+                        continue;
                     }
-                    continue;
                 }
             }
 
