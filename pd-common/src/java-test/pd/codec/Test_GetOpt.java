@@ -14,11 +14,11 @@ public class Test_GetOpt {
         Assertions.assertTrue("-a:".matches(GetOpt.singleAlphanumericOptRegex));
         Assertions.assertTrue("-0".matches(GetOpt.singleAlphanumericOptRegex));
 
-        GetOpt getOpt = new GetOpt("-A");
+        GetOpt getOpt = new GetOpt().opt("-A");
         Assertions.assertTrue(getOpt.options.containsKey("-A"));
         Assertions.assertFalse(getOpt.options.get("-A"));
 
-        getOpt = new GetOpt("-a:");
+        getOpt = new GetOpt().opt("-a:");
         Assertions.assertTrue(getOpt.options.containsKey("-a"));
         Assertions.assertTrue(getOpt.options.get("-a"));
     }
@@ -27,24 +27,24 @@ public class Test_GetOpt {
     public void testLongOptString() {
         Assertions.assertTrue(GetOpt.longOptRegexPattern.matcher("--00").matches());
 
-        GetOpt getOpt = new GetOpt("--a-long");
+        GetOpt getOpt = new GetOpt().opt("--a-long");
         Assertions.assertTrue(getOpt.options.containsKey("--a-long"));
         Assertions.assertFalse(getOpt.options.get("--a-long"));
 
-        getOpt = new GetOpt("--b_long");
+        getOpt = new GetOpt().opt("--b_long");
         Assertions.assertTrue(getOpt.options.containsKey("--b_long"));
         Assertions.assertFalse(getOpt.options.get("--b_long"));
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new GetOpt("--c__long"));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new GetOpt().opt("--c__long"));
 
-        getOpt = new GetOpt("--optionExpectingArgument:");
+        getOpt = new GetOpt().opt("--optionExpectingArgument:");
         Assertions.assertTrue(getOpt.options.containsKey("--optionExpectingArgument"));
         Assertions.assertTrue(getOpt.options.get("--optionExpectingArgument"));
     }
 
     @Test
     public void testGetOpt() {
-        GetOpt getOpt = new GetOpt("-u:,-D:,--user:,-h");
+        GetOpt getOpt = new GetOpt().opt("-u:,-D:,--user:,-h");
         List<Map.Entry<String, String>> parsedOptions = getOpt.parse(new String[] {
                 "-u", "user", "-uUser", "-Duser=User", "-h", "path", "-p"
         });

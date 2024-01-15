@@ -43,14 +43,10 @@ public class GetOpt {
     static final Pattern longOptRegexPattern = Pattern.compile(longOptRegex);
 
     public static List<Map.Entry<String, String>> parse(String optString, String[] args) {
-        return new GetOpt(optString).parse(args);
+        return new GetOpt().opt(optString).parse(args);
     }
 
     final LinkedHashMap<String, Boolean> options = new LinkedHashMap<>();
-
-    GetOpt(String optString) {
-        opt(optString);
-    }
 
     public GetOpt opt(String optString) {
         if (optString == null || optString.isEmpty()) {
@@ -76,7 +72,7 @@ public class GetOpt {
                     continue;
                 }
             }
-            throw new IllegalArgumentException(CurlyBracketPatternExtension.format("GetOpt: unrecognized option {}", s));
+            throw new IllegalArgumentException(CurlyBracketPatternExtension.format("GetOpt: invalid option {}", s));
         }
         return this;
     }
@@ -90,11 +86,6 @@ public class GetOpt {
             throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: duplicate option {}", optKeyWithPrefix));
         }
         options.put(optKeyWithPrefix, requiresArgument);
-        return this;
-    }
-
-    public GetOpt optClear() {
-        options.clear();
         return this;
     }
 
