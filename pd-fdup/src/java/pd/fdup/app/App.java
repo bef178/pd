@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import pd.codec.Md5Digest;
 import pd.fstore.FileStat;
@@ -73,7 +74,10 @@ public class App {
         }
 
         List<FileStat> stats = paths.stream()
-                .flatMap(a -> accessor.listAll(a).stream())
+                .flatMap(a -> {
+                    List<String> b = accessor.listAll(a);
+                    return b == null ? Stream.empty() : b.stream();
+                })
                 .map(accessor::stat)
                 .collect(Collectors.toList());
         stdout("found {} file(s)", stats.size());
@@ -114,6 +118,7 @@ public class App {
         }
         switch (commandKey) {
             case list:
+                stdout("");
                 stdout("size: {}", group.get(0).contentLength);
                 for (FileStat stat : group) {
                     stdout(stat.key);
@@ -122,16 +127,17 @@ public class App {
                 break;
             case list_duplicated:
                 if (group.size() > 1) {
+                    stdout("");
                     stdout("size: {}", group.get(0).contentLength);
                     for (int i = 1; i < group.size(); i++) {
                         FileStat stat = group.get(i);
                         stdout(stat.key);
                     }
-                    stdout("");
                 }
                 break;
             case remove_duplicated:
                 if (group.size() > 1) {
+                    stdout("");
                     stdout("size: {}", group.get(0).contentLength);
                     FileStat stat = group.get(0);
                     stdout("o {}", stat.key);
@@ -141,7 +147,6 @@ public class App {
                             stdout("x {}", stat.key);
                         }
                     }
-                    stdout("");
                 }
                 break;
             default:

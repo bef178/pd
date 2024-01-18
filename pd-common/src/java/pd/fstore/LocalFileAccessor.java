@@ -75,7 +75,11 @@ public class LocalFileAccessor implements FileAccessor {
     public List<String> listAll(String keyPrefix) {
         List<String> keys = new LinkedList<>();
         List<File> directories = new LinkedList<>();
-        for (String path : list(keyPrefix)) {
+        List<String> paths = list(keyPrefix);
+        if (paths == null) {
+            return null;
+        }
+        for (String path : paths) {
             File f = new File(path);
             if (f.isDirectory()) {
                 directories.add(f);
