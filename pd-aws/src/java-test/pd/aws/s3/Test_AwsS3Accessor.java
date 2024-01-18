@@ -19,11 +19,11 @@ public class Test_AwsS3Accessor {
     @SneakyThrows
     private static AwsS3Accessor createAccessor() {
         Properties properties = ResourceExtension.resourceAsProperties(".cloudflare.r2.properties");
-        String accessKeyId = properties.getProperty("accessKeyId");
-        String secretAccessKey = properties.getProperty("secretAccessKey");
-        String regionName = properties.getProperty("regionName");
-        String endpointUrl = properties.getProperty("endpointUrl");
-        String bucketName = properties.getProperty("bucketName");
+        String accessKeyId = properties.getProperty("access_id");
+        String secretAccessKey = properties.getProperty("access_secret");
+        String regionName = properties.getProperty("region_name");
+        String endpointUrl = properties.getProperty("endpoint_url");
+        String bucketName = properties.getProperty("bucket_name");
         return new AwsS3Accessor(accessKeyId, secretAccessKey, regionName, endpointUrl, bucketName);
     }
 

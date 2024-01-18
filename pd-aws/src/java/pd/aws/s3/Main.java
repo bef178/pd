@@ -26,18 +26,18 @@ public class Main {
         Map<String, String> configParams;
         try {
             params = pickParams(args);
-            configParams = pickConfigParams(params.getOrDefault("config-file", null));
+            configParams = pickConfigParams(params.getOrDefault("config", null));
         } catch (Exception e) {
             stderr("{}", e);
             System.exit(1);
             return;
         }
 
-        final String accessKeyId = params.getOrDefault("access-key-id", configParams.getOrDefault("accessKeyId", System.getenv("accessKeyId")));
-        final String secretAccessKey = params.getOrDefault("secret-access-key", configParams.getOrDefault("secretAccessKey", System.getenv("secretAccessKey")));
-        final String regionName = params.getOrDefault("region-name", configParams.getOrDefault("regionName", System.getenv("regionName")));
-        final String endpointUrl = params.getOrDefault("endpoint-url", configParams.getOrDefault("endpointUrl", System.getenv("endpointUrl")));
-        final String bucketName = params.getOrDefault("bucket-name", configParams.getOrDefault("bucketName", System.getenv("bucketName")));
+        final String accessKeyId = params.getOrDefault("access_id", configParams.getOrDefault("access_id", System.getenv("access_id")));
+        final String secretAccessKey = params.getOrDefault("access_secret", configParams.getOrDefault("access_secret", System.getenv("access_secret")));
+        final String regionName = params.getOrDefault("region_name", configParams.getOrDefault("region_name", System.getenv("region_name")));
+        final String endpointUrl = params.getOrDefault("endpoint_url", configParams.getOrDefault("endpoint_url", System.getenv("endpoint_url")));
+        final String bucketName = params.getOrDefault("bucket_name", configParams.getOrDefault("bucket_name", System.getenv("bucket_name")));
 
         String action = params.getOrDefault("action", "");
         switch (action) {
