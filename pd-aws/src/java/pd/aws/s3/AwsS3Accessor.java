@@ -184,6 +184,7 @@ public class AwsS3Accessor implements FileAccessor {
 
     public void download(String key, String localParity) throws IOException {
         try (InputStream inputStream = loadObject(key).asInputStream()) {
+            new File(localParity).getParentFile().mkdirs();
             InputStreamExtension.save(inputStream, localParity);
         }
     }
