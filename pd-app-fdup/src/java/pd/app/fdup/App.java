@@ -10,9 +10,11 @@ import java.util.stream.Collectors;
 
 import pd.codec.GetOpt;
 import pd.codec.Md5Digest;
-import pd.fenc.CurlyBracketPatternExtension;
 import pd.fstore.FileStat;
 import pd.fstore.LocalFileAccessor;
+
+import static pd.util.AppLogger.stderr;
+import static pd.util.AppLogger.stdout;
 
 public class App {
 
@@ -140,13 +142,5 @@ public class App {
                 stderr("unknown command `{}`", command);
                 break;
         }
-    }
-
-    private static void stdout(String message, Object... messageParams) {
-        System.out.println(CurlyBracketPatternExtension.format(message, messageParams));
-    }
-
-    private static void stderr(String message, Object... messageParams) {
-        System.err.println(CurlyBracketPatternExtension.format(message, messageParams));
     }
 }
