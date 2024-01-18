@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import pd.codec.GetOpt;
+import pd.util.GetOpt;
 import pd.codec.Md5Digest;
 import pd.fstore.FileStat;
 import pd.fstore.LocalFileAccessor;

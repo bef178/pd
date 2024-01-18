@@ -1,4 +1,4 @@
-package pd.codec;
+package pd.util;
 
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -77,7 +77,7 @@ public class GetOpt {
         return this;
     }
 
-    public GetOpt opt(String optKeyWithPrefix, boolean requiresArgument) {
+    private GetOpt opt(String optKeyWithPrefix, boolean requiresArgument) {
         if (optKeyWithPrefix == null || optKeyWithPrefix.isEmpty()) {
             throw new IllegalArgumentException();
         }
