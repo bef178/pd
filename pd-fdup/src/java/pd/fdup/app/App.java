@@ -1,48 +1,45 @@
-package pd.app.fdup;
+package pd.fdup.app;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-import pd.util.GetOpt;
 import pd.codec.Md5Digest;
 import pd.fstore.FileStat;
 import pd.fstore.LocalFileAccessor;
+import pd.util.ParamManager;
 
 import static pd.util.AppLogger.stderr;
 import static pd.util.AppLogger.stdout;
 
 public class App {
 
-    public static final String COMMAND_LIST = "list";
-    public static final String COMMAND_LIST_DUPLICATED = "list-duplicated";
-    public static final String COMMAND_REMOVE_DUPLICATED = "remove-duplicated";
-
     public static final LocalFileAccessor accessor = LocalFileAccessor.singleton();
 
     public static void main(String[] args) {
-        List<Map.Entry<String, String>> params;
+        ParamManager paramManager;
         try {
-            params = GetOpt.parse("--command:", args);
+            String optString = Arrays.stream(ParamKey.values()).map(ParamKey::toOptString).collect(Collectors.joining(","));
+            paramManager = ParamManager.parse(optString, args);
         } catch (Exception e) {
             stderr("{}", e);
             System.exit(1);
             return;
         }
 
-        String command = params.stream()
-                .filter(a -> Objects.equals(a.getKey(), "--command"))
-                .map(Map.Entry::getValue)
-                .reduce((a, b) -> b)
-                .orElse("");
-        List<String> paths = params.stream()
-                .filter(a -> Objects.equals(a.getKey(), "!opt"))
-                .map(a -> {
-                    String path = a.getValue();
+        final CommandKey commandKey = CommandKey.fromLiteral(paramManager.get(ParamKey.command));
+        if (commandKey == null) {
+            usage();
+            System.exit(1);
+            return;
+        }
+
+        List<String> paths = paramManager.getNonOptionArguments().stream()
+                .map(path -> {
                     if (path.startsWith("\"") && path.endsWith("\"")) {
                         path = path.substring(1, path.length() - 1);
                     }
@@ -50,20 +47,23 @@ public class App {
                 })
                 .collect(Collectors.toList());
 
-        switch (command) {
-            case COMMAND_LIST:
-            case COMMAND_LIST_DUPLICATED:
-            case COMMAND_REMOVE_DUPLICATED:
-                groupFilesAndExecute(paths, command);
-                break;
-            default:
-                stderr("unknown command: `{}`", command);
-                System.exit(1);
-                break;
+        try {
+            groupFilesAndExecuteCommand(paths, commandKey);
+            System.exit(0);
+        } catch (IllegalArgumentException e) {
+            usage();
+            System.exit(1);
+        } catch (Exception e) {
+            if (e.getMessage() != null) {
+                stderr(e.getMessage());
+            } else {
+                stderr(e.getClass().getName());
+            }
+            System.exit(1);
         }
     }
 
-    public static void groupFilesAndExecute(List<String> paths, String command) {
+    private static void groupFilesAndExecuteCommand(List<String> paths, CommandKey command) {
         if (paths == null) {
             throw new IllegalArgumentException();
         }
@@ -79,10 +79,10 @@ public class App {
         stdout("found {} file(s)", stats.size());
 
         List<List<FileStat>> sizeGroupedFiles = stats.stream()
+                .filter(a -> a.contentLength > 0)
                 .collect(Collectors.groupingBy(a -> a.contentLength))
                 .entrySet().stream()
                 .sorted(Comparator.comparingLong(Map.Entry::getKey))
-                .filter(a -> a.getKey() > 0)
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
         stdout("found {} group(s) by size", sizeGroupedFiles.size());
@@ -108,16 +108,21 @@ public class App {
         });
     }
 
-    private static void executeCommand(String command, List<FileStat> group) {
-        switch (command) {
-            case COMMAND_LIST:
+    private static void executeCommand(CommandKey commandKey, List<FileStat> group) {
+        if (group.isEmpty()) {
+            return;
+        }
+        switch (commandKey) {
+            case list:
+                stdout("size: {}", group.get(0).contentLength);
                 for (FileStat stat : group) {
                     stdout(stat.key);
                 }
                 stdout("");
                 break;
-            case COMMAND_LIST_DUPLICATED:
+            case list_duplicated:
                 if (group.size() > 1) {
+                    stdout("size: {}", group.get(0).contentLength);
                     for (int i = 1; i < group.size(); i++) {
                         FileStat stat = group.get(i);
                         stdout(stat.key);
@@ -125,8 +130,9 @@ public class App {
                     stdout("");
                 }
                 break;
-            case COMMAND_REMOVE_DUPLICATED:
+            case remove_duplicated:
                 if (group.size() > 1) {
+                    stdout("size: {}", group.get(0).contentLength);
                     FileStat stat = group.get(0);
                     stdout("o {}", stat.key);
                     for (int i = 1; i < group.size(); i++) {
@@ -139,8 +145,18 @@ public class App {
                 }
                 break;
             default:
-                stderr("unknown command `{}`", command);
+                stderr("Unknown commandKey `{}`", commandKey);
                 break;
         }
+    }
+
+    private static void usage() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("usage: $0 --command <command> <path> ...\n");
+        sb.append("where <command> is one of\n");
+        for (CommandKey commandKey : CommandKey.values()) {
+            sb.append('\t').append(commandKey.name()).append('\n');
+        }
+        stdout(sb.toString());
     }
 }

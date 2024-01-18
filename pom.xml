@@ -17,6 +17,6 @@
         <module>pd-injector</module>
         <module>pd-json</module>
         <module>pd-server</module>
-        <module>pd-app-fdup</module>
+        <module>pd-fdup</module>
     </modules>
 </project>

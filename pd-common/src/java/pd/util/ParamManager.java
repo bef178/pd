@@ -15,6 +15,10 @@ import java.util.stream.Collectors;
 
 public class ParamManager {
 
+    public static ParamManager parse(String commandLineOptionString, String[] commandLineArgs) {
+        return parse(commandLineOptionString, commandLineArgs, (String) null, null);
+    }
+
     public static ParamManager parse(String commandLineOptionString, String[] commandLineArgs, Enum<?> commandLineDotConfigKey, String defaultDotConfigPath) {
         return parse(commandLineOptionString, commandLineArgs, commandLineDotConfigKey.name(), defaultDotConfigPath);
     }
@@ -65,9 +69,13 @@ public class ParamManager {
         return getFromCommandLineOrDefault(key, dotConfigParams.getOrDefault(key, getFromSystemEnvironment(key)));
     }
 
+    public List<String> getNonOptionArguments() {
+        return getAllFromCommandLine(GetOpt.NON_OPT_KEY);
+    }
+
     private String getFromCommandLine(String key) {
         List<String> values = getAllFromCommandLine(key);
-        if (values.isEmpty()) {
+        if (values == null || values.isEmpty()) {
             return null;
         } else {
             return values.get(values.size() - 1);
@@ -83,16 +91,23 @@ public class ParamManager {
     }
 
     private List<String> getAllFromCommandLine(String key) {
-        final String optKeyWithPrefix;
-        if (key.length() == 1) {
-            optKeyWithPrefix = '-' + key;
-        } else if (key.length() > 1) {
-            optKeyWithPrefix = "--" + key;
+        if (key == null) {
+            return null;
+        }
+        final String k;
+        if (GetOpt.NON_OPT_KEY.equals(key)) {
+            k = key;
         } else {
-            optKeyWithPrefix = key;
+            if (key.length() == 1) {
+                k = '-' + key;
+            } else if (key.length() > 1) {
+                k = "--" + key;
+            } else {
+                k = key;
+            }
         }
         return commandLineParams.stream()
-                .filter(a -> Objects.equals(a.getKey(), optKeyWithPrefix))
+                .filter(a -> Objects.equals(a.getKey(), k))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toCollection(LinkedList::new));
     }

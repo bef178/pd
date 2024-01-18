@@ -36,6 +36,8 @@ import pd.fenc.CurlyBracketPatternExtension;
  */
 public class GetOpt {
 
+    public static final String NON_OPT_KEY = "!opt";
+
     public static final String singleAlphanumericOptRegex = "(-[A-Za-z0-9])(:?)";
     static final Pattern singleAlphanumericOptRegexPattern = Pattern.compile(singleAlphanumericOptRegex);
 
@@ -110,7 +112,7 @@ public class GetOpt {
             }
 
             if (meetsDashDash) {
-                result.add(new AbstractMap.SimpleImmutableEntry<>("!opt", arg));
+                result.add(new AbstractMap.SimpleImmutableEntry<>(NON_OPT_KEY, arg));
                 continue;
             }
 
@@ -159,7 +161,7 @@ public class GetOpt {
                 }
             }
 
-            result.add(new AbstractMap.SimpleImmutableEntry<>("!opt", arg));
+            result.add(new AbstractMap.SimpleImmutableEntry<>(NON_OPT_KEY, arg));
         }
 
         return result;
