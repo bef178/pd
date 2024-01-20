@@ -1,5 +1,9 @@
 package pd.fdup.app;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -44,6 +48,9 @@ public class App {
                     if (path.startsWith("\"") && path.endsWith("\"")) {
                         path = path.substring(1, path.length() - 1);
                     }
+                    if (path.equals(".")) {
+                        return "";
+                    }
                     return path;
                 })
                 .collect(Collectors.toList());
@@ -83,7 +90,7 @@ public class App {
         stdout("found {} file(s)", stats.size());
 
         List<List<FileStat>> sizeGroupedFiles = stats.stream()
-                .filter(a -> a.contentLength > 0)
+                .filter(a -> a != null && a.contentLength > 0)
                 .collect(Collectors.groupingBy(a -> a.contentLength))
                 .entrySet().stream()
                 .sorted(Comparator.comparingLong(Map.Entry::getKey))
@@ -99,12 +106,18 @@ public class App {
 
             Map<String, List<FileStat>> sameHashFiles = new LinkedHashMap<>();
             for (FileStat stat : a) {
-                byte[] bytes = accessor.load(stat.key);
-                String checksum = Md5Digest.md5sum(bytes);
-                if (!sameHashFiles.containsKey(checksum)) {
-                    sameHashFiles.put(checksum, new LinkedList<>());
+                String checksum;
+                try (InputStream inputStream = Files.newInputStream(Paths.get(stat.key))) {
+                    checksum = Md5Digest.md5sum(inputStream);
+                } catch (IOException e) {
+                    checksum = null;
                 }
-                sameHashFiles.get(checksum).add(stat);
+                if (checksum != null) {
+                    if (!sameHashFiles.containsKey(checksum)) {
+                        sameHashFiles.put(checksum, new LinkedList<>());
+                    }
+                    sameHashFiles.get(checksum).add(stat);
+                }
             }
             for (List<FileStat> group : sameHashFiles.values()) {
                 executeCommand(command, group);
@@ -157,7 +170,8 @@ public class App {
 
     private static void usage() {
         StringBuilder sb = new StringBuilder();
-        sb.append("usage: $0 --command <command> <path> ...\n");
+        sb.append("usage: $0 --command <command> <path-or-prefix> ...\n");
+        sb.append("\".\" stands for current directory, \"..\" is not supported");
         sb.append("where <command> is one of\n");
         for (CommandKey commandKey : CommandKey.values()) {
             sb.append('\t').append(commandKey.name()).append('\n');
