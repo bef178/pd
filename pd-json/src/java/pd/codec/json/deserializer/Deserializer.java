@@ -12,8 +12,8 @@ import pd.fenc.Int32Feeder;
 import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
-import pd.fenc.Util;
 import pd.util.AsciiExtension;
+import pd.util.UnicodeExtension;
 
 import static pd.fenc.ScalarPicker.EOF;
 
@@ -86,7 +86,7 @@ public class Deserializer {
                     int ch = src.hasNext() ? src.next() : EOF;
                     if (ch != '[') {
                         throw new ParsingException(
-                                String.format("expected '[', actual [%s]", Util.codepointToString(ch)));
+                                String.format("expected '[', actual [%s]", UnicodeExtension.toString(ch)));
                     }
                     scalarPicker.eatWhitespacesIfAny(src);
                     state = 1;
@@ -124,7 +124,7 @@ public class Deserializer {
                             break;
                         default:
                             throw new ParsingException(
-                                    String.format("expected ']' or ',', actual [%s]", Util.codepointToString(ch)));
+                                    String.format("expected ']' or ',', actual [%s]", UnicodeExtension.toString(ch)));
                     }
                     break;
                 }
@@ -159,7 +159,7 @@ public class Deserializer {
                     int ch = src.hasNext() ? src.next() : EOF;
                     if (ch != '{') {
                         throw new ParsingException(
-                                String.format("expected '{', actual [%s]", Util.codepointToString(ch)));
+                                String.format("expected '{', actual [%s]", UnicodeExtension.toString(ch)));
                     }
                     scalarPicker.eatWhitespacesIfAny(src);
                     state = 1;
@@ -201,7 +201,7 @@ public class Deserializer {
                             break;
                         default:
                             throw new ParsingException(
-                                    String.format("expected '}' or ',', actual [%s]", Util.codepointToString(ch)));
+                                    String.format("expected '}' or ',', actual [%s]", UnicodeExtension.toString(ch)));
                     }
                     break;
                 }
@@ -221,7 +221,7 @@ public class Deserializer {
                     int ch = src.hasNext() ? src.next() : EOF;
                     if (ch != '\"') {
                         throw new ParsingException(
-                                String.format("expected '\"', actual [%s]", Util.codepointToString(ch)));
+                                String.format("expected '\"', actual [%s]", UnicodeExtension.toString(ch)));
                     }
                     state = 1;
                     break;

@@ -1,9 +1,9 @@
 package pd.codec;
 
-import static pd.fenc.Util.checkPrintableAscii;
-
 import pd.fenc.Int32Feeder;
 import pd.fenc.Int32Pusher;
+import pd.fenc.ParsingException;
+import pd.util.AsciiExtension;
 
 public class Typeset {
 
@@ -43,5 +43,13 @@ public class Typeset {
             room = numBytesPerLine - prefix.length - suffix.length;
             appendBytes(src, room, dst);
         }
+    }
+
+    private static int checkPrintableAscii(int value) {
+        if (AsciiExtension.isPrintable(value)) {
+            return value;
+        }
+        throw new ParsingException(
+                String.format("Excepted value being SP or visible, actual 0x[%X]", value));
     }
 }
