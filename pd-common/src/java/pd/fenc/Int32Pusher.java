@@ -1,5 +1,7 @@
 package pd.fenc;
 
+import pd.util.CurlyBracketPatternExtension;
+
 public interface Int32Pusher {
 
     Int32Pusher push(int value);

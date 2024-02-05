@@ -1,4 +1,4 @@
-package pd.fenc;
+package pd.util;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,49 +9,48 @@ import java.util.Map;
 import java.util.PrimitiveIterator.OfInt;
 import java.util.Set;
 
+import pd.util.UnicodeExtension;
+
 /**
  * interpolated string
- * https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/tokens/interpolated
- * https://docs.oracle.com/cd/E19776-01/820-4867/ggqny/index.html
- * https://www.python.org/dev/peps/pep-0498/
- * pattern in c-printf called "format specifiers"
+ * https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/tokens/interpolated<br/>
+ * https://docs.oracle.com/cd/E19776-01/820-4867/ggqny/index.html<br/>
+ * https://www.python.org/dev/peps/pep-0498/<br/>
+ * pattern in c-printf called "format specifiers"<br/>
  */
 public class CurlyBracketPatternExtension {
 
-    public static final int EOF = -1;
+    private static final int EOF = -1;
+
+    private static final int STATE_READY = 0;
+    private static final int STATE_ON_BACK_SLASH = 1;
+    private static final int STATE_ON_OPENING_CURLY_BRACKET = 2;
 
     /**
      * use '{}' as formatting anchor
      */
     public static String format(String pattern, Object... args) {
-        if (pattern == null) {
-            throw new NullPointerException();
-        }
         if (args == null || args.length == 0) {
             return pattern;
         }
 
-        StringBuilder sb = new StringBuilder();
-
         int argsIndex = 0;
-
         OfInt it = pattern.codePoints().iterator();
-
-        int state = 0;
-        while (state != 3) {
+        StringBuilder sb = new StringBuilder();
+        int state = STATE_READY;
+        int limit = 50000;
+        while (limit-- > 0) {
             switch (state) {
-                case 0: {
-                    // ready
+                case STATE_READY: {
                     int ch = it.hasNext() ? it.nextInt() : EOF;
                     switch (ch) {
+                        case EOF:
+                            return sb.toString();
                         case '\\':
-                            state = 1;
+                            state = STATE_ON_BACK_SLASH;
                             break;
                         case '{':
-                            state = 2;
-                            break;
-                        case EOF:
-                            state = 3;
+                            state = STATE_ON_OPENING_CURLY_BRACKET;
                             break;
                         default:
                             sb.appendCodePoint(ch);
@@ -59,49 +58,43 @@ public class CurlyBracketPatternExtension {
                     }
                     break;
                 }
-                case 1: {
-                    // seen BACKSLASH '\\'
+                case STATE_ON_BACK_SLASH: {
                     int ch = it.hasNext() ? it.nextInt() : EOF;
                     switch (ch) {
-                        case EOF:
-                            throw new ParsingException("E: unexpected EOF");
                         case '\\':
-                            state = 0;
-                            sb.append('\\');
-                            break;
                         case '{':
-                            state = 0;
-                            sb.append('{');
+                            sb.appendCodePoint(ch);
+                            state = STATE_READY;
                             break;
                         default:
-                            String actual = new String(Character.toChars(ch));
-                            throw new ParsingException(String.format("E: unexpected \"\\%s\"", actual));
+                            throw new IllegalStateException(String.format("E: unexpected token '%s' after '\\'", UnicodeExtension.toString(ch)));
                     }
                     break;
                 }
-                case 2: {
-                    // seen OPENING_CURLY_BRACKET '{'
+                case STATE_ON_OPENING_CURLY_BRACKET: {
                     int ch = it.hasNext() ? it.nextInt() : EOF;
-                    state = 0;
-                    if (ch == '}') {
-                        if (argsIndex < args.length) {
-                            sb.append(args[argsIndex++]);
-                        } else {
-                            sb.append("{}");
+                    switch (ch) {
+                        case '}': {
+                            if (argsIndex < args.length) {
+                                sb.append(args[argsIndex++]);
+                            } else {
+                                sb.append("{}");
+                            }
+                            break;
                         }
-                    } else {
-                        String actual = new String(Character.toChars(ch));
-                        throw new ParsingException(String.format("E: unexpected \"{%s\", expecting \"{}\"", actual));
+                        default:
+                            throw new IllegalStateException(String.format("E: unexpected token '%s' after '{'", UnicodeExtension.toString(ch)));
                     }
+                    state = STATE_READY;
                     break;
                 }
             }
         }
-        return sb.toString();
+        throw new IllegalStateException("E: reached loop limit");
     }
 
     /**
-     * "a/{cusId}/b({accId})/c{camId}", "a/1/b(2)/c3" => { "cusId": "1", "accId": "2", "camId": "3" }
+     * "a/{category}/b({type})/c{item}", "a/1/b(2)/c3" => { "category": "1", "type": "2", "item": "3" }
      */
     public static Map<String, String> match(String pattern, String s) {
         String[] cuts = cutPattern(pattern);
@@ -124,10 +117,7 @@ public class CurlyBracketPatternExtension {
         }
 
         Map<String, String> groups = new LinkedHashMap<>();
-        for (int i = 0; i < cuts.length; i++) {
-            if (i % 2 == 0) {
-                continue;
-            }
+        for (int i = 1; i < cuts.length; i += 2) {
             String key = cuts[i];
             String value = s.substring(a[i], a[i + 1]);
             groups.put(key, value);
@@ -143,23 +133,23 @@ public class CurlyBracketPatternExtension {
 
         OfInt it = pattern.codePoints().iterator();
         StringBuilder sb = new StringBuilder();
-        int state = 0;
-        while (true) {
+        int state = STATE_READY;
+        int limit = 50000;
+        while (limit-- > 0) {
             switch (state) {
-                case 0: {
-                    // ready
+                case STATE_READY: {
                     int ch = it.hasNext() ? it.nextInt() : EOF;
                     switch (ch) {
                         case EOF:
                             cuts.add(sb.toString());
                             return cuts.toArray(new String[0]);
                         case '\\':
-                            state = 1;
+                            state = STATE_ON_BACK_SLASH;
                             break;
                         case '{':
-                            state = 2;
                             cuts.add(sb.toString());
                             sb.setLength(0);
+                            state = STATE_ON_OPENING_CURLY_BRACKET;
                             break;
                         default:
                             sb.appendCodePoint(ch);
@@ -167,40 +157,30 @@ public class CurlyBracketPatternExtension {
                     }
                     break;
                 }
-                case 1: {
-                    // escaped
+                case STATE_ON_BACK_SLASH: {
                     int ch = it.hasNext() ? it.nextInt() : EOF;
                     switch (ch) {
-                        case EOF:
-                            throw new ParsingException("E: unexpected EOF");
                         case '\\':
-                            state = 0;
-                            sb.append('\\');
-                            break;
                         case '{':
-                            state = 0;
-                            sb.append('{');
+                            sb.appendCodePoint(ch);
+                            state = STATE_READY;
                             break;
-                        default: {
-                            String actual = new String(Character.toChars(ch));
-                            throw new ParsingException(String.format("E: unrecognized \"\\%s\"", actual));
-                        }
+                        default:
+                            throw new IllegalStateException(String.format("E: unexpected token '%s' after '\\'", UnicodeExtension.toString(ch)));
                     }
                     break;
                 }
-                case 2: {
-                    // seen '{'
+                case STATE_ON_OPENING_CURLY_BRACKET: {
                     int ch = it.hasNext() ? it.nextInt() : EOF;
                     switch (ch) {
                         case EOF:
-                            throw new ParsingException("E: unmatched bracket");
                         case '\\':
-                            throw new ParsingException("E: unsupported escaped key");
+                            throw new IllegalStateException(String.format("E: unexpected token '%s' after '{'", UnicodeExtension.toString(ch)));
                         case '}': {
-                            state = 0;
                             String key = sb.toString();
                             cuts.add(key);
                             sb.setLength(0);
+                            state = STATE_READY;
                             break;
                         }
                         default:
@@ -212,12 +192,13 @@ public class CurlyBracketPatternExtension {
                     break;
             }
         }
+        throw new IllegalStateException("E: reached loop limit");
     }
 
     /**
      * - capturing groups cannot be neighboring<br/>
-     * - capturing groups cannot have the same name<br/>
-     * - capturing group name is a valid identifier<br/>
+     * - capturing group name should be a valid identifier<br/>
+     * - capturing group name should be unique<br/>
      */
     private static void validatePattern(String[] cuts) {
         Set<String> keys = new HashSet<>();
@@ -225,13 +206,13 @@ public class CurlyBracketPatternExtension {
             String cut = cuts[i];
             if (i % 2 == 0) {
                 if (cut.isEmpty() && i != 0 && i != cuts.length - 1) {
-                    throw new ParsingException("E: capturing group cannot be contacting");
+                    throw new IllegalArgumentException("E: capturing groups cannot be neighboring");
                 }
             } else {
                 if (cut.isEmpty() || !cut.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
-                    throw new ParsingException("E: capturing group name should be a valid identifier: `" + cut + "`");
+                    throw new IllegalArgumentException("E: capturing group name should be a valid identifier: `" + cut + "`");
                 } else if (keys.contains(cut)) {
-                    throw new ParsingException("E: capturing group name should be unique: `" + cut + "`");
+                    throw new IllegalArgumentException("E: capturing group name should be unique: `" + cut + "`");
                 } else {
                     keys.add(cut);
                 }
@@ -243,7 +224,7 @@ public class CurlyBracketPatternExtension {
         assert cutsStart % 2 == 1;
 
         if (cutsStart == cuts.length - 2) {
-            // only one '*' remaining
+            // only one '{*}' remaining
             a[cutsStart] = sStart;
             return true;
         }

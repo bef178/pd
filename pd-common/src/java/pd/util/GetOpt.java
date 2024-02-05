@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pd.fenc.CurlyBracketPatternExtension;
-
 /**
  * A restricted limited variant of POSIX getopt, of which option configurations are controlled by an option string as well.<br/>
  * <br/>

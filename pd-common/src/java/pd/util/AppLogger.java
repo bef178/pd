@@ -1,7 +1,5 @@
 package pd.util;
 
-import pd.fenc.CurlyBracketPatternExtension;
-
 public class AppLogger {
 
     public static void stdout(String message, Object... messageParams) {

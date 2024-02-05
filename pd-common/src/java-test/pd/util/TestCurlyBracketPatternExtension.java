@@ -1,4 +1,4 @@
-package pd.fenc;
+package pd.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-public class Test_CurlyBracketPatternExtension {
+public class TestCurlyBracketPatternExtension {
 
     @Test
     public void test_format() {
