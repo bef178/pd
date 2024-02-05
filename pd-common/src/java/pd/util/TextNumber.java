@@ -1,4 +1,4 @@
-package pd.fenc;
+package pd.util;
 
 import java.util.Objects;
 
@@ -81,11 +81,7 @@ public class TextNumber extends Number {
         if (raw == null) {
             throw new NullPointerException();
         }
-        try {
-            Double.parseDouble(raw);
-        } catch (NumberFormatException e) {
-            throw new ParsingException(String.format("unrecognized number [%s]", raw));
-        }
+        double ignored = Double.parseDouble(raw);
         this.raw = raw;
         return this;
     }

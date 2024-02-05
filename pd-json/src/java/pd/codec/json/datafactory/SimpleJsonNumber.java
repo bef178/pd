@@ -1,7 +1,7 @@
 package pd.codec.json.datafactory;
 
 import pd.codec.json.datatype.JsonNumber;
-import pd.fenc.TextNumber;
+import pd.util.TextNumber;
 
 final class SimpleJsonNumber extends TextNumber implements JsonNumber {
 

@@ -1,5 +1,7 @@
 package pd.fenc;
 
+import pd.util.TextNumber;
+
 import static pd.fenc.ScalarPicker.EOF;
 
 public class NumberPicker {
