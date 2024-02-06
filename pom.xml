@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>pd</groupId>
-    <artifactId>pd</artifactId>
+    <artifactId>pd-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
-        <module>pd-common</module>
+        <module>pd</module>
         <module>pd-logger</module>
         <module>pd-aws</module>
         <module>pd-csv</module>
