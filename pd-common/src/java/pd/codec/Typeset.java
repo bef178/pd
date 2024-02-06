@@ -1,19 +1,19 @@
 package pd.codec;
 
-import pd.fenc.Int32Feeder;
-import pd.fenc.Int32Pusher;
+import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ParsingException;
+import pd.fenc.UnicodeConsumer;
 import pd.util.AsciiExtension;
 
 public class Typeset {
 
-    private static void appendBytes(byte[] a, Int32Pusher dst) {
+    private static void appendBytes(byte[] a, UnicodeConsumer dst) {
         for (int i : a) {
             dst.push(checkPrintableAscii(i & 0xFF));
         }
     }
 
-    private static void appendBytes(Int32Feeder src, int srcSize, Int32Pusher dst) {
+    private static void appendBytes(BackableUnicodeProvider src, int srcSize, UnicodeConsumer dst) {
         for (int i = 0; i < srcSize; i++) {
             if (!src.hasNext()) {
                 break;
@@ -22,7 +22,7 @@ public class Typeset {
         }
     }
 
-    public static void appendBytes(Int32Feeder src, Int32Pusher dst, int numBytesPerLine,
+    public static void appendBytes(BackableUnicodeProvider src, UnicodeConsumer dst, int numBytesPerLine,
             int startingOffset, byte[] prefix, byte[] suffix) {
         if (prefix == null) {
             prefix = new byte[0];

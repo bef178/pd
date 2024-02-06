@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 public class InstallmentByteBuffer {
 
-    public class Provider extends Int32Provider {
+    public class Provider implements Int8Provider {
 
         private int pos = 0;
 

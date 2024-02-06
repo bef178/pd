@@ -5,12 +5,11 @@ import java.util.PrimitiveIterator;
 import pd.util.AsciiExtension;
 import pd.util.Int32ArrayExtension;
 
+import static pd.util.AsciiExtension.EOF;
 import static pd.util.AsciiExtension.isAlpha;
 import static pd.util.AsciiExtension.isDigit;
 
 public class ScalarPicker {
-
-    public static final int EOF = -1;
 
     private static final ScalarPicker one = new ScalarPicker();
 
@@ -22,19 +21,19 @@ public class ScalarPicker {
         // dummy
     }
 
-    public String pickBackSlashEscapedString(Int32Feeder src, int terminator) {
+    public String pickBackSlashEscapedString(BackableUnicodeProvider src, int terminator) {
         StringBuilder sb = new StringBuilder();
-        Int32Pusher dst = Int32Pusher.wrap(sb);
+        UnicodeConsumer dst = UnicodeConsumer.wrap(sb);
         if (!tryPickBackSlashEscapedString(src, dst, terminator)) {
             throw new ParsingException();
         }
         return sb.toString();
     }
 
-    public String pickDottedIdentifier(Int32Feeder src) {
+    public String pickDottedIdentifier(BackableUnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         while (true) {
-            if (!pickIdentifier(src, Int32Pusher.wrap(sb))) {
+            if (!pickIdentifier(src, UnicodeConsumer.wrap(sb))) {
                 throw new ParsingException();
             }
             if (!src.hasNext() || src.next() != '.') {
@@ -44,9 +43,9 @@ public class ScalarPicker {
         }
     }
 
-    public String pickIdentifier(Int32Feeder src) {
+    public String pickIdentifier(BackableUnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
-        if (!pickIdentifier(src, Int32Pusher.wrap(sb))) {
+        if (!pickIdentifier(src, UnicodeConsumer.wrap(sb))) {
             throw new ParsingException();
         }
         return sb.toString();
@@ -56,7 +55,7 @@ public class ScalarPicker {
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
      * if failed, src.next() will be the illegal character
      */
-    private boolean pickIdentifier(Int32Feeder src, Int32Pusher dst) {
+    private boolean pickIdentifier(BackableUnicodeProvider src, UnicodeConsumer dst) {
         int stat = 0;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -84,9 +83,9 @@ public class ScalarPicker {
         }
     }
 
-    public String pickString(Int32Feeder src, int... closingSymbols) {
+    public String pickString(BackableUnicodeProvider src, int... closingSymbols) {
         StringBuilder sb = new StringBuilder();
-        Int32Pusher dst = Int32Pusher.wrap(sb);
+        UnicodeConsumer dst = UnicodeConsumer.wrap(sb);
         if (!tryPickString(src, dst, closingSymbols)) {
             throw new ParsingException("Unexpected EOF");
         }
@@ -100,7 +99,7 @@ public class ScalarPicker {
      * - `terminator` can be `EOF`<br/>
      * Will fail in front of `EOF`<br/>
      */
-    public boolean tryPickBackSlashEscapedString(Int32Feeder src, Int32Pusher dst, int terminator) {
+    public boolean tryPickBackSlashEscapedString(BackableUnicodeProvider src, UnicodeConsumer dst, int terminator) {
         boolean isEscaping = false;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -124,7 +123,7 @@ public class ScalarPicker {
         }
     }
 
-    public boolean tryPickString(Int32Feeder src, Int32Pusher dst, int... terminators) {
+    public boolean tryPickString(BackableUnicodeProvider src, UnicodeConsumer dst, int... terminators) {
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
             if (Int32ArrayExtension.contains(terminators, ch)) {
@@ -141,7 +140,7 @@ public class ScalarPicker {
         }
     }
 
-    public void eat(Int32Feeder src, int expected) {
+    public void eat(BackableUnicodeProvider src, int expected) {
         if (!tryEat(src, expected)) {
             if (src.hasNext()) {
                 int value = src.next();
@@ -156,7 +155,7 @@ public class ScalarPicker {
     /**
      * will stop in front of unexpected value
      */
-    public boolean tryEat(Int32Feeder src, int expected) {
+    public boolean tryEat(BackableUnicodeProvider src, int expected) {
         if (src.hasNext()) {
             if (src.next() == expected) {
                 return true;
@@ -169,7 +168,7 @@ public class ScalarPicker {
         }
     }
 
-    public void eat(Int32Feeder src, String s) {
+    public void eat(BackableUnicodeProvider src, String s) {
         PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
         while (ofInt.hasNext()) {
             int expected = ofInt.nextInt();
@@ -177,7 +176,7 @@ public class ScalarPicker {
         }
     }
 
-    public boolean tryEat(Int32Feeder src, String s) {
+    public boolean tryEat(BackableUnicodeProvider src, String s) {
         PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
         while (ofInt.hasNext()) {
             int expected = ofInt.nextInt();
@@ -188,7 +187,7 @@ public class ScalarPicker {
         return true;
     }
 
-    public void eatWhitespacesIfAny(Int32Feeder src) {
+    public void eatWhitespacesIfAny(BackableUnicodeProvider src) {
         while (src.hasNext()) {
             int ch = src.next();
             if (!AsciiExtension.isWhitespace(ch)) {

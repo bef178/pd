@@ -5,6 +5,7 @@ package pd.util;
  */
 public class AsciiExtension {
 
+    public static final int EOF = -1;
     public static final int HT = '\t';
     public static final int LF = '\n';
     public static final int CR = '\r';

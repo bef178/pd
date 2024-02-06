@@ -3,12 +3,12 @@ package pd.codec.csv;
 import java.util.LinkedList;
 import java.util.List;
 
+import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
-import pd.fenc.Int32Feeder;
 import pd.util.AsciiExtension;
 
-import static pd.fenc.ScalarPicker.EOF;
+import static pd.util.AsciiExtension.EOF;
 
 class CsvDeserializer {
 
@@ -17,7 +17,7 @@ class CsvDeserializer {
     static final String CRLF = new String(new char[] { AsciiExtension.CR, AsciiExtension.LF });
 
     public static List<String> deserialize(String csvText) {
-        Int32Feeder src = new Int32Feeder(csvText);
+        BackableUnicodeProvider src = new BackableUnicodeProvider(csvText);
         List<String> fields = new LinkedList<>();
         while (true) {
             String field = pickField(src);
@@ -40,7 +40,7 @@ class CsvDeserializer {
         }
     }
 
-    private static String pickField(Int32Feeder src) {
+    private static String pickField(BackableUnicodeProvider src) {
         final int STATE_READY = 0;
         final int STATE_QUOTED = 1;
         final int STATE_QUOTED2 = 2;

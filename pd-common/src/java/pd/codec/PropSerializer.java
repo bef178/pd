@@ -1,25 +1,25 @@
 package pd.codec;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.Map.Entry;
+import java.util.Map;
 
-import pd.fenc.Int32Feeder;
+import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ScalarPicker;
 
-import static pd.fenc.ScalarPicker.EOF;
+import static pd.util.AsciiExtension.EOF;
 
 public class PropSerializer {
 
     private static final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public static Entry<String, String> deserialize(Int32Feeder src) {
+    public static Map.Entry<String, String> deserialize(BackableUnicodeProvider src) {
 
         scalarPicker.eatWhitespacesIfAny(src);
 
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == '#') {
             // comment line
-            return new SimpleImmutableEntry<String, String>(null, null);
+            return new SimpleImmutableEntry<>(null, null);
         }
         src.back();
 
@@ -37,12 +37,12 @@ public class PropSerializer {
             src.next();
             scalarPicker.eatWhitespacesIfAny(src);
             scalarPicker.eat(src, EOF);
-            return new SimpleImmutableEntry<String, String>(key, value);
+            return new SimpleImmutableEntry<>(key, value);
         } else {
             src.back();
             scalarPicker.eatWhitespacesIfAny(src);
             String value = scalarPicker.pickBackSlashEscapedString(src, EOF);
-            return new SimpleImmutableEntry<String, String>(key, value);
+            return new SimpleImmutableEntry<>(key, value);
         }
     }
 }

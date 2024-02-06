@@ -1,74 +1,10 @@
 package pd.fenc;
 
-import java.io.InputStream;
-import java.util.PrimitiveIterator.OfInt;
+interface Int32Provider {
 
-import pd.util.InputStreamExtension;
+    boolean hasNext();
 
-abstract class Int32Provider {
+    int next();
 
-    abstract boolean hasNext();
-
-    abstract int next();
-
-    abstract int position();
-
-    /**
-     * values in [-0x80,0x7F]
-     */
-    static Int32Provider wrap(InputStream inputStream) {
-        OfInt ofInt = InputStreamExtension.toIterator(inputStream);
-        return new Int32Provider() {
-
-            private int pos = 0;
-
-            @Override
-            public boolean hasNext() {
-                return ofInt.hasNext();
-            }
-
-            @Override
-            public int next() {
-                int value = (byte) ofInt.nextInt();
-                pos++;
-                return value;
-            }
-
-            @Override
-            public int position() {
-                return pos;
-            }
-        };
-    }
-
-    /**
-     * values in [0,0x10FFFF]
-     */
-    static Int32Provider wrap(CharSequence cs) {
-        return wrap(cs.codePoints().iterator());
-    }
-
-    static Int32Provider wrap(OfInt ofInt) {
-        return new Int32Provider() {
-
-            private int pos = 0;
-
-            @Override
-            public boolean hasNext() {
-                return ofInt.hasNext();
-            }
-
-            @Override
-            public int next() {
-                int value = ofInt.nextInt();
-                pos++;
-                return value;
-            }
-
-            @Override
-            public int position() {
-                return pos;
-            }
-        };
-    }
+    int position();
 }

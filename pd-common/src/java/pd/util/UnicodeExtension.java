@@ -1,6 +1,6 @@
 package pd.util;
 
-import static pd.fenc.ScalarPicker.EOF;
+import static pd.util.AsciiExtension.EOF;
 
 public class UnicodeExtension {
 

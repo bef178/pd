@@ -8,14 +8,14 @@ import pd.codec.json.datatype.JsonNull;
 import pd.codec.json.datatype.JsonNumber;
 import pd.codec.json.datatype.JsonObject;
 import pd.codec.json.datatype.JsonString;
-import pd.fenc.Int32Feeder;
+import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.util.AsciiExtension;
 import pd.util.UnicodeExtension;
 
-import static pd.fenc.ScalarPicker.EOF;
+import static pd.util.AsciiExtension.EOF;
 
 public class Deserializer {
 
@@ -34,11 +34,11 @@ public class Deserializer {
         if (s == null) {
             return null;
         }
-        Int32Feeder src = new Int32Feeder(s);
+        BackableUnicodeProvider src = new BackableUnicodeProvider(s);
         return deserializeToJson(src);
     }
 
-    private Json deserializeToJson(Int32Feeder src) {
+    private Json deserializeToJson(BackableUnicodeProvider src) {
         int ch = src.hasNext() ? src.next() : EOF;
         switch (ch) {
             case 'n':
@@ -77,7 +77,7 @@ public class Deserializer {
         }
     }
 
-    private JsonArray deserializeToJsonArray(Int32Feeder src) {
+    private JsonArray deserializeToJsonArray(BackableUnicodeProvider src) {
         JsonArray jsonArray = jsonFactory.createJsonArray();
         int state = 0;
         while (true) {
@@ -134,23 +134,23 @@ public class Deserializer {
         }
     }
 
-    private Json deserializeToJsonFalse(Int32Feeder src) {
+    private Json deserializeToJsonFalse(BackableUnicodeProvider src) {
         scalarPicker.eat(src, "false");
         return jsonFactory.createJsonBoolean(false);
 
     }
 
-    private JsonNull deserializeToJsonNull(Int32Feeder src) {
+    private JsonNull deserializeToJsonNull(BackableUnicodeProvider src) {
         scalarPicker.eat(src, "null");
         return jsonFactory.getJsonNull();
     }
 
-    private JsonNumber deserializeToJsonNumber(Int32Feeder src) {
+    private JsonNumber deserializeToJsonNumber(BackableUnicodeProvider src) {
         String floatToken = new NumberPicker().pickFloatToken(src);
         return jsonFactory.createJsonNumber().set(floatToken);
     }
 
-    private JsonObject deserializeToJsonObject(Int32Feeder src) {
+    private JsonObject deserializeToJsonObject(BackableUnicodeProvider src) {
         JsonObject jsonObject = jsonFactory.createJsonObject();
         int state = 0;
         while (true) {
@@ -211,7 +211,7 @@ public class Deserializer {
         }
     }
 
-    private JsonString deserializeToJsonString(Int32Feeder src) {
+    private JsonString deserializeToJsonString(BackableUnicodeProvider src) {
         // state machine go!
         int state = 0;
         StringBuilder sb = new StringBuilder();
@@ -297,7 +297,7 @@ public class Deserializer {
         }
     }
 
-    private Json deserializeToJsonTrue(Int32Feeder src) {
+    private Json deserializeToJsonTrue(BackableUnicodeProvider src) {
         scalarPicker.eat(src, "true");
         return jsonFactory.createJsonBoolean(true);
     }

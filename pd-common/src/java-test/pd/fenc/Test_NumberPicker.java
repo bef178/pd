@@ -19,26 +19,26 @@ public class Test_NumberPicker {
 
     @Test
     public void test_pickFloat32() {
-        Int32Feeder src = new Int32Feeder("0");
+        BackableUnicodeProvider src = new BackableUnicodeProvider("0");
         assertEquals(0f, picker.pickFloat32(src));
 
-        src = new Int32Feeder("0.0");
+        src = new BackableUnicodeProvider("0.0");
         assertEquals(0f, picker.pickFloat32(src), 0.000001f);
         assertEquals(3, src.position());
 
-        src = new Int32Feeder("1");
+        src = new BackableUnicodeProvider("1");
         assertEquals(1f, picker.pickFloat32(src), 0.000001f);
         assertEquals(1, src.position());
 
-        src = new Int32Feeder("-1");
+        src = new BackableUnicodeProvider("-1");
         assertEquals(-1f, picker.pickFloat32(src), 0.000001f);
         assertEquals(2, src.position());
 
-        src = new Int32Feeder("1.01");
+        src = new BackableUnicodeProvider("1.01");
         assertEquals(1.01f, picker.pickFloat32(src), 0.000001f);
         assertEquals(4, src.position());
 
-        src = new Int32Feeder("-1.1");
+        src = new BackableUnicodeProvider("-1.1");
         assertEquals(-1.1f, picker.pickFloat32(src), 0.000001f);
         assertEquals(4, src.position());
     }
@@ -46,7 +46,7 @@ public class Test_NumberPicker {
     @Test
     public void test_pickFloat32_failed() {
         for (String raw : new String[] { "-0", "0.", ".1", "-0.0" }) {
-            Int32Feeder src = new Int32Feeder(raw);
+            BackableUnicodeProvider src = new BackableUnicodeProvider(raw);
             assertThrows(ParsingException.class, () -> {
                 picker.pickFloat32(src);
             }, String.format("case [%s] failed", raw));
@@ -55,11 +55,11 @@ public class Test_NumberPicker {
 
     @Test
     public void test_pickInt32() {
-        Int32Feeder src = new Int32Feeder("00");
+        BackableUnicodeProvider src = new BackableUnicodeProvider("00");
         assertEquals(0, picker.pickInt32(src));
         assertEquals(1, src.position());
 
-        src = new Int32Feeder("1");
+        src = new BackableUnicodeProvider("1");
         assertEquals(1, picker.pickInt32(src));
         assertEquals(1, src.position());
     }

@@ -6,15 +6,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import pd.fenc.AsciiProvider;
+import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.InstallmentByteBuffer;
-import pd.fenc.Int32Feeder;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.util.AsciiExtension;
 import pd.util.Int32ArrayExtension;
 
-import static pd.fenc.ScalarPicker.EOF;
 import static pd.util.AsciiExtension.CR;
+import static pd.util.AsciiExtension.EOF;
 import static pd.util.AsciiExtension.HT;
 import static pd.util.AsciiExtension.LF;
 import static pd.util.AsciiExtension.SP;
@@ -30,7 +31,7 @@ public class HttpMessageParser {
 
     private static final String CRLF = "\r\n";
 
-    private final Int32Feeder src;
+    private final BackableUnicodeProvider src;
 
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
@@ -54,7 +55,7 @@ public class HttpMessageParser {
     }
 
     public HttpMessageParser(InputStream inputStream, int capacity) {
-        this.src = new Int32Feeder(inputStream) {
+        this.src = new BackableUnicodeProvider(AsciiProvider.wrap(inputStream)) {
             @Override
             public int next() {
                 int ch = super.next();
@@ -102,7 +103,7 @@ public class HttpMessageParser {
         }
     }
 
-    private Map.Entry<String, String> pickHttpHeaderEntry(Int32Feeder it) {
+    private Map.Entry<String, String> pickHttpHeaderEntry(BackableUnicodeProvider it) {
         StringBuilder sb = new StringBuilder();
         String key = null;
         int state = 0;
@@ -163,7 +164,7 @@ public class HttpMessageParser {
         }
     }
 
-    private List<Map.Entry<String, String>> pickHttpHeaders(Int32Feeder it) {
+    private List<Map.Entry<String, String>> pickHttpHeaders(BackableUnicodeProvider it) {
         List<Map.Entry<String, String>> httpHeaders = new LinkedList<>();
         while (true) {
             Map.Entry<String, String> entry = pickHttpHeaderEntry(it);
@@ -175,11 +176,11 @@ public class HttpMessageParser {
         return httpHeaders;
     }
 
-    private String pickHttpMethod(Int32Feeder it) {
+    private String pickHttpMethod(BackableUnicodeProvider it) {
         return scalarPicker.pickString(it, ' ');
     }
 
-    private String pickHttpVersion(Int32Feeder it) {
+    private String pickHttpVersion(BackableUnicodeProvider it) {
         if (!scalarPicker.tryEat(it, "HTTP/")) {
             throw new ParsingException(ERR_INVALID_HTTP_VERSION);
         }
@@ -207,7 +208,7 @@ public class HttpMessageParser {
      * "#" => "" <br/>
      * EOF => null <br/>
      */
-    private String pickUriFragment(Int32Feeder it) {
+    private String pickUriFragment(BackableUnicodeProvider it) {
         if (!scalarPicker.tryEat(it, '#')) {
             return null;
         }
@@ -231,7 +232,7 @@ public class HttpMessageParser {
     /**
      * stop in front of any terminator
      */
-    private String pickUriPath(Int32Feeder it) {
+    private String pickUriPath(BackableUnicodeProvider it) {
         int[] terminators = new int[] { '?', '#', ' ' };
         StringBuilder sb = new StringBuilder();
         while (true) {
@@ -254,7 +255,7 @@ public class HttpMessageParser {
      * "" => null<br/>
      * "?" => empty<br/>
      */
-    private List<Map.Entry<String, String>> pickUriQuery(Int32Feeder it) {
+    private List<Map.Entry<String, String>> pickUriQuery(BackableUnicodeProvider it) {
         if (!scalarPicker.tryEat(it, '?')) {
             return null;
         }
@@ -274,7 +275,7 @@ public class HttpMessageParser {
      * charset: visible ascii<br/>
      * a&a=&a=a
      */
-    private Map.Entry<String, String> pickUriQueryEntry(Int32Feeder it) {
+    private Map.Entry<String, String> pickUriQueryEntry(BackableUnicodeProvider it) {
         int[] terminators = new int[] { '#', ' ' };
         StringBuilder sb = new StringBuilder();
         String key = null;

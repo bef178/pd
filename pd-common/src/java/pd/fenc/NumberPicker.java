@@ -2,15 +2,15 @@ package pd.fenc;
 
 import pd.util.TextNumber;
 
-import static pd.fenc.ScalarPicker.EOF;
+import static pd.util.AsciiExtension.EOF;
 
 public class NumberPicker {
 
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public String pickFloatToken(Int32Feeder src) {
+    public String pickFloatToken(BackableUnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
-        Int32Pusher dst = Int32Pusher.wrap(sb);
+        UnicodeConsumer dst = UnicodeConsumer.wrap(sb);
         pickFloatToken(src, dst);
         return sb.toString();
     }
@@ -18,7 +18,7 @@ public class NumberPicker {
     /**
      * a number has 3 parts: integer, fraction and exponent
      */
-    void pickFloatToken(Int32Feeder src, Int32Pusher dst) {
+    void pickFloatToken(BackableUnicodeProvider src, UnicodeConsumer dst) {
         pickIntToken(src, dst);
 
         int ch = src.hasNext() ? src.next() : EOF;
@@ -49,18 +49,18 @@ public class NumberPicker {
         }
     }
 
-    public float pickFloat32(Int32Feeder src) {
+    public float pickFloat32(BackableUnicodeProvider src) {
         return Float.parseFloat(pickFloatToken(src));
     }
 
-    public double pickFloat64(Int32Feeder src) {
+    public double pickFloat64(BackableUnicodeProvider src) {
         return Double.parseDouble(pickFloatToken(src));
     }
 
     /**
      * fraction := '.' 1*digit
      */
-    void pickFractionPart(Int32Feeder src, Int32Pusher dst) {
+    void pickFractionPart(BackableUnicodeProvider src, UnicodeConsumer dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -125,7 +125,7 @@ public class NumberPicker {
     /**
      * exponent := ('E' / 'e') int
      */
-    void pickExponentPart(Int32Feeder src, Int32Pusher dst) {
+    void pickExponentPart(BackableUnicodeProvider src, UnicodeConsumer dst) {
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == 'E' || ch == 'e') {
             dst.push(ch);
@@ -136,9 +136,9 @@ public class NumberPicker {
         throw new ParsingException(String.format("unexpected [%s], expecting [E] or [e]", actual));
     }
 
-    public String pickIntToken(Int32Feeder src) {
+    public String pickIntToken(BackableUnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
-        Int32Pusher dst = Int32Pusher.wrap(sb);
+        UnicodeConsumer dst = UnicodeConsumer.wrap(sb);
         pickIntToken(src, dst);
         return sb.toString();
     }
@@ -146,7 +146,7 @@ public class NumberPicker {
     /**
      * pick a valid 10-based integer of string form, per intuition
      */
-    void pickIntToken(Int32Feeder src, Int32Pusher dst) {
+    void pickIntToken(BackableUnicodeProvider src, UnicodeConsumer dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -227,15 +227,15 @@ public class NumberPicker {
         }
     }
 
-    public int pickInt32(Int32Feeder src) {
+    public int pickInt32(BackableUnicodeProvider src) {
         return Integer.parseInt(pickIntToken(src));
     }
 
-    public long pickInt64(Int32Feeder src) {
+    public long pickInt64(BackableUnicodeProvider src) {
         return Long.parseLong(pickIntToken(src));
     }
 
-    public Number pickNumber(Int32Feeder src) {
+    public Number pickNumber(BackableUnicodeProvider src) {
         return new TextNumber(pickFloatToken(src));
     }
 }

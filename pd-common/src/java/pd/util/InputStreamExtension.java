@@ -7,9 +7,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.PrimitiveIterator;
-
-import pd.fenc.ParsingException;
 
 public class InputStreamExtension {
 
@@ -51,45 +48,6 @@ public class InputStreamExtension {
                 outputStream.write(buffer, 0, nRead);
             }
         }
-    }
-
-    public static PrimitiveIterator.OfInt toIterator(InputStream inputStream) {
-
-        return new PrimitiveIterator.OfInt() {
-
-            private final int NOT_SET = -2;
-
-            private int nextValue = NOT_SET;
-
-            @Override
-            public boolean hasNext() {
-                if (nextValue == NOT_SET) {
-                    try {
-                        nextValue = inputStream.read();
-                    } catch (IOException e) {
-                        throw new ParsingException(e);
-                    }
-                }
-                return nextValue != -1;
-            }
-
-            @Override
-            public int nextInt() {
-                if (nextValue == NOT_SET) {
-                    try {
-                        nextValue = inputStream.read();
-                    } catch (IOException e) {
-                        throw new ParsingException(e);
-                    }
-                }
-                if (nextValue == -1) {
-                    throw new ParsingException("E: no next");
-                }
-                int result = nextValue;
-                nextValue = NOT_SET;
-                return result;
-            }
-        };
     }
 
     public static void consumeAndCloseSilently(InputStream stream) {
