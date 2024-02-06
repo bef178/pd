@@ -8,11 +8,11 @@ import pd.fenc.ScalarPicker;
 
 import static pd.util.AsciiExtension.EOF;
 
-public class PropSerializer {
+public class PropertyCodec {
 
     private static final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public static Map.Entry<String, String> deserialize(BackableUnicodeProvider src) {
+    public static Map.Entry<String, String> deserializeEntry(BackableUnicodeProvider src) {
 
         scalarPicker.eatWhitespacesIfAny(src);
 
