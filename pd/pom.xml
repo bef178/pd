@@ -18,7 +18,7 @@
     <distributionManagement>
         <repository>
             <id>local-maven-repo</id>
-            <url>file://${project.basedir}/../maven-repo</url>
+            <url>file://${project.basedir}/../m2/repository</url>
         </repository>
     </distributionManagement>
 
