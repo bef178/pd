@@ -14,7 +14,7 @@ import java.util.Map;
  * It is a native carrier/bridge for json. In Java, `T` can only be `Object`.
  * A path could be used to get/set value from/to the object.
  */
-public class JcoExtension {
+public class JacoExtension {
 
     static final String INVALID_PATH_NULL = "InvalidPath: null";
     static final String INVALID_PATH_EMPTY_STRING = "InvalidPath: empty string";
@@ -42,12 +42,12 @@ public class JcoExtension {
         List<String> keys = Arrays.asList(path.split("/"));
         try {
             o = getter.get(o, keys);
-        } catch (JcoException ignored) {
+        } catch (JacoException ignored) {
             return null;
         }
         try {
             return convert(o, targetClass);
-        } catch (JcoException ignored) {
+        } catch (JacoException ignored) {
             return null;
         }
     }
@@ -83,7 +83,7 @@ public class JcoExtension {
             }
         }
         // XXX try json rebuild?
-        throw JcoException.notConvertible(o.getClass().getName(), targetClass.getName());
+        throw JacoException.notConvertible(o.getClass().getName(), targetClass.getName());
     }
 
     public static Object set(Object o, String path, Object o1) {
@@ -110,17 +110,17 @@ public class JcoExtension {
         }
 
         /**
-         * throws {@link JcoException}
+         * throws {@link JacoException}
          */
         public Object get(Object o, String key) {
             if (o == null) {
-                throw JcoException.invalidCollection("null");
+                throw JacoException.invalidCollection("null");
             } else if (o instanceof Map) {
                 Map<?, ?> m = (Map<?, ?>) o;
                 if (m.containsKey(key)) {
                     return m.get(key);
                 } else {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 }
             } else if (o instanceof List) {
                 List<?> a = (List<?>) o;
@@ -128,12 +128,12 @@ public class JcoExtension {
                 try {
                     index = Integer.parseInt(key);
                 } catch (NumberFormatException e) {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 }
                 if (index >= 0 && index < a.size()) {
                     return a.get(index);
                 } else {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 }
             } else if (o.getClass().isArray()) {
                 Object[] a = (Object[]) o;
@@ -141,16 +141,16 @@ public class JcoExtension {
                 try {
                     index = Integer.parseInt(key);
                 } catch (NumberFormatException e) {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 }
                 if (index >= 0 && index < a.length) {
                     return a[index];
                 } else {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 }
             } else {
                 // XXX get object field using reflection?
-                throw JcoException.invalidCollection(o.getClass().getSimpleName());
+                throw JacoException.invalidCollection(o.getClass().getSimpleName());
             }
         }
 
@@ -194,7 +194,7 @@ public class JcoExtension {
 
         public Object set(Object o, String key, Object o1) {
             if (o == null) {
-                throw JcoException.invalidCollection("null");
+                throw JacoException.invalidCollection("null");
             } else if (o instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<Object, Object> m = (Map<Object, Object>) o;
@@ -206,10 +206,10 @@ public class JcoExtension {
                 try {
                     index = Integer.parseInt(key);
                 } catch (NumberFormatException e) {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 }
                 if (index < 0) {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 } else if (index < a.size()) {
                     return a.set(index, o1);
                 } else {
@@ -224,7 +224,7 @@ public class JcoExtension {
                 try {
                     index = Integer.parseInt(key);
                 } catch (NumberFormatException e) {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 }
                 Object[] a = (Object[]) o;
                 if (index >= 0 && index < a.length) {
@@ -232,34 +232,34 @@ public class JcoExtension {
                     a[index] = o1;
                     return old;
                 } else {
-                    throw JcoException.keyNotFound(o.getClass(), key);
+                    throw JacoException.keyNotFound(o.getClass(), key);
                 }
             } else {
                 // XXX get object field using reflection?
-                throw JcoException.invalidCollection(o.getClass().getSimpleName());
+                throw JacoException.invalidCollection(o.getClass().getSimpleName());
             }
         }
     }
 
-    public static class JcoException extends RuntimeException {
+    public static class JacoException extends RuntimeException {
 
         static final String INVALID_COLLECTION = "InvalidCollection: `%s` not a Map, List or Array";
         static final String KEY_NOT_FOUND = "KeyNotFound: `%s` of `%s`";
         static final String NOT_CONVERTIBLE = "NotConvertible: cannot convert `%s` to `%s`";
 
-        public static JcoException invalidCollection(String className) {
-            return new JcoException(String.format(INVALID_COLLECTION, className));
+        public static JacoException invalidCollection(String className) {
+            return new JacoException(String.format(INVALID_COLLECTION, className));
         }
 
-        public static JcoException keyNotFound(Class<?> clazz, String key) {
-            return new JcoException(String.format(KEY_NOT_FOUND, key, clazz.getSimpleName()));
+        public static JacoException keyNotFound(Class<?> clazz, String key) {
+            return new JacoException(String.format(KEY_NOT_FOUND, key, clazz.getSimpleName()));
         }
 
-        public static JcoException notConvertible(String srcClassName, String dstClassName) {
-            return new JcoException(String.format(NOT_CONVERTIBLE, srcClassName, dstClassName));
+        public static JacoException notConvertible(String srcClassName, String dstClassName) {
+            return new JacoException(String.format(NOT_CONVERTIBLE, srcClassName, dstClassName));
         }
 
-        public JcoException(String message) {
+        public JacoException(String message) {
             super(message);
         }
     }

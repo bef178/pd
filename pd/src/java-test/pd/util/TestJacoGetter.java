@@ -5,15 +5,15 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static pd.util.JcoExtension.JcoException;
+import static pd.util.JacoExtension.JacoException;
 
-public class TestJcoGetter {
+public class TestJacoGetter {
 
     @Test
     public void testGetFromArray() {
         String s = "{\"a\":{\"b\":[\"c\",\"d\"]}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        String value = JcoExtension.get(o, "a/b/1", String.class);
+        String value = JacoExtension.get(o, "a/b/1", String.class);
         assertEquals("d", value);
     }
 
@@ -21,7 +21,7 @@ public class TestJcoGetter {
     public void testGetFromArray_null() {
         String s = "{\"a\":{\"b\":[\"c\",\"d\"]}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        String value = JcoExtension.getOrNull(o, "a/b/1d", String.class);
+        String value = JacoExtension.getOrNull(o, "a/b/1d", String.class);
         assertNull(value);
     }
 
@@ -30,8 +30,8 @@ public class TestJcoGetter {
         String s = "{\"a\":{\"b\":[\"c\",\"d\"]}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
         Exception expectedException = assertThrows(
-                JcoException.class,
-                () -> JcoExtension.get(o, "a/b/1d", String.class));
+                JacoException.class,
+                () -> JacoExtension.get(o, "a/b/1d", String.class));
         assertEquals("KeyNotFound: `1d` of `ArrayList`", expectedException.getMessage());
     }
 
@@ -40,8 +40,8 @@ public class TestJcoGetter {
         String s = "{\"a\":{\"b\":[\"c\",\"d\"]}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
         Exception expectedException = assertThrows(
-                JcoException.class,
-                () -> JcoExtension.get(o, "a/b/2", String.class));
+                JacoException.class,
+                () -> JacoExtension.get(o, "a/b/2", String.class));
         assertEquals("KeyNotFound: `2` of `ArrayList`", expectedException.getMessage());
     }
 
@@ -49,7 +49,7 @@ public class TestJcoGetter {
     public void testGetFromMap() {
         String s = "{\"a\":{\"b\":{\"1\":\"d\"}}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        String value = JcoExtension.get(o, "a/b/1", String.class);
+        String value = JacoExtension.get(o, "a/b/1", String.class);
         assertEquals("d", value);
     }
 
@@ -57,7 +57,7 @@ public class TestJcoGetter {
     public void testGetIntegerFromMap() {
         String s = "{\"a\":{\"b\":{\"1\":2}}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        Integer value = JcoExtension.get(o, "a/b/1", Integer.class);
+        Integer value = JacoExtension.get(o, "a/b/1", Integer.class);
         assertEquals(new Integer(2), value);
     }
 
@@ -65,7 +65,7 @@ public class TestJcoGetter {
     public void testGetLongFromMap() {
         String s = "{\"a\":{\"b\":{\"1\":2}}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        Long value = JcoExtension.get(o, "a/b/1", Long.class);
+        Long value = JacoExtension.get(o, "a/b/1", Long.class);
         assertEquals(new Long(2), value);
     }
 
@@ -73,7 +73,7 @@ public class TestJcoGetter {
     public void testGetDoubleFromMap() {
         String s = "{\"a\":{\"b\":{\"1\":2.0}}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        Double value = JcoExtension.get(o, "a/b/1", Double.class);
+        Double value = JacoExtension.get(o, "a/b/1", Double.class);
         assertEquals(new Double(2), value);
     }
 
@@ -81,7 +81,7 @@ public class TestJcoGetter {
     public void testConvertDouble() {
         String s = "2.0";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        Double value = JcoExtension.convert(o, Double.class);
+        Double value = JacoExtension.convert(o, Double.class);
         assertEquals(new Double(2), value);
     }
 }
