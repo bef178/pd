@@ -2,6 +2,8 @@ package pd.jaco;
 
 import java.util.Arrays;
 
+import static pd.util.ObjectExtension.convert;
+
 /**
  * Define T as primitive data container object:
  * ```
@@ -30,40 +32,6 @@ public class JacoExtension {
             return null;
         }
         return convert(value, targetClass);
-    }
-
-    public static <T> T convert(Object o, Class<T> targetClass) {
-        if (o == null) {
-            return null;
-        }
-        if (targetClass.isAssignableFrom(o.getClass())) {
-            return targetClass.cast(o);
-        }
-        if (targetClass == Double.class) {
-            if (o.getClass() == Float.class) {
-                return targetClass.cast(((Float) o).doubleValue());
-            }
-        } else if (targetClass == Long.class) {
-            if (o.getClass() == Integer.class) {
-                return targetClass.cast(((Integer) o).longValue());
-            } else if (o.getClass() == Short.class) {
-                return targetClass.cast(((Short) o).longValue());
-            } else if (o.getClass() == Byte.class) {
-                return targetClass.cast(((Byte) o).longValue());
-            }
-        } else if (targetClass == Integer.class) {
-            if (o.getClass() == Short.class) {
-                return targetClass.cast(((Short) o).intValue());
-            } else if (o.getClass() == Byte.class) {
-                return targetClass.cast(((Byte) o).intValue());
-            }
-        } else if (targetClass == Short.class) {
-            if (o.getClass() == Byte.class) {
-                return targetClass.cast(((Byte) o).shortValue());
-            }
-        }
-        // XXX try json rebuild?
-        throw JacoException.notConvertible(o.getClass().getName(), targetClass.getName());
     }
 
     public static Object setWithPath(Object o, String path, Object value) {

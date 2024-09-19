@@ -76,12 +76,4 @@ public class TestJacoGetter {
         Double value = JacoExtension.getWithPath(o, "a/b/1", Double.class);
         assertEquals(new Double(2), value);
     }
-
-    @Test
-    public void testConvertDouble() {
-        String s = "2.0";
-        Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        Double value = JacoExtension.convert(o, Double.class);
-        assertEquals(new Double(2), value);
-    }
 }
