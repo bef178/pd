@@ -13,7 +13,7 @@ public class TestJacoGetter {
     public void testGetFromArray() {
         String s = "{\"a\":{\"b\":[\"c\",\"d\"]}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        String value = JacoExtension.get(o, "a/b/1", String.class);
+        String value = JacoExtension.getWithPath(o, "a/b/1", String.class);
         assertEquals("d", value);
     }
 
@@ -21,7 +21,7 @@ public class TestJacoGetter {
     public void testGetFromArray_null() {
         String s = "{\"a\":{\"b\":[\"c\",\"d\"]}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        String value = JacoExtension.getOrNull(o, "a/b/1d", String.class);
+        String value = JacoExtension.getOrNullWithPath(o, "a/b/1d", String.class);
         assertNull(value);
     }
 
@@ -31,7 +31,7 @@ public class TestJacoGetter {
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
         Exception expectedException = assertThrows(
                 JacoException.class,
-                () -> JacoExtension.get(o, "a/b/1d", String.class));
+                () -> JacoExtension.getWithPath(o, "a/b/1d", String.class));
         assertEquals("KeyNotFound: `1d` of `ArrayList`", expectedException.getMessage());
     }
 
@@ -41,7 +41,7 @@ public class TestJacoGetter {
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
         Exception expectedException = assertThrows(
                 JacoException.class,
-                () -> JacoExtension.get(o, "a/b/2", String.class));
+                () -> JacoExtension.getWithPath(o, "a/b/2", String.class));
         assertEquals("KeyNotFound: `2` of `ArrayList`", expectedException.getMessage());
     }
 
@@ -49,7 +49,7 @@ public class TestJacoGetter {
     public void testGetFromMap() {
         String s = "{\"a\":{\"b\":{\"1\":\"d\"}}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        String value = JacoExtension.get(o, "a/b/1", String.class);
+        String value = JacoExtension.getWithPath(o, "a/b/1", String.class);
         assertEquals("d", value);
     }
 
@@ -57,7 +57,7 @@ public class TestJacoGetter {
     public void testGetIntegerFromMap() {
         String s = "{\"a\":{\"b\":{\"1\":2}}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        Integer value = JacoExtension.get(o, "a/b/1", Integer.class);
+        Integer value = JacoExtension.getWithPath(o, "a/b/1", Integer.class);
         assertEquals(new Integer(2), value);
     }
 
@@ -65,7 +65,7 @@ public class TestJacoGetter {
     public void testGetLongFromMap() {
         String s = "{\"a\":{\"b\":{\"1\":2}}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        Long value = JacoExtension.get(o, "a/b/1", Long.class);
+        Long value = JacoExtension.getWithPath(o, "a/b/1", Long.class);
         assertEquals(new Long(2), value);
     }
 
@@ -73,7 +73,7 @@ public class TestJacoGetter {
     public void testGetDoubleFromMap() {
         String s = "{\"a\":{\"b\":{\"1\":2.0}}}";
         Object o = JacksonUtil.jacksonDeserialize(s, Object.class);
-        Double value = JacoExtension.get(o, "a/b/1", Double.class);
+        Double value = JacoExtension.getWithPath(o, "a/b/1", Double.class);
         assertEquals(new Double(2), value);
     }
 

@@ -1,7 +1,6 @@
 package pd.jaco;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Define T as primitive data container object:
@@ -13,40 +12,24 @@ import java.util.List;
  */
 public class JacoExtension {
 
-    static final String INVALID_PATH_NULL = "InvalidPath: null";
-    static final String INVALID_PATH_EMPTY_STRING = "InvalidPath: empty string";
-
     private static final JacoGetter jacoGetter = new JacoGetter();
     private static final JacoSetter jacoSetter = new JacoSetter();
 
-    public static <T> T get(Object o, String path, Class<T> targetClass) {
-        if (path == null) {
-            throw new IllegalArgumentException(INVALID_PATH_NULL);
-        } else if (path.isEmpty()) {
-            throw new IllegalArgumentException(INVALID_PATH_EMPTY_STRING);
-        }
-        List<String> keys = Arrays.asList(path.split("/"));
-        o = jacoGetter.get(o, keys);
-        return convert(o, targetClass);
+    public static <T> T getWithPath(Object o, String path, Class<T> targetClass) {
+        checkPath(path);
+        Object value = jacoGetter.get(o, Arrays.asList(path.split("/")));
+        return convert(value, targetClass);
     }
 
-    public static <T> T getOrNull(Object o, String path, Class<T> targetClass) {
-        if (path == null) {
-            throw new IllegalArgumentException(INVALID_PATH_NULL);
-        } else if (path.isEmpty()) {
-            throw new IllegalArgumentException(INVALID_PATH_EMPTY_STRING);
-        }
-        List<String> keys = Arrays.asList(path.split("/"));
+    public static <T> T getOrNullWithPath(Object o, String path, Class<T> targetClass) {
+        checkPath(path);
+        Object value;
         try {
-            o = jacoGetter.get(o, keys);
+            value = jacoGetter.get(o, Arrays.asList(path.split("/")));
         } catch (JacoException ignored) {
             return null;
         }
-        try {
-            return convert(o, targetClass);
-        } catch (JacoException ignored) {
-            return null;
-        }
+        return convert(value, targetClass);
     }
 
     public static <T> T convert(Object o, Class<T> targetClass) {
@@ -83,13 +66,16 @@ public class JacoExtension {
         throw JacoException.notConvertible(o.getClass().getName(), targetClass.getName());
     }
 
-    public static Object set(Object o, String path, Object o1) {
+    public static Object setWithPath(Object o, String path, Object value) {
+        checkPath(path);
+        return jacoSetter.set(o, Arrays.asList(path.split("/")), value);
+    }
+
+    static void checkPath(String path) {
         if (path == null) {
-            throw new IllegalArgumentException(INVALID_PATH_NULL);
+            throw JacoException.invalidPath("null");
         } else if (path.isEmpty()) {
-            throw new IllegalArgumentException(INVALID_PATH_EMPTY_STRING);
+            throw JacoException.invalidPath("empty string");
         }
-        List<String> keys = Arrays.asList(path.split("/"));
-        return jacoSetter.set(o, keys, o1);
     }
 }

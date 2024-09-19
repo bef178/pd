@@ -1,29 +1,27 @@
 package pd.jaco;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import lombok.NonNull;
+
 public class JacoGetter {
 
-    public Object get(Object o, List<String> keys) {
+    public Object get(@NonNull Object o, List<String> keys) {
         for (String key : keys) {
             o = get(o, key);
+            if (o == null) {
+                break;
+            }
         }
         return o;
-    }
-
-    public Object get(Object o, String... keys) {
-        return get(o, Arrays.asList(keys));
     }
 
     /**
      * throws {@link JacoException}
      */
-    public Object get(Object o, String key) {
-        if (o == null) {
-            throw JacoException.invalidCollection("null");
-        } else if (o instanceof Map) {
+    public Object get(@NonNull Object o, String key) {
+        if (o instanceof Map) {
             Map<?, ?> m = (Map<?, ?>) o;
             if (m.containsKey(key)) {
                 return m.get(key);
@@ -59,14 +57,6 @@ public class JacoGetter {
         } else {
             // XXX reflection get?
             throw JacoException.invalidCollection(o.getClass().getSimpleName());
-        }
-    }
-
-    public Object getOrNull(Object o, String key) {
-        try {
-            return get(o, key);
-        } catch (Exception ignored) {
-            return null;
         }
     }
 }
