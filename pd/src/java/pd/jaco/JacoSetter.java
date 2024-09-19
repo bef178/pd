@@ -9,21 +9,19 @@ import lombok.NonNull;
 
 public class JacoSetter {
 
-    private static final JacoGetter jacoGetter = new JacoGetter();
+    public final JacoGetter jacoGetter;
+
+    public JacoSetter(JacoGetter jacoGetter) {
+        this.jacoGetter = jacoGetter;
+    }
 
     public Object set(@NonNull Object o, List<String> keys, Object value) {
         for (int i = 0; i < keys.size() - 1; i++) {
             String key = keys.get(i);
-            Object o1;
-            {
-                try {
-                    o1 = jacoGetter.get(o, key);
-                } catch (Exception ignored) {
-                    o1 = null;
-                }
-            }
+            Object o1 = jacoGetter.get(o, key);
             if (o1 == null) {
-                o1 = createWithNextKey(keys.get(i + 1));
+                String nextKey = keys.get(i + 1);
+                o1 = createWithNextKey(nextKey);
                 set(o, key, o1);
             }
             o = o1;
@@ -31,6 +29,9 @@ public class JacoSetter {
         return set(o, keys.get(keys.size() - 1), value);
     }
 
+    /**
+     * throws {@link JacoException}
+     */
     public Object set(@NonNull Object o, String key, Object value) {
         if (o instanceof Map) {
             @SuppressWarnings("unchecked")
@@ -43,10 +44,10 @@ public class JacoSetter {
             try {
                 index = Integer.parseInt(key);
             } catch (NumberFormatException e) {
-                throw JacoException.keyNotFound(o.getClass(), key);
+                throw JacoException.keyNotIndex(key);
             }
             if (index < 0) {
-                throw JacoException.keyNotFound(o.getClass(), key);
+                throw JacoException.negativeIndex(index);
             } else if (index < a.size()) {
                 return a.set(index, value);
             } else {
@@ -61,15 +62,17 @@ public class JacoSetter {
             try {
                 index = Integer.parseInt(key);
             } catch (NumberFormatException e) {
-                throw JacoException.keyNotFound(o.getClass(), key);
+                throw JacoException.keyNotIndex(key);
             }
             Object[] a = (Object[]) o;
-            if (index >= 0 && index < a.length) {
+            if (index < 0) {
+                throw JacoException.negativeIndex(index);
+            } else if (index < a.length) {
                 Object old = a[index];
                 a[index] = value;
                 return old;
             } else {
-                throw JacoException.keyNotFound(o.getClass(), key);
+                throw JacoException.indexTooLarge(index, a.length);
             }
         } else {
             // XXX reflection get?

@@ -23,23 +23,21 @@ public class JacoGetter {
     public Object get(@NonNull Object o, String key) {
         if (o instanceof Map) {
             Map<?, ?> m = (Map<?, ?>) o;
-            if (m.containsKey(key)) {
-                return m.get(key);
-            } else {
-                throw JacoException.keyNotFound(o.getClass(), key);
-            }
+            return m.getOrDefault(key, null);
         } else if (o instanceof List) {
             List<?> a = (List<?>) o;
             int index;
             try {
                 index = Integer.parseInt(key);
             } catch (NumberFormatException e) {
-                throw JacoException.keyNotFound(o.getClass(), key);
+                throw JacoException.keyNotIndex(key);
             }
-            if (index >= 0 && index < a.size()) {
+            if (index < 0) {
+                throw JacoException.negativeIndex(index);
+            } else if (index < a.size()) {
                 return a.get(index);
             } else {
-                throw JacoException.keyNotFound(o.getClass(), key);
+                return null;
             }
         } else if (o.getClass().isArray()) {
             Object[] a = (Object[]) o;
@@ -47,12 +45,14 @@ public class JacoGetter {
             try {
                 index = Integer.parseInt(key);
             } catch (NumberFormatException e) {
-                throw JacoException.keyNotFound(o.getClass(), key);
+                throw JacoException.keyNotIndex(key);
             }
-            if (index >= 0 && index < a.length) {
+            if (index < 0) {
+                throw JacoException.negativeIndex(index);
+            } else if (index < a.length) {
                 return a[index];
             } else {
-                throw JacoException.keyNotFound(o.getClass(), key);
+                return null;
             }
         } else {
             // XXX reflection get?
