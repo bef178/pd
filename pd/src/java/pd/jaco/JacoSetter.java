@@ -23,21 +23,7 @@ public class JacoSetter {
                 }
             }
             if (o1 == null) {
-                // create collection
-                String nextKey = keys.get(i + 1);
-                boolean preferSequential = false;
-                try {
-                    int nextIndex = Integer.parseInt(nextKey);
-                    if (nextIndex >= 0 && nextIndex < 100) {
-                        preferSequential = true;
-                    }
-                } catch (Exception ignored) {
-                }
-                if (preferSequential) {
-                    o1 = new LinkedList<>();
-                } else {
-                    o1 = new LinkedHashMap<>();
-                }
+                o1 = createWithNextKey(keys.get(i + 1));
                 set(o, key, o1);
             }
             o = o1;
@@ -88,6 +74,22 @@ public class JacoSetter {
         } else {
             // XXX reflection get?
             throw JacoException.invalidCollection(o.getClass().getSimpleName());
+        }
+    }
+
+    public Object createWithNextKey(String nextKey) {
+        boolean prefersSequential = false;
+        try {
+            int nextIndex = Integer.parseInt(nextKey);
+            if (nextIndex >= 0 && nextIndex < 64) {
+                prefersSequential = true;
+            }
+        } catch (Exception ignored) {
+        }
+        if (prefersSequential) {
+            return new LinkedList<>();
+        } else {
+            return new LinkedHashMap<>();
         }
     }
 }
