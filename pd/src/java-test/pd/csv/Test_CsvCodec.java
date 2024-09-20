@@ -1,4 +1,4 @@
-package pd.codec.csv;
+package pd.csv;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import pd.csv.CsvCodec;
 
 public class Test_CsvCodec {
 

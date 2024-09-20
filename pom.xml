@@ -13,7 +13,6 @@
         <module>pd</module>
         <module>pd-logger</module>
         <module>pd-aws</module>
-        <module>pd-csv</module>
         <module>pd-injector</module>
         <module>pd-server</module>
         <module>pd-fdup</module>

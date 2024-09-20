@@ -1,4 +1,4 @@
-package pd.codec.csv;
+package pd.csv;
 
 import java.util.List;
 
