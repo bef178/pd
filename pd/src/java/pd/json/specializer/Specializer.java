@@ -1,0 +1,182 @@
+package pd.json.specializer;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.Map;
+
+import pd.fenc.ParsingException;
+import pd.json.datatype.Json;
+import pd.json.datatype.JsonArray;
+import pd.json.datatype.JsonObject;
+import pd.util.PathExtension;
+
+public class Specializer {
+
+    public final SpecializingConfig config;
+
+    public Specializer(SpecializingConfig config) {
+        this.config = config;
+    }
+
+    public <T> T convert(Json json, Class<T> targetClass) {
+        try {
+            return convert(json, "/", targetClass);
+        } catch (Exception e) {
+            throw new ParsingException(e);
+        }
+    }
+
+    /**
+     * convert Json things to Java things
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T convert(Json json, String path, Class<T> targetClass)
+            throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
+            IllegalArgumentException, InvocationTargetException {
+
+        if (targetClass == null) {
+            throw new IllegalArgumentException();
+        }
+
+        if (json == null) {
+            return null;
+        }
+
+        Class<? extends T> mappedClass = deduceMappedClassFromConfig(json, path, targetClass);
+        if (mappedClass == Object.class) {
+            mappedClass = deduceMappedClassFromJson(json);
+            if (mappedClass == null || mappedClass == Void.class) {
+                return null;
+            } else if (mappedClass.isInterface()) {
+                mappedClass = deduceMappedClassFromConfig(json, path, mappedClass);
+            }
+        }
+
+        T result = mapToPrimitiveOrStringIfPossible(json, mappedClass);
+        if (result != null) {
+            return result;
+        }
+
+        // TODO add mapToObject config
+
+        if (mappedClass.isInterface()) {
+            throw new ParsingException("E: cannot instantiate an interface: " + mappedClass.getName());
+        } else if (Modifier.isAbstract(mappedClass.getModifiers())) {
+            throw new ParsingException("E: cannot instantiate an abstract class: " + mappedClass.getName());
+        }
+
+        if (mappedClass.isAssignableFrom(JsonArray.class)) {
+            return (T) json.asJsonArray();
+        } else if (mappedClass.isArray()) {
+            JsonArray jsonArray = json.asJsonArray();
+            Class<?> elementClass = mappedClass.getComponentType();
+            Object array = Array.newInstance(elementClass, jsonArray.size());
+            for (int i = 0; i < jsonArray.size(); i++) {
+                String path1 = PathExtension.resolve(path, "[" + i + "]");
+                Array.set(array, i, convert(jsonArray.get(i), path1, elementClass));
+            }
+            return (T) array;
+        } else if (List.class.isAssignableFrom(mappedClass)) {
+            JsonArray jsonArray = json.asJsonArray();
+            Constructor<?> constructor = mappedClass.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            List<Object> list = (List<Object>) constructor.newInstance();
+            for (int i = 0; i < jsonArray.size(); i++) {
+                String path1 = PathExtension.resolve(path, "[" + i + "]");
+                list.add(convert(jsonArray.get(i), path1, Object.class));
+            }
+            return (T) list;
+        }
+
+        if (mappedClass.isAssignableFrom(JsonObject.class)) {
+            return (T) json.asJsonObject();
+        } else if (Map.class.isAssignableFrom(mappedClass)) {
+            JsonObject jsonObject = json.asJsonObject();
+            Constructor<?> constructor = mappedClass.getDeclaredConstructor();
+            Map<String, Object> map = (Map<String, Object>) constructor.newInstance();
+            for (Map.Entry<String, Json> entry : jsonObject.entrySet()) {
+                String path1 = PathExtension.resolve(path, "{" + entry.getKey() + "}");
+                map.put(entry.getKey(), convert(entry.getValue(), path1, Object.class));
+            }
+            return (T) map;
+        }
+
+        // not array, not list, not map: that is a "normal" object
+        JsonObject jsonObject = json.asJsonObject();
+        Constructor<?> constructor = mappedClass.getDeclaredConstructor();
+        Object object = constructor.newInstance();
+        for (Field field : mappedClass.getFields()) {
+            String fieldName = field.getName();
+            if (jsonObject.containsKey(fieldName)) {
+                field.setAccessible(true);
+                String path1 = PathExtension.resolve(path, fieldName);
+                field.set(object, convert(jsonObject.get(fieldName), path1, field.getType()));
+            }
+        }
+        return (T) object;
+    }
+
+    <T> Class<? extends T> deduceMappedClassFromConfig(Json json, String path, final Class<T> tClass) {
+        @SuppressWarnings("unchecked")
+        MapToJavaTypeFunc<T> func = (MapToJavaTypeFunc<T>) config.refs.get(tClass);
+        if (func == null) {
+            return tClass;
+        }
+        Class<? extends T> dstClass = func.map(json, path, tClass);
+        if (dstClass == null) {
+            return tClass;
+        }
+        return dstClass;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Class<? extends T> deduceMappedClassFromJson(Json json) {
+        switch (json.getJsonType()) {
+            case NULL:
+                return (Class<? extends T>) Void.class;
+            case BOOLEAN:
+                return (Class<? extends T>) Boolean.class;
+            case NUMBER: {
+                return json.asJsonNumber().isRoundNumber()
+                        ? (Class<? extends T>) Long.class
+                        : (Class<? extends T>) Double.class;
+            }
+            case STRING:
+                return (Class<? extends T>) String.class;
+            case ARRAY:
+                return (Class<? extends T>) List.class;
+            case OBJECT:
+                return (Class<? extends T>) Map.class;
+            default:
+                throw new ParsingException();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T mapToPrimitiveOrStringIfPossible(Json json, Class<? extends T> mappedClass) {
+        if (mappedClass == int.class || mappedClass == Integer.class) {
+            return (T) (Integer) json.asJsonNumber().getInt32();
+        } else if (mappedClass == long.class || mappedClass == Long.class) {
+            return (T) (Long) json.asJsonNumber().getInt64();
+        } else if (mappedClass == byte.class || mappedClass == Byte.class) {
+            return (T) (Byte) (byte) json.asJsonNumber().getInt32();
+        } else if (mappedClass == short.class || mappedClass == Short.class) {
+            return (T) (Short) (short) json.asJsonNumber().getInt32();
+        } else if (mappedClass == char.class || mappedClass == Character.class) {
+            return (T) (Character) (char) json.asJsonNumber().getInt32();
+        } else if (mappedClass == float.class || mappedClass == Float.class) {
+            return (T) (Float) json.asJsonNumber().getFloat32();
+        } else if (mappedClass == double.class || mappedClass == Double.class) {
+            return (T) (Double) json.asJsonNumber().getFloat64();
+        } else if (mappedClass == boolean.class || mappedClass == Boolean.class) {
+            return (T) (Boolean) json.asJsonBoolean().getBoolean();
+        } else if (mappedClass == String.class) {
+            return (T) json.asJsonString().getString();
+        }
+        return null;
+    }
+}
