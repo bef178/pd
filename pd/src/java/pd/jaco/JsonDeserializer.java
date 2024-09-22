@@ -1,55 +1,41 @@
-package pd.json.deserializer;
+package pd.jaco;
+
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import pd.codec.HexCodec;
 import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
-import pd.json.datafactory.JsonFactory;
-import pd.json.datatype.Json;
-import pd.json.datatype.JsonArray;
-import pd.json.datatype.JsonNull;
-import pd.json.datatype.JsonNumber;
-import pd.json.datatype.JsonObject;
-import pd.json.datatype.JsonString;
 import pd.util.AsciiExtension;
+import pd.util.TextNumber;
 import pd.util.UnicodeExtension;
 
 import static pd.util.AsciiExtension.EOF;
 
-public class Deserializer {
-
-    private final JsonFactory jsonFactory;
+public class JsonDeserializer {
 
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public Deserializer(JsonFactory jsonFactory) {
-        this.jsonFactory = jsonFactory;
+    public Object jsonToJaco(String s) {
+        return jsonToJaco(new BackableUnicodeProvider(s));
     }
 
-    /**
-     * `String` => `Json`<br/>
-     */
-    public Json deserialize(String s) {
-        if (s == null) {
-            return null;
-        }
-        BackableUnicodeProvider src = new BackableUnicodeProvider(s);
-        return deserializeToJson(src);
-    }
-
-    private Json deserializeToJson(BackableUnicodeProvider src) {
-        int ch = src.hasNext() ? src.next() : EOF;
+    private Object jsonToJaco(BackableUnicodeProvider it) {
+        int ch = it.hasNext() ? it.next() : EOF;
         switch (ch) {
             case 'n':
-                src.back();
-                return deserializeToJsonNull(src);
+                it.back();
+                return jsonToNull(it);
             case 't':
-                src.back();
-                return deserializeToJsonTrue(src);
+                it.back();
+                return jsonToTrue(it);
             case 'f':
-                src.back();
-                return deserializeToJsonFalse(src);
+                it.back();
+                return jsonToFalse(it);
             case '0':
             case '1':
             case '2':
@@ -61,116 +47,44 @@ public class Deserializer {
             case '8':
             case '9':
             case '-':
-                src.back();
-                return deserializeToJsonNumber(src);
+                it.back();
+                return jsonToNumber(it);
             case '\"':
-                src.back();
-                return deserializeToJsonString(src);
+                it.back();
+                return jsonToString(it);
             case '[':
-                src.back();
-                return deserializeToJsonArray(src);
+                it.back();
+                return jsonToArray(it);
             case '{':
-                src.back();
-                return deserializeToJsonObject(src);
+                it.back();
+                return jsonToMap(it);
             default:
                 throw new ParsingException();
         }
     }
 
-    private JsonArray deserializeToJsonArray(BackableUnicodeProvider src) {
-        JsonArray jsonArray = jsonFactory.createJsonArray();
+    private Map<String, Object> jsonToMap(BackableUnicodeProvider it) {
+        Map<String, Object> m = new LinkedHashMap<>();
         int state = 0;
         while (true) {
             switch (state) {
                 case 0: {
-                    int ch = src.hasNext() ? src.next() : EOF;
-                    if (ch != '[') {
-                        throw new ParsingException(
-                                String.format("expected '[', actual [%s]", UnicodeExtension.toString(ch)));
-                    }
-                    scalarPicker.eatWhitespacesIfAny(src);
-                    state = 1;
-                    break;
-                }
-                case 1: {
-                    // a json or the end
-                    int ch = src.hasNext() ? src.next() : EOF;
-                    switch (ch) {
-                        case ']':
-                            return jsonArray;
-                        default:
-                            src.back();
-                            state = 2;
-                            break;
-                    }
-                    break;
-                }
-                case 2: {
-                    // a json
-                    jsonArray.append(deserializeToJson(src));
-                    scalarPicker.eatWhitespacesIfAny(src);
-                    state = 3;
-                    break;
-                }
-                case 3: {
-                    // a comma or the end
-                    int ch = src.hasNext() ? src.next() : EOF;
-                    switch (ch) {
-                        case ']':
-                            return jsonArray;
-                        case ',':
-                            scalarPicker.eatWhitespacesIfAny(src);
-                            state = 2;
-                            break;
-                        default:
-                            throw new ParsingException(
-                                    String.format("expected ']' or ',', actual [%s]", UnicodeExtension.toString(ch)));
-                    }
-                    break;
-                }
-                default:
-                    throw new IllegalStateException();
-            }
-        }
-    }
-
-    private Json deserializeToJsonFalse(BackableUnicodeProvider src) {
-        scalarPicker.eat(src, "false");
-        return jsonFactory.createJsonBoolean(false);
-    }
-
-    private JsonNull deserializeToJsonNull(BackableUnicodeProvider src) {
-        scalarPicker.eat(src, "null");
-        return jsonFactory.getJsonNull();
-    }
-
-    private JsonNumber deserializeToJsonNumber(BackableUnicodeProvider src) {
-        String floatToken = new NumberPicker().pickFloatToken(src);
-        return jsonFactory.createJsonNumber().set(floatToken);
-    }
-
-    private JsonObject deserializeToJsonObject(BackableUnicodeProvider src) {
-        JsonObject jsonObject = jsonFactory.createJsonObject();
-        int state = 0;
-        while (true) {
-            switch (state) {
-                case 0: {
-                    int ch = src.hasNext() ? src.next() : EOF;
+                    int ch = it.hasNext() ? it.next() : EOF;
                     if (ch != '{') {
                         throw new ParsingException(
                                 String.format("expected '{', actual [%s]", UnicodeExtension.toString(ch)));
                     }
-                    scalarPicker.eatWhitespacesIfAny(src);
+                    scalarPicker.eatWhitespacesIfAny(it);
                     state = 1;
                     break;
                 }
                 case 1: {
-                    int ch = src.hasNext() ? src.next() : EOF;
+                    int ch = it.hasNext() ? it.next() : EOF;
                     switch (ch) {
                         case '}':
-                            return jsonObject;
+                            return m;
                         default:
-                            src.back();
+                            it.back();
                             state = 2;
                             break;
                     }
@@ -178,24 +92,24 @@ public class Deserializer {
                 }
                 case 2: {
                     // deserializeJsonKeyValue()
-                    String pKey = deserializeToJsonString(src).getString();
-                    scalarPicker.eatWhitespacesIfAny(src);
-                    scalarPicker.eat(src, ':');
-                    scalarPicker.eatWhitespacesIfAny(src);
-                    Json pValue = deserializeToJson(src);
+                    String pKey = jsonToString(it);
+                    scalarPicker.eatWhitespacesIfAny(it);
+                    scalarPicker.eat(it, ':');
+                    scalarPicker.eatWhitespacesIfAny(it);
+                    Object pValue = jsonToJaco(it);
 
-                    jsonObject.put(pKey, pValue);
-                    scalarPicker.eatWhitespacesIfAny(src);
+                    m.put(pKey, pValue);
+                    scalarPicker.eatWhitespacesIfAny(it);
                     state = 3;
                     break;
                 }
                 case 3: {
-                    int ch = src.hasNext() ? src.next() : EOF;
+                    int ch = it.hasNext() ? it.next() : EOF;
                     switch (ch) {
                         case '}':
-                            return jsonObject;
+                            return m;
                         case ',':
-                            scalarPicker.eatWhitespacesIfAny(src);
+                            scalarPicker.eatWhitespacesIfAny(it);
                             state = 2;
                             break;
                         default:
@@ -210,14 +124,71 @@ public class Deserializer {
         }
     }
 
-    private JsonString deserializeToJsonString(BackableUnicodeProvider src) {
+    private List<Object> jsonToArray(BackableUnicodeProvider it) {
+        List<Object> a = new LinkedList<>();
+        int state = 0;
+        while (true) {
+            switch (state) {
+                case 0: {
+                    int ch = it.hasNext() ? it.next() : EOF;
+                    if (ch != '[') {
+                        throw new ParsingException(
+                                String.format("expected '[', actual [%s]", UnicodeExtension.toString(ch)));
+                    }
+                    scalarPicker.eatWhitespacesIfAny(it);
+                    state = 1;
+                    break;
+                }
+                case 1: {
+                    // a json or the end
+                    int ch = it.hasNext() ? it.next() : EOF;
+                    switch (ch) {
+                        case ']':
+                            return a;
+                        default:
+                            it.back();
+                            state = 2;
+                            break;
+                    }
+                    break;
+                }
+                case 2: {
+                    // a json
+                    a.add(jsonToJaco(it));
+                    scalarPicker.eatWhitespacesIfAny(it);
+                    state = 3;
+                    break;
+                }
+                case 3: {
+                    // a comma or the end
+                    int ch = it.hasNext() ? it.next() : EOF;
+                    switch (ch) {
+                        case ']':
+                            return a;
+                        case ',':
+                            scalarPicker.eatWhitespacesIfAny(it);
+                            state = 2;
+                            break;
+                        default:
+                            throw new ParsingException(
+                                    String.format("expected ']' or ',', actual [%s]", UnicodeExtension.toString(ch)));
+                    }
+                    break;
+                }
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+    }
+
+    private String jsonToString(BackableUnicodeProvider it) {
         // state machine go!
         int state = 0;
         StringBuilder sb = new StringBuilder();
         while (true) {
             switch (state) {
                 case 0: {
-                    int ch = src.hasNext() ? src.next() : EOF;
+                    int ch = it.hasNext() ? it.next() : EOF;
                     if (ch != '\"') {
                         throw new ParsingException(
                                 String.format("expected '\"', actual [%s]", UnicodeExtension.toString(ch)));
@@ -226,10 +197,10 @@ public class Deserializer {
                     break;
                 }
                 case 1: {
-                    int ch = src.hasNext() ? src.next() : EOF;
+                    int ch = it.hasNext() ? it.next() : EOF;
                     if (ch == '\"') {
                         // consume the end delimiter and exit
-                        return jsonFactory.createJsonString(sb.toString());
+                        return sb.toString();
                     } else if (ch == '\\') {
                         state = 2;
                     } else if (AsciiExtension.isControl(ch)) {
@@ -241,7 +212,7 @@ public class Deserializer {
                 }
                 case 2: {
                     // escaping
-                    int ch = src.hasNext() ? src.next() : EOF;
+                    int ch = it.hasNext() ? it.next() : EOF;
                     switch (ch) {
                         case '\"':
                             state = 1;
@@ -277,10 +248,10 @@ public class Deserializer {
                             break;
                         case 'u':
                             int[] u = new int[4];
-                            u[0] = src.next();
-                            u[1] = src.next();
-                            u[2] = src.next();
-                            u[3] = src.next();
+                            u[0] = it.next();
+                            u[1] = it.next();
+                            u[2] = it.next();
+                            u[3] = it.next();
                             sb.append((char) ((HexCodec.decode1byte(u[0], u[1]) << 8)
                                     | HexCodec.decode1byte(u[2], u[3])));
                             state = 1;
@@ -296,8 +267,28 @@ public class Deserializer {
         }
     }
 
-    private Json deserializeToJsonTrue(BackableUnicodeProvider src) {
+    private Number jsonToNumber(BackableUnicodeProvider it) {
+        String floatToken = new NumberPicker().pickFloatToken(it);
+        TextNumber number = new TextNumber(floatToken);
+        if (number.isRoundNumber()) {
+            return number.getInt64();
+        } else {
+            return number.getFloat64();
+        }
+    }
+
+    private Boolean jsonToTrue(BackableUnicodeProvider src) {
         scalarPicker.eat(src, "true");
-        return jsonFactory.createJsonBoolean(true);
+        return true;
+    }
+
+    private Boolean jsonToFalse(BackableUnicodeProvider it) {
+        scalarPicker.eat(it, "false");
+        return false;
+    }
+
+    private Object jsonToNull(BackableUnicodeProvider it) {
+        scalarPicker.eat(it, "null");
+        return null;
     }
 }

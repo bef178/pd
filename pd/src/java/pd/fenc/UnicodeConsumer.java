@@ -1,10 +1,20 @@
 package pd.fenc;
 
+import java.util.PrimitiveIterator;
+
 import pd.util.CurlyBracketPatternExtension;
 
 public interface UnicodeConsumer {
 
     UnicodeConsumer push(int value);
+
+    default UnicodeConsumer push(String s) {
+        PrimitiveIterator.OfInt it = s.codePoints().iterator();
+        while (it.hasNext()) {
+            push(it.next());
+        }
+        return this;
+    }
 
     int position();
 

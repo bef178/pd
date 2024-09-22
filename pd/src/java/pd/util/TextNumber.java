@@ -9,7 +9,7 @@ public class TextNumber extends Number {
      */
     private static final long serialVersionUID = 1L;
 
-    protected String raw;
+    protected String numberString;
 
     public TextNumber() {
         this(0);
@@ -23,13 +23,8 @@ public class TextNumber extends Number {
         this(Long.toString(value));
     }
 
-    public TextNumber(String raw) {
-        set(raw);
-    }
-
-    @Override
-    public double doubleValue() {
-        return Double.parseDouble(raw);
+    public TextNumber(String s) {
+        set(s);
     }
 
     @Override
@@ -42,52 +37,78 @@ public class TextNumber extends Number {
         }
         if (o instanceof TextNumber) {
             TextNumber another = (TextNumber) o;
-            return Objects.equals(another.raw, raw);
+            return Objects.equals(another.numberString, numberString);
         }
         return false;
     }
 
     @Override
-    public float floatValue() {
-        return Float.parseFloat(raw);
+    public int hashCode() {
+        return Objects.hashCode(numberString);
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(raw);
+    public float floatValue() {
+        return Float.parseFloat(numberString);
+    }
+
+    @Override
+    public double doubleValue() {
+        return Double.parseDouble(numberString);
     }
 
     @Override
     public int intValue() {
-        return Integer.parseInt(raw);
+        return Integer.parseInt(numberString);
     }
 
     @Override
     public long longValue() {
-        return Long.parseLong(raw);
+        return Long.parseLong(numberString);
+    }
+
+    public float getFloat32() {
+        return floatValue();
+    }
+
+    public double getFloat64() {
+        return doubleValue();
+    }
+
+    public int getInt32() {
+        return intValue();
+    }
+
+    public long getInt64() {
+        return longValue();
+    }
+
+    public boolean isRoundNumber() {
+        double f = getFloat64();
+        return f == (long) f;
     }
 
     public TextNumber set(double value) {
-        raw = Double.toString(value);
+        numberString = Double.toString(value);
         return this;
     }
 
     public TextNumber set(long value) {
-        raw = Long.toString(value);
+        numberString = Long.toString(value);
         return this;
     }
 
-    public TextNumber set(String raw) {
-        if (raw == null) {
+    public TextNumber set(String s) {
+        if (s == null) {
             throw new NullPointerException();
         }
-        double ignored = Double.parseDouble(raw);
-        this.raw = raw;
+        double ignored = Double.parseDouble(s);
+        numberString = s;
         return this;
     }
 
     @Override
     public String toString() {
-        return raw;
+        return numberString;
     }
 }

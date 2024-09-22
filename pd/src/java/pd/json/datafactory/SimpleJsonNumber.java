@@ -23,16 +23,6 @@ final class SimpleJsonNumber extends TextNumber implements JsonNumber {
     }
 
     @Override
-    public double getFloat64() {
-        return doubleValue();
-    }
-
-    @Override
-    public long getInt64() {
-        return longValue();
-    }
-
-    @Override
     public boolean isRoundNumber() {
         double f = getFloat64();
         return f == (long) f;
@@ -51,8 +41,8 @@ final class SimpleJsonNumber extends TextNumber implements JsonNumber {
     }
 
     @Override
-    public SimpleJsonNumber set(String raw) {
-        super.set(raw);
+    public SimpleJsonNumber set(String s) {
+        super.set(s);
         return this;
     }
 }
