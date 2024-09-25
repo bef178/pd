@@ -9,7 +9,7 @@ public class Typeset {
 
     private static void appendBytes(byte[] a, UnicodeConsumer dst) {
         for (int i : a) {
-            dst.push(checkPrintableAscii(i & 0xFF));
+            dst.next(checkPrintableAscii(i & 0xFF));
         }
     }
 
@@ -18,7 +18,7 @@ public class Typeset {
             if (!src.hasNext()) {
                 break;
             }
-            dst.push(checkPrintableAscii(src.next()));
+            dst.next(checkPrintableAscii(src.next()));
         }
     }
 
@@ -37,7 +37,7 @@ public class Typeset {
 
         while (src.hasNext()) {
             appendBytes(suffix, dst);
-            dst.push('\n');
+            dst.next('\n');
 
             appendBytes(prefix, dst);
             room = numBytesPerLine - prefix.length - suffix.length;

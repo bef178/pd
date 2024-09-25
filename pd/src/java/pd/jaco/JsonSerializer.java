@@ -31,7 +31,7 @@ public class JsonSerializer {
 
     private void jacoToJson(Object o, int numIndents, UnicodeConsumer unicodeConsumer) {
         if (o == null) {
-            unicodeConsumer.push("null");
+            unicodeConsumer.next("null");
         } else if (o instanceof Map) {
             mapToJson((Map<?, ?>) o, numIndents, unicodeConsumer);
         } else if (o instanceof List) {
@@ -41,9 +41,9 @@ public class JsonSerializer {
         } else if (o instanceof String) {
             stringToJson((String) o, unicodeConsumer);
         } else if (o instanceof Number) {
-            unicodeConsumer.push(String.valueOf(o));
+            unicodeConsumer.next(String.valueOf(o));
         } else if (o instanceof Boolean) {
-            unicodeConsumer.push(String.valueOf(o));
+            unicodeConsumer.next(String.valueOf(o));
         } else {
             // XXX reflection get?
             throw JacoException.invalidCollection(o.getClass().getSimpleName());
@@ -51,10 +51,10 @@ public class JsonSerializer {
     }
 
     private void mapToJson(Map<?, ?> o, int numIndents, UnicodeConsumer unicodeConsumer) {
-        unicodeConsumer.push('{');
+        unicodeConsumer.next('{');
 
         if (!o.isEmpty()) {
-            unicodeConsumer.push(config.eol);
+            unicodeConsumer.next(config.eol);
         }
 
         numIndents++;
@@ -66,16 +66,16 @@ public class JsonSerializer {
             outputMarginAndIndents(numIndents, unicodeConsumer);
 
             stringToJson(next.getKey().toString(), unicodeConsumer);
-            unicodeConsumer.push(config.colonPrefix);
-            unicodeConsumer.push(':');
-            unicodeConsumer.push(config.colonSuffix);
+            unicodeConsumer.next(config.colonPrefix);
+            unicodeConsumer.next(':');
+            unicodeConsumer.next(config.colonSuffix);
             jacoToJson(next.getValue(), numIndents, unicodeConsumer);
 
             if (it.hasNext()) {
-                unicodeConsumer.push(',');
+                unicodeConsumer.next(',');
             }
 
-            unicodeConsumer.push(config.eol);
+            unicodeConsumer.next(config.eol);
         }
 
         numIndents--;
@@ -84,14 +84,14 @@ public class JsonSerializer {
             outputMarginAndIndents(numIndents, unicodeConsumer);
         }
 
-        unicodeConsumer.push('}');
+        unicodeConsumer.next('}');
     }
 
     private void arrayToJson(List<?> o, int numIndents, UnicodeConsumer unicodeConsumer) {
-        unicodeConsumer.push('[');
+        unicodeConsumer.next('[');
 
         if (!o.isEmpty()) {
-            unicodeConsumer.push(config.eol);
+            unicodeConsumer.next(config.eol);
         }
 
         numIndents++;
@@ -101,9 +101,9 @@ public class JsonSerializer {
             outputMarginAndIndents(numIndents, unicodeConsumer);
             jacoToJson(it.next(), numIndents, unicodeConsumer);
             if (it.hasNext()) {
-                unicodeConsumer.push(',');
+                unicodeConsumer.next(',');
             }
-            unicodeConsumer.push(config.eol);
+            unicodeConsumer.next(config.eol);
         }
 
         numIndents--;
@@ -112,52 +112,52 @@ public class JsonSerializer {
             outputMarginAndIndents(numIndents, unicodeConsumer);
         }
 
-        unicodeConsumer.push(']');
+        unicodeConsumer.next(']');
     }
 
     private void stringToJson(String s, UnicodeConsumer unicodeConsumer) {
-        unicodeConsumer.push('\"');
+        unicodeConsumer.next('\"');
         PrimitiveIterator.OfInt it = s.codePoints().iterator();
         while (it.hasNext()) {
             int ch = it.nextInt();
             switch (ch) {
                 case '\"':
                 case '\\':
-                    unicodeConsumer.push('\\').push(ch);
+                    unicodeConsumer.next('\\').next(ch);
                     break;
                 case '\b':
-                    unicodeConsumer.push('\\').push('b');
+                    unicodeConsumer.next('\\').next('b');
                     break;
                 case '\f':
-                    unicodeConsumer.push('\\').push('f');
+                    unicodeConsumer.next('\\').next('f');
                     break;
                 case '\n':
-                    unicodeConsumer.push('\\').push('n');
+                    unicodeConsumer.next('\\').next('n');
                     break;
                 case '\r':
-                    unicodeConsumer.push('\\').push('r');
+                    unicodeConsumer.next('\\').next('r');
                     break;
                 case '\t':
-                    unicodeConsumer.push('\\').push('t');
+                    unicodeConsumer.next('\\').next('t');
                     break;
                 default:
                     if (AsciiExtension.isControl(ch)) {
                         int[] a = new int[2];
                         HexCodec.encode1byte((byte) ch, a, 0);
-                        unicodeConsumer.push('\\').push('u').push('0').push('0').push((char) a[0]).push((char) a[1]);
+                        unicodeConsumer.next('\\').next('u').next('0').next('0').next((char) a[0]).next((char) a[1]);
                     } else {
-                        unicodeConsumer.push(ch);
+                        unicodeConsumer.next(ch);
                     }
                     break;
             }
         }
-        unicodeConsumer.push('\"');
+        unicodeConsumer.next('\"');
     }
 
     private void outputMarginAndIndents(int numIndents, UnicodeConsumer unicodeConsumer) {
-        unicodeConsumer.push(config.margin);
+        unicodeConsumer.next(config.margin);
         for (int i = 0; i < numIndents; i++) {
-            unicodeConsumer.push(config.indent);
+            unicodeConsumer.next(config.indent);
         }
     }
 

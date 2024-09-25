@@ -62,7 +62,7 @@ public class ScalarPicker {
             switch (stat) {
                 case 0:
                     if (isAlpha(ch) || ch == '_') {
-                        dst.push(ch);
+                        dst.next(ch);
                         stat = 1;
                     } else {
                         src.back();
@@ -71,7 +71,7 @@ public class ScalarPicker {
                     break;
                 case 1:
                     if (isAlpha(ch) || ch == '_' || isDigit(ch)) {
-                        dst.push(ch);
+                        dst.next(ch);
                     } else {
                         src.back();
                         return true;
@@ -105,8 +105,8 @@ public class ScalarPicker {
             int ch = src.hasNext() ? src.next() : EOF;
             if (isEscaping) {
                 isEscaping = false;
-                dst.push('\\');
-                dst.push(ch);
+                dst.next('\\');
+                dst.next(ch);
             } else if (ch == '\\') {
                 isEscaping = true;
             } else if (ch == terminator) {
@@ -118,7 +118,7 @@ public class ScalarPicker {
                 // unexpected EOF
                 return false;
             } else {
-                dst.push(ch);
+                dst.next(ch);
             }
         }
     }
@@ -135,7 +135,7 @@ public class ScalarPicker {
                 // unexpected EOF
                 return false;
             } else {
-                dst.push(ch);
+                dst.next(ch);
             }
         }
     }

@@ -6,12 +6,12 @@ import pd.util.CurlyBracketPatternExtension;
 
 public interface UnicodeConsumer {
 
-    UnicodeConsumer push(int value);
+    UnicodeConsumer next(int value);
 
-    default UnicodeConsumer push(String s) {
+    default UnicodeConsumer next(String s) {
         PrimitiveIterator.OfInt it = s.codePoints().iterator();
         while (it.hasNext()) {
-            push(it.next());
+            next(it.next());
         }
         return this;
     }
@@ -22,7 +22,7 @@ public interface UnicodeConsumer {
         return new UnicodeConsumer() {
 
             @Override
-            public UnicodeConsumer push(int value) {
+            public UnicodeConsumer next(int value) {
                 int minValue = 0;
                 int maxValue = 0x10FFFF;
                 if (value < minValue || value > maxValue) {

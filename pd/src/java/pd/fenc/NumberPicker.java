@@ -66,7 +66,7 @@ public class NumberPicker {
             switch (state) {
                 case 0: {
                     scalarPicker.eat(src, '.');
-                    dst.push('.');
+                    dst.next('.');
                     state = 1;
                     break;
                 }
@@ -84,7 +84,7 @@ public class NumberPicker {
                         case '7':
                         case '8':
                         case '9':
-                            dst.push(ch);
+                            dst.next(ch);
                             state = 2;
                             break;
                         default:
@@ -108,7 +108,7 @@ public class NumberPicker {
                         case '7':
                         case '8':
                         case '9':
-                            dst.push(ch);
+                            dst.next(ch);
                             break;
                         default:
                             src.back();
@@ -128,7 +128,7 @@ public class NumberPicker {
     void pickExponentPart(BackableUnicodeProvider src, UnicodeConsumer dst) {
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == 'E' || ch == 'e') {
-            dst.push(ch);
+            dst.next(ch);
             pickIntToken(src, dst);
             return;
         }
@@ -154,11 +154,11 @@ public class NumberPicker {
                     int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case '-':
-                            dst.push(ch);
+                            dst.next(ch);
                             state = 1;
                             break;
                         case '0':
-                            dst.push(ch);
+                            dst.next(ch);
                             return;
                         case '1':
                         case '2':
@@ -169,7 +169,7 @@ public class NumberPicker {
                         case '7':
                         case '8':
                         case '9':
-                            dst.push(ch);
+                            dst.next(ch);
                             state = 3;
                             break;
                         default:
@@ -190,7 +190,7 @@ public class NumberPicker {
                         case '7':
                         case '8':
                         case '9':
-                            dst.push(ch);
+                            dst.next(ch);
                             state = 3;
                             break;
                         default:
@@ -215,7 +215,7 @@ public class NumberPicker {
                         case '7':
                         case '8':
                         case '9':
-                            dst.push(ch);
+                            dst.next(ch);
                             break;
                         default:
                             src.back();
