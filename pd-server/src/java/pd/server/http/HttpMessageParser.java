@@ -8,10 +8,10 @@ import java.util.Map;
 
 import pd.fenc.AsciiProvider;
 import pd.fenc.BackableUnicodeProvider;
-import pd.fenc.InstallmentByteBuffer;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.util.AsciiExtension;
+import pd.util.InstallmentByteBuffer;
 import pd.util.Int32ArrayExtension;
 
 import static pd.util.AsciiExtension.CR;

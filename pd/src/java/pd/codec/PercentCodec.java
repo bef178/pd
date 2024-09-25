@@ -3,7 +3,7 @@ package pd.codec;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 
-import pd.fenc.InstallmentByteBuffer;
+import pd.util.InstallmentByteBuffer;
 
 public class PercentCodec {
 

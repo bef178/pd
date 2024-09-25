@@ -1,39 +1,15 @@
-package pd.fenc;
+package pd.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class InstallmentByteBuffer {
-
-    public class Provider implements Int8Provider {
-
-        private int pos = 0;
-
-        @Override
-        public boolean hasNext() {
-            return pos >= 0 && pos < size();
-        }
-
-        /**
-         * values in [-0x80,0x7F]
-         */
-        @Override
-        public int next() {
-            return InstallmentByteBuffer.this.get(pos++);
-        }
-
-        @Override
-        public int position() {
-            return pos;
-        }
-    }
 
     private static final int INSTALLMENT_BITS = 10;
 
     private static final int INSTALLMENT_BYTES = 1 << INSTALLMENT_BITS;
     private static final int INSTALLMENT_MASK = INSTALLMENT_BYTES - 1;
 
-    private ArrayList<byte[]> savings = new ArrayList<>();
+    private final ArrayList<byte[]> savings = new ArrayList<>();
 
     private int size = 0;
 
@@ -45,7 +21,7 @@ public class InstallmentByteBuffer {
         setupCapacity(initialCapacity);
     }
 
-    public int capacity() {
+    private int capacity() {
         return savings.size() << INSTALLMENT_BITS;
     }
 
@@ -106,22 +82,15 @@ public class InstallmentByteBuffer {
 
     public InstallmentByteBuffer push(byte byteValue) {
         setupCapacity(size + 1);
-        put(size++, byteValue);
+        set(size++, byteValue);
         return this;
     }
 
-    private void put(int pos, byte b) {
-        savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK] = b;
-    }
-
-    public Provider provider() {
-        return new Provider();
+    private void set(int pos, byte byteValue) {
+        savings.get(pos >> INSTALLMENT_BITS)[pos & INSTALLMENT_MASK] = byteValue;
     }
 
     private void setupCapacity(int newCapacity) {
-        if (savings == null) {
-            savings = new ArrayList<>();
-        }
         if (newCapacity > capacity()) {
             int n = newCapacity >> INSTALLMENT_BITS;
             if ((newCapacity & INSTALLMENT_MASK) != 0) {
@@ -146,9 +115,7 @@ public class InstallmentByteBuffer {
      * For writing, erase every slot's content and reset size.<br/>
      */
     public void wipe() {
-        for (byte[] a : savings) {
-            Arrays.fill(a, (byte) 0);
-        }
+        savings.clear();
         size = 0;
     }
 }
