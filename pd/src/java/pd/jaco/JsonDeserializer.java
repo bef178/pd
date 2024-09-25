@@ -18,6 +18,8 @@ import static pd.util.AsciiExtension.EOF;
 
 public class JsonDeserializer {
 
+    private final NumberPicker numberPicker = NumberPicker.singleton();
+
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
     public Object jsonToJaco(String s) {
@@ -268,7 +270,7 @@ public class JsonDeserializer {
     }
 
     private Number jsonToNumber(BackableUnicodeProvider it) {
-        String floatToken = new NumberPicker().pickFloatToken(it);
+        String floatToken = numberPicker.pickFloatToken(it);
         TextNumber number = new TextNumber(floatToken);
         if (number.isRoundNumber()) {
             return number.getInt64();

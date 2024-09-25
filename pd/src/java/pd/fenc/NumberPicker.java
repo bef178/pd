@@ -6,7 +6,17 @@ import static pd.util.AsciiExtension.EOF;
 
 public class NumberPicker {
 
+    private static final NumberPicker one = new NumberPicker();
+
+    public static NumberPicker singleton() {
+        return one;
+    }
+
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
+
+    private NumberPicker() {
+        // dummy
+    }
 
     public String pickFloatToken(BackableUnicodeProvider src) {
         StringBuilder sb = new StringBuilder();

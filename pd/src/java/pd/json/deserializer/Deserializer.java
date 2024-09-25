@@ -21,6 +21,8 @@ public class Deserializer {
 
     private final JsonFactory jsonFactory;
 
+    private final NumberPicker numberPicker = NumberPicker.singleton();
+
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
     public Deserializer(JsonFactory jsonFactory) {
@@ -145,7 +147,7 @@ public class Deserializer {
     }
 
     private JsonNumber deserializeToJsonNumber(BackableUnicodeProvider src) {
-        String floatToken = new NumberPicker().pickFloatToken(src);
+        String floatToken = numberPicker.pickFloatToken(src);
         return jsonFactory.createJsonNumber().set(floatToken);
     }
 
