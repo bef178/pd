@@ -1,10 +1,12 @@
 package pd.fenc;
 
+import pd.util.CappedIntQueue;
+
 public class BackableUnicodeProvider implements UnicodeProvider {
 
     private final UnicodeProvider src;
 
-    private final Recent recent;
+    private final CappedIntQueue recent;
 
     private int nBack;
 
@@ -21,7 +23,7 @@ public class BackableUnicodeProvider implements UnicodeProvider {
             throw new IllegalArgumentException("E: expected positive backCapacity, actual " + backCapacity);
         }
         this.src = src;
-        this.recent = new Recent(backCapacity);
+        this.recent = new CappedIntQueue(backCapacity);
         this.nBack = 0;
     }
 
@@ -37,10 +39,10 @@ public class BackableUnicodeProvider implements UnicodeProvider {
     @Override
     public int next() {
         if (nBack > 0) {
-            return recent.get(-nBack--);
+            return recent.get(--nBack);
         }
         int value = src.next(); // let it throw if no next value
-        recent.add(value);
+        recent.pushHead(value);
         return value;
     }
 
@@ -56,37 +58,10 @@ public class BackableUnicodeProvider implements UnicodeProvider {
     }
 
     public boolean tryBack() {
-        if (nBack + 1 > recent.capacity()) {
+        if (nBack + 1 > recent.size()) {
             return false;
         }
         nBack++;
         return true;
-    }
-
-    static class Recent {
-
-        private final int[] a;
-
-        private int n;
-
-        public Recent(int capacity) {
-            a = new int[capacity];
-            n = 0;
-        }
-
-        public void add(int value) {
-            a[n++ % a.length] = value;
-        }
-
-        public int capacity() {
-            return a.length;
-        }
-
-        public int get(int i) {
-            if (i >= 0 || i < -a.length || i < -n) {
-                throw new IndexOutOfBoundsException();
-            }
-            return a[(n + i) % a.length];
-        }
     }
 }
