@@ -2,7 +2,8 @@ package pd.jaco;
 
 import java.util.Arrays;
 
-import static pd.util.ObjectExtension.convert;
+import lombok.NonNull;
+import pd.util.ObjectExtension;
 
 /**
  * Define T as primitive data container object:
@@ -35,6 +36,10 @@ public class Jaco {
         }
 
         Object value = jacoGetter.get(o, Arrays.asList(path.split("/")));
+        if (value == null) {
+            return null;
+        }
+
         return convert(value, targetClass);
     }
 
@@ -53,5 +58,13 @@ public class Jaco {
         } else if (path.isEmpty()) {
             throw JacoException.invalidPath("empty string");
         }
+    }
+
+    private <T> T convert(@NonNull Object o, Class<T> targetClass) {
+        T result = ObjectExtension.convert(o, targetClass);
+        if (result == null) {
+            throw new RuntimeException(String.format("NotConvertible: cannot convert `%s` to `%s`", o.getClass().getName(), targetClass.getName()));
+        }
+        return result;
     }
 }
