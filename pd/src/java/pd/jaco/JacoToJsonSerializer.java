@@ -11,19 +11,15 @@ import pd.codec.HexCodec;
 import pd.fenc.UnicodeConsumer;
 import pd.util.AsciiExtension;
 
-public class JsonSerializer {
+public class JacoToJsonSerializer {
 
     public final Config config;
 
-    public JsonSerializer() {
-        this(new Config());
-    }
-
-    public JsonSerializer(Config config) {
+    public JacoToJsonSerializer(Config config) {
         this.config = config;
     }
 
-    public String jacoToJson(@NonNull Object o) {
+    public String toJson(@NonNull Object o) {
         StringBuilder sb = new StringBuilder();
         jacoToJson(o, 0, UnicodeConsumer.wrap(sb));
         return sb.toString();
@@ -168,6 +164,10 @@ public class JsonSerializer {
         public String eol = "";
         public String colonPrefix = "";
         public String colonSuffix = "";
+
+        public Config() {
+            this.resetToCheatsheetStyle();
+        }
 
         public void resetToCheatsheetStyle() {
             Config config = this;

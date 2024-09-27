@@ -27,6 +27,9 @@ public class ObjectExtension {
             } else if (targetClass == Float.class) {
                 return targetClass.cast(o1.floatValue());
             }
+            if (targetClass == Character.class) {
+                return targetClass.cast((char) o1.shortValue());
+            }
         }
 
         if (o instanceof Boolean) {
@@ -36,12 +39,6 @@ public class ObjectExtension {
         }
 
         if (o instanceof Character) {
-            if (targetClass == Character.class) {
-                return targetClass.cast(o);
-            }
-            if (targetClass == String.class) {
-                return targetClass.cast(o.toString());
-            }
             if (targetClass == Long.class) {
                 int value = Character.getNumericValue((Character) o);
                 return targetClass.cast((long) value);
@@ -54,13 +51,18 @@ public class ObjectExtension {
             } else if (targetClass == Byte.class) {
                 int value = Character.getNumericValue((Character) o);
                 return targetClass.cast((byte) value);
-            }
-            if (targetClass == Double.class) {
+            } else if (targetClass == Double.class) {
                 int value = Character.getNumericValue((Character) o);
                 return targetClass.cast((double) value);
             } else if (targetClass == Float.class) {
                 int value = Character.getNumericValue((Character) o);
                 return targetClass.cast((float) value);
+            }
+            if (targetClass == Character.class) {
+                return targetClass.cast(o);
+            }
+            if (targetClass == String.class) {
+                return targetClass.cast(o.toString());
             }
         }
 

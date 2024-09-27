@@ -11,18 +11,18 @@ import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.util.AsciiExtension;
-import pd.util.TextNumber;
+import pd.util.SimpleNumber;
 import pd.util.UnicodeExtension;
 
 import static pd.util.AsciiExtension.EOF;
 
-public class JsonDeserializer {
+public class JacoFromJsonDeserializer {
 
     private final NumberPicker numberPicker = NumberPicker.singleton();
 
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public Object jsonToJaco(String s) {
+    public Object fromJson(String s) {
         return jsonToJaco(new BackableUnicodeProvider(s));
     }
 
@@ -271,7 +271,7 @@ public class JsonDeserializer {
 
     private Number jsonToNumber(BackableUnicodeProvider it) {
         String floatToken = numberPicker.pickFloatToken(it);
-        TextNumber number = new TextNumber(floatToken);
+        SimpleNumber number = new SimpleNumber(floatToken);
         if (number.isRoundNumber()) {
             return number.getInt64();
         } else {

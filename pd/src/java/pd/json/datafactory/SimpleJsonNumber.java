@@ -1,9 +1,9 @@
 package pd.json.datafactory;
 
 import pd.json.datatype.JsonNumber;
-import pd.util.TextNumber;
+import pd.util.SimpleNumber;
 
-final class SimpleJsonNumber extends TextNumber implements JsonNumber {
+final class SimpleJsonNumber extends SimpleNumber implements JsonNumber {
 
     /**
      *
@@ -20,12 +20,6 @@ final class SimpleJsonNumber extends TextNumber implements JsonNumber {
 
     public SimpleJsonNumber(long value) {
         super(value);
-    }
-
-    @Override
-    public boolean isRoundNumber() {
-        double f = getFloat64();
-        return f == (long) f;
     }
 
     @Override

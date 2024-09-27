@@ -2,28 +2,28 @@ package pd.util;
 
 import java.util.Objects;
 
-public class TextNumber extends Number {
+public class SimpleNumber extends Number {
 
     /**
      *
      */
     private static final long serialVersionUID = 1L;
 
-    protected String numberString;
+    protected Number numberValue;
 
-    public TextNumber() {
+    public SimpleNumber() {
         this(0);
     }
 
-    public TextNumber(double value) {
+    public SimpleNumber(double value) {
         this(Double.toString(value));
     }
 
-    public TextNumber(long value) {
+    public SimpleNumber(long value) {
         this(Long.toString(value));
     }
 
-    public TextNumber(String s) {
+    public SimpleNumber(String s) {
         set(s);
     }
 
@@ -35,36 +35,36 @@ public class TextNumber extends Number {
         if (o == null) {
             return false;
         }
-        if (o instanceof TextNumber) {
-            TextNumber another = (TextNumber) o;
-            return Objects.equals(another.numberString, numberString);
+        if (o instanceof SimpleNumber) {
+            SimpleNumber another = (SimpleNumber) o;
+            return Objects.equals(another.numberValue, numberValue);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(numberString);
+        return Objects.hashCode(numberValue);
     }
 
     @Override
     public float floatValue() {
-        return Float.parseFloat(numberString);
+        return numberValue.floatValue();
     }
 
     @Override
     public double doubleValue() {
-        return Double.parseDouble(numberString);
+        return numberValue.doubleValue();
     }
 
     @Override
     public int intValue() {
-        return Integer.parseInt(numberString);
+        return numberValue.intValue();
     }
 
     @Override
     public long longValue() {
-        return Long.parseLong(numberString);
+        return numberValue.longValue();
     }
 
     public float getFloat32() {
@@ -84,31 +84,33 @@ public class TextNumber extends Number {
     }
 
     public boolean isRoundNumber() {
-        double f = getFloat64();
-        return f == (long) f;
+        return numberValue instanceof Long;
     }
 
-    public TextNumber set(double value) {
-        numberString = Double.toString(value);
+    public SimpleNumber set(double value) {
+        numberValue = value;
         return this;
     }
 
-    public TextNumber set(long value) {
-        numberString = Long.toString(value);
+    public SimpleNumber set(long value) {
+        numberValue = value;
         return this;
     }
 
-    public TextNumber set(String s) {
+    public SimpleNumber set(String s) {
         if (s == null) {
             throw new NullPointerException();
         }
-        double ignored = Double.parseDouble(s);
-        numberString = s;
+        if (s.indexOf('.') < 0) {
+            numberValue = Long.parseLong(s);
+        } else {
+            numberValue = Double.parseDouble(s);
+        }
         return this;
     }
 
     @Override
     public String toString() {
-        return numberString;
+        return numberValue.toString();
     }
 }

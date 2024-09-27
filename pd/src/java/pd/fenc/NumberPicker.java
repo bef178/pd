@@ -1,6 +1,6 @@
 package pd.fenc;
 
-import pd.util.TextNumber;
+import pd.util.SimpleNumber;
 
 import static pd.util.AsciiExtension.EOF;
 
@@ -246,6 +246,6 @@ public class NumberPicker {
     }
 
     public Number pickNumber(BackableUnicodeProvider src) {
-        return new TextNumber(pickFloatToken(src));
+        return new SimpleNumber(pickFloatToken(src));
     }
 }
