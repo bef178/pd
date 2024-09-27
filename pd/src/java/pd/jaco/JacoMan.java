@@ -74,4 +74,26 @@ public class JacoMan {
         }
         return new JacoFromJsonDeserializer().fromJson(json);
     }
+
+    public <T> T toEntity(Object jaco, Class<T> targetClass) {
+        return toEntity(jaco, targetClass, new JacoToEntityConverter.Config());
+    }
+
+    public <T> T toEntity(Object jaco, Class<T> targetClass, @NonNull JacoToEntityConverter.Config config) {
+        if (jaco == null) {
+            return null;
+        }
+        return new JacoToEntityConverter(config).toEntity(jaco, targetClass);
+    }
+
+    public Object fromEntity(Object entity) {
+        return fromEntity(entity, new JacoFromEntityConverter.Config());
+    }
+
+    public Object fromEntity(Object entity, @NonNull JacoFromEntityConverter.Config config) {
+        if (entity == null) {
+            return null;
+        }
+        return new JacoFromEntityConverter(config).fromEntity(entity);
+    }
 }

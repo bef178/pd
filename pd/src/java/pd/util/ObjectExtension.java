@@ -72,6 +72,7 @@ public class ObjectExtension {
             }
         }
 
+        // XXX try json rebuild?
         return null;
     }
 }
