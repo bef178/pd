@@ -65,17 +65,13 @@ public class JacoMan {
         if (jaco == null) {
             return null;
         }
-
-        JacoToJsonSerializer serializer = new JacoToJsonSerializer(config);
-        return serializer.toJson(jaco);
+        return new JacoToJsonSerializer(config).toJson(jaco);
     }
 
     public Object fromJson(String json) {
         if (json == null) {
             return null;
         }
-
-        JacoFromJsonDeserializer deserializer = new JacoFromJsonDeserializer();
-        return deserializer.fromJson(json);
+        return new JacoFromJsonDeserializer().fromJson(json);
     }
 }
