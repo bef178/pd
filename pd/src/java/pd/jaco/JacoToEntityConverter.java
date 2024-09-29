@@ -167,7 +167,7 @@ public class JacoToEntityConverter {
 
     public static class Config {
 
-        public final LinkedHashMap<Class<?>, ToJavaTypeFunc<?>> refs = new LinkedHashMap<>();
+        final LinkedHashMap<Class<?>, ToJavaTypeFunc<?>> refs = new LinkedHashMap<>();
 
         public Config() {
             register(List.class, ArrayList.class);

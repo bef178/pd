@@ -140,7 +140,7 @@ public class JacoFromEntityConverter {
 
     public static class Config {
 
-        public final LinkedHashMap<Class<?>, ToJacoFunc> refs = new LinkedHashMap<>();
+        final LinkedHashMap<Class<?>, ToJacoFunc> refs = new LinkedHashMap<>();
 
         public <T> void register(Class<?> targetClass, ToJacoFunc mapFunc) {
             if (mapFunc == null) {

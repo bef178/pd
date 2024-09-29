@@ -14,7 +14,6 @@ import pd.fun.ernie.entity.ErnieRequest;
 import pd.util.PathPattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestJacoWithEntity {
 
@@ -105,14 +104,13 @@ public class TestJacoWithEntity {
             m.put("stream", true);
             jaco = m;
         }
-        JacoToEntityConverter.Config config = new JacoToEntityConverter.Config();
-        config.register(Object.class, (json, p, c) -> {
+        jacoMan.toEntityConfig.register(Object.class, (json, p, c) -> {
             if (PathPattern.singleton().matches("/messages/[*]", p)) {
                 return ErnieMessage.class;
             }
             return Object.class;
         });
-        assertEquals(entity, jacoMan.toEntity(jaco, ErnieRequest.class, config));
+        assertEquals(entity, jacoMan.toEntity(jaco, ErnieRequest.class));
         assertEquals(jaco, jacoMan.fromEntity(entity));
     }
 }
