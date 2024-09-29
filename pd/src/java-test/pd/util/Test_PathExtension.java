@@ -80,6 +80,9 @@ public class Test_PathExtension {
         test_normalize("/../abc", "/abc");
         test_normalize("../.././../abc/..", "../../..");
         test_normalize("/", "/");
+        test_normalize("//a", "/a");
+        test_normalize("a///b", "./a/b");
+        test_normalize("a/../../b", "../b");
     }
 
     private void test_normalize(String input, String expected) {
@@ -89,6 +92,7 @@ public class Test_PathExtension {
 
     @Test
     public void test_resolve() {
+        assertEquals("//a", PathExtension.resolve("/", "a"));
         assertEquals("a/b", PathExtension.resolve("a", "b"));
         assertEquals("/b", PathExtension.resolve("a", "/b"));
         assertEquals("a///b", PathExtension.resolve("a//", "b"));
