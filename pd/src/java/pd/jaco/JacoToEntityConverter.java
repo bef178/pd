@@ -28,7 +28,7 @@ public class JacoToEntityConverter {
 
     public <T> T toEntity(Object o, Class<T> targetClass) {
         try {
-            return jacoToEntity(o, "/", targetClass);
+            return jacoToEntity(o, ".", targetClass);
         } catch (Exception e) {
             throw new ParsingException(e);
         }
@@ -97,7 +97,7 @@ public class JacoToEntityConverter {
                 constructor.setAccessible(true);
                 List<Object> a = (List<Object>) constructor.newInstance();
                 for (int i = 0; i < o1.size(); i++) {
-                    String path1 = PathExtension.resolveAndNormalize(path, "[" + i + "]");
+                    String path1 = PathExtension.join(path, "[" + i + "]");
                     a.add(jacoToEntity(o1.get(i), path1, Object.class));
                 }
                 return retargetedClass.cast(a);
@@ -110,7 +110,7 @@ public class JacoToEntityConverter {
                 Class<?> elementClass = retargetedClass.getComponentType();
                 Object a = Array.newInstance(elementClass, o1.size());
                 for (int i = 0; i < o1.size(); i++) {
-                    String path1 = PathExtension.resolveAndNormalize(path, "[" + i + "]");
+                    String path1 = PathExtension.join(path, "[" + i + "]");
                     Array.set(a, i, jacoToEntity(o1.get(i), path1, elementClass));
                 }
                 return targetClass.cast(a);
@@ -124,7 +124,7 @@ public class JacoToEntityConverter {
                 constructor.setAccessible(true);
                 Map<Object, Object> m = (Map<Object, Object>) constructor.newInstance();
                 for (Map.Entry<Object, Object> entry : o1.entrySet()) {
-                    String path1 = PathExtension.resolveAndNormalize(path, "{" + entry.getKey() + "}");
+                    String path1 = PathExtension.join(path, "{" + entry.getKey() + "}");
                     m.put(entry.getKey(), jacoToEntity(entry.getValue(), path1, Object.class));
                 }
                 return retargetedClass.cast(m);
@@ -142,7 +142,7 @@ public class JacoToEntityConverter {
                     String fieldName = field.getName();
                     if (o1.containsKey(fieldName)) {
                         field.setAccessible(true);
-                        String path1 = PathExtension.resolveAndNormalize(path, fieldName);
+                        String path1 = PathExtension.join(path, fieldName);
                         field.set(object, jacoToEntity(o1.get(fieldName), path1, field.getType()));
                     }
                 }

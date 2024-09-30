@@ -258,11 +258,6 @@ public class PathExtension {
         return sb.toString();
     }
 
-    public static String resolveAndNormalize(String path, String... more) {
-        String p = resolve(path, more);
-        return normalize(p);
-    }
-
     public static int compare(String path, String another) {
         if (path == null || another == null) {
             throw new IllegalArgumentException();

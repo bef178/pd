@@ -24,7 +24,7 @@ public class TestJsonMan {
 
         JsonMan jsonMan = new JsonMan();
         jsonMan.getToEntityConfig().register(Object.class, (j, p, c) -> {
-            if (PathPattern.singleton().matches("/messages/[*]", p)) {
+            if (PathPattern.singleton().matches("./messages/[*]", p)) {
                 return ErnieMessage.class;
             }
             return Object.class;
