@@ -8,7 +8,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import pd.fun.Cat;
 import pd.fun.Dog;
-import pd.util.PathPattern;
+import pd.util.PathExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -28,7 +28,7 @@ public class TestSpecializer {
         specializer.config.register(Object.class, (json, p, c) -> {
             if (p.equals("/animals/[1]")) {
                 return Cat.class;
-            } else if (PathPattern.singleton().matches("/animals/[*]", p)) {
+            } else if (PathExtension.matches(p, "/animals/[*]")) {
                 return Dog.class;
             }
             return Object.class;

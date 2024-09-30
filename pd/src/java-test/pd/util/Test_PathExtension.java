@@ -1,7 +1,9 @@
 package pd.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -113,5 +115,19 @@ public class Test_PathExtension {
         assertEquals(1, PathExtension.compare("abc/a", "a"));
         assertEquals(-1, PathExtension.compare("abc.txt", "abc (abc).txt"));
         assertEquals(1, PathExtension.compare("abc (copy).txt", "abc.txt"));
+    }
+
+    @Test
+    public void test_matches() {
+        assertTrue(PathExtension.matches("/a/bc", "/a/*"));
+        assertTrue(PathExtension.matches("/a/bc", "/a/b*"));
+        assertTrue(PathExtension.matches("/a/bc", "/a/b*c"));
+
+        assertFalse(PathExtension.matches("/a/c", "/a/b*"));
+        assertFalse(PathExtension.matches("/a/bc", "/a/b*d"));
+
+        assertTrue(PathExtension.matches("a/c", "a/*c"));
+
+        assertFalse(PathExtension.matches("/a/c", "a/*c"));
     }
 }

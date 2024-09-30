@@ -315,4 +315,91 @@ public class PathExtension {
             return 1;
         }
     }
+
+    /**
+     * pathPattern:<br/>
+     * - `*` matches within a segment of path, as regex: [^/]*<br/>
+     * - `**` matches whole path, as regex: .*<br/>
+     */
+    public static boolean matches(String path, String pathPattern) {
+        if (path == null || path.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        if (pathPattern == null) {
+            throw new IllegalArgumentException();
+        }
+        return matches(path, 0, pathPattern, 0);
+    }
+
+    private static boolean matches(String path, int pathStart, String pathPattern, int pathPatternStart) {
+        final int TOKEN_EOF = -1;
+        final int TOKEN_ASTERISK = -11;
+        int token;
+
+        boolean inAsteriskMatching = false;
+
+        int p = pathPatternStart;
+        int s = pathStart;
+        while (true) {
+            // read next token
+            if (p == pathPattern.length()) {
+                token = TOKEN_EOF;
+            } else {
+                int ch = pathPattern.charAt(p++);
+                if (ch == '*') {
+                    token = TOKEN_ASTERISK;
+                } else if (ch == '\\') {
+                    // escaped. look at next symbol
+                    if (p == pathPattern.length()) {
+                        throw new IllegalArgumentException("Malformed pathPattern: only allows to escape either '\\' or '*'");
+                    }
+                    int ch1 = pathPattern.charAt(p++);
+                    if (ch1 == '\\') {
+                        token = '\\';
+                    } else if (ch1 == '*') {
+                        token = '*';
+                    } else {
+                        throw new IllegalArgumentException("Malformed pathPattern: only allows to escape either '\\' or '*'");
+                    }
+                } else {
+                    token = ch;
+                }
+            }
+
+            if (token == TOKEN_EOF) {
+                if (inAsteriskMatching) {
+                    for (int i = s; i < path.length(); i++) {
+                        if (path.charAt(i) == '/') {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                return s == path.length();
+            } else if (token == TOKEN_ASTERISK) {
+                if (inAsteriskMatching) {
+                    throw new IllegalArgumentException("Malformed pathPattern: illegal continuous asterisk");
+                }
+                inAsteriskMatching = true;
+            } else {
+                if (inAsteriskMatching) {
+                    for (int i = s; i < path.length(); i++) {
+                        int ch = path.charAt(i);
+                        if (ch == token) {
+                            if (matches(pathPattern, p, path, i + 1)) {
+                                return true;
+                            }
+                            break;
+                        } else if (ch == '/') {
+                            break;
+                        }
+                    }
+                    return false;
+                }
+                if (token != path.charAt(s++)) {
+                    return false;
+                }
+            }
+        }
+    }
 }
