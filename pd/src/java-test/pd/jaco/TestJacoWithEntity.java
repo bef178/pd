@@ -105,7 +105,7 @@ public class TestJacoWithEntity {
             jaco = m;
         }
         jacoMan.toEntityConfig.register(Object.class, (json, p, c) -> {
-            if (PathPattern.singleton().matches("ErnieRequest/messages/[*]", p)) {
+            if (PathPattern.singleton().matches("ErnieRequest/messages/*", p)) {
                 return ErnieMessage.class;
             }
             return Object.class;
