@@ -26,9 +26,12 @@ public class JacoToEntityConverter {
         this.config = config;
     }
 
-    public <T> T toEntity(Object o, Class<T> targetClass) {
+    public <T> T toEntity(Object o, Class<T> targetClass, String startPath) {
+        if (startPath == null || startPath.isEmpty()) {
+            throw new IllegalArgumentException("startPath should not be null or empty");
+        }
         try {
-            return jacoToEntity(o, ".", targetClass);
+            return jacoToEntity(o, startPath, targetClass);
         } catch (Exception e) {
             throw new ParsingException(e);
         }

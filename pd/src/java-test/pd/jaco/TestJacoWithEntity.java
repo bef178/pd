@@ -65,7 +65,7 @@ public class TestJacoWithEntity {
             m.put("name", "Mimi");
             jaco = m;
         }
-        assertEquals(entity, jacoMan.toEntity(jaco, Cat.class));
+        assertEquals(entity, jacoMan.toEntity(jaco, Cat.class, "Cat"));
         assertEquals(jaco, jacoMan.fromEntity(entity));
 
         {
@@ -105,12 +105,12 @@ public class TestJacoWithEntity {
             jaco = m;
         }
         jacoMan.toEntityConfig.register(Object.class, (json, p, c) -> {
-            if (PathPattern.singleton().matches("./messages/[*]", p)) {
+            if (PathPattern.singleton().matches("ErnieRequest/messages/[*]", p)) {
                 return ErnieMessage.class;
             }
             return Object.class;
         });
-        assertEquals(entity, jacoMan.toEntity(jaco, ErnieRequest.class));
+        assertEquals(entity, jacoMan.toEntity(jaco, ErnieRequest.class, "ErnieRequest"));
         assertEquals(jaco, jacoMan.fromEntity(entity));
     }
 }

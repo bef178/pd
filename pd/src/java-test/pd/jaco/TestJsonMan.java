@@ -24,13 +24,13 @@ public class TestJsonMan {
 
         JsonMan jsonMan = new JsonMan();
         jsonMan.getToEntityConfig().register(Object.class, (j, p, c) -> {
-            if (PathPattern.singleton().matches("./messages/[*]", p)) {
+            if (PathPattern.singleton().matches("ErnieRequest/messages/[*]", p)) {
                 return ErnieMessage.class;
             }
             return Object.class;
         });
 
         assertEquals(json, jsonMan.serialize(request));
-        assertEquals(request, jsonMan.deserialize(json, ErnieRequest.class));
+        assertEquals(request, jsonMan.deserialize(json, ErnieRequest.class, "ErnieRequest"));
     }
 }

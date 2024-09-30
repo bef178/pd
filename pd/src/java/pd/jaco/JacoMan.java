@@ -86,11 +86,11 @@ public class JacoMan {
         return new JacoFromJsonDeserializer().fromJson(json);
     }
 
-    public <T> T toEntity(Object jaco, Class<T> targetClass) {
+    public <T> T toEntity(Object jaco, Class<T> targetClass, String startPath) {
         if (jaco == null) {
             return null;
         }
-        return new JacoToEntityConverter(toEntityConfig).toEntity(jaco, targetClass);
+        return new JacoToEntityConverter(toEntityConfig).toEntity(jaco, targetClass, startPath);
     }
 
     public Object fromEntity(Object entity) {
