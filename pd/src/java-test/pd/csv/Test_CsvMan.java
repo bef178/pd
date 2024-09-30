@@ -7,14 +7,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import pd.csv.CsvCodec;
 
-public class Test_CsvCodec {
+public class Test_CsvMan {
+
+    CsvMan csvMan = new CsvMan();
 
     @Test
     public void test_deserialize() {
         String csvText = "PartId,\"Quantity\",'Color',4297719,'Bla\\'ck'";
-        List<String> l = CsvCodec.deserialize(csvText);
+        List<String> l = csvMan.deserialize(csvText);
         assertEquals("PartId", l.get(0));
         assertEquals("Quantity", l.get(1));
         assertEquals("'Color'", l.get(2));
@@ -28,7 +29,7 @@ public class Test_CsvCodec {
                 "SetNumber", "b\"bb", "c"
         };
         String csvText = "SetNumber,\"b\"\"bb\",c\r\n";
-        assertEquals(csvText, CsvCodec.serialize(Arrays.asList(fields)));
-        assertArrayEquals(fields, CsvCodec.deserialize(csvText).toArray(new String[0]));
+        assertEquals(csvText, csvMan.serialize(Arrays.asList(fields)));
+        assertArrayEquals(fields, csvMan.deserialize(csvText).toArray(new String[0]));
     }
 }

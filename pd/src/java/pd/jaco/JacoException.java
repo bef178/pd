@@ -5,7 +5,7 @@ public class JacoException extends RuntimeException {
     static final String KEY_NOT_INDEX = "KeyNotIndex: `%s`";
     static final String NEGATIVE_INDEX = "NegativeIndex: `%d`";
     static final String INDEX_TOO_LARGE = "IndexTooLarge: `%d` of `%d`";
-    static final String NOT_JACO = "NotJaco: `%s` not jaco";
+    static final String NOT_APPLICABLE = "NotApplicable: `%s` not jaco";
     static final String INVALID_PATH = "InvalidPath: `%s`";
 
     public static JacoException keyNotIndex(String key) {
@@ -21,7 +21,7 @@ public class JacoException extends RuntimeException {
     }
 
     public static JacoException invalidCollection(String className) {
-        return new JacoException(String.format(NOT_JACO, className));
+        return new JacoException(String.format(NOT_APPLICABLE, className));
     }
 
     public static JacoException invalidPath(String reason) {

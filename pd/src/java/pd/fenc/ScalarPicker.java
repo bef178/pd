@@ -1,5 +1,6 @@
 package pd.fenc;
 
+import java.util.Arrays;
 import java.util.PrimitiveIterator;
 
 import pd.util.AsciiExtension;
@@ -152,6 +153,14 @@ public class ScalarPicker {
         }
     }
 
+    public void eat(BackableUnicodeProvider src, String s) {
+        PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
+        while (ofInt.hasNext()) {
+            int expected = ofInt.nextInt();
+            eat(src, expected);
+        }
+    }
+
     /**
      * will stop in front of unexpected value
      */
@@ -168,16 +177,15 @@ public class ScalarPicker {
         }
     }
 
-    public void eat(BackableUnicodeProvider src, String s) {
-        PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
-        while (ofInt.hasNext()) {
-            int expected = ofInt.nextInt();
-            eat(src, expected);
-        }
+    public boolean tryEat(BackableUnicodeProvider src, String s) {
+        return tryEat(src, s.codePoints().iterator());
     }
 
-    public boolean tryEat(BackableUnicodeProvider src, String s) {
-        PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
+    public boolean tryEat(BackableUnicodeProvider src, int... expected) {
+        return tryEat(src, Arrays.stream(expected).iterator());
+    }
+
+    private boolean tryEat(BackableUnicodeProvider src, PrimitiveIterator.OfInt ofInt) {
         while (ofInt.hasNext()) {
             int expected = ofInt.nextInt();
             if (!tryEat(src, expected)) {

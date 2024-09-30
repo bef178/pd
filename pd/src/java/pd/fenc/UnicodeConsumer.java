@@ -8,8 +8,8 @@ public interface UnicodeConsumer {
 
     UnicodeConsumer next(int value);
 
-    default UnicodeConsumer next(String s) {
-        PrimitiveIterator.OfInt it = s.codePoints().iterator();
+    default UnicodeConsumer next(CharSequence cs) {
+        PrimitiveIterator.OfInt it = cs.codePoints().iterator();
         while (it.hasNext()) {
             next(it.next());
         }
