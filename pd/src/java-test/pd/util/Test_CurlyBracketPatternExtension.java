@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-public class TestCurlyBracketPatternExtension {
+public class Test_CurlyBracketPatternExtension {
 
     @Test
     public void test_format() {
