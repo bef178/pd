@@ -14,6 +14,8 @@ import pd.fun.ernie.entity.ErnieRequest;
 import pd.util.PathExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestJacoWithEntity {
 
@@ -112,5 +114,14 @@ public class TestJacoWithEntity {
         });
         assertEquals(entity, jacoMan.toEntity(jaco, ErnieRequest.class, "ErnieRequest"));
         assertEquals(jaco, jacoMan.fromEntity(entity));
+    }
+
+    @Test
+    public void testFromToEntityNullField() {
+        Cat cat = new Cat();
+        cat.name = "Mimi";
+        @SuppressWarnings("unchecked") Map<String, Object> jaco = (Map<String, Object>) jacoMan.fromEntity(cat);
+        assertFalse(jaco.containsKey("Phylum"));
+        assertTrue(jaco.containsKey("name"));
     }
 }

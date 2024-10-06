@@ -83,7 +83,14 @@ public class JacoFromEntityConverter {
             Map<String, Object> m = new LinkedHashMap<>();
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String key = entry.getKey().toString();
-                m.put(key, fromEntity(entry.getValue()));
+                Object value = fromEntity(entry.getValue());
+                if (value == null) {
+                    if (config.keepsNull) {
+                        m.put(key, null);
+                    }
+                } else {
+                    m.put(key, value);
+                }
             }
             return m;
         } else {
@@ -96,10 +103,18 @@ public class JacoFromEntityConverter {
                     continue;
                 }
                 String key = field.getName();
+                Object value;
                 try {
-                    m.put(key, fieldToJaco(field, o));
+                    value = fieldToJaco(field, o);
                 } catch (IllegalArgumentException | IllegalAccessException e) {
                     throw new ParsingException(e);
+                }
+                if (value == null) {
+                    if (config.keepsNull) {
+                        m.put(key, null);
+                    }
+                } else {
+                    m.put(key, value);
                 }
             }
             return m;
@@ -141,6 +156,8 @@ public class JacoFromEntityConverter {
     public static class Config {
 
         final LinkedHashMap<Class<?>, ToJacoFunc> refs = new LinkedHashMap<>();
+
+        public boolean keepsNull = false;
 
         public <T> void register(Class<?> targetClass, ToJacoFunc mapFunc) {
             if (mapFunc == null) {
