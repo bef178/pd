@@ -11,7 +11,7 @@ import pd.fun.Cat;
 import pd.fun.Dog;
 import pd.fun.ernie.entity.ErnieMessage;
 import pd.fun.ernie.entity.ErnieRequest;
-import pd.util.PathExtension;
+import pd.path.PathPattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -31,7 +31,7 @@ public class TestJacoWithEntity {
         converter.config.register(Object.class, (json, p, c) -> {
             if (p.equals("/animals/[1]")) {
                 return Cat.class;
-            } else if (PathExtension.matches(p, "/animals/[*]")) {
+            } else if (PathPattern.matches("/animals/[*]", p)) {
                 return Dog.class;
             }
             return Object.class;
@@ -107,7 +107,7 @@ public class TestJacoWithEntity {
             jaco = m;
         }
         jacoMan.toEntityConfig.register(Object.class, (json, p, c) -> {
-            if (PathExtension.matches(p, "ErnieRequest/messages/*")) {
+            if (PathPattern.matches("ErnieRequest/messages/*", p)) {
                 return ErnieMessage.class;
             }
             return Object.class;
