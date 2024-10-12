@@ -8,9 +8,8 @@ import java.util.List;
 public interface FileAccessor {
 
     /**
-     * List next level key prefixes (stop after `/`) and keys.<br/>
-     * `keyPrefix` could be empty.<br/>
-     * Result values are sorted and all start with `keyPrefix`.<br/>
+     * List next level directory-like key-prefixes (stopped after `/`) and/or keys.<br/>
+     * Results are sorted.<br/>
      * e.g.<br/>
      * - "d" => ["d/"]<br/>
      * - "d/" => ["d/d/", "d/f"]<br/>

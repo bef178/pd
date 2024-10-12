@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Test_LocalFileAccessor {
 
-    private static final LocalFileAccessor accessor = LocalFileAccessor.singleton();
+    private static final LocalFileAccessor accessor = new LocalFileAccessor();
 
     @Test
     public void test_list() {

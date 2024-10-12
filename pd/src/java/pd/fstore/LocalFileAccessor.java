@@ -15,16 +15,10 @@ import pd.util.PathExtension;
 
 public class LocalFileAccessor implements FileAccessor {
 
-    private static final LocalFileAccessor one = new LocalFileAccessor();
-
-    public static LocalFileAccessor singleton() {
-        return one;
-    }
-
     @Override
     public List<String> list(String keyPrefix) {
-        String s = getUpDirectory(keyPrefix);
-        try (Stream<Path> stream = Files.list(Paths.get(s))) {
+        String parent = getParentDirectory(keyPrefix);
+        try (Stream<Path> stream = Files.list(Paths.get(parent))) {
             return stream
                     .map(a -> {
                         String aString = a.toString();
@@ -50,7 +44,7 @@ public class LocalFileAccessor implements FileAccessor {
         }
     }
 
-    private String getUpDirectory(String keyPrefix) {
+    private String getParentDirectory(String keyPrefix) {
         String s;
         if (keyPrefix.equals(".")) {
             s = "";
