@@ -23,7 +23,7 @@ import static pd.util.AppLogger.stdout;
 
 public class App {
 
-    public static final LocalFileAccessor accessor = LocalFileAccessor.singleton();
+    public static final LocalFileAccessor accessor = new LocalFileAccessor();
 
     public static void main(String[] args) {
         ParamManager paramManager;

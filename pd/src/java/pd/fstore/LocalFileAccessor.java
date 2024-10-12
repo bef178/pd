@@ -2,6 +2,7 @@ package pd.fstore;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -179,5 +180,21 @@ public class LocalFileAccessor implements FileAccessor {
             return false;
         }
         return true;
+    }
+
+    public boolean exists(String key) {
+        return stat(key) != null;
+    }
+
+    public String loadString(String key) {
+        byte[] a = load(key);
+        if (a == null) {
+            return null;
+        }
+        return new String(a, StandardCharsets.UTF_8);
+    }
+
+    public boolean saveString(String key, String s) {
+        return save(key, s.getBytes(StandardCharsets.UTF_8));
     }
 }

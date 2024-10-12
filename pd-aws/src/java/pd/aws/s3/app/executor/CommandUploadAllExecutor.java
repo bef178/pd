@@ -15,6 +15,8 @@ import static pd.util.AppLogger.stdout;
 
 public class CommandUploadAllExecutor extends CommandExecutor {
 
+    private final LocalFileAccessor localFileAccessor = new LocalFileAccessor();
+
     public CommandUploadAllExecutor() {
         super(CommandKey.upload_all, Arrays.stream(new ParamKey[] { ParamKey.remote_prefix, ParamKey.prefix }).collect(Collectors.toList()));
     }
@@ -26,7 +28,7 @@ public class CommandUploadAllExecutor extends CommandExecutor {
         checkNotNull(remotePrefix, localParity);
         AwsS3Accessor accessor = checkAndCreateAccessor(paramManager);
 
-        List<String> localFiles = LocalFileAccessor.singleton().listAll(localParity);
+        List<String> localFiles = localFileAccessor.listAll(localParity);
         stdout("upload: find {} file(s)", localFiles.size());
 
         AtomicBoolean allSuccessful = new AtomicBoolean(true);
