@@ -23,7 +23,7 @@ public class TestJsonMan {
         String json = "{\"messages\":[{\"role\":\"user\",\"content\":\"how are you\"},{\"role\":\"assistant\",\"content\":\"fine, thank you, and you\"},{\"role\":\"user\",\"content\":\"how old are you\"}],\"stream\":true}";
 
         JsonMan jsonMan = new JsonMan();
-        jsonMan.getToEntityConfig().register(Object.class, (j, p, c) -> {
+        jsonMan.jacoMan.toEntityConfig.register(Object.class, (j, p, c) -> {
             if (PathPattern.matches("ErnieRequest/messages/*", p)) {
                 return ErnieMessage.class;
             }
