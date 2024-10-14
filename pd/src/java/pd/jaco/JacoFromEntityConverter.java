@@ -62,6 +62,10 @@ public class JacoFromEntityConverter {
             return o.toString();
         }
 
+        if (o.getClass().isEnum()) {
+            return o.toString();
+        }
+
         if (o.getClass().isArray()) {
             List<Object> a = new LinkedList<>();
             for (int i = 0; i < Array.getLength(o); i++) {

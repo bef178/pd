@@ -85,19 +85,19 @@ public class TestJacoWithEntity {
                 List<Object> messages = new LinkedList<>();
                 {
                     Map<String, Object> m1 = new LinkedHashMap<>();
-                    m1.put("role", ErnieMessage.ROLE_USER);
+                    m1.put("role", ErnieMessage.ROLE_USER.toString());
                     m1.put("content", "how are you");
                     messages.add(m1);
                 }
                 {
                     Map<String, Object> m1 = new LinkedHashMap<>();
-                    m1.put("role", ErnieMessage.ROLE_ASSISTANT);
+                    m1.put("role", ErnieMessage.ROLE_ASSISTANT.toString());
                     m1.put("content", "fine, thank you, and you");
                     messages.add(m1);
                 }
                 {
                     Map<String, Object> m1 = new LinkedHashMap<>();
-                    m1.put("role", ErnieMessage.ROLE_USER);
+                    m1.put("role", ErnieMessage.ROLE_USER.toString());
                     m1.put("content", "how old are you");
                     messages.add(m1);
                 }

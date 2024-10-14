@@ -107,6 +107,16 @@ public class JacoToEntityConverter {
             } else {
                 throw new ParsingException(String.format("E: cannot build %s from %s", targetClass.getName(), o.getClass().getName()));
             }
+        } else if (retargetedClass.isEnum()) {
+            if (o instanceof String) {
+                Object[] values = retargetedClass.getEnumConstants();
+                for (Object value : values) {
+                    if (value.toString().equals(o)) {
+                        return retargetedClass.cast(value);
+                    }
+                }
+            }
+            throw new ParsingException(String.format("E: cannot build %s from %s", targetClass.getName(), o.getClass().getName()));
         } else if (retargetedClass.isArray()) {
             if (o instanceof List) {
                 List<Object> o1 = (List<Object>) o;

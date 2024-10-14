@@ -5,9 +5,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class ErnieMessage {
 
-    public static final String ROLE_USER = "user";
+    public static final MessageRole ROLE_USER = MessageRole.USER;
 
-    public static final String ROLE_ASSISTANT = "assistant";
+    public static final MessageRole ROLE_ASSISTANT = MessageRole.ASSISTANT;
 
     public static ErnieMessage userMessage(String content) {
         return new ErnieMessage(ROLE_USER, content);
@@ -17,14 +17,14 @@ public class ErnieMessage {
         return new ErnieMessage(ROLE_ASSISTANT, content);
     }
 
-    public String role;
+    public MessageRole role;
 
     public String content;
 
     public ErnieMessage() {
     }
 
-    public ErnieMessage(String role, String content) {
+    public ErnieMessage(MessageRole role, String content) {
         this.role = role;
         this.content = content;
     }
