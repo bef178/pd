@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,12 +81,22 @@ public class JacoToEntityConverter {
             return null;
         }
 
-        T result = ObjectExtension.convert(o, retargetedClass);
-        if (result != null) {
-            return result;
+        {
+            T result = ObjectExtension.convert(o, retargetedClass);
+            if (result != null) {
+                return result;
+            }
         }
 
-        // TODO add mapToObject config
+        {
+            JacoToEntityFunc<T> f = (JacoToEntityFunc<T>) config.jacoToEntityMappings.get(targetClass);
+            if (f != null) {
+                T[] values = f.map(o, path, targetClass);
+                if (values != null) {
+                    return values[0];
+                }
+            }
+        }
 
         if (retargetedClass.isInterface()) {
             throw new ParsingException("E: cannot instantiate an interface: " + retargetedClass.getName());
@@ -171,44 +182,72 @@ public class JacoToEntityConverter {
      */
     <T> Class<? extends T> retargetClassWithConfig(Object o, String path, final Class<T> targetClass) {
         @SuppressWarnings("unchecked")
-        ToJavaTypeFunc<T> func = (ToJavaTypeFunc<T>) config.refs.get(targetClass);
-        if (func != null) {
-            return func.map(o, path, targetClass);
+        EntityTypeFunc<T> f = (EntityTypeFunc<T>) config.entityTypeMappings.get(targetClass);
+        if (f != null) {
+            return f.map(o, path, targetClass);
         }
         return null;
     }
 
     public static class Config {
 
-        final LinkedHashMap<Class<?>, ToJavaTypeFunc<?>> refs = new LinkedHashMap<>();
+        final LinkedHashMap<Class<?>, EntityTypeFunc<?>> entityTypeMappings = new LinkedHashMap<>();
+
+        final LinkedHashMap<Class<?>, JacoToEntityFunc<?>> jacoToEntityMappings = new LinkedHashMap<>();
 
         public Config() {
-            register(List.class, ArrayList.class);
-            register(Map.class, LinkedHashMap.class);
-            register(long.class, Long.class);
-            register(int.class, Integer.class);
-            register(short.class, Short.class);
-            register(byte.class, Byte.class);
-            register(double.class, Double.class);
-            register(float.class, Float.class);
-            register(boolean.class, Boolean.class);
-            register(char.class, Character.class);
+            registerEntityTypeMapping(List.class, ArrayList.class);
+            registerEntityTypeMapping(Map.class, LinkedHashMap.class);
+            registerEntityTypeMapping(long.class, Long.class);
+            registerEntityTypeMapping(int.class, Integer.class);
+            registerEntityTypeMapping(short.class, Short.class);
+            registerEntityTypeMapping(byte.class, Byte.class);
+            registerEntityTypeMapping(double.class, Double.class);
+            registerEntityTypeMapping(float.class, Float.class);
+            registerEntityTypeMapping(boolean.class, Boolean.class);
+            registerEntityTypeMapping(char.class, Character.class);
+
+            registerJacoToEntityMapping(Instant.class, (jaco, path, entityType) -> {
+                if (entityType == Instant.class) {
+                    if (jaco instanceof String) {
+                        Instant[] values = new Instant[1];
+                        values[0] = Instant.parse((String) jaco);
+                        return values;
+                    }
+                }
+                return null;
+            });
         }
 
-        public <T> void register(Class<T> fromClass, Class<? extends T> toClass) {
-            register(fromClass, (jaco, p, t) -> toClass);
+        public <T> void registerEntityTypeMapping(Class<T> fromClass, Class<? extends T> toClass) {
+            registerEntityTypeMapping(fromClass, (jaco, p, t) -> toClass);
         }
 
-        public <T> void register(Class<T> fromClass, ToJavaTypeFunc<T> f) {
+        public <T> void registerEntityTypeMapping(Class<T> fromClass, EntityTypeFunc<T> f) {
             if (f == null) {
                 throw new NullPointerException();
             }
-            refs.put(fromClass, f);
+            entityTypeMappings.put(fromClass, f);
+        }
+
+        public <T> void registerJacoToEntityMapping(Class<T> entityType, JacoToEntityFunc<T> f) {
+            if (f == null) {
+                throw new NullPointerException();
+            }
+            jacoToEntityMappings.put(entityType, f);
         }
     }
 
+    /**
+     * maps `entityType` to its extended (instantiable) class
+     */
     @FunctionalInterface
-    public interface ToJavaTypeFunc<T> {
-        Class<? extends T> map(Object o, String path, Class<T> targetClass);
+    public interface EntityTypeFunc<T> {
+        Class<? extends T> map(Object jaco, String path, Class<T> entityType);
+    }
+
+    @FunctionalInterface
+    public interface JacoToEntityFunc<T> {
+        T[] map(Object jaco, String path, Class<T> entityType);
     }
 }

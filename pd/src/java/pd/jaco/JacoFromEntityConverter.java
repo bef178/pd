@@ -3,6 +3,7 @@ package pd.jaco;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,10 +30,10 @@ public class JacoFromEntityConverter {
 
         // intercept
         {
-            Class<?> runtimeClass = o.getClass();
             // TODO search for super class and interfaces
-            if (config.refs.containsKey(runtimeClass)) {
-                return config.refs.get(runtimeClass).map(runtimeClass, o);
+            EntityToJacoFunc f = config.entityToJacoMappings.get(o.getClass());
+            if (f != null) {
+                return f.map(o);
             }
         }
 
@@ -159,20 +160,24 @@ public class JacoFromEntityConverter {
 
     public static class Config {
 
-        final LinkedHashMap<Class<?>, ToJacoFunc> refs = new LinkedHashMap<>();
+        final LinkedHashMap<Class<?>, EntityToJacoFunc> entityToJacoMappings = new LinkedHashMap<>();
 
         public boolean keepsNull = false;
 
-        public <T> void register(Class<?> targetClass, ToJacoFunc mapFunc) {
-            if (mapFunc == null) {
+        public Config() {
+            register(Instant.class, (entity) -> ((Instant) entity).toString());
+        }
+
+        public void register(Class<?> entityClass, EntityToJacoFunc f) {
+            if (f == null) {
                 throw new NullPointerException();
             }
-            // TODO should log: swapped out `{}` => `{}`", key, old
-            refs.put(targetClass, mapFunc);
+            // XXX should log: swapped out `{}` => `{}`", key, old
+            entityToJacoMappings.put(entityClass, f);
         }
     }
 
-    public interface ToJacoFunc {
-        Object map(Class<?> targetClass, Object instance);
+    public interface EntityToJacoFunc {
+        Object map(Object entity);
     }
 }

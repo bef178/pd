@@ -1,10 +1,12 @@
 package pd.fun;
 
+import java.time.Instant;
 import java.util.Objects;
 
 public class Cat extends Animal {
 
     public String name;
+    public Instant birthTime;
 
     @Override
     public boolean equals(Object o) {

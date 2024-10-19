@@ -1,5 +1,6 @@
 package pd.jaco;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -28,7 +29,7 @@ public class TestJacoWithEntity {
         assertEquals(ArrayList.class, converter.retargetClassWithConfig(null, "/", List.class));
         assertEquals(LinkedHashMap.class, converter.retargetClassWithConfig(null, "/", Map.class));
 
-        converter.config.register(Object.class, (json, p, c) -> {
+        converter.config.registerEntityTypeMapping(Object.class, (json, p, c) -> {
             if (p.equals("/animals/[1]")) {
                 return Cat.class;
             } else if (PathPattern.matches("/animals/[*]", p)) {
@@ -53,11 +54,13 @@ public class TestJacoWithEntity {
             cat.Genus = "Felis";
             cat.Species = "Felis catus";
             cat.name = "Mimi";
+            cat.birthTime = Instant.EPOCH;
             entity = cat;
         }
         Object jaco;
         {
             Map<String, Object> m = new LinkedHashMap<>();
+            m.put("birthTime", Instant.EPOCH.toString());
             m.put("Phylum", "Chordata");
             m.put("Class", "Mammalia");
             m.put("Order", "Carnivora");
@@ -106,7 +109,7 @@ public class TestJacoWithEntity {
             m.put("stream", true);
             jaco = m;
         }
-        jacoMan.toEntityConfig.register(Object.class, (json, p, c) -> {
+        jacoMan.toEntityConfig.registerEntityTypeMapping(Object.class, (json, p, c) -> {
             if (PathPattern.matches("ErnieRequest/messages/*", p)) {
                 return ErnieMessage.class;
             }
@@ -120,7 +123,8 @@ public class TestJacoWithEntity {
     public void testFromToEntityNullField() {
         Cat cat = new Cat();
         cat.name = "Mimi";
-        @SuppressWarnings("unchecked") Map<String, Object> jaco = (Map<String, Object>) jacoMan.fromEntity(cat);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> jaco = (Map<String, Object>) jacoMan.fromEntity(cat);
         assertFalse(jaco.containsKey("Phylum"));
         assertTrue(jaco.containsKey("name"));
     }
