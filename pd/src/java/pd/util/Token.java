@@ -1,20 +1,17 @@
-package pd.fenc;
+package pd.util;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @EqualsAndHashCode
 @ToString
-public class Token {
+public class Token<T> {
 
-    public int type;
+    public T type;
 
     public String content;
 
-    public Token() {
-    }
-
-    public Token(int type, String content) {
+    public Token(T type, String content) {
         this.type = type;
         this.content = content;
     }

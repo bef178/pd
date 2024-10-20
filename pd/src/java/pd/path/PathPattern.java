@@ -5,9 +5,13 @@ import java.util.LinkedList;
 import lombok.NonNull;
 import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ParsingException;
-import pd.fenc.Token;
 import pd.util.UnicodeExtension;
 
+import static pd.path.TokenType.TOKEN_TYPE_ASTERISK;
+import static pd.path.TokenType.TOKEN_TYPE_DOUBLE_ASTERISK;
+import static pd.path.TokenType.TOKEN_TYPE_EOF;
+import static pd.path.TokenType.TOKEN_TYPE_ERROR;
+import static pd.path.TokenType.TOKEN_TYPE_TEXT;
 import static pd.util.AsciiExtension.EOF;
 
 /**
@@ -16,12 +20,6 @@ import static pd.util.AsciiExtension.EOF;
  * - `**` could across boundary `/`, as regex: `.*`<br/>
  */
 public class PathPattern {
-
-    private static final int TOKEN_TYPE_EOF = -1;
-    private static final int TOKEN_TYPE_ERROR = -2;
-    private static final int TOKEN_TYPE_TEXT = 0;
-    private static final int TOKEN_TYPE_ASTERISK = 1;
-    private static final int TOKEN_TYPE_DOUBLE_ASTERISK = 2;
 
     public static boolean matches(String pathPattern, String path) {
         return new PathPattern(pathPattern).matches(path);
