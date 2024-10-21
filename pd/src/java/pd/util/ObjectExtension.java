@@ -1,14 +1,23 @@
 package pd.util;
 
+import java.util.Collection;
+
 import lombok.NonNull;
 
 public class ObjectExtension {
 
     /**
-     * return `null` iff cannot convert
+     * return `null` iff not convertible<br/>
+     * especially, arrays and collections are considered non-convertible<br/>
      */
     public static <T> T convert(@NonNull Object o, Class<T> targetClass) {
         if (targetClass.isAssignableFrom(o.getClass())) {
+            if (targetClass.isArray()) {
+                return null;
+            }
+            if (Collection.class.isAssignableFrom(targetClass)) {
+                return null;
+            }
             return targetClass.cast(o);
         }
 

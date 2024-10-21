@@ -2,6 +2,7 @@ package pd.jaco;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -127,5 +128,67 @@ public class TestJacoWithEntity {
         Map<String, Object> jaco = (Map<String, Object>) jacoMan.fromEntity(cat);
         assertFalse(jaco.containsKey("Phylum"));
         assertTrue(jaco.containsKey("name"));
+    }
+
+    @Test
+    public void testArray() {
+        Object entity;
+        {
+            Cat cat = new Cat();
+            cat.name = "Mimi";
+            List<Cat> cats = new ArrayList<>();
+            cats.add(cat);
+            entity = cats;
+        }
+        Object jaco;
+        {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("name", "Mimi");
+            List<Map<String, Object>> a = new LinkedList<>();
+            a.add(m);
+            jaco = a;
+        }
+
+        JacoMan jacoMan = new JacoMan();
+        jacoMan.toEntityConfig.registerEntityTypeMapping(Object.class, (o, path, entityType) -> {
+            if (PathPattern.matches("aaa/*", path)) {
+                return Cat.class;
+            }
+            return null;
+        });
+
+        assertEquals(entity, jacoMan.toEntity(jaco, List.class, "aaa"));
+        assertEquals(jaco, jacoMan.fromEntity(entity));
+    }
+
+    @Test
+    public void testMap() {
+        Object entity;
+        {
+            Cat cat = new Cat();
+            cat.name = "Mimi";
+            Map<String, Cat> cats = new LinkedHashMap<>();
+            cats.put(cat.name, cat);
+            entity = cats;
+        }
+        Object jaco;
+        {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("name", "Mimi");
+            Map<String, Map<String, Object>> a = new HashMap<>();
+            a.put(m.get("name").toString(), m);
+            jaco = a;
+        }
+
+        JacoMan jacoMan = new JacoMan();
+        jacoMan.toEntityConfig.registerEntityTypeMapping(Object.class, (o, path, entityType) -> {
+            if (PathPattern.matches("aaa/*", path)) {
+                return Cat.class;
+            }
+            return null;
+        });
+
+        assertEquals(entity, jacoMan.toEntity(jaco, Map.class, "aaa"));
+        assertEquals(jaco, jacoMan.fromEntity(entity));
     }
 }
