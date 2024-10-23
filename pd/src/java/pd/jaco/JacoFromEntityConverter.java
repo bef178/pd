@@ -31,7 +31,7 @@ public class JacoFromEntityConverter {
         // intercept
         {
             // TODO search for super class and interfaces
-            EntityToJacoFunc f = config.entityToJacoMappings.get(o.getClass());
+            EntityToJacoMappingFunc f = config.entityToJacoMappings.get(o.getClass());
             if (f != null) {
                 return f.map(o);
             }
@@ -160,7 +160,7 @@ public class JacoFromEntityConverter {
 
     public static class Config {
 
-        final LinkedHashMap<Class<?>, EntityToJacoFunc> entityToJacoMappings = new LinkedHashMap<>();
+        final LinkedHashMap<Class<?>, EntityToJacoMappingFunc> entityToJacoMappings = new LinkedHashMap<>();
 
         public boolean keepsNull = false;
 
@@ -168,7 +168,7 @@ public class JacoFromEntityConverter {
             register(Instant.class, (entity) -> ((Instant) entity).toString());
         }
 
-        public void register(Class<?> entityClass, EntityToJacoFunc f) {
+        public void register(Class<?> entityClass, EntityToJacoMappingFunc f) {
             if (f == null) {
                 throw new NullPointerException();
             }
@@ -177,7 +177,7 @@ public class JacoFromEntityConverter {
         }
     }
 
-    public interface EntityToJacoFunc {
+    public interface EntityToJacoMappingFunc {
         Object map(Object entity);
     }
 }

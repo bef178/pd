@@ -3,6 +3,7 @@ package pd.path;
 import java.util.LinkedList;
 
 import lombok.NonNull;
+import lombok.ToString;
 import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ParsingException;
 import pd.util.UnicodeExtension;
@@ -19,6 +20,7 @@ import static pd.util.AsciiExtension.EOF;
  * - `*` matches within boundary `/`, as regex: `[^/]*`<br/>
  * - `**` could across boundary `/`, as regex: `.*`<br/>
  */
+@ToString
 public class PathPattern {
 
     public static boolean matches(String pathPattern, String path) {
@@ -36,6 +38,25 @@ public class PathPattern {
         if (lastToken.type == TOKEN_TYPE_ERROR) {
             throw new IllegalArgumentException(lastToken.content);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (o == this) {
+            return true;
+        }
+        if (o instanceof PathPattern) {
+            return ((PathPattern) o).pathPattern.equals(pathPattern);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return pathPattern.hashCode();
     }
 
     public boolean matches(@NonNull String path) {

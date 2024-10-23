@@ -13,7 +13,6 @@ import pd.fun.Cat;
 import pd.fun.Dog;
 import pd.fun.ernie.entity.ErnieMessage;
 import pd.fun.ernie.entity.ErnieRequest;
-import pd.path.PathPattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,23 +23,18 @@ public class TestJacoWithEntity {
     JacoMan jacoMan = new JacoMan();
 
     @Test
-    public void testRetargetClass() {
-        JacoToEntityConverter converter = new JacoToEntityConverter();
+    public void testJacoToEntityConfig() {
+        JacoToEntityConverter.Config config = new JacoToEntityConverter.Config();
 
-        assertEquals(ArrayList.class, converter.retargetClassWithConfig(null, "/", List.class));
-        assertEquals(LinkedHashMap.class, converter.retargetClassWithConfig(null, "/", Map.class));
+        assertEquals(ArrayList.class, config.queryEntityTypeMapping("ignored", List.class, "ignored"));
+        assertEquals(LinkedHashMap.class, config.queryEntityTypeMapping("ignored", Map.class, "ignored"));
 
-        converter.config.registerEntityTypeMapping(Object.class, (json, p, c) -> {
-            if (p.equals("/animals/[1]")) {
-                return Cat.class;
-            } else if (PathPattern.matches("/animals/[*]", p)) {
-                return Dog.class;
-            }
-            return Object.class;
-        });
-        assertEquals(Dog.class, converter.retargetClassWithConfig(null, "/animals/[0]", Object.class));
-        assertEquals(Cat.class, converter.retargetClassWithConfig(null, "/animals/[1]", Object.class));
-        assertEquals(Dog.class, converter.retargetClassWithConfig(null, "/animals/[2]", Object.class));
+        config.registerEntityTypeMapping("/animals/1", Cat.class);
+        config.registerEntityTypeMapping("/animals/*", Dog.class);
+
+        assertEquals(Dog.class, config.queryEntityTypeMapping(null, Object.class, "/animals/0"));
+        assertEquals(Cat.class, config.queryEntityTypeMapping(null, Object.class, "/animals/1"));
+        assertEquals(Dog.class, config.queryEntityTypeMapping(null, Object.class, "/animals/2"));
     }
 
     @Test
@@ -110,12 +104,7 @@ public class TestJacoWithEntity {
             m.put("stream", true);
             jaco = m;
         }
-        jacoMan.toEntityConfig.registerEntityTypeMapping(Object.class, (json, p, c) -> {
-            if (PathPattern.matches("ErnieRequest/messages/*", p)) {
-                return ErnieMessage.class;
-            }
-            return Object.class;
-        });
+        jacoMan.toEntityConfig.registerEntityTypeMapping("ErnieRequest/messages/*", ErnieMessage.class);
         assertEquals(entity, jacoMan.toEntity(jaco, ErnieRequest.class, "ErnieRequest"));
         assertEquals(jaco, jacoMan.fromEntity(entity));
     }
@@ -150,12 +139,7 @@ public class TestJacoWithEntity {
         }
 
         JacoMan jacoMan = new JacoMan();
-        jacoMan.toEntityConfig.registerEntityTypeMapping(Object.class, (o, path, entityType) -> {
-            if (PathPattern.matches("aaa/*", path)) {
-                return Cat.class;
-            }
-            return null;
-        });
+        jacoMan.toEntityConfig.registerEntityTypeMapping("aaa/*", Cat.class);
 
         assertEquals(entity, jacoMan.toEntity(jaco, List.class, "aaa"));
         assertEquals(jaco, jacoMan.fromEntity(entity));
@@ -181,12 +165,7 @@ public class TestJacoWithEntity {
         }
 
         JacoMan jacoMan = new JacoMan();
-        jacoMan.toEntityConfig.registerEntityTypeMapping(Object.class, (o, path, entityType) -> {
-            if (PathPattern.matches("aaa/*", path)) {
-                return Cat.class;
-            }
-            return null;
-        });
+        jacoMan.toEntityConfig.registerEntityTypeMapping("aaa/*", Cat.class);
 
         assertEquals(entity, jacoMan.toEntity(jaco, Map.class, "aaa"));
         assertEquals(jaco, jacoMan.fromEntity(entity));

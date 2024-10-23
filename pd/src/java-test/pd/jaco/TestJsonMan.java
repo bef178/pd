@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import org.junit.jupiter.api.Test;
 import pd.fun.ernie.entity.ErnieMessage;
 import pd.fun.ernie.entity.ErnieRequest;
-import pd.path.PathPattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -23,12 +22,7 @@ public class TestJsonMan {
         String json = "{\"messages\":[{\"role\":\"user\",\"content\":\"how are you\"},{\"role\":\"assistant\",\"content\":\"fine, thank you, and you\"},{\"role\":\"user\",\"content\":\"how old are you\"}],\"stream\":true}";
 
         JsonMan jsonMan = new JsonMan();
-        jsonMan.jacoMan.toEntityConfig.registerEntityTypeMapping(Object.class, (j, p, c) -> {
-            if (PathPattern.matches("ErnieRequest/messages/*", p)) {
-                return ErnieMessage.class;
-            }
-            return Object.class;
-        });
+        jsonMan.jacoMan.toEntityConfig.registerEntityTypeMapping("ErnieRequest/messages/*", ErnieMessage.class);
 
         assertEquals(json, jsonMan.serialize(request));
         assertEquals(request, jsonMan.deserialize(json, ErnieRequest.class, "ErnieRequest"));

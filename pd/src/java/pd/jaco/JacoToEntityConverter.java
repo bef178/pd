@@ -8,20 +8,18 @@ import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import pd.fenc.ParsingException;
+import pd.path.PathPattern;
 import pd.util.ObjectExtension;
 import pd.util.PathExtension;
 
 public class JacoToEntityConverter {
 
     public final Config config;
-
-    public JacoToEntityConverter() {
-        this(new Config());
-    }
 
     public JacoToEntityConverter(Config config) {
         this.config = config;
@@ -32,17 +30,14 @@ public class JacoToEntityConverter {
             throw new IllegalArgumentException("startPath should not be null or empty");
         }
         try {
-            return jacoToEntity(o, startPath, targetClass);
+            return jacoToEntity(o, targetClass, startPath);
         } catch (Exception e) {
             throw new ParsingException(e);
         }
     }
 
-    /**
-     * convert Json things to Java things
-     */
     @SuppressWarnings("unchecked")
-    private <T> T jacoToEntity(Object o, String path, Class<T> targetClass)
+    private <T> T jacoToEntity(Object o, Class<T> targetClass, String path)
             throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException {
 
@@ -50,7 +45,7 @@ public class JacoToEntityConverter {
             throw new IllegalArgumentException();
         }
 
-        Class<? extends T> retargetedClass = retargetClassWithConfig(o, path, targetClass);
+        Class<? extends T> retargetedClass = config.queryEntityTypeMapping(o, targetClass, path);
         if (retargetedClass == null) {
             retargetedClass = targetClass;
         }
@@ -89,12 +84,9 @@ public class JacoToEntityConverter {
         }
 
         {
-            JacoToEntityFunc<T> f = (JacoToEntityFunc<T>) config.jacoToEntityMappings.get(targetClass);
-            if (f != null) {
-                T[] values = f.map(o, path, targetClass);
-                if (values != null) {
-                    return values[0];
-                }
+            T result = config.queryEntityMapping(o, retargetedClass, path);
+            if (result != null) {
+                return result;
             }
         }
 
@@ -112,7 +104,7 @@ public class JacoToEntityConverter {
                 List<Object> a = (List<Object>) constructor.newInstance();
                 for (int i = 0; i < o1.size(); i++) {
                     String path1 = PathExtension.join(path, String.valueOf(i));
-                    a.add(jacoToEntity(o1.get(i), path1, Object.class));
+                    a.add(jacoToEntity(o1.get(i), Object.class, path1));
                 }
                 return retargetedClass.cast(a);
             } else {
@@ -135,7 +127,7 @@ public class JacoToEntityConverter {
                 Object a = Array.newInstance(elementClass, o1.size());
                 for (int i = 0; i < o1.size(); i++) {
                     String path1 = PathExtension.join(path, String.valueOf(i));
-                    Array.set(a, i, jacoToEntity(o1.get(i), path1, elementClass));
+                    Array.set(a, i, jacoToEntity(o1.get(i), elementClass, path1));
                 }
                 return targetClass.cast(a);
             } else {
@@ -149,7 +141,7 @@ public class JacoToEntityConverter {
                 Map<Object, Object> m = (Map<Object, Object>) constructor.newInstance();
                 for (Map.Entry<Object, Object> entry : o1.entrySet()) {
                     String path1 = PathExtension.join(path, String.valueOf(entry.getKey()));
-                    m.put(entry.getKey(), jacoToEntity(entry.getValue(), path1, Object.class));
+                    m.put(entry.getKey(), jacoToEntity(entry.getValue(), Object.class, path1));
                 }
                 return retargetedClass.cast(m);
             } else {
@@ -167,7 +159,7 @@ public class JacoToEntityConverter {
                     if (o1.containsKey(fieldName)) {
                         field.setAccessible(true);
                         String path1 = PathExtension.join(path, fieldName);
-                        field.set(object, jacoToEntity(o1.get(fieldName), path1, field.getType()));
+                        field.set(object, jacoToEntity(o1.get(fieldName), field.getType(), path1));
                     }
                 }
                 return targetClass.cast(object);
@@ -177,23 +169,11 @@ public class JacoToEntityConverter {
         }
     }
 
-    /**
-     * return `null` if it cannot retarget
-     */
-    <T> Class<? extends T> retargetClassWithConfig(Object o, String path, final Class<T> targetClass) {
-        @SuppressWarnings("unchecked")
-        EntityTypeFunc<T> f = (EntityTypeFunc<T>) config.entityTypeMappings.get(targetClass);
-        if (f != null) {
-            return f.map(o, path, targetClass);
-        }
-        return null;
-    }
-
     public static class Config {
 
-        final LinkedHashMap<Class<?>, EntityTypeFunc<?>> entityTypeMappings = new LinkedHashMap<>();
+        final LinkedHashMap<PathPattern, List<EntityTypeMappingFunc<?>>> entityTypeMappings = new LinkedHashMap<>();
 
-        final LinkedHashMap<Class<?>, JacoToEntityFunc<?>> jacoToEntityMappings = new LinkedHashMap<>();
+        final LinkedHashMap<Class<?>, List<EntityMappingFunc<?>>> entityMappings = new LinkedHashMap<>();
 
         public Config() {
             registerEntityTypeMapping(List.class, ArrayList.class);
@@ -207,11 +187,11 @@ public class JacoToEntityConverter {
             registerEntityTypeMapping(boolean.class, Boolean.class);
             registerEntityTypeMapping(char.class, Character.class);
 
-            registerJacoToEntityMapping(Instant.class, (jaco, path, entityType) -> {
-                if (entityType == Instant.class) {
-                    if (jaco instanceof String) {
+            registerEntityMapping(Instant.class, (o, t, p) -> {
+                if (t == Instant.class) {
+                    if (o instanceof String) {
                         Instant[] values = new Instant[1];
-                        values[0] = Instant.parse((String) jaco);
+                        values[0] = Instant.parse((String) o);
                         return values;
                     }
                 }
@@ -220,21 +200,63 @@ public class JacoToEntityConverter {
         }
 
         public <T> void registerEntityTypeMapping(Class<T> fromClass, Class<? extends T> toClass) {
-            registerEntityTypeMapping(fromClass, (jaco, p, t) -> toClass);
+            registerEntityTypeMapping("**", (o, t, p) -> {
+                if (t == fromClass) {
+                    return toClass;
+                }
+                return null;
+            });
         }
 
-        public <T> void registerEntityTypeMapping(Class<T> fromClass, EntityTypeFunc<T> f) {
+        public <T> void registerEntityTypeMapping(String pathPattern, Class<T> toClass) {
+            registerEntityTypeMapping(pathPattern, (p, j, t) -> toClass);
+        }
+
+        public <T> void registerEntityTypeMapping(String pathPattern, EntityTypeMappingFunc<T> f) {
+            registerEntityTypeMapping(new PathPattern(pathPattern), f);
+        }
+
+        public <T> void registerEntityTypeMapping(PathPattern pathPattern, EntityTypeMappingFunc<T> f) {
             if (f == null) {
                 throw new NullPointerException();
             }
-            entityTypeMappings.put(fromClass, f);
+            entityTypeMappings.computeIfAbsent(pathPattern, (key) -> new LinkedList<>()).add(f);
         }
 
-        public <T> void registerJacoToEntityMapping(Class<T> entityType, JacoToEntityFunc<T> f) {
+        public <T> Class<? extends T> queryEntityTypeMapping(Object jaco, final Class<T> entityType, String path) {
+            for (Map.Entry<PathPattern, List<EntityTypeMappingFunc<?>>> p : entityTypeMappings.entrySet()) {
+                if (p.getKey().matches(path)) {
+                    for (EntityTypeMappingFunc<?> f : p.getValue()) {
+                        @SuppressWarnings("unchecked")
+                        Class<? extends T> extendedEntityType = ((EntityTypeMappingFunc<T>) f).map(jaco, entityType, path);
+                        if (extendedEntityType != null) {
+                            return extendedEntityType;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public <T> void registerEntityMapping(Class<T> entityType, EntityMappingFunc<T> f) {
             if (f == null) {
                 throw new NullPointerException();
             }
-            jacoToEntityMappings.put(entityType, f);
+            entityMappings.computeIfAbsent(entityType, (key) -> new LinkedList<>()).add(f);
+        }
+
+        public <T> T queryEntityMapping(Object jaco, Class<T> entityType, String path) {
+            List<EntityMappingFunc<?>> a = entityMappings.get(entityType);
+            if (a != null) {
+                for (EntityMappingFunc<?> f : a) {
+                    @SuppressWarnings("unchecked")
+                    T[] values = ((EntityMappingFunc<T>) f).map(jaco, entityType, path);
+                    if (values != null) {
+                        return values[0];
+                    }
+                }
+            }
+            return null;
         }
     }
 
@@ -242,12 +264,12 @@ public class JacoToEntityConverter {
      * maps `entityType` to its extended (instantiable) class
      */
     @FunctionalInterface
-    public interface EntityTypeFunc<T> {
-        Class<? extends T> map(Object jaco, String path, Class<T> entityType);
+    public interface EntityTypeMappingFunc<T> {
+        Class<? extends T> map(Object jaco, Class<T> entityType, String path);
     }
 
     @FunctionalInterface
-    public interface JacoToEntityFunc<T> {
-        T[] map(Object jaco, String path, Class<T> entityType);
+    public interface EntityMappingFunc<T> {
+        T[] map(Object jaco, Class<T> entityType, String path);
     }
 }
