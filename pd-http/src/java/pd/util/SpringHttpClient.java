@@ -1,5 +1,6 @@
 package pd.util;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -16,18 +17,21 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
 
 @Slf4j
 public class SpringHttpClient {
 
-    private final WebClient client = buildClient();
+    private final WebClient client;
 
-    public SpringHttpClient() {
+    public SpringHttpClient(InetSocketAddress socksProxyAddress) {
+        client = buildClient(socksProxyAddress);
     }
 
-    private WebClient buildClient() {
+    private WebClient buildClient(InetSocketAddress socksProxyAddress) {
         HttpClient nettyClient = HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 60000)
+                .proxy(spec -> spec.type(ProxyProvider.Proxy.SOCKS5).address(socksProxyAddress))
                 .doOnConnected(conn -> {
                     conn.addHandlerLast(new ReadTimeoutHandler(60000, TimeUnit.MILLISECONDS));
                     conn.addHandlerLast(new WriteTimeoutHandler(60000, TimeUnit.MILLISECONDS));

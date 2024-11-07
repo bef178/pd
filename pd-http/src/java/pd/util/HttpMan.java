@@ -1,5 +1,6 @@
 package pd.util;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
@@ -13,9 +14,27 @@ import reactor.core.publisher.Flux;
 
 public class HttpMan {
 
-    private final ApacheHttpClient apacheHttpClient = new ApacheHttpClient();
+    static InetSocketAddress buildSocketAddress(String socketAddressString) {
+        if (socketAddressString == null) {
+            return null;
+        }
+        String[] a = socketAddressString.split(":");
+        return new InetSocketAddress(a[0], Integer.parseInt(a[1]));
+    }
 
-    private final SpringHttpClient springHttpClient = new SpringHttpClient();
+    private final ApacheHttpClient apacheHttpClient;
+
+    private final SpringHttpClient springHttpClient;
+
+    public HttpMan() {
+        this(null);
+    }
+
+    public HttpMan(String socksProxyAddressString) {
+        InetSocketAddress socksProxyAddress = buildSocketAddress(socksProxyAddressString);
+        apacheHttpClient = new ApacheHttpClient(socksProxyAddress);
+        springHttpClient = new SpringHttpClient(socksProxyAddress);
+    }
 
     public URI buildUri(String u, Map<String, String> queryParams) {
         return apacheHttpClient.buildUri(u, queryParams);

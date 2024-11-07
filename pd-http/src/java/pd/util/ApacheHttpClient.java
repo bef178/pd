@@ -1,5 +1,6 @@
 package pd.util;
 
+import java.net.SocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -34,24 +35,17 @@ import org.apache.hc.core5.util.Timeout;
 @Slf4j
 public class ApacheHttpClient {
 
-    private final CloseableHttpClient client = buildClient();
+    private final CloseableHttpClient client;
 
-    public ApacheHttpClient() {
+    public ApacheHttpClient(SocketAddress socksProxyAddress) {
+        client = buildClient(socksProxyAddress);
     }
 
-    private CloseableHttpClient buildClient() {
-        return HttpClients.custom()
-                .setConnectionManager(buildConnectionManager())
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setCookieSpec(StandardCookieSpec.STRICT)
-                        .build())
-                .build();
-    }
-
-    private PoolingHttpClientConnectionManager buildConnectionManager() {
-        return PoolingHttpClientConnectionManagerBuilder.create()
+    private CloseableHttpClient buildClient(SocketAddress socksProxyAddress) {
+        PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                 .setDefaultSocketConfig(SocketConfig.custom()
                         .setSoTimeout(Timeout.ofSeconds(60))
+                        .setSocksProxyAddress(socksProxyAddress)
                         .build())
                 .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
                 .setConnPoolPolicy(PoolReusePolicy.LIFO)
@@ -59,6 +53,13 @@ public class ApacheHttpClient {
                         .setSocketTimeout(Timeout.ofSeconds(60))
                         .setConnectTimeout(Timeout.ofSeconds(2))
                         .setTimeToLive(TimeValue.ofSeconds(120))
+                        .build())
+                .build();
+
+        return HttpClients.custom()
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setCookieSpec(StandardCookieSpec.STRICT)
                         .build())
                 .build();
     }
@@ -112,8 +113,8 @@ public class ApacheHttpClient {
     private HttpClientContext buildClientContext() {
         HttpClientContext context = HttpClientContext.create();
         context.setRequestConfig(RequestConfig.custom()
-                .setConnectionRequestTimeout(Timeout.ofSeconds(15))
-                .setResponseTimeout(Timeout.ofSeconds(15))
+                .setConnectionRequestTimeout(Timeout.ofSeconds(10))
+                .setResponseTimeout(Timeout.ofSeconds(10))
                 .build());
         return context;
     }
