@@ -31,7 +31,11 @@ public class SpringHttpClient {
     private WebClient buildClient(InetSocketAddress socksProxyAddress) {
         HttpClient nettyClient = HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 60000)
-                .proxy(spec -> spec.type(ProxyProvider.Proxy.SOCKS5).address(socksProxyAddress))
+                .proxy(spec -> {
+                    if (socksProxyAddress != null) {
+                        spec.type(ProxyProvider.Proxy.SOCKS5).address(socksProxyAddress);
+                    }
+                })
                 .doOnConnected(conn -> {
                     conn.addHandlerLast(new ReadTimeoutHandler(60000, TimeUnit.MILLISECONDS));
                     conn.addHandlerLast(new WriteTimeoutHandler(60000, TimeUnit.MILLISECONDS));
