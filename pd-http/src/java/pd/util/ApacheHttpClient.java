@@ -37,15 +37,15 @@ public class ApacheHttpClient {
 
     private final CloseableHttpClient client;
 
-    public ApacheHttpClient(SocketAddress socksProxyAddress) {
-        client = buildClient(socksProxyAddress);
+    public ApacheHttpClient(SocketAddress socks5ProxyAddress) {
+        client = buildClient(socks5ProxyAddress);
     }
 
-    private CloseableHttpClient buildClient(SocketAddress socksProxyAddress) {
+    private CloseableHttpClient buildClient(SocketAddress socks5ProxyAddress) {
         PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                 .setDefaultSocketConfig(SocketConfig.custom()
                         .setSoTimeout(Timeout.ofSeconds(60))
-                        .setSocksProxyAddress(socksProxyAddress)
+                        .setSocksProxyAddress(socks5ProxyAddress)
                         .build())
                 .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
                 .setConnPoolPolicy(PoolReusePolicy.LIFO)

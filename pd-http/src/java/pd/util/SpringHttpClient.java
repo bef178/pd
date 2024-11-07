@@ -24,22 +24,20 @@ public class SpringHttpClient {
 
     private final WebClient client;
 
-    public SpringHttpClient(InetSocketAddress socksProxyAddress) {
-        client = buildClient(socksProxyAddress);
+    public SpringHttpClient(InetSocketAddress socks5ProxyAddress) {
+        client = buildClient(socks5ProxyAddress);
     }
 
-    private WebClient buildClient(InetSocketAddress socksProxyAddress) {
+    private WebClient buildClient(InetSocketAddress socks5ProxyAddress) {
         HttpClient nettyClient = HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 60000)
-                .proxy(spec -> {
-                    if (socksProxyAddress != null) {
-                        spec.type(ProxyProvider.Proxy.SOCKS5).address(socksProxyAddress);
-                    }
-                })
                 .doOnConnected(conn -> {
                     conn.addHandlerLast(new ReadTimeoutHandler(60000, TimeUnit.MILLISECONDS));
                     conn.addHandlerLast(new WriteTimeoutHandler(60000, TimeUnit.MILLISECONDS));
                 });
+        if (socks5ProxyAddress != null) {
+            nettyClient.proxy(spec -> spec.type(ProxyProvider.Proxy.SOCKS5).address(socks5ProxyAddress));
+        }
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(nettyClient))
                 .exchangeStrategies(ExchangeStrategies.builder()

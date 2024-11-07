@@ -30,10 +30,10 @@ public class HttpMan {
         this(null);
     }
 
-    public HttpMan(String socksProxyAddressString) {
-        InetSocketAddress socksProxyAddress = buildSocketAddress(socksProxyAddressString);
-        apacheHttpClient = new ApacheHttpClient(socksProxyAddress);
-        springHttpClient = new SpringHttpClient(socksProxyAddress);
+    public HttpMan(String socks5ProxyAddressString) {
+        InetSocketAddress socks5ProxyAddress = buildSocketAddress(socks5ProxyAddressString);
+        apacheHttpClient = new ApacheHttpClient(socks5ProxyAddress);
+        springHttpClient = new SpringHttpClient(socks5ProxyAddress);
     }
 
     public URI buildUri(String u, Map<String, String> queryParams) {
