@@ -7,11 +7,13 @@ import java.util.Map;
 import java.util.PrimitiveIterator;
 
 import lombok.NonNull;
-import pd.codec.HexCodec;
 import pd.fenc.UnicodeConsumer;
 import pd.util.AsciiExtension;
+import pd.util.HexCodec;
 
 public class JacoToJsonSerializer {
+
+    final HexCodec hexCodec = new HexCodec();
 
     public final Config config;
 
@@ -139,7 +141,7 @@ public class JacoToJsonSerializer {
                 default:
                     if (AsciiExtension.isControl(ch)) {
                         int[] a = new int[2];
-                        HexCodec.encode1byte((byte) ch, a, 0);
+                        hexCodec.encode1byte((byte) ch, a, 0);
                         unicodeConsumer.next('\\').next('u').next('0').next('0').next((char) a[0]).next((char) a[1]);
                     } else {
                         unicodeConsumer.next(ch);

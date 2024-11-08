@@ -3,9 +3,12 @@ package pd.codec;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 
+import pd.util.HexCodec;
 import pd.util.InstallmentByteBuffer;
 
 public class PercentCodec {
+
+    private static final HexCodec hexCodec = new HexCodec();
 
     private static final BitSet UNRESERVED = new BitSet(128);
 
@@ -38,7 +41,7 @@ public class PercentCodec {
         if (shouldEncode(byteValue)) {
             if (dst != null) {
                 dst[start++] = '%';
-                HexCodec.encode1byte(byteValue, dst, start);
+                hexCodec.encode1byte(byteValue, dst, start);
             }
             return 3;
         } else {
@@ -53,7 +56,9 @@ public class PercentCodec {
         if (shouldEncode(byteValue)) {
             if (sb != null) {
                 sb.append('%');
-                HexCodec.encode1byte(byteValue, sb, true);
+                int[] dst = new int[2];
+                hexCodec.encode1byte(byteValue, dst, 0);
+                sb.appendCodePoint(dst[0]).appendCodePoint(dst[1]);
             }
             return 3;
         } else {
@@ -84,7 +89,7 @@ public class PercentCodec {
             if (dst != null) {
                 int hiByte = a[i + 1];
                 int loByte = a[i + 2];
-                dst[start] = HexCodec.decode1byte(hiByte, loByte);
+                dst[start] = hexCodec.decode1byte(hiByte, loByte);
             }
             return 3;
         } else {

@@ -5,7 +5,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import pd.util.HexCodec;
+
 public class Md5Digest {
+
+    private static final HexCodec hexCodec = HexCodec.encodeWithLowerCaseLetters();
 
     public static byte[] md5(byte[] bytes) {
         MessageDigest md5;
@@ -18,11 +22,11 @@ public class Md5Digest {
     }
 
     public static String md5sum(byte[] bytes) {
-        return HexCodec.toHexString(md5(bytes), false);
+        return hexCodec.toHexString(md5(bytes));
     }
 
     public static String md5sum(String s) {
-        return HexCodec.toHexString(md5(s.getBytes(StandardCharsets.UTF_8)), false);
+        return hexCodec.toHexString(md5(s.getBytes(StandardCharsets.UTF_8)));
     }
 
     public static String md5sum(InputStream inputStream) {
@@ -34,7 +38,7 @@ public class Md5Digest {
             while ((nRead = inputStream.read(buffer)) > 0) {
                 md.update(buffer, 0, nRead);
             }
-            return HexCodec.toHexString(md5(md.digest()), false);
+            return hexCodec.toHexString(md5(md.digest()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
