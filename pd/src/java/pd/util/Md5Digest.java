@@ -1,17 +1,15 @@
-package pd.codec;
+package pd.util;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import pd.util.HexCodec;
-
 public class Md5Digest {
 
-    private static final HexCodec hexCodec = HexCodec.encodeWithLowerCaseLetters();
+    private final HexCodec hexCodec = HexCodec.encodeWithLowerCaseLetters();
 
-    public static byte[] md5(byte[] bytes) {
+    public byte[] md5(byte[] bytes) {
         MessageDigest md5;
         try {
             md5 = MessageDigest.getInstance("md5");
@@ -21,15 +19,15 @@ public class Md5Digest {
         return md5.digest(bytes);
     }
 
-    public static String md5sum(byte[] bytes) {
+    public String md5sum(byte[] bytes) {
         return hexCodec.toHexString(md5(bytes));
     }
 
-    public static String md5sum(String s) {
+    public String md5sum(String s) {
         return hexCodec.toHexString(md5(s.getBytes(StandardCharsets.UTF_8)));
     }
 
-    public static String md5sum(InputStream inputStream) {
+    public String md5sum(InputStream inputStream) {
         MessageDigest md;
         try {
             int nRead;

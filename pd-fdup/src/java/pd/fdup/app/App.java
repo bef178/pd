@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import pd.codec.Md5Digest;
 import pd.fstore.FileStat;
 import pd.fstore.LocalFileAccessor;
+import pd.util.Md5Digest;
 import pd.util.ParamManager;
 
 import static pd.util.AppLogger.stderr;
@@ -24,6 +24,8 @@ import static pd.util.AppLogger.stdout;
 public class App {
 
     public static final LocalFileAccessor accessor = new LocalFileAccessor();
+
+    private static final Md5Digest md5Digest = new Md5Digest();
 
     public static void main(String[] args) {
         ParamManager paramManager;
@@ -108,7 +110,7 @@ public class App {
             for (FileStat stat : a) {
                 String checksum;
                 try (InputStream inputStream = Files.newInputStream(Paths.get(stat.key))) {
-                    checksum = Md5Digest.md5sum(inputStream);
+                    checksum = md5Digest.md5sum(inputStream);
                 } catch (IOException e) {
                     checksum = null;
                 }
