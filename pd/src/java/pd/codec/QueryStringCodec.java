@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import pd.util.PercentCodec;
 import pd.util.StringExtension;
 
 /**
@@ -18,6 +19,8 @@ public final class QueryStringCodec {
 
     public static final int MINOR_DELIMITER = '=';
 
+    static PercentCodec percentCodec = new PercentCodec();
+
     public static String serialize(Collection<? extends Map.Entry<String, String>> entries) {
         return serialize(entries, MAJOR_DELIMITER, MINOR_DELIMITER);
     }
@@ -25,9 +28,9 @@ public final class QueryStringCodec {
     public static String serialize(Collection<? extends Map.Entry<String, String>> entries, int majorDelimiter, int minorDelimiter) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : entries) {
-            PercentCodec.encode(entry.getKey(), sb);
+            percentCodec.encode(entry.getKey(), sb);
             sb.appendCodePoint(minorDelimiter);
-            PercentCodec.encode(entry.getValue(), sb);
+            percentCodec.encode(entry.getValue(), sb);
             sb.appendCodePoint(majorDelimiter);
         }
         if (sb.length() > 0) {
@@ -60,7 +63,7 @@ public final class QueryStringCodec {
                 key = entryString.substring(0, i);
                 value = entryString.substring(i + 1);
             }
-            entries.add(new SimpleImmutableEntry<>(PercentCodec.decode(key), PercentCodec.decode(value)));
+            entries.add(new SimpleImmutableEntry<>(percentCodec.decode(key), percentCodec.decode(value)));
         }
         return entries;
     }
