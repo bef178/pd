@@ -14,15 +14,48 @@ import pd.util.StringExtension;
  */
 public class QueryObject {
 
+    public static final int defaultMajorDelimiter = '&';
+
+    public static final int defaultMinorDelimiter = '=';
+
     private static final PercentCodec percentCodec = new PercentCodec();
 
     public static QueryObject parse(String queryString) {
         QueryObject queryObject = new QueryObject();
-        parseTo(queryObject, queryString, queryObject.majorDelimiter, queryObject.minorDelimiter);
+        queryObject.parseString(queryString);
         return queryObject;
     }
 
-    private static void parseTo(QueryObject queryObject, String queryString, int majorDelimiter, int minorDelimiter) {
+    public final LinkedList<Map.Entry<String, String>> params = new LinkedList<>();
+
+    public void clear() {
+        params.clear();
+    }
+
+    public void add(String key, String value) {
+        params.add(new AbstractMap.SimpleEntry<>(key, value));
+    }
+
+    public void add(LinkedList<Map.Entry<String, String>> params) {
+        this.params.addAll(params);
+    }
+
+    public void add(QueryObject another) {
+        params.addAll(another.params);
+    }
+
+    public List<String> get(String key) {
+        return params.stream()
+                .filter(a1 -> a1.getKey().equals(key))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
+
+    public void parseString(String queryString) {
+        parseString(queryString, defaultMajorDelimiter, defaultMinorDelimiter);
+    }
+
+    public void parseString(String queryString, int majorDelimiter, int minorDelimiter) {
         if (queryString == null) {
             throw new IllegalArgumentException();
         }
@@ -41,41 +74,15 @@ public class QueryObject {
                 key = entryString.substring(0, i);
                 value = entryString.substring(i + 1);
             }
-            queryObject.add(percentCodec.decode(key), percentCodec.decode(value));
+            add(percentCodec.decode(key), percentCodec.decode(value));
         }
     }
 
-    public final int majorDelimiter;
-
-    public final int minorDelimiter;
-
-    public final LinkedList<Map.Entry<String, String>> params = new LinkedList<>();
-
-    public QueryObject() {
-        this('&', '=');
-    }
-
-    public QueryObject(int majorDelimiter, int minorDelimiter) {
-        this.majorDelimiter = majorDelimiter;
-        this.minorDelimiter = minorDelimiter;
-    }
-
-    public void clear() {
-        params.clear();
-    }
-
-    public void add(String key, String value) {
-        params.add(new AbstractMap.SimpleEntry<>(key, value));
-    }
-
-    public List<String> get(String key) {
-        return params.stream()
-                .filter(a1 -> a1.getKey().equals(key))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-    }
-
     public String toString() {
+        return toString(defaultMajorDelimiter, defaultMinorDelimiter);
+    }
+
+    public String toString(int majorDelimiter, int minorDelimiter) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : params) {
             percentCodec.encode(entry.getKey(), sb);
