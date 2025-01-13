@@ -17,4 +17,15 @@ public class Test_StringExtension {
         String[] actual = StringExtension.split(input, inputSeparator);
         assertArrayEquals(expected, actual);
     }
+
+    @Test
+    public void test_split_n() {
+        assertArrayEquals(new String[] { "ababa" }, StringExtension.split("ababa", 'b', 1));
+
+        assertArrayEquals(new String[] { "a", "aba" }, StringExtension.split("ababa", 'b', 2));
+
+        assertArrayEquals(new String[] { "a", "a", "a" }, StringExtension.split("ababa", 'b', 3));
+
+        assertArrayEquals(new String[] { "a", "a", "a" }, StringExtension.split("ababa", 'b', 9));
+    }
 }

@@ -42,10 +42,14 @@ public class StringExtension {
     }
 
     public static String[] split(String s, int ch) {
+        return split(s, ch, Integer.MAX_VALUE);
+    }
+
+    public static String[] split(String s, int ch, int maxResults) {
         List<String> a = new LinkedList<>();
         int startIndex = 0;
         int endIndex;
-        while ((endIndex = s.indexOf(ch, startIndex)) != -1) {
+        while (a.size() < maxResults - 1 && (endIndex = s.indexOf(ch, startIndex)) != -1) {
             a.add(s.substring(startIndex, endIndex));
             startIndex = endIndex + 1;
         }
@@ -55,7 +59,7 @@ public class StringExtension {
 
     @SuppressWarnings("unused")
     private static String[] split1(String s, final int delimiter) {
-        List<String> list = new LinkedList<String>();
+        List<String> list = new LinkedList<>();
         int start = -1;
         int i = 0;
         while (i < s.length()) {
