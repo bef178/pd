@@ -134,9 +134,8 @@ public class PathExtension {
     }
 
     /**
-     * normalized path will not end with '/'<br/>
-     * <br/>
-     * return e.g. "/a/b/c" or "./a/b/c" or "../a/b/c"
+     * normalize() removes unnecessary '.' and '..' and trailing '/'<br/>
+     * normalize("./../abc/") => "../abc"<br/>
      */
     public static String normalize(String path) {
         if (path == null || path.isEmpty()) {
@@ -200,7 +199,8 @@ public class PathExtension {
     }
 
     /**
-     * "/a/b/c", "/d" => "../../../d"
+     * u.relativize(v) => relativize(u, v) => v - u<br/>
+     * relativize("/a/b", "/a/b/c") => "c"<br/>
      */
     public static String relativize(String from, String to) {
         if (from == null || from.isEmpty()) {
@@ -237,6 +237,14 @@ public class PathExtension {
         return a;
     }
 
+    /**
+     * u.resolve(v) => resolve(u, v) => v + u<br/>
+     * resolve("/a/b", "c") => "/a/b/c"<br/>
+     * <br/>
+     * if both u and v are relative:<br/>
+     * - u.relativize(u.resolve(v)).equals(v)<br/>
+     * - u.resolve(u.relativize(v)).equals(v)<br/>
+     */
     public static String resolve(String path, String... more) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
