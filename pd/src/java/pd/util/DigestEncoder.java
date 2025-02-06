@@ -48,6 +48,7 @@ public class DigestEncoder {
     public enum Algorithm {
         md5,
         sha1,
-        sha256
+        sha256,
+        sha512
     }
 }

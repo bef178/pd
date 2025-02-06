@@ -32,4 +32,11 @@ public class Test_DigestEncoder {
         assertEquals("87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7", sha256Digest.checksum(new ByteArrayInputStream("a\n".getBytes(StandardCharsets.UTF_8))));
         assertEquals("edeaaff3f1774ad2888673770c6d64097e391bc362d7d6fb34982ddf0efd18cb", sha256Digest.checksum("abc\n"));
     }
+
+    @Test
+    public void test_sha512sum() {
+        DigestEncoder sha512Digest = new DigestEncoder(DigestEncoder.Algorithm.sha512);
+        assertEquals("162b0b32f02482d5aca0a7c93dd03ceac3acd7e410a5f18f3fb990fc958ae0df6f32233b91831eaf99ca581a8c4ddf9c8ba315ac482db6d4ea01cc7884a635be", sha512Digest.checksum("a\n".getBytes(StandardCharsets.UTF_8)));
+        assertEquals("4f285d0c0cc77286d8731798b7aae2639e28270d4166f40d769cbbdca5230714d848483d364e2f39fe6cb9083c15229b39a33615ebc6d57605f7c43f6906739d", sha512Digest.checksum("abc\n"));
+    }
 }
