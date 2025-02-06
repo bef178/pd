@@ -7,7 +7,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class Md5Digest {
 
-    private final HexCodec hexCodec = HexCodec.encodeWithLowerCaseLetters();
+    private final HexCodec hexCodec = HexCodec.withLowerCaseLetters();
 
     public byte[] md5(byte[] bytes) {
         MessageDigest md5;
@@ -20,11 +20,11 @@ public class Md5Digest {
     }
 
     public String md5sum(byte[] bytes) {
-        return hexCodec.toHexString(md5(bytes));
+        return hexCodec.encodeToString(md5(bytes));
     }
 
     public String md5sum(String s) {
-        return hexCodec.toHexString(md5(s.getBytes(StandardCharsets.UTF_8)));
+        return hexCodec.encodeToString(md5(s.getBytes(StandardCharsets.UTF_8)));
     }
 
     public String md5sum(InputStream inputStream) {
@@ -36,7 +36,7 @@ public class Md5Digest {
             while ((nRead = inputStream.read(buffer)) > 0) {
                 md.update(buffer, 0, nRead);
             }
-            return hexCodec.toHexString(md5(md.digest()));
+            return hexCodec.encodeToString(md5(md.digest()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

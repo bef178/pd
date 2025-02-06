@@ -13,7 +13,7 @@ import pd.util.HexCodec;
 
 public class JacoToJsonSerializer {
 
-    final HexCodec hexCodec = new HexCodec();
+    final HexCodec hexCodec = HexCodec.withUpperCaseLetters();
 
     public final Config config;
 
@@ -140,8 +140,7 @@ public class JacoToJsonSerializer {
                     break;
                 default:
                     if (AsciiExtension.isControl(ch)) {
-                        int[] a = new int[2];
-                        hexCodec.encode1byte((byte) ch, a, 0);
+                        int[] a = hexCodec.encodeToArray((byte) ch);
                         unicodeConsumer.next('\\').next('u').next('0').next('0').next((char) a[0]).next((char) a[1]);
                     } else {
                         unicodeConsumer.next(ch);

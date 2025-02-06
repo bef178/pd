@@ -2,32 +2,26 @@ package pd.util;
 
 public class HexCodec {
 
-    public static HexCodec encodeWithLowerCaseLetters() {
+    public static HexCodec withLowerCaseLetters() {
         return new HexCodec(false);
     }
 
-    public static HexCodec encodeWithUpperCaseLetters() {
+    public static HexCodec withUpperCaseLetters() {
         return new HexCodec(true);
     }
 
     final int baseLetter;
 
-    public HexCodec() {
-        this(true);
-    }
-
-    public HexCodec(boolean encodeWithUpperCaseLetters) {
-        this.baseLetter = encodeWithUpperCaseLetters ? 'A' : 'a';
+    private HexCodec(boolean withUpperCaseLetters) {
+        this.baseLetter = withUpperCaseLetters ? 'A' : 'a';
     }
 
     /**
-     * consume 1 byte and produce 2 ascii<br/>
      * (byte) 0x61 => ['6','1']
-     * (byte) 0x5B => ['5','B']
      */
-    public int encode1byte(byte byteValue, int[] dst, int start) {
-        dst[start] = (byte) encode4bit((byteValue >> 4) & 0x0F);
-        dst[start + 1] = (byte) encode4bit(byteValue & 0x0F);
+    public int encode(byte octet, int[] dst, int start) {
+        dst[start] = encode4bit((octet >> 4) & 0x0F);
+        dst[start + 1] = encode4bit(octet & 0x0F);
         return 2;
     }
 
@@ -61,20 +55,25 @@ public class HexCodec {
         throw new IllegalArgumentException();
     }
 
-    public String toHexString(byte[] bytes) {
-        int[] dst = new int[bytes.length * 2];
+    public int[] encodeToArray(byte... octets) {
+        int[] dst = new int[octets.length * 2];
         int start = 0;
-        for (byte aByte : bytes) {
-            start += encode1byte(aByte, dst, start);
+        for (byte octet : octets) {
+            start += encode(octet, dst, start);
         }
-        return new String(dst, 0, dst.length);
+        return dst;
+    }
+
+    public String encodeToString(byte... octets) {
+        int[] a = encodeToArray(octets);
+        return new String(a, 0, a.length);
     }
 
     /**
      * ['6','1'] => (byte) 0x61
      */
-    public byte decode1byte(int hiValue, int loValue) {
-        return (byte) ((decode4bit(hiValue) << 4) | decode4bit(loValue));
+    public byte decode(int a0, int a1) {
+        return (byte) ((decode4bit(a0) << 4) | decode4bit(a1));
     }
 
     private int decode4bit(int ch) {

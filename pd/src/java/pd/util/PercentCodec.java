@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 public class PercentCodec {
 
-    private final HexCodec hexCodec = new HexCodec();
+    private final HexCodec hexCodec = HexCodec.withUpperCaseLetters();
 
     /**
      * total 7
@@ -106,7 +106,7 @@ public class PercentCodec {
         if (shouldEncode(byteValue)) {
             if (dst != null) {
                 dst[start++] = '%';
-                hexCodec.encode1byte(byteValue, dst, start);
+                hexCodec.encode(byteValue, dst, start);
             }
             return 3;
         } else {
@@ -140,9 +140,7 @@ public class PercentCodec {
     public int decode1byte(int[] a, int i, byte[] dst, int start) {
         if (a[i] == '%') {
             if (dst != null) {
-                int hiByte = a[i + 1];
-                int loByte = a[i + 2];
-                dst[start] = hexCodec.decode1byte(hiByte, loByte);
+                dst[start] = hexCodec.decode(a[i + 1], a[i + 2]);
             }
             return 3;
         } else {

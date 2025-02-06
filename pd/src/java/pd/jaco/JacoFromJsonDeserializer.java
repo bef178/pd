@@ -18,7 +18,7 @@ import static pd.util.AsciiExtension.EOF;
 
 public class JacoFromJsonDeserializer {
 
-    private final HexCodec hexCodec = new HexCodec();
+    private final HexCodec hexCodec = HexCodec.withUpperCaseLetters();
 
     private final NumberPicker numberPicker = NumberPicker.singleton();
 
@@ -256,7 +256,7 @@ public class JacoFromJsonDeserializer {
                             u[1] = it.next();
                             u[2] = it.next();
                             u[3] = it.next();
-                            sb.append((char) ((hexCodec.decode1byte(u[0], u[1]) << 8) | hexCodec.decode1byte(u[2], u[3])));
+                            sb.append((char) ((hexCodec.decode(u[0], u[1]) << 8) | (hexCodec.decode(u[2], u[3]) & 0xFF)));
                             state = 1;
                             break;
                         default:
