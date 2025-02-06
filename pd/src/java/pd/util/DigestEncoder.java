@@ -9,12 +9,28 @@ import lombok.SneakyThrows;
 
 public class DigestEncoder {
 
+    public static DigestEncoder md5() {
+        return new DigestEncoder("md5");
+    }
+
+    public static DigestEncoder sha1() {
+        return new DigestEncoder("sha1");
+    }
+
+    public static DigestEncoder sha256() {
+        return new DigestEncoder("sha256");
+    }
+
+    public static DigestEncoder sha512() {
+        return new DigestEncoder("sha512");
+    }
+
     private final HexCodec hexCodec = HexCodec.withLowerCaseLetters();
 
     private final String algoName;
 
-    public DigestEncoder(Algorithm algo) {
-        algoName = algo.name();
+    private DigestEncoder(String algoName) {
+        this.algoName = algoName;
     }
 
     @SneakyThrows
@@ -43,12 +59,5 @@ public class DigestEncoder {
 
     public String checksum(String s) {
         return hexCodec.encodeToString(digest(s.getBytes(StandardCharsets.UTF_8)));
-    }
-
-    public enum Algorithm {
-        md5,
-        sha1,
-        sha256,
-        sha512
     }
 }

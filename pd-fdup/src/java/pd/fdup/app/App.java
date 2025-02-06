@@ -25,7 +25,7 @@ public class App {
 
     public static final LocalFileAccessor accessor = new LocalFileAccessor();
 
-    private static final DigestEncoder md5Digest = new DigestEncoder(DigestEncoder.Algorithm.md5);
+    private static final DigestEncoder md5Digest = DigestEncoder.md5();
 
     public static void main(String[] args) {
         ParamManager paramManager;
