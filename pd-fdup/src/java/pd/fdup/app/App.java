@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 import pd.fstore.FileStat;
 import pd.fstore.LocalFileAccessor;
-import pd.util.DigestEncoder;
+import pd.util.DigestCodec;
 import pd.util.ParamManager;
 
 import static pd.util.AppLogger.stderr;
@@ -25,7 +25,7 @@ public class App {
 
     public static final LocalFileAccessor accessor = new LocalFileAccessor();
 
-    private static final DigestEncoder md5Digest = DigestEncoder.md5();
+    private static final DigestCodec md5Digest = DigestCodec.md5();
 
     public static void main(String[] args) {
         ParamManager paramManager;

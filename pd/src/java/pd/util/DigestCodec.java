@@ -7,29 +7,33 @@ import java.security.MessageDigest;
 
 import lombok.SneakyThrows;
 
-public class DigestEncoder {
+/**
+ * 摘要算法会损失信息量：名为codec实为encoder<br/>
+ * 对象化；static方法仅用于封装构造函数；类本身不作为singleton管理器<br/>
+ */
+public class DigestCodec {
 
-    public static DigestEncoder md5() {
-        return new DigestEncoder("md5");
+    public static DigestCodec md5() {
+        return new DigestCodec("md5");
     }
 
-    public static DigestEncoder sha1() {
-        return new DigestEncoder("sha1");
+    public static DigestCodec sha1() {
+        return new DigestCodec("sha1");
     }
 
-    public static DigestEncoder sha256() {
-        return new DigestEncoder("sha256");
+    public static DigestCodec sha256() {
+        return new DigestCodec("sha256");
     }
 
-    public static DigestEncoder sha512() {
-        return new DigestEncoder("sha512");
+    public static DigestCodec sha512() {
+        return new DigestCodec("sha512");
     }
 
     private final HexCodec hexCodec = HexCodec.withLowerCaseLetters();
 
     private final String algoName;
 
-    private DigestEncoder(String algoName) {
+    private DigestCodec(String algoName) {
         this.algoName = algoName;
     }
 
