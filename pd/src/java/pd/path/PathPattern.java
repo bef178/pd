@@ -4,8 +4,8 @@ import java.util.LinkedList;
 
 import lombok.NonNull;
 import lombok.ToString;
-import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ParsingException;
+import pd.fenc.UnicodeProvider;
 import pd.util.UnicodeExtension;
 
 import static pd.path.TokenType.TOKEN_TYPE_ASTERISK;
@@ -156,7 +156,7 @@ public class PathPattern {
             tokens.add(new Token(TOKEN_TYPE_ERROR, "MalformedPathPattern: null"));
         }
 
-        BackableUnicodeProvider it = new BackableUnicodeProvider(pathPattern);
+        UnicodeProvider it = UnicodeProvider.wrap(pathPattern);
         while (true) {
             Token token = getNextToken(it);
             if (token.type == TOKEN_TYPE_ASTERISK || token.type == TOKEN_TYPE_DOUBLE_ASTERISK) {
@@ -176,7 +176,7 @@ public class PathPattern {
         return tokens;
     }
 
-    private Token getNextToken(BackableUnicodeProvider it) {
+    private Token getNextToken(UnicodeProvider it) {
         final int STATE_READY = 0;
         final int STATE_AFTER_BACK_SLASH = 1;
         final int STATE_AFTER_ASTERISK = 2;

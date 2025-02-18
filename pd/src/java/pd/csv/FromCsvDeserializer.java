@@ -4,9 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import lombok.NonNull;
-import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
+import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 
 import static pd.util.AsciiExtension.EOF;
@@ -16,7 +16,7 @@ class FromCsvDeserializer {
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
     public List<String> fromCsvRow(@NonNull String csvRow) {
-        BackableUnicodeProvider it = new BackableUnicodeProvider(csvRow);
+        UnicodeProvider it = UnicodeProvider.wrap(csvRow);
         List<String> values = new LinkedList<>();
         while (true) {
             String value = decodeString(it);
@@ -39,7 +39,7 @@ class FromCsvDeserializer {
         }
     }
 
-    private String decodeString(BackableUnicodeProvider it) {
+    private String decodeString(UnicodeProvider it) {
         final int STATE_READY = 0;
         final int STATE_QUOTED = 1;
         final int STATE_QUOTED2 = 2;

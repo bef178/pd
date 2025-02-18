@@ -18,7 +18,7 @@ public class NumberPicker {
         // dummy
     }
 
-    public String pickFloatToken(BackableUnicodeProvider src) {
+    public String pickFloatToken(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         UnicodeConsumer dst = UnicodeConsumer.wrap(sb);
         pickFloatToken(src, dst);
@@ -28,7 +28,7 @@ public class NumberPicker {
     /**
      * a number has 3 parts: integer, fraction and exponent
      */
-    void pickFloatToken(BackableUnicodeProvider src, UnicodeConsumer dst) {
+    void pickFloatToken(UnicodeProvider src, UnicodeConsumer dst) {
         pickIntToken(src, dst);
 
         int ch = src.hasNext() ? src.next() : EOF;
@@ -59,18 +59,18 @@ public class NumberPicker {
         }
     }
 
-    public float pickFloat32(BackableUnicodeProvider src) {
+    public float pickFloat32(UnicodeProvider src) {
         return Float.parseFloat(pickFloatToken(src));
     }
 
-    public double pickFloat64(BackableUnicodeProvider src) {
+    public double pickFloat64(UnicodeProvider src) {
         return Double.parseDouble(pickFloatToken(src));
     }
 
     /**
      * fraction := '.' 1*digit
      */
-    void pickFractionPart(BackableUnicodeProvider src, UnicodeConsumer dst) {
+    void pickFractionPart(UnicodeProvider src, UnicodeConsumer dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -135,7 +135,7 @@ public class NumberPicker {
     /**
      * exponent := ('E' / 'e') int
      */
-    void pickExponentPart(BackableUnicodeProvider src, UnicodeConsumer dst) {
+    void pickExponentPart(UnicodeProvider src, UnicodeConsumer dst) {
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == 'E' || ch == 'e') {
             dst.next(ch);
@@ -146,7 +146,7 @@ public class NumberPicker {
         throw new ParsingException(String.format("unexpected [%s], expecting [E] or [e]", actual));
     }
 
-    public String pickIntToken(BackableUnicodeProvider src) {
+    public String pickIntToken(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
         UnicodeConsumer dst = UnicodeConsumer.wrap(sb);
         pickIntToken(src, dst);
@@ -156,7 +156,7 @@ public class NumberPicker {
     /**
      * pick a valid 10-based integer of string form, per intuition
      */
-    void pickIntToken(BackableUnicodeProvider src, UnicodeConsumer dst) {
+    void pickIntToken(UnicodeProvider src, UnicodeConsumer dst) {
         int state = 0;
         while (true) {
             switch (state) {
@@ -237,15 +237,15 @@ public class NumberPicker {
         }
     }
 
-    public int pickInt32(BackableUnicodeProvider src) {
+    public int pickInt32(UnicodeProvider src) {
         return Integer.parseInt(pickIntToken(src));
     }
 
-    public long pickInt64(BackableUnicodeProvider src) {
+    public long pickInt64(UnicodeProvider src) {
         return Long.parseLong(pickIntToken(src));
     }
 
-    public Number pickNumber(BackableUnicodeProvider src) {
+    public Number pickNumber(UnicodeProvider src) {
         return new SimpleNumber(pickFloatToken(src));
     }
 }

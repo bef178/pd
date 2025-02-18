@@ -1,8 +1,8 @@
 package pd.codec;
 
-import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ParsingException;
 import pd.fenc.UnicodeConsumer;
+import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 
 public class Typeset {
@@ -13,7 +13,7 @@ public class Typeset {
         }
     }
 
-    private static void appendBytes(BackableUnicodeProvider src, int srcSize, UnicodeConsumer dst) {
+    private static void appendBytes(UnicodeProvider src, int srcSize, UnicodeConsumer dst) {
         for (int i = 0; i < srcSize; i++) {
             if (!src.hasNext()) {
                 break;
@@ -22,7 +22,7 @@ public class Typeset {
         }
     }
 
-    public static void appendBytes(BackableUnicodeProvider src, UnicodeConsumer dst, int numBytesPerLine,
+    public static void appendBytes(UnicodeProvider src, UnicodeConsumer dst, int numBytesPerLine,
             int startingOffset, byte[] prefix, byte[] suffix) {
         if (prefix == null) {
             prefix = new byte[0];

@@ -3,8 +3,8 @@ package pd.codec;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
 
-import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.ScalarPicker;
+import pd.fenc.UnicodeProvider;
 
 import static pd.util.AsciiExtension.EOF;
 
@@ -12,7 +12,7 @@ public class PropertyCodec {
 
     private static final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public static Map.Entry<String, String> deserializeEntry(BackableUnicodeProvider src) {
+    public static Map.Entry<String, String> deserializeEntry(UnicodeProvider src) {
 
         scalarPicker.eatWhitespacesIfAny(src);
 

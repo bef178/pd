@@ -1,37 +1,55 @@
 package pd.fenc;
 
-import java.util.PrimitiveIterator;
+public interface UnicodeProvider {
 
-public interface UnicodeProvider extends Int32Provider {
+    boolean hasNext();
 
     /**
-     * values in [0,0x10FFFF]
+     * read and move;
+     * values in [0, 0x10FFFF]
      */
-    static UnicodeProvider wrap(CharSequence cs) {
-        return wrap(cs.codePoints().iterator());
+    int next();
+
+    boolean hasPrev();
+
+    int prev();
+
+    int position();
+
+    default void back() {
+        prev();
     }
 
-    static UnicodeProvider wrap(PrimitiveIterator.OfInt ofInt) {
+    static UnicodeProvider wrap(CharSequence cs) {
 
         return new UnicodeProvider() {
 
-            private int pos = 0;
+            final int[] a = cs == null ? new int[0] : cs.codePoints().toArray();
+            int i = 0;
 
             @Override
             public boolean hasNext() {
-                return ofInt.hasNext();
+                return i < a.length;
             }
 
             @Override
             public int next() {
-                int value = ofInt.nextInt();
-                pos++;
-                return value;
+                return a[i++];
+            }
+
+            @Override
+            public boolean hasPrev() {
+                return i > 0;
+            }
+
+            @Override
+            public int prev() {
+                return a[--i];
             }
 
             @Override
             public int position() {
-                return pos;
+                return i;
             }
         };
     }

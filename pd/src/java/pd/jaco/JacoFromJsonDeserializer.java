@@ -5,10 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import pd.fenc.BackableUnicodeProvider;
 import pd.fenc.NumberPicker;
 import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
+import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 import pd.util.HexCodec;
 import pd.util.SimpleNumber;
@@ -25,10 +25,10 @@ public class JacoFromJsonDeserializer {
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
     public Object fromJson(String s) {
-        return jsonToJaco(new BackableUnicodeProvider(s));
+        return jsonToJaco(UnicodeProvider.wrap(s));
     }
 
-    private Object jsonToJaco(BackableUnicodeProvider it) {
+    private Object jsonToJaco(UnicodeProvider it) {
         int ch = it.hasNext() ? it.next() : EOF;
         switch (ch) {
             case 'n':
@@ -67,7 +67,7 @@ public class JacoFromJsonDeserializer {
         }
     }
 
-    private Map<String, Object> jsonToMap(BackableUnicodeProvider it) {
+    private Map<String, Object> jsonToMap(UnicodeProvider it) {
         Map<String, Object> m = new LinkedHashMap<>();
         int state = 0;
         while (true) {
@@ -128,7 +128,7 @@ public class JacoFromJsonDeserializer {
         }
     }
 
-    private List<Object> jsonToArray(BackableUnicodeProvider it) {
+    private List<Object> jsonToArray(UnicodeProvider it) {
         List<Object> a = new LinkedList<>();
         int state = 0;
         while (true) {
@@ -185,7 +185,7 @@ public class JacoFromJsonDeserializer {
         }
     }
 
-    private String jsonToString(BackableUnicodeProvider it) {
+    private String jsonToString(UnicodeProvider it) {
         // state machine go!
         int state = 0;
         StringBuilder sb = new StringBuilder();
@@ -270,7 +270,7 @@ public class JacoFromJsonDeserializer {
         }
     }
 
-    private Number jsonToNumber(BackableUnicodeProvider it) {
+    private Number jsonToNumber(UnicodeProvider it) {
         String floatToken = numberPicker.pickFloatToken(it);
         SimpleNumber number = new SimpleNumber(floatToken);
         if (number.isRoundNumber()) {
@@ -280,17 +280,17 @@ public class JacoFromJsonDeserializer {
         }
     }
 
-    private Boolean jsonToTrue(BackableUnicodeProvider src) {
+    private Boolean jsonToTrue(UnicodeProvider src) {
         scalarPicker.eat(src, "true");
         return true;
     }
 
-    private Boolean jsonToFalse(BackableUnicodeProvider it) {
+    private Boolean jsonToFalse(UnicodeProvider it) {
         scalarPicker.eat(it, "false");
         return false;
     }
 
-    private Object jsonToNull(BackableUnicodeProvider it) {
+    private Object jsonToNull(UnicodeProvider it) {
         scalarPicker.eat(it, "null");
         return null;
     }

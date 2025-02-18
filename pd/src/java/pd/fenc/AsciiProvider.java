@@ -7,7 +7,21 @@ import java.util.PrimitiveIterator;
 
 import static pd.util.AsciiExtension.EOF;
 
-public interface AsciiProvider extends UnicodeProvider {
+public interface AsciiProvider {
+
+    boolean hasNext();
+
+    /**
+     * read and move;
+     * values in [0, 0x10FFFF]
+     */
+    int next();
+
+    boolean hasPrev();
+
+    int prev();
+
+    int position();
 
     /**
      * values in [-0x80,0x7F]
@@ -30,6 +44,16 @@ public interface AsciiProvider extends UnicodeProvider {
                 int value = (byte) ofInt.nextInt();
                 pos++;
                 return value;
+            }
+
+            @Override
+            public boolean hasPrev() {
+                return false;
+            }
+
+            @Override
+            public int prev() {
+                return 0;
             }
 
             @Override
