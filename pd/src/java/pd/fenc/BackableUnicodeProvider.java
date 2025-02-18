@@ -1,12 +1,12 @@
 package pd.fenc;
 
-import pd.util.CappedIntQueue;
+import pd.util.IntQueue;
 
 public class BackableUnicodeProvider implements UnicodeProvider {
 
     private final UnicodeProvider src;
 
-    private final CappedIntQueue recent;
+    private final IntQueue recent;
 
     private int nBack;
 
@@ -23,7 +23,7 @@ public class BackableUnicodeProvider implements UnicodeProvider {
             throw new IllegalArgumentException("E: expected positive backCapacity, actual " + backCapacity);
         }
         this.src = src;
-        this.recent = new CappedIntQueue(backCapacity);
+        this.recent = new IntQueue(backCapacity);
         this.nBack = 0;
     }
 
