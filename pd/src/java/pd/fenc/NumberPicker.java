@@ -75,7 +75,7 @@ public class NumberPicker {
         while (true) {
             switch (state) {
                 case 0: {
-                    scalarPicker.eat(src, '.');
+                    scalarPicker.eatOneOrThrow(src, '.');
                     dst.next('.');
                     state = 1;
                     break;

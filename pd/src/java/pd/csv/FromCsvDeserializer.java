@@ -30,9 +30,7 @@ class FromCsvDeserializer {
                     break;
                 default:
                     it.back();
-                    if (!scalarPicker.tryEat(it, AsciiExtension.CR, AsciiExtension.LF)) {
-                        throw new ParsingException("E: unexpected token");
-                    }
+                    scalarPicker.eatSequenceOrThrow(it, AsciiExtension.CR, AsciiExtension.LF);
                     values.add(value);
                     return values;
             }

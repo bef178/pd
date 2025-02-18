@@ -78,7 +78,7 @@ public class JacoFromJsonDeserializer {
                         throw new ParsingException(
                                 String.format("expected '{', actual [%s]", UnicodeExtension.toString(ch)));
                     }
-                    scalarPicker.eatWhitespacesIfAny(it);
+                    scalarPicker.eatWhitespaces(it);
                     state = 1;
                     break;
                 }
@@ -97,13 +97,13 @@ public class JacoFromJsonDeserializer {
                 case 2: {
                     // deserializeJsonKeyValue()
                     String pKey = jsonToString(it);
-                    scalarPicker.eatWhitespacesIfAny(it);
-                    scalarPicker.eat(it, ':');
-                    scalarPicker.eatWhitespacesIfAny(it);
+                    scalarPicker.eatWhitespaces(it);
+                    scalarPicker.eatOneOrThrow(it, ':');
+                    scalarPicker.eatWhitespaces(it);
                     Object pValue = jsonToJaco(it);
 
                     m.put(pKey, pValue);
-                    scalarPicker.eatWhitespacesIfAny(it);
+                    scalarPicker.eatWhitespaces(it);
                     state = 3;
                     break;
                 }
@@ -113,7 +113,7 @@ public class JacoFromJsonDeserializer {
                         case '}':
                             return m;
                         case ',':
-                            scalarPicker.eatWhitespacesIfAny(it);
+                            scalarPicker.eatWhitespaces(it);
                             state = 2;
                             break;
                         default:
@@ -139,7 +139,7 @@ public class JacoFromJsonDeserializer {
                         throw new ParsingException(
                                 String.format("expected '[', actual [%s]", UnicodeExtension.toString(ch)));
                     }
-                    scalarPicker.eatWhitespacesIfAny(it);
+                    scalarPicker.eatWhitespaces(it);
                     state = 1;
                     break;
                 }
@@ -159,7 +159,7 @@ public class JacoFromJsonDeserializer {
                 case 2: {
                     // a json
                     a.add(jsonToJaco(it));
-                    scalarPicker.eatWhitespacesIfAny(it);
+                    scalarPicker.eatWhitespaces(it);
                     state = 3;
                     break;
                 }
@@ -170,7 +170,7 @@ public class JacoFromJsonDeserializer {
                         case ']':
                             return a;
                         case ',':
-                            scalarPicker.eatWhitespacesIfAny(it);
+                            scalarPicker.eatWhitespaces(it);
                             state = 2;
                             break;
                         default:
@@ -281,17 +281,17 @@ public class JacoFromJsonDeserializer {
     }
 
     private Boolean jsonToTrue(UnicodeProvider src) {
-        scalarPicker.eat(src, "true");
+        scalarPicker.eatSequenceOrThrow(src, "true");
         return true;
     }
 
     private Boolean jsonToFalse(UnicodeProvider it) {
-        scalarPicker.eat(it, "false");
+        scalarPicker.eatSequenceOrThrow(it, "false");
         return false;
     }
 
     private Object jsonToNull(UnicodeProvider it) {
-        scalarPicker.eat(it, "null");
+        scalarPicker.eatSequenceOrThrow(it, "null");
         return null;
     }
 }

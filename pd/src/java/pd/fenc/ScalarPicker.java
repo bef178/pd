@@ -2,13 +2,12 @@ package pd.fenc;
 
 import java.util.Arrays;
 import java.util.PrimitiveIterator;
-
-import pd.util.AsciiExtension;
-import pd.util.Int32ArrayExtension;
+import java.util.function.Predicate;
 
 import static pd.util.AsciiExtension.EOF;
 import static pd.util.AsciiExtension.isAlpha;
 import static pd.util.AsciiExtension.isDigit;
+import static pd.util.AsciiExtension.isWhitespace;
 
 public class ScalarPicker {
 
@@ -22,31 +21,93 @@ public class ScalarPicker {
         // dummy
     }
 
-    public String pickBackSlashEscapedString(UnicodeProvider src, int terminator) {
+    /**
+     * might return empty string
+     */
+    public String pickString(UnicodeProvider src, Predicate<Integer> charset) {
         StringBuilder sb = new StringBuilder();
-        UnicodeConsumer dst = UnicodeConsumer.wrap(sb);
-        if (!tryPickBackSlashEscapedString(src, dst, terminator)) {
+        pickString(src, UnicodeConsumer.wrap(sb), charset);
+        return sb.toString();
+    }
+
+    private void pickString(UnicodeProvider src, UnicodeConsumer dst, Predicate<Integer> charset) {
+        while (true) {
+            if (src.hasNext()) {
+                int ch = src.next();
+                if (charset.test(ch)) {
+                    dst.next(ch);
+                } else {
+                    src.back();
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    /**
+     * might return empty string
+     */
+    public String pickBackSlashEscapedString(UnicodeProvider src, Predicate<Integer> charset) {
+        StringBuilder sb = new StringBuilder();
+        if (!tryPickBackSlashEscapedString(src, UnicodeConsumer.wrap(sb), charset)) {
             throw new ParsingException();
         }
         return sb.toString();
     }
 
-    public String pickDottedIdentifier(UnicodeProvider src) {
-        StringBuilder sb = new StringBuilder();
+    /**
+     * return `true` if meet any of terminators<br/>
+     * return `false` if `src` ends with escaping state<br/>
+     * - `charset` always contains `\`<br/>
+     * - `charset` always contains escaped unicodes<br/>
+     * - a unicode not in charset is a terminator<br/>
+     */
+    private boolean tryPickBackSlashEscapedString(UnicodeProvider src, UnicodeConsumer dst, Predicate<Integer> charset) {
+        boolean isEscaping = false;
         while (true) {
-            if (!pickIdentifier(src, UnicodeConsumer.wrap(sb))) {
-                throw new ParsingException();
+            if (src.hasNext()) {
+                int ch = src.next();
+                if (isEscaping) {
+                    isEscaping = false;
+                    dst.next('\\');
+                    dst.next(ch);
+                } else if (ch == '\\') {
+                    isEscaping = true;
+                } else if (charset.test(ch)) {
+                    dst.next(ch);
+                } else {
+                    src.back();
+                    return true;
+                }
+            } else {
+                return !isEscaping;
             }
-            if (!src.hasNext() || src.next() != '.') {
-                return sb.toString();
-            }
-            sb.append('.');
         }
     }
 
-    public String pickIdentifier(UnicodeProvider src) {
+    public String pickDottedIdentifierOrThrow(UnicodeProvider src) {
         StringBuilder sb = new StringBuilder();
-        if (!pickIdentifier(src, UnicodeConsumer.wrap(sb))) {
+        while (true) {
+            sb.append(pickIdentifierOrThrow(src));
+            if (src.hasNext()) {
+                if (src.next() == '.') {
+                    sb.append('.');
+                } else {
+                    src.back();
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        return sb.toString();
+    }
+
+    public String pickIdentifierOrThrow(UnicodeProvider src) {
+        StringBuilder sb = new StringBuilder();
+        if (!tryPickIdentifier(src, UnicodeConsumer.wrap(sb))) {
             throw new ParsingException();
         }
         return sb.toString();
@@ -54,9 +115,9 @@ public class ScalarPicker {
 
     /**
      * identifier matches [a-zA-Z_][a-zA-Z_0-9]*<br/>
-     * if failed, src.next() will be the illegal character
+     * return `false` if no identifier picked<br/>
      */
-    private boolean pickIdentifier(UnicodeProvider src, UnicodeConsumer dst) {
+    private boolean tryPickIdentifier(UnicodeProvider src, UnicodeConsumer dst) {
         int stat = 0;
         while (true) {
             int ch = src.hasNext() ? src.next() : EOF;
@@ -84,65 +145,8 @@ public class ScalarPicker {
         }
     }
 
-    public String pickString(UnicodeProvider src, int... closingSymbols) {
-        StringBuilder sb = new StringBuilder();
-        UnicodeConsumer dst = UnicodeConsumer.wrap(sb);
-        if (!tryPickString(src, dst, closingSymbols)) {
-            throw new ParsingException("Unexpected EOF");
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Will succ when meet `terminator`<br/>
-     * - `terminator` will not be consumed and not be a part of result<br/>
-     * - `terminator` can be escaped by `\`<br/>
-     * - `terminator` can be `EOF`<br/>
-     * Will fail in front of `EOF`<br/>
-     */
-    public boolean tryPickBackSlashEscapedString(UnicodeProvider src, UnicodeConsumer dst, int terminator) {
-        boolean isEscaping = false;
-        while (true) {
-            int ch = src.hasNext() ? src.next() : EOF;
-            if (isEscaping) {
-                isEscaping = false;
-                dst.next('\\');
-                dst.next(ch);
-            } else if (ch == '\\') {
-                isEscaping = true;
-            } else if (ch == terminator) {
-                if (ch != EOF) {
-                    src.back();
-                }
-                return true;
-            } else if (ch == EOF) {
-                // unexpected EOF
-                return false;
-            } else {
-                dst.next(ch);
-            }
-        }
-    }
-
-    public boolean tryPickString(UnicodeProvider src, UnicodeConsumer dst, int... terminators) {
-        while (true) {
-            int ch = src.hasNext() ? src.next() : EOF;
-            if (Int32ArrayExtension.contains(terminators, ch)) {
-                if (ch != EOF) {
-                    src.back();
-                }
-                return true;
-            } else if (ch == EOF) {
-                // unexpected EOF
-                return false;
-            } else {
-                dst.next(ch);
-            }
-        }
-    }
-
-    public void eat(UnicodeProvider src, int expected) {
-        if (!tryEat(src, expected)) {
+    public void eatOneOrThrow(UnicodeProvider src, int expected) {
+        if (!tryEatOne(src, ch -> ch == expected)) {
             if (src.hasNext()) {
                 int value = src.next();
                 src.back();
@@ -153,55 +157,47 @@ public class ScalarPicker {
         }
     }
 
-    public void eat(UnicodeProvider src, String s) {
-        PrimitiveIterator.OfInt ofInt = s.codePoints().iterator();
-        while (ofInt.hasNext()) {
-            int expected = ofInt.nextInt();
-            eat(src, expected);
-        }
-    }
-
-    /**
-     * will stop in front of unexpected value
-     */
-    public boolean tryEat(UnicodeProvider src, int expected) {
+    private boolean tryEatOne(UnicodeProvider src, Predicate<Integer> expected) {
         if (src.hasNext()) {
-            if (src.next() == expected) {
+            if (expected.test(src.next())) {
                 return true;
             } else {
                 src.back();
                 return false;
             }
         } else {
-            return expected == EOF;
+            return false;
         }
     }
 
-    public boolean tryEat(UnicodeProvider src, String s) {
-        return tryEat(src, s.codePoints().iterator());
+    public void eatSequenceOrThrow(UnicodeProvider src, String s) {
+        eatSequenceOrThrow(src, s.codePoints().iterator());
     }
 
-    public boolean tryEat(UnicodeProvider src, int... expected) {
-        return tryEat(src, Arrays.stream(expected).iterator());
+    public void eatSequenceOrThrow(UnicodeProvider src, int... a) {
+        eatSequenceOrThrow(src, Arrays.stream(a).iterator());
     }
 
-    private boolean tryEat(UnicodeProvider src, PrimitiveIterator.OfInt ofInt) {
-        while (ofInt.hasNext()) {
-            int expected = ofInt.nextInt();
-            if (!tryEat(src, expected)) {
-                return false;
-            }
+    public void eatSequenceOrThrow(UnicodeProvider src, PrimitiveIterator.OfInt a) {
+        while (a.hasNext()) {
+            eatOneOrThrow(src, a.nextInt());
         }
-        return true;
     }
 
-    public void eatWhitespacesIfAny(UnicodeProvider src) {
+    /**
+     * return num whitespaces eaten
+     */
+    public int eatWhitespaces(UnicodeProvider src) {
+        int n = 0;
         while (src.hasNext()) {
             int ch = src.next();
-            if (!AsciiExtension.isWhitespace(ch)) {
+            if (isWhitespace(ch)) {
+                n++;
+            } else {
                 src.back();
-                return;
+                break;
             }
         }
+        return n;
     }
 }

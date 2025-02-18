@@ -3,6 +3,7 @@ package pd.codec;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
 
+import pd.fenc.ParsingException;
 import pd.fenc.ScalarPicker;
 import pd.fenc.UnicodeProvider;
 
@@ -14,7 +15,7 @@ public class PropertyCodec {
 
     public static Map.Entry<String, String> deserializeEntry(UnicodeProvider src) {
 
-        scalarPicker.eatWhitespacesIfAny(src);
+        scalarPicker.eatWhitespaces(src);
 
         int ch = src.hasNext() ? src.next() : EOF;
         if (ch == '#') {
@@ -23,25 +24,27 @@ public class PropertyCodec {
         }
         src.back();
 
-        String key = scalarPicker.pickDottedIdentifier(src);
+        String key = scalarPicker.pickDottedIdentifierOrThrow(src);
 
-        scalarPicker.eatWhitespacesIfAny(src);
+        scalarPicker.eatWhitespaces(src);
 
-        scalarPicker.eat(src, '=');
+        scalarPicker.eatOneOrThrow(src, '=');
 
-        scalarPicker.eatWhitespacesIfAny(src);
+        scalarPicker.eatWhitespaces(src);
 
         ch = src.hasNext() ? src.next() : EOF;
         if (ch == '\"') {
-            String value = scalarPicker.pickBackSlashEscapedString(src, '\"');
+            String value = scalarPicker.pickBackSlashEscapedString(src, a -> a != '\"');
             src.next();
-            scalarPicker.eatWhitespacesIfAny(src);
-            scalarPicker.eat(src, EOF);
+            scalarPicker.eatWhitespaces(src);
+            if (!src.hasNext()) {
+                throw new ParsingException();
+            }
             return new SimpleImmutableEntry<>(key, value);
         } else {
             src.back();
-            scalarPicker.eatWhitespacesIfAny(src);
-            String value = scalarPicker.pickBackSlashEscapedString(src, EOF);
+            scalarPicker.eatWhitespaces(src);
+            String value = scalarPicker.pickBackSlashEscapedString(src, a -> true);
             return new SimpleImmutableEntry<>(key, value);
         }
     }
