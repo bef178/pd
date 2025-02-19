@@ -14,19 +14,19 @@ import lombok.SneakyThrows;
 public class DigestCodec {
 
     public static DigestCodec md5() {
-        return new DigestCodec("md5");
+        return new DigestCodec("MD5");
     }
 
     public static DigestCodec sha1() {
-        return new DigestCodec("sha1");
+        return new DigestCodec("SHA-1");
     }
 
     public static DigestCodec sha256() {
-        return new DigestCodec("sha256");
+        return new DigestCodec("SHA-256");
     }
 
     public static DigestCodec sha512() {
-        return new DigestCodec("sha512");
+        return new DigestCodec("SHA-512");
     }
 
     private final HexCodec hexCodec = HexCodec.withLowerCaseLetters();
