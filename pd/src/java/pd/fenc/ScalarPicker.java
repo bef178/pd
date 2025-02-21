@@ -2,7 +2,7 @@ package pd.fenc;
 
 import java.util.Arrays;
 import java.util.PrimitiveIterator;
-import java.util.function.Predicate;
+import java.util.function.IntPredicate;
 
 import static pd.util.AsciiExtension.EOF;
 import static pd.util.AsciiExtension.isAlpha;
@@ -24,13 +24,13 @@ public class ScalarPicker {
     /**
      * might return empty string
      */
-    public String pickString(UnicodeProvider src, Predicate<Integer> charset) {
+    public String pickString(UnicodeProvider src, IntPredicate charset) {
         StringBuilder sb = new StringBuilder();
         pickString(src, UnicodeConsumer.wrap(sb), charset);
         return sb.toString();
     }
 
-    private void pickString(UnicodeProvider src, UnicodeConsumer dst, Predicate<Integer> charset) {
+    private void pickString(UnicodeProvider src, UnicodeConsumer dst, IntPredicate charset) {
         while (true) {
             if (src.hasNext()) {
                 int ch = src.next();
@@ -49,7 +49,7 @@ public class ScalarPicker {
     /**
      * might return empty string
      */
-    public String pickBackSlashEscapedString(UnicodeProvider src, Predicate<Integer> charset) {
+    public String pickBackSlashEscapedString(UnicodeProvider src, IntPredicate charset) {
         StringBuilder sb = new StringBuilder();
         if (!tryPickBackSlashEscapedString(src, UnicodeConsumer.wrap(sb), charset)) {
             throw new ParsingException();
@@ -64,7 +64,7 @@ public class ScalarPicker {
      * - `charset` always contains escaped unicodes<br/>
      * - a unicode not in charset is a terminator<br/>
      */
-    private boolean tryPickBackSlashEscapedString(UnicodeProvider src, UnicodeConsumer dst, Predicate<Integer> charset) {
+    private boolean tryPickBackSlashEscapedString(UnicodeProvider src, UnicodeConsumer dst, IntPredicate charset) {
         boolean isEscaping = false;
         while (true) {
             if (src.hasNext()) {
@@ -157,7 +157,7 @@ public class ScalarPicker {
         }
     }
 
-    private boolean tryEatOne(UnicodeProvider src, Predicate<Integer> expected) {
+    private boolean tryEatOne(UnicodeProvider src, IntPredicate expected) {
         if (src.hasNext()) {
             if (expected.test(src.next())) {
                 return true;
