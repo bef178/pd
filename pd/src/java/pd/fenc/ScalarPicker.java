@@ -157,6 +157,10 @@ public class ScalarPicker {
         }
     }
 
+    public boolean tryEatOne(UnicodeProvider src, int expected) {
+        return tryEatOne(src, ch -> ch == expected);
+    }
+
     public boolean tryEatOne(UnicodeProvider src, IntPredicate expected) {
         if (src.hasNext()) {
             if (expected.test(src.next())) {
