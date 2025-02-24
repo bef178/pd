@@ -8,32 +8,32 @@ import lombok.NonNull;
 import pd.fenc.UnicodeConsumer;
 import pd.util.AsciiExtension;
 
-class ToCsvSerializer {
+class CsvSerializer {
 
-    public String toCsvRow(@NonNull List<String> values) {
+    /**
+     * serialize to a string, without trailing CR or LF
+     */
+    public String serialize(@NonNull List<String> fields) {
         StringBuilder sb = new StringBuilder();
-        toCsvRow(values, UnicodeConsumer.wrap(sb));
+        serialize(fields, UnicodeConsumer.wrap(sb));
         return sb.toString();
     }
 
-    private void toCsvRow(Iterable<String> values, UnicodeConsumer unicodeConsumer) {
-        Iterator<String> it = values.iterator();
+    private void serialize(Iterable<String> fields, UnicodeConsumer dst) {
+        Iterator<String> it = fields.iterator();
         while (it.hasNext()) {
-            String value = it.next();
-            stringToCsvValue(value, unicodeConsumer);
+            serializeField(it.next(), dst);
             if (it.hasNext()) {
-                unicodeConsumer.next(AsciiExtension.COMMA);
+                dst.next(AsciiExtension.COMMA);
             }
         }
-        unicodeConsumer.next(AsciiExtension.CR);
-        unicodeConsumer.next(AsciiExtension.LF);
     }
 
-    private void stringToCsvValue(String value, UnicodeConsumer unicodeConsumer) {
+    private void serializeField(String field, UnicodeConsumer dst) {
         StringBuilder sb = new StringBuilder();
         boolean shouldQuote = false;
 
-        PrimitiveIterator.OfInt it = value.codePoints().iterator();
+        PrimitiveIterator.OfInt it = field.codePoints().iterator();
         while (it.hasNext()) {
             int ch = it.nextInt();
             switch (ch) {
@@ -54,9 +54,9 @@ class ToCsvSerializer {
         }
 
         if (shouldQuote) {
-            unicodeConsumer.next(AsciiExtension.DOUBLE_QUOTE).next(sb).next(AsciiExtension.DOUBLE_QUOTE);
+            dst.next(AsciiExtension.DOUBLE_QUOTE).next(sb).next(AsciiExtension.DOUBLE_QUOTE);
         } else {
-            unicodeConsumer.next(sb);
+            dst.next(sb);
         }
     }
 }

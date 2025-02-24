@@ -9,35 +9,31 @@ import pd.fenc.ScalarPicker;
 import pd.fenc.UnicodeProvider;
 import pd.util.AsciiExtension;
 
+import static pd.util.AsciiExtension.COMMA;
+import static pd.util.AsciiExtension.CR;
 import static pd.util.AsciiExtension.EOF;
+import static pd.util.AsciiExtension.LF;
 
-class FromCsvDeserializer {
+class CsvDeserializer {
 
     private final ScalarPicker scalarPicker = ScalarPicker.singleton();
 
-    public List<String> fromCsvRow(@NonNull String csvRow) {
-        UnicodeProvider it = UnicodeProvider.wrap(csvRow);
-        List<String> values = new LinkedList<>();
-        while (true) {
-            String value = decodeString(it);
-            int ch = it.hasNext() ? it.next() : EOF;
-            switch (ch) {
-                case EOF:
-                    values.add(value);
-                    return values;
-                case AsciiExtension.COMMA:
-                    values.add(value);
-                    break;
-                default:
-                    it.back();
-                    scalarPicker.eatSequenceOrThrow(it, AsciiExtension.CR, AsciiExtension.LF);
-                    values.add(value);
-                    return values;
+    public List<String> deserialize(@NonNull String s) {
+        List<String> fields = new LinkedList<>();
+        UnicodeProvider src = UnicodeProvider.wrap(s);
+        while (src.hasNext()) {
+            fields.add(parseField(src));
+            if (src.hasNext()) {
+                scalarPicker.eatOneOrThrow(src, COMMA);
             }
         }
+        return fields;
     }
 
-    private String decodeString(UnicodeProvider it) {
+    /**
+     * say `field` stands for the raw string, not the encoded string
+     */
+    private String parseField(UnicodeProvider src) {
         final int STATE_READY = 0;
         final int STATE_QUOTED = 1;
         final int STATE_QUOTED2 = 2;
@@ -48,7 +44,7 @@ class FromCsvDeserializer {
         while (true) {
             switch (state) {
                 case STATE_READY: {
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case EOF:
                             return sb.toString();
@@ -56,9 +52,9 @@ class FromCsvDeserializer {
                             state = STATE_QUOTED;
                             break;
                         case AsciiExtension.COMMA:
-                        case AsciiExtension.CR:
-                        case AsciiExtension.LF:
-                            it.back();
+                        case CR:
+                        case LF:
+                            src.back();
                             return sb.toString();
                         default:
                             sb.appendCodePoint(ch);
@@ -68,7 +64,7 @@ class FromCsvDeserializer {
                     break;
                 }
                 case STATE_QUOTED: {
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case EOF:
                             throw new ParsingException("E: unexpected EOF");
@@ -83,7 +79,7 @@ class FromCsvDeserializer {
                 }
                 case STATE_QUOTED2: {
                     // might be the end of field or start of escaping
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case EOF:
                             return sb.toString();
@@ -92,9 +88,9 @@ class FromCsvDeserializer {
                             sb.appendCodePoint(ch);
                             break;
                         case AsciiExtension.COMMA:
-                        case AsciiExtension.CR:
-                        case AsciiExtension.LF:
-                            it.back();
+                        case CR:
+                        case LF:
+                            src.back();
                             return sb.toString();
                         default:
                             throw new ParsingException("E: unexpected `" + new String(Character.toChars(ch)) + "`");
@@ -102,16 +98,16 @@ class FromCsvDeserializer {
                     break;
                 }
                 case STATE_UNQUOTED: {
-                    int ch = it.hasNext() ? it.next() : EOF;
+                    int ch = src.hasNext() ? src.next() : EOF;
                     switch (ch) {
                         case EOF:
                             return sb.toString();
                         case AsciiExtension.DOUBLE_QUOTE:
                             throw new ParsingException("E: unexpected `\"`");
                         case AsciiExtension.COMMA:
-                        case AsciiExtension.CR:
-                        case AsciiExtension.LF:
-                            it.back();
+                        case CR:
+                        case LF:
+                            src.back();
                             return sb.toString();
                         default:
                             sb.appendCodePoint(ch);

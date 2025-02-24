@@ -28,7 +28,7 @@ public class Test_CsvMan {
         String[] fields = new String[] {
                 "SetNumber", "b\"bb", "c"
         };
-        String csvText = "SetNumber,\"b\"\"bb\",c\r\n";
+        String csvText = "SetNumber,\"b\"\"bb\",c";
         assertEquals(csvText, csvMan.serialize(Arrays.asList(fields)));
         assertArrayEquals(fields, csvMan.deserialize(csvText).toArray(new String[0]));
     }

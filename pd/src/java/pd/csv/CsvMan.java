@@ -9,11 +9,15 @@ import java.util.List;
  */
 public class CsvMan {
 
+    private final CsvSerializer serializer = new CsvSerializer();
+
+    private final CsvDeserializer deserializer = new CsvDeserializer();
+
     public String serialize(List<String> values) {
-        return new ToCsvSerializer().toCsvRow(values);
+        return serializer.serialize(values);
     }
 
     public List<String> deserialize(String recordString) {
-        return new FromCsvDeserializer().fromCsvRow(recordString);
+        return deserializer.deserialize(recordString);
     }
 }
