@@ -13,7 +13,13 @@
         <module>pd</module>
         <module>pd-logger</module>
         <module>pd-aws</module>
+        <module>pd-http</module>
         <module>pd-injector</module>
         <module>pd-fdup</module>
     </modules>
+
+    <properties>
+        <lombok.version>1.18.36</lombok.version>
+        <slf4j.verion>2.0.9</slf4j.verion>
+    </properties>
 </project>
