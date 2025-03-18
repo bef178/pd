@@ -2,7 +2,8 @@ package pd.injector;
 
 import java.io.InputStreamReader;
 import java.util.Properties;
-import static pd.injector.util.Util.resourceAsReader;
+
+import static pd.util.ResourceExtension.resourceAsReader;
 
 class PropertyKeeper {
 
