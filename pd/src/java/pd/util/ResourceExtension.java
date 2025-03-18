@@ -2,6 +2,8 @@ package pd.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import static pd.util.InputStreamExtension.readAllBytes;
@@ -23,8 +25,8 @@ public class ResourceExtension {
     public static Properties resourceAsProperties(String resourceName) throws IOException {
         assert resourceName != null;
         Properties properties = new Properties();
-        try (InputStream stream = resourceAsStream(resourceName)) {
-            properties.load(stream);
+        try (InputStreamReader reader = resourceAsReader(resourceName)) {
+            properties.load(reader);
             return properties;
         }
     }
@@ -37,6 +39,10 @@ public class ResourceExtension {
         }
     }
 
+    public static String resourceAsString(String resourceName) {
+        return new String(resourceAsBytes(resourceName), StandardCharsets.UTF_8);
+    }
+
     public static InputStream resourceAsStream(String resourceName) {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         return classLoader != null
@@ -44,8 +50,12 @@ public class ResourceExtension {
                 : ClassLoader.getSystemResourceAsStream(resourceName);
     }
 
-    public static String resourceAsString(String resourceName) {
-        return new String(resourceAsBytes(resourceName));
+    public static InputStreamReader resourceAsReader(String name) {
+        InputStream inputStream = resourceAsStream(name);
+        if (inputStream == null) {
+            return null;
+        }
+        return new InputStreamReader(inputStream, StandardCharsets.UTF_8);
     }
 
     private ResourceExtension() {
