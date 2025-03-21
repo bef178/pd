@@ -14,7 +14,7 @@ import pd.injector.Injector;
 @SpringBootApplication
 public class DemoApplication {
 
-    public static final Injector injector = new Injector(DemoApplication.class);
+    public static final Injector injector = new Injector();
 
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(DemoApplication.class);
@@ -32,7 +32,7 @@ public class DemoApplication {
                 injector.loadValuesFromResource("application-local.yml");
                 log.info("injector: properties loaded");
             } else if (event instanceof ApplicationPreparedEvent) {
-                injector.scan();
+                injector.scan(DemoApplication.class);
                 log.info("injector: scanned");
             } else if (event instanceof ApplicationStartedEvent) {
                 injector.dispose();
