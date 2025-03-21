@@ -4,16 +4,21 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
 
 import pd.injector.annotation.Managed;
 
+import static pd.util.ResourceExtension.resourceAsString;
+
+@Slf4j
 public class Injector {
 
-    private final PropertyKeeper propertyKeeper = new PropertyKeeper();
+    private final ValueKeeper valueKeeper = new ValueKeeper();
 
     private final InstanceKeeper instanceKeeper = new InstanceKeeper();
 
@@ -28,16 +33,25 @@ public class Injector {
         this.basePackageName = basePackageName;
     }
 
-    public void loadProperties() {
-        String name = "application.properties";
-        propertyKeeper.load(name);
-        String activeProfile = System.getenv("INJANO_ACTIVE_PROFILE");
-        if (activeProfile == null) {
-            activeProfile = propertyKeeper.getProperty("injano.active_profile");
+    public void loadValuesFromResource(String resourceName) {
+        if (resourceName.endsWith(".properties")) {
+            String s = resourceAsString(resourceName);
+            valueKeeper.loadProperties(s);
+            return;
+        } else if (resourceName.endsWith(".yaml") || resourceName.endsWith(".yml")) {
+            String s = resourceAsString(resourceName);
+            valueKeeper.loadYaml(s);
+            return;
         }
-        if (activeProfile != null) {
-            propertyKeeper.load("application-" + activeProfile + ".properties");
-        }
+        log.error("support only properties file and yaml file");
+    }
+
+    public Object putValue(String key, Object value) {
+        return valueKeeper.put(key, value);
+    }
+
+    public void putValues(Map<String, Object> map) {
+        valueKeeper.putAll(map);
     }
 
     public void scan() {
@@ -47,7 +61,7 @@ public class Injector {
 
     private void scan(Collection<Class<?>> managedClasses) {
         instanceKeeper.instantiateClasses(managedClasses);
-        instanceKeeper.injectClassFields(propertyKeeper);
+        instanceKeeper.injectClassFields(valueKeeper);
         instanceKeeper.invokeCallbacks();
     }
 
@@ -68,11 +82,11 @@ public class Injector {
     }
 
     public void injectClassFields(Object target) {
-        instanceKeeper.injectClassFields(Collections.singletonList(target), propertyKeeper);
+        instanceKeeper.injectClassFields(Collections.singletonList(target), valueKeeper);
     }
 
     public void dispose() {
         instanceKeeper.clear();
-        propertyKeeper.clear();
+        valueKeeper.clear();
     }
 }

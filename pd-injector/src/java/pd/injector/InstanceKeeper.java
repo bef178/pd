@@ -51,11 +51,11 @@ class InstanceKeeper {
         }
     }
 
-    public void injectClassFields(PropertyKeeper propertyKeeper) {
-        injectClassFields(cache.values(), propertyKeeper);
+    public void injectClassFields(ValueKeeper valueKeeper) {
+        injectClassFields(cache.values(), valueKeeper);
     }
 
-    public void injectClassFields(Collection<Object> instances, PropertyKeeper propertyKeeper) {
+    public void injectClassFields(Collection<Object> instances, ValueKeeper valueKeeper) {
         List<PrioritizedMemberField> all = new LinkedList<>();
         for (Object instance : instances) {
             for (Field field : instance.getClass().getDeclaredFields()) {
@@ -86,10 +86,10 @@ class InstanceKeeper {
             FromProperty annoFromProperty = a.field.getAnnotation(FromProperty.class);
             if (annoFromProperty != null) {
                 String propertyKey = annoFromProperty.value();
-                if (!propertyKeeper.containsKey(propertyKey)) {
+                if (!valueKeeper.containsKey(propertyKey)) {
                     throw new IllegalArgumentException("Failed to find property \"" + propertyKey + "\"");
                 }
-                a.assign(propertyKeeper.getProperty(propertyKey));
+                a.assign(valueKeeper.get(propertyKey));
                 continue;
             }
 

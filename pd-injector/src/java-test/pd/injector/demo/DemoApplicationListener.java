@@ -16,7 +16,8 @@ public class DemoApplicationListener implements ApplicationListener<ApplicationE
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ApplicationEnvironmentPreparedEvent) {
-            injector.loadProperties();
+            injector.loadValuesFromResource("application.yml");
+            injector.loadValuesFromResource("application-local.yml");
             log.info("injector: properties loaded");
         } else if (event instanceof ApplicationPreparedEvent) {
             injector.scan();

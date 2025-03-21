@@ -1,0 +1,7 @@
+server:
+  port: 8100
+
+injano:
+  active_profile: local
+  name: injano
+  greeting: greeting
