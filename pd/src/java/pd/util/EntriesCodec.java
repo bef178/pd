@@ -28,6 +28,12 @@ public class EntriesCodec {
         this('=', '&');
     }
 
+    /**
+     * typically:<br/>
+     *  - for jar manifest file, use ':", '\n'<br/>
+     *  - for properties file, use '=', '\n'<br/>
+     *  - for uri query params, use '=', '&'<br/>
+     */
     public EntriesCodec(int delimiter, int valueDelimiter) {
         this(delimiter, valueDelimiter, 0, 0);
     }
@@ -35,7 +41,7 @@ public class EntriesCodec {
     public EntriesCodec(int delimiter, int valueDelimiter, int serializationNumSpacesBeforeDelimiter, int serializationNumSpacesAfterDelimiter) {
         this.delimiter = delimiter;
         this.valueDelimiter = valueDelimiter;
-        this.keyPredicate = ch -> ch != delimiter;
+        this.keyPredicate = ch -> ch != delimiter && ch != valueDelimiter;
         this.valuePredicate = ch -> ch != valueDelimiter;
         this.serializationNumSpacesBeforeDelimiter = serializationNumSpacesBeforeDelimiter;
         this.serializationNumSpacesAfterDelimiter = serializationNumSpacesAfterDelimiter;
@@ -94,17 +100,11 @@ public class EntriesCodec {
     private List<Map.Entry<String, String>> decode(UnicodeProvider src) {
         List<Map.Entry<String, String>> entries = new LinkedList<>();
         while (src.hasNext()) {
-            int ch = src.next();
-            if (ch == '#') {
-                scalarPicker.pickString(src, a -> a != valueDelimiter);
-                scalarPicker.tryEatOne(src, valueDelimiter);
-                continue;
-            }
-            src.back();
-
             String key = scalarPicker.pickBackSlashEscapedString(src, keyPredicate);
-            scalarPicker.eatOneOrThrow(src, delimiter);
-            String value = scalarPicker.pickBackSlashEscapedString(src, valuePredicate);
+            String value = null;
+            if (scalarPicker.tryEatOne(src, delimiter)) {
+                value = scalarPicker.pickBackSlashEscapedString(src, valuePredicate);
+            }
             scalarPicker.tryEatOne(src, valueDelimiter);
 
             entries.add(new AbstractMap.SimpleEntry<>(key, value));
