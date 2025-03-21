@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pd.injector.annotation.FromProperty;
 import pd.injector.annotation.Managed;
-import pd.injector.annotation.OnConstructed;
 import pd.injector.demo.DemoApplication;
 
 @RestController
@@ -35,8 +34,8 @@ public class DemoController {
         @FromProperty("injano.greeting")
         private String message;
 
-        @OnConstructed
-        public void onConstructed() {
+        @PostConstruct
+        public void onPostConstruct() {
             message = message + "!";
         }
 

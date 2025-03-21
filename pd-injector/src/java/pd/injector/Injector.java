@@ -102,7 +102,7 @@ public class Injector {
                 .collect(Collectors.toList());
         instanceKeeper.instantiateClasses(sorted);
         instanceKeeper.injectClassFields(valueKeeper);
-        instanceKeeper.invokeCallbacks();
+        instanceKeeper.invokePostConstructs();
     }
 
     public void injectClassFields(Object target) {

@@ -3,18 +3,20 @@ package pd.injector;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 import pd.injector.annotation.FromProperty;
 import pd.injector.annotation.Managed;
-import pd.injector.annotation.OnConstructed;
 
 @Slf4j
 class InstanceKeeper {
@@ -117,29 +119,25 @@ class InstanceKeeper {
         return null;
     }
 
-    public void invokeCallbacks() {
-        invokeCallbacks(cache.values());
-    }
-
-    private void invokeCallbacks(Collection<Object> instances) {
-        List<PrioritizedMemberMethod> all = new LinkedList<>();
-        for (Object instance : instances) {
-            for (Method method : instance.getClass().getDeclaredMethods()) {
-                OnConstructed annoOnConstructed = method.getAnnotation(OnConstructed.class);
-                if (annoOnConstructed != null) {
-                    PrioritizedMemberMethod a = new PrioritizedMemberMethod();
-                    a.method = method;
-                    a.instance = instance;
-                    a.priority = annoOnConstructed.priority();
-                    all.add(a);
-                }
-            }
-        }
-        all.sort(PrioritizedMemberMethod.comparator);
-
-        for (PrioritizedMemberMethod a : all) {
-            a.invoke();
-        }
+    public void invokePostConstructs() {
+        cache.values().stream()
+                .flatMap(instance -> {
+                    Managed managedClassAnnotation = instance.getClass().getAnnotation(Managed.class);
+                    return Arrays.stream(instance.getClass().getDeclaredMethods())
+                            .map(method -> {
+                                if (method.getAnnotation(PostConstruct.class) == null) {
+                                    return null;
+                                }
+                                PrioritizedClassPostConstruct a = new PrioritizedClassPostConstruct();
+                                a.instance = instance;
+                                a.method = method;
+                                a.classAnnotation = managedClassAnnotation;
+                                return a;
+                            });
+                })
+                .filter(Objects::nonNull)
+                .sorted(PrioritizedClassPostConstruct.comparator)
+                .forEachOrdered(PrioritizedClassPostConstruct::invoke);
     }
 
     public void clear() {

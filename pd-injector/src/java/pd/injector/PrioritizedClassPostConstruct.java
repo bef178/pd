@@ -4,23 +4,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Comparator;
 
-class PrioritizedMemberMethod {
+import pd.injector.annotation.Managed;
 
-    public static final Comparator<PrioritizedMemberMethod> comparator = (o1, o2) -> {
-        int d = o1.priority - o2.priority;
-        if (d != 0) {
-            return d;
-        }
-        return Comparator.comparing(String::toString).compare(
-                o1.instance.getClass().getCanonicalName(),
-                o2.instance.getClass().getCanonicalName());
-    };
+class PrioritizedClassPostConstruct {
 
-    public Method method;
+    public static final Comparator<PrioritizedClassPostConstruct> comparator = Comparator
+            .comparingInt((PrioritizedClassPostConstruct o) -> o.classAnnotation.priority())
+            .thenComparing(o -> o.instance.getClass().getCanonicalName());
 
     public Object instance;
 
-    public int priority;
+    public Method method;
+
+    public Managed classAnnotation;
 
     public void invoke() {
         try {
