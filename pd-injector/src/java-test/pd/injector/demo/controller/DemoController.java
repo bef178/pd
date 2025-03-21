@@ -28,20 +28,20 @@ public class DemoController {
     public String hello() {
         return String.format("%s says \"%s\"", name, greeting.message());
     }
-}
 
-@Managed
-class Greeting {
+    @Managed
+    static class Greeting {
 
-    @FromProperty("injano.greeting")
-    private String message;
+        @FromProperty("injano.greeting")
+        private String message;
 
-    @OnConstructed
-    public void onConstructed() {
-        message = message + "!";
-    }
+        @OnConstructed
+        public void onConstructed() {
+            message = message + "!";
+        }
 
-    public String message() {
-        return message;
+        public String message() {
+            return message;
+        }
     }
 }
