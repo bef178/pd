@@ -73,9 +73,9 @@ class InstanceKeeper {
                 .sorted(PrioritizedClassField.comparator)
                 .forEachOrdered(a -> {
                     if (a.fieldAnnotation != null) {
-                        String key = a.fieldAnnotation.value();
-                        if (!key.isEmpty()) {
-                            a.assign(getValue(key, valueKeeper));
+                        String expr = a.fieldAnnotation.value();
+                        if (!expr.isEmpty()) {
+                            a.assign(getValue(expr, valueKeeper));
                         } else {
                             a.assign(getInstance(a.field.getType()));
                         }
@@ -83,11 +83,23 @@ class InstanceKeeper {
                 });
     }
 
-    private Object getValue(String key, ValueKeeper valueKeeper) {
-        if (!valueKeeper.containsKey(key)) {
-            throw new RuntimeException("Failed to find key `" + key + "`");
+    private Object getValue(String expr, ValueKeeper valueKeeper) {
+        if (expr.startsWith("${") && expr.endsWith("}")) {
+            String[] a = expr.substring(2, expr.length() - 1).split(":", 2);
+            if (a[0] == null || a[0].isEmpty()) {
+                throw new RuntimeException("key should not be null or empty");
+            }
+            Object value = valueKeeper.get(a[0]);
+            if (value != null) {
+                return value;
+            } else if (a.length == 2) {
+                return a[1];
+            } else {
+                throw new RuntimeException("Failed to find key `" + a[0] + "`");
+            }
+        } else {
+            return expr;
         }
-        return valueKeeper.get(key);
     }
 
     private Object getInstance(Class<?> clazz) {

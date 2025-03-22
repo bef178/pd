@@ -8,7 +8,7 @@ import pd.injector.annotation.Managed;
 class PrioritizedClassField {
 
     public static final Comparator<PrioritizedClassField> comparator = Comparator
-            .comparingInt((PrioritizedClassField o) -> o.classAnnotation.priority())
+            .comparingInt((PrioritizedClassField o) -> o.classAnnotation != null ? o.classAnnotation.priority() : 100)
             .thenComparing(o -> o.instance.getClass().getCanonicalName())
             .thenComparingInt(o -> !o.fieldAnnotation.value().isEmpty() ? 0 : 1)
             .thenComparingInt(o -> o.fieldAnnotation.priority());

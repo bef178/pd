@@ -11,7 +11,7 @@ import pd.injector.demo.DemoApplication;
 @RestController
 public class DemoController {
 
-    @Managed("injano.name")
+    @Managed("${injano.name}")
     private String name;
 
     @Managed
@@ -30,7 +30,7 @@ public class DemoController {
     @Managed
     static class Greeting {
 
-        @Managed("injano.greeting")
+        @Managed("${injano.greeting}")
         private String message;
 
         @PostConstruct
