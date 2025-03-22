@@ -91,10 +91,10 @@ public class Injector {
     private void scanManagedClasses(Collection<Class<?>> managedClasses) {
         List<Class<?>> sorted = managedClasses.stream()
                 .map(clazz -> {
-                    Managed annotation = clazz.getAnnotation(Managed.class);
+                    Managed managedClassAnnotation = clazz.getAnnotation(Managed.class);
                     PrioritizedClass a = new PrioritizedClass();
                     a.clazz = clazz;
-                    a.priority = annotation.priority();
+                    a.priority = managedClassAnnotation.priority();
                     return a;
                 })
                 .sorted(PrioritizedClass.comparator)

@@ -5,14 +5,13 @@ import javax.annotation.PostConstruct;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import pd.injector.annotation.FromProperty;
 import pd.injector.annotation.Managed;
 import pd.injector.demo.DemoApplication;
 
 @RestController
 public class DemoController {
 
-    @FromProperty("injano.name")
+    @Managed("injano.name")
     private String name;
 
     @Managed
@@ -31,7 +30,7 @@ public class DemoController {
     @Managed
     static class Greeting {
 
-        @FromProperty("injano.greeting")
+        @Managed("injano.greeting")
         private String message;
 
         @PostConstruct

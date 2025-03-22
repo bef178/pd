@@ -8,5 +8,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.FIELD })
 public @interface Managed {
-    int priority() default 20;
+    String value() default "";
+    int priority() default 10;
 }

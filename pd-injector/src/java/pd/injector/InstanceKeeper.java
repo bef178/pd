@@ -1,28 +1,23 @@
 package pd.injector;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-
 import javax.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
-import pd.injector.annotation.FromProperty;
 import pd.injector.annotation.Managed;
 
 @Slf4j
 class InstanceKeeper {
 
     // className => classInstance
-    private final Map<String, Object> cache = new ConcurrentHashMap<>();
+    private final Map<String, Object> cache = new LinkedHashMap<>();
 
     /**
      * instantiate managed singleton(s)
@@ -43,8 +38,7 @@ class InstanceKeeper {
                     Object instance = constructor.newInstance();
                     cache.put(className, instance);
                 } catch (NoSuchMethodException e) {
-                    throw new RuntimeException(
-                            "Failed to find no-args constructor \"" + className + "\"", e);
+                    throw new RuntimeException("Failed to find no-args constructor \"" + className + "\"", e);
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                         | InvocationTargetException e) {
                     throw new RuntimeException("Failed to create instance \"" + className + "\"", e);
@@ -57,53 +51,46 @@ class InstanceKeeper {
         injectClassFields(cache.values(), valueKeeper);
     }
 
-    public void injectClassFields(Collection<Object> instances, ValueKeeper valueKeeper) {
-        List<PrioritizedMemberField> all = new LinkedList<>();
-        for (Object instance : instances) {
-            for (Field field : instance.getClass().getDeclaredFields()) {
-                FromProperty annoFromProperty = field.getAnnotation(FromProperty.class);
-                if (annoFromProperty != null) {
-                    PrioritizedMemberField a = new PrioritizedMemberField();
-                    a.field = field;
-                    a.instance = instance;
-                    a.priority = annoFromProperty.priority();
-                    all.add(a);
-                    continue;
-                }
-
-                Managed annoManaged = field.getAnnotation(Managed.class);
-                if (annoManaged != null) {
-                    PrioritizedMemberField a = new PrioritizedMemberField();
-                    a.field = field;
-                    a.instance = instance;
-                    a.priority = annoManaged.priority();
-                    all.add(a);
-                    continue;
-                }
-            }
-        }
-        all.sort(PrioritizedMemberField.comparator);
-
-        for (PrioritizedMemberField a : all) {
-            FromProperty annoFromProperty = a.field.getAnnotation(FromProperty.class);
-            if (annoFromProperty != null) {
-                String propertyKey = annoFromProperty.value();
-                if (!valueKeeper.containsKey(propertyKey)) {
-                    throw new IllegalArgumentException("Failed to find property \"" + propertyKey + "\"");
-                }
-                a.assign(valueKeeper.get(propertyKey));
-                continue;
-            }
-
-            Managed annoManaged = a.field.getAnnotation(Managed.class);
-            if (annoManaged != null) {
-                a.assign(findInstance(a.field.getType()));
-                continue;
-            }
-        }
+    public void injectClassFields(Collection<Object> objects, ValueKeeper valueKeeper) {
+        objects.stream()
+                .flatMap(instance -> {
+                    Managed managedClassAnnotation = instance.getClass().getAnnotation(Managed.class);
+                    return Arrays.stream(instance.getClass().getDeclaredFields())
+                            .map(field -> {
+                                Managed managedFieldAnnotation = field.getAnnotation(Managed.class);
+                                if (managedFieldAnnotation == null) {
+                                    return null;
+                                }
+                                PrioritizedClassField a = new PrioritizedClassField();
+                                a.instance = instance;
+                                a.field = field;
+                                a.classAnnotation = managedClassAnnotation;
+                                a.fieldAnnotation = managedFieldAnnotation;
+                                return a;
+                            });
+                })
+                .filter(Objects::nonNull)
+                .sorted(PrioritizedClassField.comparator)
+                .forEachOrdered(a -> {
+                    if (a.fieldAnnotation != null) {
+                        String key = a.fieldAnnotation.value();
+                        if (!key.isEmpty()) {
+                            a.assign(getValue(key, valueKeeper));
+                        } else {
+                            a.assign(getInstance(a.field.getType()));
+                        }
+                    }
+                });
     }
 
-    private Object findInstance(Class<?> clazz) {
+    private Object getValue(String key, ValueKeeper valueKeeper) {
+        if (!valueKeeper.containsKey(key)) {
+            throw new RuntimeException("Failed to find key `" + key + "`");
+        }
+        return valueKeeper.get(key);
+    }
+
+    private Object getInstance(Class<?> clazz) {
         Object object = cache.get(clazz.getCanonicalName());
         if (object != null) {
             return object;
