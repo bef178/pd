@@ -33,9 +33,15 @@ public class DemoController {
         @Managed("${injano.greeting}")
         private String message;
 
+        @Managed("${injano.number}")
+        private int number;
+
+        @Managed("${injano.number}")
+        private String numberString;
+
         @PostConstruct
         public void onPostConstruct() {
-            message = message + "!";
+            message = message + "! - from No." + numberString;
         }
 
         public String message() {
