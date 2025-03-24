@@ -11,6 +11,47 @@ public class ObjectExtension {
      * especially, arrays and collections are considered non-convertible<br/>
      */
     public static <T> T convert(@NonNull Object o, Class<T> targetClass) {
+        T r = compatibleCast(o, targetClass);
+        if (r != null) {
+            return r;
+        }
+
+        // parse
+        if (targetClass == String.class) {
+            return targetClass.cast(o.toString());
+        }
+
+        if (o instanceof String) {
+            if (targetClass == Long.class) {
+                return targetClass.cast(Long.parseLong((String) o));
+            } else if (targetClass == Integer.class) {
+                return targetClass.cast(Integer.parseInt((String) o));
+            } else if (targetClass == Short.class) {
+                return targetClass.cast(Short.parseShort((String) o));
+            } else if (targetClass == Byte.class) {
+                return targetClass.cast(Byte.parseByte((String) o));
+            }
+            if (targetClass == Double.class) {
+                return targetClass.cast(Double.parseDouble((String) o));
+            } else if (targetClass == Float.class) {
+                return targetClass.cast(Float.parseFloat((String) o));
+            }
+            if (targetClass == Boolean.class) {
+                return targetClass.cast(Boolean.parseBoolean((String) o));
+            }
+            if (targetClass == Character.class) {
+                return targetClass.cast((char) Integer.parseInt((String) o));
+            }
+        }
+
+        // XXX try csv/json?
+        return null;
+    }
+
+    /**
+     * cast without parsing
+     */
+    public static <T> T compatibleCast(@NonNull Object o, Class<T> targetClass) {
         if (targetClass.isAssignableFrom(o.getClass())) {
             if (targetClass.isArray()) {
                 return null;
@@ -81,7 +122,6 @@ public class ObjectExtension {
             }
         }
 
-        // XXX try json rebuild?
         return null;
     }
 }
