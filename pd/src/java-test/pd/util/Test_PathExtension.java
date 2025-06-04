@@ -9,6 +9,13 @@ public class Test_PathExtension {
 
     @Test
     public void test_basename() {
+        test_basename("/usr/lib", "lib");
+        test_basename("/usr/", "usr");
+        test_basename("usr", "usr");
+        test_basename("/", "/");
+        test_basename(".", ".");
+        test_basename("..", "..");
+
         test_basename("abc", "abc");
         test_basename("def/abc", "abc");
         test_basename("abc///", "abc");
@@ -39,16 +46,17 @@ public class Test_PathExtension {
 
     @Test
     public void test_dirname() {
+        test_dirname("/usr/lib", "/usr");
+        test_dirname("/usr/", "/");
+        test_dirname("usr", ".");
+        test_dirname("/", "/");
+        test_dirname(".", ".");
+        test_dirname("..", ".");
+
         test_dirname("abc", ".");
         test_dirname("abc//", ".");
         test_dirname("abc/../def", "abc/..");
         test_dirname("abc//.///", "abc");
-        test_dirname(".", ".");
-        test_dirname("..", ".");
-        test_dirname("/usr/lib", "/usr");
-        test_dirname("/usr/", "/");
-        test_dirname("/usr", "/");
-        test_dirname("/", "/");
     }
 
     private void test_dirname(String input, String expected) {

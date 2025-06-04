@@ -14,7 +14,8 @@ public class PathExtension {
     }
 
     /**
-     * strip directory and suffix from path; trailing '/'(s) will be ignored
+     * strip directory and suffix from path; trailing '/'(s) will be ignored<br/>
+     * see `man 3 basename`<br/>
      */
     public static String basename(String path, String suffix) {
         if (path == null || path.isEmpty()) {
@@ -55,7 +56,8 @@ public class PathExtension {
     }
 
     /**
-     * strip last component from path; trailing '/'(s) will be ignored
+     * strip last component from path; trailing '/'(s) will be ignored<br/>
+     * see `man 3 dirname`<br/>
      */
     public static String dirname(String path) {
         if (path == null || path.isEmpty()) {
