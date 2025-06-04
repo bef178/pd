@@ -66,7 +66,14 @@ public class Test_PathExtension {
 
     @Test
     public void test_extname() {
-        test_extname("/tmp/a.b.c", "c");
+        test_extname("index.html", ".html");
+        test_extname("index.coffee.md", ".md");
+        test_extname("index.", ".");
+        test_extname("index", "");
+        test_extname(".index", "");
+        test_extname(".index.md", ".md");
+
+        test_extname("/tmp/a.b.c", ".c");
         test_extname("/tmp/a", "");
     }
 

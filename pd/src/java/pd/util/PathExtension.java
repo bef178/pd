@@ -88,16 +88,23 @@ public class PathExtension {
         return path.substring(0, endIndex);
     }
 
+    /**
+     * get the file extension; the dot will be included<br/>
+     * see node.js path.extname<br/>
+     */
     public static String extname(String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException();
         }
 
         int i = path.lastIndexOf('.');
-        if (i == -1) {
-            return "";
+        switch (path.lastIndexOf('.')) {
+            case -1:
+            case 0:
+                return "";
+            default:
+                return path.substring(i);
         }
-        return path.substring(i + 1);
     }
 
     public static boolean isAbsolutePath(String path) {
