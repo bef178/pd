@@ -22,7 +22,7 @@ public class TestJsonMan {
         String json = "{\"messages\":[{\"role\":\"user\",\"content\":\"how are you\"},{\"role\":\"assistant\",\"content\":\"fine, thank you, and you\"},{\"role\":\"user\",\"content\":\"how old are you\"}],\"stream\":true}";
 
         JsonMan jsonMan = new JsonMan();
-        jsonMan.jacoMan.jacoToEntityConverter.config.registerEntityTypeMapping("ErnieRequest/messages/*", ErnieMessage.class);
+        jsonMan.jacoToEntityConverter.config.registerEntityTypeMapping("ErnieRequest/messages/*", ErnieMessage.class);
 
         assertEquals(json, jsonMan.serialize(request));
         assertEquals(request, jsonMan.deserialize(json, ErnieRequest.class, "ErnieRequest"));

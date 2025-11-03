@@ -1,4 +1,4 @@
-package pd.jaco;
+package pd.jaco.bridge;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;

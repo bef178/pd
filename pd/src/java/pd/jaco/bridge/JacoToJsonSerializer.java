@@ -1,4 +1,4 @@
-package pd.jaco;
+package pd.jaco.bridge;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -8,6 +8,7 @@ import java.util.PrimitiveIterator;
 
 import lombok.NonNull;
 import pd.fenc.UnicodeConsumer;
+import pd.jaco.JacoException;
 import pd.util.AsciiExtension;
 import pd.util.HexCodec;
 

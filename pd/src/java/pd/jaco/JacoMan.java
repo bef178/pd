@@ -2,8 +2,6 @@ package pd.jaco;
 
 import java.util.Arrays;
 
-import lombok.NonNull;
-
 /**
  * Define T as a simple java container object type:
  * ```
@@ -21,11 +19,6 @@ public class JacoMan {
 
     private final JacoGetter jacoGetter = new JacoGetter();
     private final JacoSetter jacoSetter = new JacoSetter(jacoGetter);
-
-    public final JacoFromEntityConverter jacoFromEntityConverter = new JacoFromEntityConverter();
-    public final JacoToEntityConverter jacoToEntityConverter = new JacoToEntityConverter();
-    public final JacoToJsonSerializer jacoToJsonSerializer = new JacoToJsonSerializer();
-    public final JacoFromJsonDeserializer jacoFromJsonDeserializer = new JacoFromJsonDeserializer();
 
     public Object getWithPath(Object o, String path) {
         checkPath(path);
@@ -50,33 +43,5 @@ public class JacoMan {
         } else if (path.isEmpty()) {
             throw JacoException.invalidPath("empty string");
         }
-    }
-
-    public String toJson(Object jaco) {
-        if (jaco == null) {
-            return null;
-        }
-        return jacoToJsonSerializer.toJson(jaco);
-    }
-
-    public Object fromJson(String json) {
-        if (json == null) {
-            return null;
-        }
-        return jacoFromJsonDeserializer.fromJson(json);
-    }
-
-    public <T> T toEntity(Object jaco, Class<T> targetClass, String startPath) {
-        if (jaco == null) {
-            return null;
-        }
-        return jacoToEntityConverter.toEntity(jaco, targetClass, startPath);
-    }
-
-    public Object fromEntity(Object entity) {
-        if (entity == null) {
-            return null;
-        }
-        return jacoFromEntityConverter.fromEntity(entity);
     }
 }

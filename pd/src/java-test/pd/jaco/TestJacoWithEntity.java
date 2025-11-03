@@ -13,6 +13,7 @@ import pd.fun.Cat;
 import pd.fun.Dog;
 import pd.fun.ernie.entity.ErnieMessage;
 import pd.fun.ernie.entity.ErnieRequest;
+import pd.jaco.bridge.JacoToEntityConverter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestJacoWithEntity {
 
-    JacoMan jacoMan = new JacoMan();
+    JsonMan jsonMan = new JsonMan();
 
     @Test
     public void testJacoToEntityConfig() {
@@ -65,8 +66,8 @@ public class TestJacoWithEntity {
             m.put("name", "Mimi");
             jaco = m;
         }
-        assertEquals(entity, jacoMan.toEntity(jaco, Cat.class, "Cat"));
-        assertEquals(jaco, jacoMan.fromEntity(entity));
+        assertEquals(entity, jsonMan.jacoToEntity(jaco, Cat.class, "Cat"));
+        assertEquals(jaco, jsonMan.entityToJaco(entity));
 
         {
             ErnieRequest request = new ErnieRequest();
@@ -104,9 +105,9 @@ public class TestJacoWithEntity {
             m.put("stream", true);
             jaco = m;
         }
-        jacoMan.jacoToEntityConverter.config.registerEntityTypeMapping("ErnieRequest/messages/*", ErnieMessage.class);
-        assertEquals(entity, jacoMan.toEntity(jaco, ErnieRequest.class, "ErnieRequest"));
-        assertEquals(jaco, jacoMan.fromEntity(entity));
+        jsonMan.jacoToEntityConverter.config.registerEntityTypeMapping("ErnieRequest/messages/*", ErnieMessage.class);
+        assertEquals(entity, jsonMan.jacoToEntity(jaco, ErnieRequest.class, "ErnieRequest"));
+        assertEquals(jaco, jsonMan.entityToJaco(entity));
     }
 
     @Test
@@ -114,7 +115,7 @@ public class TestJacoWithEntity {
         Cat cat = new Cat();
         cat.name = "Mimi";
         @SuppressWarnings("unchecked")
-        Map<String, Object> jaco = (Map<String, Object>) jacoMan.fromEntity(cat);
+        Map<String, Object> jaco = (Map<String, Object>) jsonMan.entityToJaco(cat);
         assertFalse(jaco.containsKey("Phylum"));
         assertTrue(jaco.containsKey("name"));
     }
@@ -138,11 +139,11 @@ public class TestJacoWithEntity {
             jaco = a;
         }
 
-        JacoMan jacoMan = new JacoMan();
-        jacoMan.jacoToEntityConverter.config.registerEntityTypeMapping("aaa/*", Cat.class);
+        JsonMan jsonMan = new JsonMan();
+        jsonMan.jacoToEntityConverter.config.registerEntityTypeMapping("aaa/*", Cat.class);
 
-        assertEquals(entity, jacoMan.toEntity(jaco, List.class, "aaa"));
-        assertEquals(jaco, jacoMan.fromEntity(entity));
+        assertEquals(entity, jsonMan.jacoToEntity(jaco, List.class, "aaa"));
+        assertEquals(jaco, jsonMan.entityToJaco(entity));
     }
 
     @Test
@@ -164,10 +165,10 @@ public class TestJacoWithEntity {
             jaco = a;
         }
 
-        JacoMan jacoMan = new JacoMan();
-        jacoMan.jacoToEntityConverter.config.registerEntityTypeMapping("aaa/*", Cat.class);
+        JsonMan jacoMan = new JsonMan();
+        jsonMan.jacoToEntityConverter.config.registerEntityTypeMapping("aaa/*", Cat.class);
 
-        assertEquals(entity, jacoMan.toEntity(jaco, Map.class, "aaa"));
-        assertEquals(jaco, jacoMan.fromEntity(entity));
+        assertEquals(entity, jsonMan.jacoToEntity(jaco, Map.class, "aaa"));
+        assertEquals(jaco, jsonMan.entityToJaco(entity));
     }
 }
