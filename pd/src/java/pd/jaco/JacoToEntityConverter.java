@@ -19,11 +19,7 @@ import pd.util.PathExtension;
 
 public class JacoToEntityConverter {
 
-    public final Config config;
-
-    public JacoToEntityConverter(Config config) {
-        this.config = config;
-    }
+    public final Config config = new Config();
 
     public <T> T toEntity(Object o, Class<T> targetClass, String startPath) {
         if (startPath == null || startPath.isEmpty()) {

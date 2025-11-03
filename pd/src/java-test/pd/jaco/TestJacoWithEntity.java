@@ -104,7 +104,7 @@ public class TestJacoWithEntity {
             m.put("stream", true);
             jaco = m;
         }
-        jacoMan.toEntityConfig.registerEntityTypeMapping("ErnieRequest/messages/*", ErnieMessage.class);
+        jacoMan.jacoToEntityConverter.config.registerEntityTypeMapping("ErnieRequest/messages/*", ErnieMessage.class);
         assertEquals(entity, jacoMan.toEntity(jaco, ErnieRequest.class, "ErnieRequest"));
         assertEquals(jaco, jacoMan.fromEntity(entity));
     }
@@ -139,7 +139,7 @@ public class TestJacoWithEntity {
         }
 
         JacoMan jacoMan = new JacoMan();
-        jacoMan.toEntityConfig.registerEntityTypeMapping("aaa/*", Cat.class);
+        jacoMan.jacoToEntityConverter.config.registerEntityTypeMapping("aaa/*", Cat.class);
 
         assertEquals(entity, jacoMan.toEntity(jaco, List.class, "aaa"));
         assertEquals(jaco, jacoMan.fromEntity(entity));
@@ -165,7 +165,7 @@ public class TestJacoWithEntity {
         }
 
         JacoMan jacoMan = new JacoMan();
-        jacoMan.toEntityConfig.registerEntityTypeMapping("aaa/*", Cat.class);
+        jacoMan.jacoToEntityConverter.config.registerEntityTypeMapping("aaa/*", Cat.class);
 
         assertEquals(entity, jacoMan.toEntity(jaco, Map.class, "aaa"));
         assertEquals(jaco, jacoMan.fromEntity(entity));

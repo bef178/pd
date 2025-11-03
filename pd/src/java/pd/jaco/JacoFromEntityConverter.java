@@ -13,11 +13,7 @@ import pd.fenc.ParsingException;
 
 public class JacoFromEntityConverter {
 
-    public final Config config;
-
-    public JacoFromEntityConverter(Config config) {
-        this.config = config;
-    }
+    public final Config config = new Config();
 
     /**
      * convert java things to jaco things<br/>

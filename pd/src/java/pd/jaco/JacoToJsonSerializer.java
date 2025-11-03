@@ -15,11 +15,7 @@ public class JacoToJsonSerializer {
 
     final HexCodec hexCodec = HexCodec.withUpperCaseLetters();
 
-    public final Config config;
-
-    public JacoToJsonSerializer(Config config) {
-        this.config = config;
-    }
+    public final Config config = new Config();
 
     public String toJson(@NonNull Object o) {
         StringBuilder sb = new StringBuilder();
