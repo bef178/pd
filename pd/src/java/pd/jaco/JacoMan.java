@@ -165,4 +165,106 @@ public class JacoMan {
             return new LinkedHashMap<>();
         }
     }
+
+    public Object removeWithPath(Object o, @NonNull String path) {
+        return removeWithPath(o, path.split("/"));
+    }
+
+    public Object removeWithPath(Object o, @NonNull String[] path) {
+        if (o == null) {
+            return null;
+        }
+        for (int i = 0; i < path.length - 1; i++) {
+            String key = path[i];
+            Object value = get(o, key);
+            if (value == null) {
+                return null;
+            }
+            o = value;
+        }
+        return remove(o, path[path.length - 1]);
+    }
+
+    private Object remove(@NonNull Object o, @NonNull String key) {
+        if (o instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> m = (Map<Object, Object>) o;
+            return m.remove(key);
+        } else if (o instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> a = (List<Object>) o;
+            int index;
+            try {
+                index = Integer.parseInt(key);
+            } catch (NumberFormatException e) {
+                throw JacoException.keyNotIndex(key);
+            }
+            if (index < 0) {
+                throw JacoException.negativeIndex(index);
+            } else if (index < a.size()) {
+                return a.remove(index);
+            } else {
+                return null;
+            }
+        } else if (o.getClass().isArray()) {
+            int index;
+            try {
+                index = Integer.parseInt(key);
+            } catch (NumberFormatException e) {
+                throw JacoException.keyNotIndex(key);
+            }
+            Object[] a = (Object[]) o;
+            if (index < 0) {
+                throw JacoException.negativeIndex(index);
+            } else if (index < a.length) {
+                Object old = a[index];
+                System.arraycopy(a, index + 1, a, index, a.length - 1 - index);
+                return old;
+            } else {
+                throw JacoException.indexTooLarge(index, a.length);
+            }
+        } else {
+            // XXX reflection get?
+            throw JacoException.invalidCollection(o.getClass().getSimpleName());
+        }
+    }
+
+    public Map<String[], Object> flatten(Object o) {
+        LinkedHashMap<String[], Object> result = new LinkedHashMap<>();
+        flatten(new LinkedList<>(), o, result);
+        return result;
+    }
+
+    private void flatten(LinkedList<String> path, Object o, Map<String[], Object> out) {
+        if (o instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> m = (Map<Object, Object>) o;
+            for (Map.Entry<Object, Object> entry : m.entrySet()) {
+                String key = entry.getKey().toString();
+                path.add(key);
+                flatten(path, entry.getValue(), out);
+                path.removeLast();
+            }
+        } else if (o instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> a = (List<Object>) o;
+            for (int i = 0; i < a.size(); i++) {
+                String key = Integer.toString(i);
+                path.add(key);
+                flatten(path, a.get(i), out);
+                path.removeLast();
+            }
+        } else if (o != null && o.getClass().isArray()) {
+            Object[] a = (Object[]) o;
+            for (int i = 0; i < a.length; i++) {
+                String key = Integer.toString(i);
+                path.add(key);
+                flatten(path, a[i], out);
+                path.removeLast();
+            }
+        } else {
+            // treat `o` as value
+            out.put(path.toArray(new String[0]), o);
+        }
+    }
 }

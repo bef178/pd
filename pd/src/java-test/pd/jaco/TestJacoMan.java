@@ -1,5 +1,6 @@
 package pd.jaco;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -79,5 +81,26 @@ public class TestJacoMan {
 
         jacoMan.setWithPath(o, "a/e/8", 8.0);
         assertEquals(8.0, jacoMan.getWithPath(o, "a/e/8"));
+    }
+
+    @Test
+    public void testRemove() {
+        Map<String, Object> o = new LinkedHashMap<>();
+        {
+            LinkedHashMap<String, Object> m = new LinkedHashMap<>();
+            m.put("k", "v");
+            o.put("m", m);
+        }
+        jacoMan.removeWithPath(o, "m/k");
+        assertNull(jacoMan.getWithPath(o, "m/k"));
+        assertNotNull(jacoMan.getWithPath(o,"m"));
+    }
+
+    @Test
+    public void testFlatten() {
+        Map<String[], Object> pairs = jacoMan.flatten(null);
+        assertEquals(1, pairs.size());
+        assertEquals(0, pairs.keySet().iterator().next().length);
+        assertNull(pairs.values().iterator().next());
     }
 }
