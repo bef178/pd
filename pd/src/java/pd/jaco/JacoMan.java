@@ -23,16 +23,15 @@ import lombok.NonNull;
  */
 public class JacoMan {
 
-    public Object getWithPath(Object o, String path) {
-        checkPath(path);
+    public Object getWithPath(Object o, @NonNull String path) {
+        return getWithPath(o, path.split("/"));
+    }
+
+    public Object getWithPath(Object o, @NonNull String[] path) {
         if (o == null) {
             return null;
         }
-        return get(o, Arrays.asList(path.split("/")));
-    }
-
-    private Object get(@NonNull Object o, List<String> keys) {
-        for (String key : keys) {
+        for (String key : path) {
             o = get(o, key);
             if (o == null) {
                 break;
@@ -41,10 +40,7 @@ public class JacoMan {
         return o;
     }
 
-    /**
-     * throws {@link JacoException}
-     */
-    private Object get(@NonNull Object o, String key) {
+    private Object get(@NonNull Object o, @NonNull String key) {
         if (o instanceof Map) {
             Map<?, ?> m = (Map<?, ?>) o;
             return m.getOrDefault(key, null);
