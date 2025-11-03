@@ -1,6 +1,5 @@
 package pd.jaco;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -80,33 +79,30 @@ public class JacoMan {
         }
     }
 
-    public Object setWithPath(Object o, String path, Object value) {
-        checkPath(path);
+    public Object setWithPath(Object o, @NonNull String path, Object value) {
+        return setWithPath(o, path.split("/"), value);
+    }
+
+    public Object setWithPath(Object o, @NonNull String[] path, Object value) {
         if (o == null) {
-            o = createWithNextKey(path.split("/")[0]);
+            o = createByKey(path[0]);
         }
-        set(o, Arrays.asList(path.split("/")), value);
+        Object node = o;
+        for (int i = 0; i < path.length - 1; i++) {
+            String key = path[i];
+            Object node1 = get(node, key);
+            if (node1 == null) {
+                String nextKey = path[i + 1];
+                node1 = createByKey(nextKey);
+                set(node, key, node1);
+            }
+            node = node1;
+        }
+        set(node, path[path.length - 1], value);
         return o;
     }
 
-    private Object set(@NonNull Object o, List<String> keys, Object value) {
-        for (int i = 0; i < keys.size() - 1; i++) {
-            String key = keys.get(i);
-            Object o1 = get(o, key);
-            if (o1 == null) {
-                String nextKey = keys.get(i + 1);
-                o1 = createWithNextKey(nextKey);
-                set(o, key, o1);
-            }
-            o = o1;
-        }
-        return set(o, keys.get(keys.size() - 1), value);
-    }
-
-    /**
-     * throws {@link JacoException}
-     */
-    private Object set(@NonNull Object o, String key, Object value) {
+    private Object set(@NonNull Object o, @NonNull String key, Object value) {
         if (o instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<Object, Object> m = (Map<Object, Object>) o;
@@ -154,7 +150,7 @@ public class JacoMan {
         }
     }
 
-    private Object createWithNextKey(String nextKey) {
+    private Object createByKey(String nextKey) {
         boolean prefersSequential = false;
         try {
             int nextIndex = Integer.parseInt(nextKey);
@@ -167,14 +163,6 @@ public class JacoMan {
             return new LinkedList<>();
         } else {
             return new LinkedHashMap<>();
-        }
-    }
-
-    private void checkPath(String path) {
-        if (path == null) {
-            throw JacoException.invalidPath("null");
-        } else if (path.isEmpty()) {
-            throw JacoException.invalidPath("empty string");
         }
     }
 }
