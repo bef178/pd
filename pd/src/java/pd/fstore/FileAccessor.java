@@ -8,7 +8,7 @@ import java.util.List;
 public interface FileAccessor {
 
     /**
-     * List next level paths, stopping after `/`(directory-like) or before EOF(key).<br/>
+     * List next level paths starting with `keyPrefix`, stopping after `/`(directory-like) or before `EOF`(key).<br/>
      * Results are sorted.<br/>
      * e.g.<br/>
      * - "d" => ["d/"]<br/>

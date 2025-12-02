@@ -18,7 +18,7 @@ public class LocalFileAccessor implements FileAccessor {
 
     @Override
     public List<String> list(String keyPrefix) {
-        String parent = getParentDirectory(keyPrefix);
+        String parent = getD(keyPrefix);
         try (Stream<Path> stream = Files.list(Paths.get(parent))) {
             return stream
                     .map(a -> {
@@ -45,7 +45,7 @@ public class LocalFileAccessor implements FileAccessor {
         }
     }
 
-    private String getParentDirectory(String keyPrefix) {
+    private String getD(String keyPrefix) {
         String s;
         if (keyPrefix.equals(".")) {
             s = "";
