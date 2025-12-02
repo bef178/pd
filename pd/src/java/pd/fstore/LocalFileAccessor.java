@@ -101,11 +101,15 @@ public class LocalFileAccessor implements FileAccessor {
     @Override
     public FileStat stat(String key) {
         File f = new File(key);
-        if (!f.isFile()) {
-            return null;
-        }
         FileStat fileStat = new FileStat();
         fileStat.key = key;
+        if (f.isFile()) {
+            fileStat.type = FileStat.TYPE_FILE;
+        } else if (f.isDirectory()) {
+            fileStat.type = FileStat.TYPE_DIRECTORY;
+        } else {
+            return null;
+        }
         fileStat.contentLength = f.length();
         fileStat.lastModified = f.lastModified();
         return fileStat;
@@ -183,7 +187,8 @@ public class LocalFileAccessor implements FileAccessor {
     }
 
     public boolean exists(String key) {
-        return stat(key) != null;
+        FileStat stat = stat(key);
+        return stat != null && stat.type == FileStat.TYPE_FILE;
     }
 
     public String loadString(String key) {
