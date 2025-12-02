@@ -8,7 +8,7 @@ import java.util.List;
 public interface FileAccessor {
 
     /**
-     * List next level directory-like key-prefixes (stopped after `/`) and/or keys.<br/>
+     * List next level paths, stopping after `/`(directory-like) or before EOF(key).<br/>
      * Results are sorted.<br/>
      * e.g.<br/>
      * - "d" => ["d/"]<br/>
@@ -26,8 +26,8 @@ public interface FileAccessor {
     FileStat stat(String key);
 
     /**
-     * remove single abstract key<br/>
-     * return `true` if the operation succeeds<br/>
+     * Remove a single key.<br/>
+     * Return `true` if the operation succeeds.<br/>
      */
     boolean remove(String key);
 
