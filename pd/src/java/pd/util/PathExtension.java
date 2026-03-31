@@ -3,8 +3,15 @@ package pd.util;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import lombok.NonNull;
+
 /**
- * manipulate string that represent path<br/>
+ * Path string manipulation.<br/>
+ * <br/>
+ * Accepts/produces empty strings (interpreted as the current directory).<br/>
+ * Won't create `.` or `..`.<br/>
+ * <br/>
+ *
  * @see <a href="https://tools.ietf.org/rfc/rfc3986.txt">rfc3986</a><br/>
  */
 public class PathExtension {
@@ -16,34 +23,23 @@ public class PathExtension {
     /**
      * strip directory and suffix from path; trailing '/'(s) will be ignored
      */
-    public static String basename(String path, String suffix) {
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException();
+    public static String basename(@NonNull String path, String suffix) {
+        if (path.isEmpty()) {
+            return "";
         }
 
-        int startIndex = 0;
-        int endIndex = -1;
-        for (int i = path.length() - 1; i >= 0; i--) {
-            int ch = path.charAt(i);
-            if (endIndex == -1) {
-                if (ch == '/') {
-                    // ignored: trailing '/'
-                } else {
-                    endIndex = i + 1;
-                }
-            } else {
-                if (ch == '/') {
-                    startIndex = i + 1;
-                    break;
-                } else {
-                    // ignored: found partial, go ahead
-                }
-            }
+        // trim trailing '/'(s)
+        int endIndex = path.length();
+        while (endIndex - 1 >= 0 && path.charAt(endIndex - 1) == '/') {
+            endIndex--;
         }
 
-        if (endIndex == -1) {
+        // special exec against "////"
+        if (endIndex == 0) {
             return "/";
         }
+
+        int startIndex = path.lastIndexOf('/', endIndex - 1) + 1;
 
         if (suffix != null && !suffix.isEmpty()) {
             int i = path.lastIndexOf(suffix, endIndex);
@@ -51,77 +47,88 @@ public class PathExtension {
                 endIndex = i;
             }
         }
+
         return path.substring(startIndex, endIndex);
     }
 
     /**
-     * strip last component from path; trailing '/'(s) will be ignored
+     * strip the last segment from path; trailing '/'(s) will be ignored<br/>
+     * won't recognize `.` or `..`<br/>
      */
-    public static String dirname(String path) {
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException();
+    public static String dirname(@NonNull String path) {
+        if (path.isEmpty()) {
+            return "";
         }
 
-        int endIndex = -1;
-        int candidateIndex = -1;
-        for (int i = 0; i < path.length(); i++) {
-            if (path.charAt(i) == '/') {
-                if (candidateIndex == -1) {
-                    candidateIndex = i;
-                }
-            } else if (candidateIndex != -1) {
-                endIndex = candidateIndex;
-                candidateIndex = -1;
-            }
+        int endIndex = path.length();
+        while (endIndex - 1 >= 0 && path.charAt(endIndex - 1) == '/') {
+            endIndex--;
         }
-        if (endIndex == -1) {
-            if (candidateIndex == 0) {
-                return "/";
-            } else {
-                return ".";
-            }
-        } else if (endIndex == 0) {
+
+        if (endIndex == 0) {
             return "/";
         }
+
+        endIndex = path.lastIndexOf('/', endIndex - 1);
+        if (endIndex < 0) {
+            return "";
+        }
+
+        while (endIndex - 1 >= 0 && path.charAt(endIndex - 1) == '/') {
+            endIndex--;
+        }
+        if (endIndex == 0) {
+            return "/";
+        }
+
         return path.substring(0, endIndex);
     }
 
-    public static String extname(String path) {
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
-
-        int i = path.lastIndexOf('.');
-        if (i == -1) {
+    /**
+     * within the last segment, skip leading `.`(s) and trailing '/'(s), get string starting at the next `.`<br/>
+     * <br/>
+     * extname cannot be basename<br/>
+     */
+    public static String extname(@NonNull String path) {
+        if (path.isEmpty()) {
             return "";
         }
-        return path.substring(i + 1);
+
+        int endIndex = path.length();
+        while (endIndex - 1 >= 0 && path.charAt(endIndex - 1) == '/') {
+            endIndex--;
+        }
+
+        if (endIndex == 0) {
+            return "";
+        }
+
+        int startIndex = path.lastIndexOf('/', endIndex - 1) + 1;
+        while (startIndex < endIndex && path.charAt(startIndex) == '.') {
+            startIndex++;
+        }
+
+        while (++startIndex < endIndex) {
+            if (path.charAt(startIndex) == '.') {
+                return path.substring(startIndex, endIndex);
+            }
+        }
+        return "";
     }
 
-    public static boolean isAbsolutePath(String path) {
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException();
+    public static boolean isAbsolutePath(@NonNull String path) {
+        if (path.isEmpty()) {
+            return false;
         }
         return path.charAt(0) == '/';
     }
 
     /**
-     * will ignore the possible absolute path in the middle
+     * connect given inputs with '/'
      */
-    public static String join(String path, Iterable<String> more) {
+    public static String join(@NonNull String path, @NonNull Iterable<String> more) {
         // not use Paths. it will trim "//" to "/"
         // return Paths.get(path, more).toString();
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
-        if (more == null) {
-            throw new IllegalArgumentException();
-        }
-        for (String another : more) {
-            if (another == null || another.isEmpty()) {
-                throw new IllegalArgumentException();
-            }
-        }
         StringBuilder sb = new StringBuilder().append(path);
         for (String another : more) {
             sb.append('/').append(another);
@@ -129,7 +136,7 @@ public class PathExtension {
         return sb.toString();
     }
 
-    public static String join(String path, String... more) {
+    public static String join(@NonNull String path, @NonNull String... more) {
         return join(path, Arrays.asList(more));
     }
 
@@ -137,9 +144,9 @@ public class PathExtension {
      * normalize() removes unnecessary '.' and '..' and trailing '/'<br/>
      * normalize("./../abc/") => "../abc"<br/>
      */
-    public static String normalize(String path) {
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException();
+    public static String normalize(@NonNull String path) {
+        if (path.isEmpty()) {
+            return "";
         }
 
         if (path.equals("/")) {
@@ -148,23 +155,20 @@ public class PathExtension {
         return String.join("/", normalize(path.split("/")));
     }
 
-    private static String[] normalize(String[] a) {
-        assert a != null;
+    private static String[] normalize(@NonNull String[] a) {
+        if (a.length == 0) {
+            throw new IllegalArgumentException();
+        }
 
         LinkedList<String> segments = new LinkedList<>();
 
         int i = 0;
-        switch (a[i]) {
-            case "":
-            case ".":
-            case "..":
-                segments.add(a[i++]);
-                break;
-            default:
-                segments.add(".");
-                break;
+        while (i < a.length && a[i].equals(".")) {
+            i++;
         }
-
+        if (i < a.length) {
+            segments.add(a[i++]);
+        }
         while (i < a.length) {
             switch (a[i]) {
                 case "":
@@ -172,13 +176,13 @@ public class PathExtension {
                     i++;
                     break;
                 case "..":
+                    if (segments.isEmpty()) {
+                        segments.add(a[i++]);
+                        break;
+                    }
                     switch (segments.getLast()) {
                         case "":
                             i++;
-                            break;
-                        case ".":
-                            segments.removeLast();
-                            segments.add(a[i++]);
                             break;
                         case "..":
                             segments.add(a[i++]);
@@ -202,12 +206,9 @@ public class PathExtension {
      * u.relativize(v) => relativize(u, v) => v - u<br/>
      * relativize("/a/b", "/a/b/c") => "c"<br/>
      */
-    public static String relativize(String from, String to) {
-        if (from == null || from.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
-        if (to == null || to.isEmpty()) {
-            throw new IllegalArgumentException();
+    public static String relativize(@NonNull String from, @NonNull String to) {
+        if (from.isEmpty()) {
+            return to;
         }
         if (isAbsolutePath(from) != isAbsolutePath(to)) {
             throw new IllegalArgumentException();
@@ -241,34 +242,29 @@ public class PathExtension {
      * u.resolve(v) => resolve(u, v) => v + u<br/>
      * resolve("/a/b", "c") => "/a/b/c"<br/>
      * <br/>
-     * if both u and v are relative:<br/>
-     * - u.relativize(u.resolve(v)).equals(v)<br/>
-     * - u.resolve(u.relativize(v)).equals(v)<br/>
+     * if u and v are both relative:<br/>
+     * - u.relativize(u.resolve(v)) == v<br/>
+     * - u.resolve(u.relativize(v)) == v<br/>
      */
-    public static String resolve(String path, String... more) {
-        if (path == null || path.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
+    public static String resolve(@NonNull String path, @NonNull String... more) {
         StringBuilder sb = new StringBuilder().append(path);
         for (String another : more) {
-            if (another == null || another.isEmpty()) {
-                throw new IllegalArgumentException();
+            if (another.isEmpty()) {
+                continue;
             }
             if (isAbsolutePath(another)) {
                 sb.setLength(0);
                 sb.append(another);
-            } else {
+            } else if (sb.length() > 0) {
                 sb.append('/').append(another);
+            } else {
+                sb.append(another);
             }
         }
-        return sb.toString();
+        return normalize(sb.toString());
     }
 
-    public static int compare(String path, String another) {
-        if (path == null || another == null) {
-            throw new IllegalArgumentException();
-        }
-
+    public static int compare(@NonNull String path, @NonNull String another) {
         // directory first
         if (path.endsWith("/")) {
             if (!another.endsWith("/")) {
@@ -282,7 +278,7 @@ public class PathExtension {
 
         int[] endIndexes;
         {
-            endIndexes = new int[] { path.length(), another.length() };
+            endIndexes = new int[] {path.length(), another.length()};
             int i = endIndexes[0] - 1;
             int j = endIndexes[1] - 1;
             while (i >= 0 && j >= 0) {
