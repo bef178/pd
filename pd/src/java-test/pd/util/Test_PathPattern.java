@@ -1,11 +1,11 @@
-package pd.path;
+package pd.util;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestPathPattern {
+public class Test_PathPattern {
 
     @Test
     public void testMatches() {

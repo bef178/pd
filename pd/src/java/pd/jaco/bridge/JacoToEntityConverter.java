@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Map;
 
 import pd.fenc.ParsingException;
-import pd.path.PathPattern;
 import pd.util.ObjectExtension;
 import pd.util.PathExtension;
+import pd.util.PathPattern;
 
 public class JacoToEntityConverter {
 

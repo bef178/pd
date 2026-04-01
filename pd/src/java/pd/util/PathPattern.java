@@ -1,4 +1,4 @@
-package pd.path;
+package pd.util;
 
 import java.util.LinkedList;
 
@@ -6,19 +6,13 @@ import lombok.NonNull;
 import lombok.ToString;
 import pd.fenc.ParsingException;
 import pd.fenc.UnicodeProvider;
-import pd.util.UnicodeExtension;
 
-import static pd.path.TokenType.TOKEN_TYPE_ASTERISK;
-import static pd.path.TokenType.TOKEN_TYPE_DOUBLE_ASTERISK;
-import static pd.path.TokenType.TOKEN_TYPE_EOF;
-import static pd.path.TokenType.TOKEN_TYPE_ERROR;
-import static pd.path.TokenType.TOKEN_TYPE_TEXT;
 import static pd.util.AsciiExtension.EOF;
 
 /**
  * PathPattern:<br/>
- * - `*` matches within boundary `/`, as regex: `[^/]*`<br/>
- * - `**` could across boundary `/`, as regex: `.*`<br/>
+ * - `*` matches within a single path segment, as regex: `[^/]*`<br/>
+ * - `**` may cross multiple segments, as regex: `.*`<br/>
  */
 @ToString
 public class PathPattern {
@@ -35,7 +29,7 @@ public class PathPattern {
         this.tokens = tokenize(pathPattern).toArray(new Token[0]);
 
         Token lastToken = tokens[tokens.length - 1];
-        if (lastToken.type == TOKEN_TYPE_ERROR) {
+        if (lastToken.type == TokenType.TOKEN_TYPE_ERROR) {
             throw new IllegalArgumentException(lastToken.content);
         }
     }
@@ -65,7 +59,7 @@ public class PathPattern {
                 if (tokens == null) {
                     tokens = tokenize(pathPattern).toArray(new Token[0]);
                     Token lastToken = tokens[tokens.length - 1];
-                    if (lastToken.type == TOKEN_TYPE_ERROR) {
+                    if (lastToken.type == TokenType.TOKEN_TYPE_ERROR) {
                         throw new IllegalArgumentException(lastToken.content);
                     }
                 }
@@ -93,7 +87,7 @@ public class PathPattern {
                 }
                 case TOKEN_TYPE_ASTERISK: {
                     Token nextToken = pathPattern[p + 1];
-                    if (nextToken.type == TOKEN_TYPE_EOF) {
+                    if (nextToken.type == TokenType.TOKEN_TYPE_EOF) {
                         int s1 = s;
                         while (true) {
                             // consume until EOF or '/'
@@ -105,7 +99,7 @@ public class PathPattern {
                             }
                             s1++;
                         }
-                    } else if (nextToken.type == TOKEN_TYPE_TEXT) {
+                    } else if (nextToken.type == TokenType.TOKEN_TYPE_TEXT) {
                         for (int s1 = s; s1 < path.length; s1++) {
                             if (path[s1].equals("/")) {
                                 return matches(pathPattern, p + 1, path, s1);
@@ -122,9 +116,9 @@ public class PathPattern {
                 }
                 case TOKEN_TYPE_DOUBLE_ASTERISK: {
                     Token nextToken = pathPattern[p + 1];
-                    if (nextToken.type == TOKEN_TYPE_EOF) {
+                    if (nextToken.type == TokenType.TOKEN_TYPE_EOF) {
                         return true;
-                    } else if (nextToken.type == TOKEN_TYPE_TEXT) {
+                    } else if (nextToken.type == TokenType.TOKEN_TYPE_TEXT) {
                         for (int s1 = s; s1 < path.length; s1++) {
                             if (path[s1].equals(nextToken.content)) {
                                 if (matches(pathPattern, p + 1, path, s1)) {
@@ -153,23 +147,23 @@ public class PathPattern {
         LinkedList<Token> tokens = new LinkedList<>();
 
         if (pathPattern == null) {
-            tokens.add(new Token(TOKEN_TYPE_ERROR, "MalformedPathPattern: null"));
+            tokens.add(new Token(TokenType.TOKEN_TYPE_ERROR, "MalformedPathPattern: null"));
         }
 
         UnicodeProvider it = UnicodeProvider.wrap(pathPattern);
         while (true) {
             Token token = getNextToken(it);
-            if (token.type == TOKEN_TYPE_ASTERISK || token.type == TOKEN_TYPE_DOUBLE_ASTERISK) {
+            if (token.type == TokenType.TOKEN_TYPE_ASTERISK || token.type == TokenType.TOKEN_TYPE_DOUBLE_ASTERISK) {
                 if (!tokens.isEmpty()) {
                     Token lastToken = tokens.getLast();
-                    if (lastToken.type == TOKEN_TYPE_ASTERISK || lastToken.type == TOKEN_TYPE_DOUBLE_ASTERISK) {
-                        tokens.add(new Token(TOKEN_TYPE_ERROR, "MalformedPathPattern: unexpected continuous asterisk"));
+                    if (lastToken.type == TokenType.TOKEN_TYPE_ASTERISK || lastToken.type == TokenType.TOKEN_TYPE_DOUBLE_ASTERISK) {
+                        tokens.add(new Token(TokenType.TOKEN_TYPE_ERROR, "MalformedPathPattern: unexpected continuous asterisk"));
                         break;
                     }
                 }
             }
             tokens.add(token);
-            if (token.type == TOKEN_TYPE_EOF || token.type == TOKEN_TYPE_ERROR) {
+            if (token.type == TokenType.TOKEN_TYPE_EOF || token.type == TokenType.TOKEN_TYPE_ERROR) {
                 break;
             }
         }
@@ -188,7 +182,7 @@ public class PathPattern {
                     int ch = it.hasNext() ? it.next() : EOF;
                     switch (ch) {
                         case EOF:
-                            return new Token(TOKEN_TYPE_EOF, null);
+                            return new Token(TokenType.TOKEN_TYPE_EOF, null);
                         case '\\':
                             state = STATE_AFTER_BACK_SLASH;
                             break;
@@ -196,7 +190,7 @@ public class PathPattern {
                             state = STATE_AFTER_ASTERISK;
                             break;
                         default:
-                            return new Token(TOKEN_TYPE_TEXT, UnicodeExtension.toString(ch));
+                            return new Token(TokenType.TOKEN_TYPE_TEXT, UnicodeExtension.toString(ch));
                     }
                     break;
                 }
@@ -204,29 +198,45 @@ public class PathPattern {
                     int ch = it.hasNext() ? it.next() : EOF;
                     switch (ch) {
                         case '\\':
-                            return new Token(TOKEN_TYPE_TEXT, "\\");
+                            return new Token(TokenType.TOKEN_TYPE_TEXT, "\\");
                         case '*':
-                            return new Token(TOKEN_TYPE_TEXT, "*");
+                            return new Token(TokenType.TOKEN_TYPE_TEXT, "*");
                         default:
                             String message = String.format(
                                     "MalformedPathPattern: unexpected escaped symbol: expecting escaping either '\\' or '*', actual '%s'",
                                     ch == EOF ? "EOF" : UnicodeExtension.toString(ch));
-                            return new Token(TOKEN_TYPE_ERROR, message);
+                            return new Token(TokenType.TOKEN_TYPE_ERROR, message);
                     }
                 }
                 case STATE_AFTER_ASTERISK: {
                     int ch = it.hasNext() ? it.next() : EOF;
                     switch (ch) {
                         case EOF:
-                            return new Token(TOKEN_TYPE_ASTERISK, "*");
+                            return new Token(TokenType.TOKEN_TYPE_ASTERISK, "*");
                         case '*':
-                            return new Token(TOKEN_TYPE_DOUBLE_ASTERISK, "**");
+                            return new Token(TokenType.TOKEN_TYPE_DOUBLE_ASTERISK, "**");
                         default:
                             it.back();
-                            return new Token(TOKEN_TYPE_ASTERISK, "*");
+                            return new Token(TokenType.TOKEN_TYPE_ASTERISK, "*");
                     }
                 }
             }
         }
+    }
+
+    @ToString
+    static class Token extends pd.util.Token<TokenType> {
+
+        public Token(TokenType type, String content) {
+            super(type, content);
+        }
+    }
+
+    enum TokenType {
+        TOKEN_TYPE_EOF,
+        TOKEN_TYPE_ERROR,
+        TOKEN_TYPE_TEXT,
+        TOKEN_TYPE_ASTERISK,
+        TOKEN_TYPE_DOUBLE_ASTERISK
     }
 }
