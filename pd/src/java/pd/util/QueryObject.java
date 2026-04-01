@@ -1,4 +1,4 @@
-package pd.uri;
+package pd.util;
 
 import java.util.AbstractMap;
 import java.util.LinkedList;
@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import pd.util.PercentCodec;
-import pd.util.StringExtension;
+import lombok.NonNull;
 
 /**
  * ref: <a href="https://datatracker.ietf.org/doc/html/rfc3986">rfc3986</a>
@@ -32,12 +31,10 @@ public class QueryObject {
         params.clear();
     }
 
-    public void add(String key, String value) {
-        params.add(new AbstractMap.SimpleEntry<>(key, value));
-    }
-
-    public void add(LinkedList<Map.Entry<String, String>> params) {
-        this.params.addAll(params);
+    public void add(@NonNull String key, @NonNull String value) {
+        params.add(new AbstractMap.SimpleEntry<>(
+                percentCodec.encode(key),
+                percentCodec.encode(value)));
     }
 
     public void add(QueryObject another) {
@@ -45,9 +42,11 @@ public class QueryObject {
     }
 
     public List<String> get(String key) {
+        String encodedKey = percentCodec.encode(key);
         return params.stream()
-                .filter(a1 -> a1.getKey().equals(key))
+                .filter(a1 -> a1.getKey().equals(encodedKey))
                 .map(Map.Entry::getValue)
+                .map(percentCodec::decode)
                 .collect(Collectors.toList());
     }
 
@@ -55,11 +54,10 @@ public class QueryObject {
         parseString(queryString, defaultMajorDelimiter, defaultMinorDelimiter);
     }
 
-    public void parseString(String queryString, int majorDelimiter, int minorDelimiter) {
-        if (queryString == null) {
-            throw new IllegalArgumentException();
+    public void parseString(@NonNull String queryString, int majorDelimiter, int minorDelimiter) {
+        if (queryString.isEmpty()) {
+            return;
         }
-
         for (String entryString : StringExtension.split(queryString, majorDelimiter)) {
             String key;
             String value;
@@ -85,9 +83,9 @@ public class QueryObject {
     public String toString(int majorDelimiter, int minorDelimiter) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : params) {
-            percentCodec.encode(entry.getKey(), sb);
+            sb.append(entry.getKey());
             sb.appendCodePoint(minorDelimiter);
-            percentCodec.encode(entry.getValue(), sb);
+            sb.append(entry.getValue());
             sb.appendCodePoint(majorDelimiter);
         }
         if (sb.length() > 0) {

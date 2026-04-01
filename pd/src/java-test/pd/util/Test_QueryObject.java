@@ -1,4 +1,4 @@
-package pd.uri;
+package pd.util;
 
 import java.util.Collections;
 
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestQueryObject {
+public class Test_QueryObject {
 
     @Test
     public void testParse() {
@@ -16,5 +16,11 @@ public class TestQueryObject {
         assertEquals(2, queryObject.params.size());
         assertEquals(Collections.singletonList(""), queryObject.get("a"));
         assertEquals(Collections.singletonList("1"), queryObject.get("b"));
+    }
+
+    @Test
+    public void testParseEmpty() {
+        QueryObject queryObject = QueryObject.parse("");
+        assertEquals("", queryObject.toString());
     }
 }
