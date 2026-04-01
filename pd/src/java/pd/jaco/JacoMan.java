@@ -1,5 +1,6 @@
 package pd.jaco;
 
+import java.lang.reflect.Array;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,7 +60,7 @@ public class JacoMan {
                 return null;
             }
         } else if (o.getClass().isArray()) {
-            Object[] a = (Object[]) o;
+            int length = Array.getLength(o);
             int index;
             try {
                 index = Integer.parseInt(key);
@@ -68,8 +69,8 @@ public class JacoMan {
             }
             if (index < 0) {
                 throw JacoException.negativeIndex(index);
-            } else if (index < a.length) {
-                return a[index];
+            } else if (index < length) {
+                return Array.get(o, index);
             } else {
                 return null;
             }
@@ -128,21 +129,21 @@ public class JacoMan {
                 return null;
             }
         } else if (o.getClass().isArray()) {
+            int length = Array.getLength(o);
             int index;
             try {
                 index = Integer.parseInt(key);
             } catch (NumberFormatException e) {
                 throw JacoException.keyNotIndex(key);
             }
-            Object[] a = (Object[]) o;
             if (index < 0) {
                 throw JacoException.negativeIndex(index);
-            } else if (index < a.length) {
-                Object old = a[index];
-                a[index] = value;
+            } else if (index < length) {
+                Object old = Array.get(o, index);
+                Array.set(o, index, value);
                 return old;
             } else {
-                throw JacoException.indexTooLarge(index, a.length);
+                throw JacoException.indexTooLarge(index, length);
             }
         } else {
             // XXX reflection get?
@@ -207,22 +208,29 @@ public class JacoMan {
                 return null;
             }
         } else if (o.getClass().isArray()) {
+            int length = Array.getLength(o);
             int index;
             try {
                 index = Integer.parseInt(key);
             } catch (NumberFormatException e) {
                 throw JacoException.keyNotIndex(key);
             }
-            Object[] a = (Object[]) o;
             if (index < 0) {
                 throw JacoException.negativeIndex(index);
-            } else if (index < a.length) {
-                Object old = a[index];
-                System.arraycopy(a, index + 1, a, index, a.length - 1 - index);
-                a[a.length - 1] = null;
+            } else if (index < length) {
+                Object old = Array.get(o, index);
+                Class<?> componentType = o.getClass().getComponentType();
+                if (componentType.isPrimitive()) {
+                    // primitive arrays cannot shift elements, set to default value instead
+                    Array.set(o, index, getPrimitiveDefaultValue(componentType));
+                } else {
+                    // non-primitive arrays: shift and clear last element
+                    System.arraycopy(o, index + 1, o, index, length - 1 - index);
+                    Array.set(o, length - 1, null);
+                }
                 return old;
             } else {
-                throw JacoException.indexTooLarge(index, a.length);
+                throw JacoException.indexTooLarge(index, length);
             }
         } else {
             // XXX reflection get?
@@ -256,16 +264,40 @@ public class JacoMan {
                 path.removeLast();
             }
         } else if (o != null && o.getClass().isArray()) {
-            Object[] a = (Object[]) o;
-            for (int i = 0; i < a.length; i++) {
+            int length = Array.getLength(o);
+            for (int i = 0; i < length; i++) {
                 String key = Integer.toString(i);
                 path.add(key);
-                flatten(path, a[i], out);
+                flatten(path, Array.get(o, i), out);
                 path.removeLast();
             }
         } else {
             // treat `o` as value
             out.put(path.toArray(new String[0]), o);
         }
+    }
+
+    public static Object getPrimitiveDefaultValue(Class<?> clazz) {
+        if (clazz == long.class) {
+            return 0L;
+        } else if (clazz == int.class) {
+            return 0;
+        } else if (clazz == short.class) {
+            return (short) 0;
+        } else if (clazz == byte.class) {
+            return (byte) 0;
+        }
+        if (clazz == double.class) {
+            return 0.0d;
+        } else if (clazz == float.class) {
+            return 0.0f;
+        }
+        if (clazz == boolean.class) {
+            return false;
+        }
+        if (clazz == char.class) {
+            return '\0';
+        }
+        return null;
     }
 }

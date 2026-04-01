@@ -1,6 +1,6 @@
 package pd.jaco.bridge;
 
-import java.util.Arrays;
+import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ public class JacoToJsonSerializer {
         } else if (o instanceof List) {
             arrayToJson((List<?>) o, numIndents, unicodeConsumer);
         } else if (o.getClass().isArray()) {
-            arrayToJson(Arrays.asList((Object[]) o), numIndents, unicodeConsumer);
+            arrayToJson(o, numIndents, unicodeConsumer);
         } else if (o instanceof String) {
             stringToJson((String) o, unicodeConsumer);
         } else if (o instanceof Number) {
@@ -104,6 +104,34 @@ public class JacoToJsonSerializer {
         numIndents--;
 
         if (!o.isEmpty()) {
+            outputMarginAndIndents(numIndents, unicodeConsumer);
+        }
+
+        unicodeConsumer.next(']');
+    }
+
+    private void arrayToJson(Object array, int numIndents, UnicodeConsumer unicodeConsumer) {
+        int length = Array.getLength(array);
+        unicodeConsumer.next('[');
+
+        if (length > 0) {
+            unicodeConsumer.next(config.eol);
+        }
+
+        numIndents++;
+
+        for (int i = 0; i < length; i++) {
+            outputMarginAndIndents(numIndents, unicodeConsumer);
+            jacoToJson(Array.get(array, i), numIndents, unicodeConsumer);
+            if (i < length - 1) {
+                unicodeConsumer.next(',');
+            }
+            unicodeConsumer.next(config.eol);
+        }
+
+        numIndents--;
+
+        if (length > 0) {
             outputMarginAndIndents(numIndents, unicodeConsumer);
         }
 
