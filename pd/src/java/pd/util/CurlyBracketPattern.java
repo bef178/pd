@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.PrimitiveIterator.OfInt;
 import java.util.Set;
 
-import pd.util.UnicodeExtension;
+import static pd.util.AsciiExtension.EOF;
 
 /**
  * interpolated string
@@ -18,9 +18,7 @@ import pd.util.UnicodeExtension;
  * https://www.python.org/dev/peps/pep-0498/<br/>
  * pattern in c-printf called "format specifiers"<br/>
  */
-public class CurlyBracketPatternExtension {
-
-    private static final int EOF = -1;
+public class CurlyBracketPattern {
 
     private static final int STATE_READY = 0;
     private static final int STATE_ON_BACK_SLASH = 1;
@@ -187,6 +185,7 @@ public class CurlyBracketPatternExtension {
                             sb.appendCodePoint(ch);
                             break;
                     }
+                    break;
                 }
                 default:
                     break;

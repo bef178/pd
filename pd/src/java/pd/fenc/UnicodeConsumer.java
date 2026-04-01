@@ -2,7 +2,7 @@ package pd.fenc;
 
 import java.util.PrimitiveIterator;
 
-import pd.util.CurlyBracketPatternExtension;
+import pd.util.CurlyBracketPattern;
 
 public interface UnicodeConsumer {
 
@@ -26,7 +26,7 @@ public interface UnicodeConsumer {
                 int minValue = 0;
                 int maxValue = 0x10FFFF;
                 if (value < minValue || value > maxValue) {
-                    throw new ParsingException(CurlyBracketPatternExtension.format("E: value {} not in range [{}, {}]", value, minValue, maxValue));
+                    throw new ParsingException(CurlyBracketPattern.format("E: value {} not in range [{}, {}]", value, minValue, maxValue));
                 }
                 sb.appendCodePoint(value);
                 return this;

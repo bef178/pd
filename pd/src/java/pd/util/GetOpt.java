@@ -72,7 +72,7 @@ public class GetOpt {
                     continue;
                 }
             }
-            throw new IllegalArgumentException(CurlyBracketPatternExtension.format("GetOpt: invalid option {}", s));
+            throw new IllegalArgumentException(CurlyBracketPattern.format("GetOpt: invalid option {}", s));
         }
         return this;
     }
@@ -83,7 +83,7 @@ public class GetOpt {
         }
 
         if (options.containsKey(optKeyWithPrefix)) {
-            throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: duplicate option {}", optKeyWithPrefix));
+            throw new RuntimeException(CurlyBracketPattern.format("GetOpt: duplicate option {}", optKeyWithPrefix));
         }
         options.put(optKeyWithPrefix, requiresArgument);
         return this;
@@ -120,7 +120,7 @@ public class GetOpt {
                     if (it.hasNext()) {
                         result.add(new AbstractMap.SimpleImmutableEntry<>(arg, it.next()));
                     } else {
-                        throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: option {} requires an argument but there is none", arg));
+                        throw new RuntimeException(CurlyBracketPattern.format("GetOpt: option {} requires an argument but there is none", arg));
                     }
                 } else {
                     result.add(new AbstractMap.SimpleImmutableEntry<>(arg, null));
@@ -136,7 +136,7 @@ public class GetOpt {
                         String a1 = arg.substring(2);
                         result.add(new AbstractMap.SimpleImmutableEntry<>(a0, a1));
                     } else {
-                        throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: option {} requires no argument but there is one", a0));
+                        throw new RuntimeException(CurlyBracketPattern.format("GetOpt: option {} requires no argument but there is one", a0));
                     }
                     continue;
                 }
@@ -152,7 +152,7 @@ public class GetOpt {
                             String a1 = arg.substring(assignmentIndex + 1);
                             result.add(new AbstractMap.SimpleImmutableEntry<>(a0, a1));
                         } else {
-                            throw new RuntimeException(CurlyBracketPatternExtension.format("GetOpt: option {} requires no argument but there is one", a0));
+                            throw new RuntimeException(CurlyBracketPattern.format("GetOpt: option {} requires no argument but there is one", a0));
                         }
                         continue;
                     }

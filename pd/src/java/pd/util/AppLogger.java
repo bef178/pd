@@ -3,15 +3,15 @@ package pd.util;
 public class AppLogger {
 
     public static void stdout(String message, Object... messageParams) {
-        System.out.println(CurlyBracketPatternExtension.format(message, messageParams));
+        System.out.println(CurlyBracketPattern.format(message, messageParams));
     }
 
     public static void stdoutNoNewLine(String message, Object... messageParams) {
-        System.out.print(CurlyBracketPatternExtension.format(message, messageParams));
+        System.out.print(CurlyBracketPattern.format(message, messageParams));
     }
 
     public static void stderr(String message, Object... messageParams) {
-        System.err.println(CurlyBracketPatternExtension.format(message, messageParams));
+        System.err.println(CurlyBracketPattern.format(message, messageParams));
     }
 
     public static final AppLogger one = new AppLogger();

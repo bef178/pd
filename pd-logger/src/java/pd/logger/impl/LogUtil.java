@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
 import pd.logger.LogLevel;
 import pd.time.TimeExtension;
-import pd.util.CurlyBracketPatternExtension;
+import pd.util.CurlyBracketPattern;
 
 class LogUtil {
 
@@ -34,7 +34,7 @@ class LogUtil {
         String message;
         {
             StringBuilder sb = new StringBuilder();
-            sb.append(CurlyBracketPatternExtension.format(logEntry.message, logEntry.messageParams));
+            sb.append(CurlyBracketPattern.format(logEntry.message, logEntry.messageParams));
             if (logEntry.throwable != null) {
                 sb.append(' ').append(throwableToString(logEntry.throwable));
             }
