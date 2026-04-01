@@ -25,7 +25,7 @@ public class TestConversion {
     public void testEntityTypeMapping() {
         JacoToEntityConverter.Config config = new JacoToEntityConverter.Config();
 
-        assertEquals(ArrayList.class, config.queryEntityTypeMapping("ignored", List.class, "ignored"));
+        assertEquals(LinkedList.class, config.queryEntityTypeMapping("ignored", List.class, "ignored"));
         assertEquals(LinkedHashMap.class, config.queryEntityTypeMapping("ignored", Map.class, "ignored"));
 
         config.registerEntityTypeMapping("/animals/1", Cat.class);

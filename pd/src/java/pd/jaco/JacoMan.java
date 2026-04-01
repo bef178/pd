@@ -1,6 +1,5 @@
 package pd.jaco;
 
-import java.lang.reflect.Array;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,17 +8,14 @@ import java.util.Map;
 import lombok.NonNull;
 
 /**
- * Define T as a simple java container object type:
+ * Inspired by JSON, define JACO as a simple java container object type:
  * ```
- * T = Map<String, T> | List<T> | Object | NULL
+ * T = Map<String, T> | Array<T> | String | Int64 | Float64 | Boolean | NULL
  * ```
- * A path could be used to get/set value from/to the object.
  *
- * Furthermore, if restrict T:
- * ```
- * T = LinkedHashMap<String, T> | LinkedList<T> | String | Int64 | Float64 | Boolean | NULL
- * ```
- * it is a good carrier for json.
+ * If force `Map` to be `LinkedHashMap` and `Array` to be `LinkedList`, JACO is a good carrier for json.
+ *
+ * And paths could be used to get/set value from/to JACO.
  */
 public class JacoMan {
 
@@ -59,24 +55,8 @@ public class JacoMan {
             } else {
                 return null;
             }
-        } else if (o.getClass().isArray()) {
-            int length = Array.getLength(o);
-            int index;
-            try {
-                index = Integer.parseInt(key);
-            } catch (NumberFormatException e) {
-                throw JacoException.keyNotIndex(key);
-            }
-            if (index < 0) {
-                throw JacoException.negativeIndex(index);
-            } else if (index < length) {
-                return Array.get(o, index);
-            } else {
-                return null;
-            }
         } else {
-            // XXX reflection get?
-            throw JacoException.invalidCollection(o.getClass().getSimpleName());
+            throw JacoException.invalidDataType(o.getClass().getSimpleName());
         }
     }
 
@@ -128,26 +108,8 @@ public class JacoMan {
                 a.add(value);
                 return null;
             }
-        } else if (o.getClass().isArray()) {
-            int length = Array.getLength(o);
-            int index;
-            try {
-                index = Integer.parseInt(key);
-            } catch (NumberFormatException e) {
-                throw JacoException.keyNotIndex(key);
-            }
-            if (index < 0) {
-                throw JacoException.negativeIndex(index);
-            } else if (index < length) {
-                Object old = Array.get(o, index);
-                Array.set(o, index, value);
-                return old;
-            } else {
-                throw JacoException.indexTooLarge(index, length);
-            }
         } else {
-            // XXX reflection get?
-            throw JacoException.invalidCollection(o.getClass().getSimpleName());
+            throw JacoException.invalidDataType(o.getClass().getSimpleName());
         }
     }
 
@@ -155,7 +117,7 @@ public class JacoMan {
         boolean prefersSequential = false;
         try {
             int nextIndex = Integer.parseInt(nextKey);
-            if (nextIndex >= 0 && nextIndex < 64) {
+            if (nextIndex >= 0 && nextIndex < 1024) {
                 prefersSequential = true;
             }
         } catch (Exception ignored) {
@@ -207,34 +169,8 @@ public class JacoMan {
             } else {
                 return null;
             }
-        } else if (o.getClass().isArray()) {
-            int length = Array.getLength(o);
-            int index;
-            try {
-                index = Integer.parseInt(key);
-            } catch (NumberFormatException e) {
-                throw JacoException.keyNotIndex(key);
-            }
-            if (index < 0) {
-                throw JacoException.negativeIndex(index);
-            } else if (index < length) {
-                Object old = Array.get(o, index);
-                Class<?> componentType = o.getClass().getComponentType();
-                if (componentType.isPrimitive()) {
-                    // primitive arrays cannot shift elements, set to default value instead
-                    Array.set(o, index, getPrimitiveDefaultValue(componentType));
-                } else {
-                    // non-primitive arrays: shift and clear last element
-                    System.arraycopy(o, index + 1, o, index, length - 1 - index);
-                    Array.set(o, length - 1, null);
-                }
-                return old;
-            } else {
-                throw JacoException.indexTooLarge(index, length);
-            }
         } else {
-            // XXX reflection get?
-            throw JacoException.invalidCollection(o.getClass().getSimpleName());
+            throw JacoException.invalidDataType(o.getClass().getSimpleName());
         }
     }
 
@@ -263,41 +199,9 @@ public class JacoMan {
                 flatten(path, a.get(i), out);
                 path.removeLast();
             }
-        } else if (o != null && o.getClass().isArray()) {
-            int length = Array.getLength(o);
-            for (int i = 0; i < length; i++) {
-                String key = Integer.toString(i);
-                path.add(key);
-                flatten(path, Array.get(o, i), out);
-                path.removeLast();
-            }
         } else {
             // treat `o` as value
             out.put(path.toArray(new String[0]), o);
         }
-    }
-
-    public static Object getPrimitiveDefaultValue(Class<?> clazz) {
-        if (clazz == long.class) {
-            return 0L;
-        } else if (clazz == int.class) {
-            return 0;
-        } else if (clazz == short.class) {
-            return (short) 0;
-        } else if (clazz == byte.class) {
-            return (byte) 0;
-        }
-        if (clazz == double.class) {
-            return 0.0d;
-        } else if (clazz == float.class) {
-            return 0.0f;
-        }
-        if (clazz == boolean.class) {
-            return false;
-        }
-        if (clazz == char.class) {
-            return '\0';
-        }
-        return null;
     }
 }

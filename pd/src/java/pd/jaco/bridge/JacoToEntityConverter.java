@@ -17,8 +17,6 @@ import pd.util.ObjectExtension;
 import pd.util.PathExtension;
 import pd.util.PathPattern;
 
-import static pd.jaco.JacoMan.getPrimitiveDefaultValue;
-
 public class JacoToEntityConverter {
 
     public final Config config = new Config();
@@ -146,6 +144,30 @@ public class JacoToEntityConverter {
         }
     }
 
+    private static Object getPrimitiveDefaultValue(Class<?> clazz) {
+        if (clazz == long.class) {
+            return 0L;
+        } else if (clazz == int.class) {
+            return 0;
+        } else if (clazz == short.class) {
+            return (short) 0;
+        } else if (clazz == byte.class) {
+            return (byte) 0;
+        }
+        if (clazz == double.class) {
+            return 0.0d;
+        } else if (clazz == float.class) {
+            return 0.0f;
+        }
+        if (clazz == boolean.class) {
+            return false;
+        }
+        if (clazz == char.class) {
+            return '\0';
+        }
+        return null;
+    }
+
     public static class Config {
 
         final LinkedHashMap<PathPattern, List<EntityTypeMappingFunc<?>>> entityTypeMappings = new LinkedHashMap<>();
@@ -153,7 +175,7 @@ public class JacoToEntityConverter {
         final LinkedHashMap<Class<?>, List<EntityMappingFunc<?>>> entityMappings = new LinkedHashMap<>();
 
         public Config() {
-            registerEntityTypeMapping(List.class, ArrayList.class);
+            registerEntityTypeMapping(List.class, LinkedList.class);
             registerEntityTypeMapping(Map.class, LinkedHashMap.class);
             registerEntityTypeMapping(long.class, Long.class);
             registerEntityTypeMapping(int.class, Integer.class);
