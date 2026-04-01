@@ -2,11 +2,14 @@ package pd.time;
 
 import java.io.Serializable;
 
+import lombok.Getter;
+
 import static pd.time.TimeExtension.MILLISECONDS_PER_SECOND;
 
 /**
  * offset between two timestamps, in milliseconds
  */
+@Getter
 public class SimpleTimeOffset implements Comparable<SimpleTimeOffset>, Serializable {
 
     /**
@@ -27,7 +30,7 @@ public class SimpleTimeOffset implements Comparable<SimpleTimeOffset>, Serializa
         if (another == null) {
             return 1;
         }
-        return (int) (one.offsetMilliseconds - another.offsetMilliseconds);
+        return Long.compare(one.offsetMilliseconds, another.offsetMilliseconds);
     }
 
     private final long offsetMilliseconds;
@@ -56,10 +59,6 @@ public class SimpleTimeOffset implements Comparable<SimpleTimeOffset>, Serializa
         return false;
     }
 
-    public long getOffsetMilliseconds() {
-        return offsetMilliseconds;
-    }
-
     @Override
     public int hashCode() {
         return Long.hashCode(offsetMilliseconds);
@@ -68,7 +67,7 @@ public class SimpleTimeOffset implements Comparable<SimpleTimeOffset>, Serializa
     @Override
     public String toString() {
         long seconds = offsetMilliseconds / MILLISECONDS_PER_SECOND;
-        int millisecondOfSecond = (int) (offsetMilliseconds % MILLISECONDS_PER_SECOND);
-        return String.format("P%ld.%03d", seconds, millisecondOfSecond);
+        int millisecondOfSecond = (int) Math.abs(offsetMilliseconds % MILLISECONDS_PER_SECOND);
+        return String.format("P%d.%03d", seconds, millisecondOfSecond);
     }
 }
