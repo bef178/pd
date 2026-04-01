@@ -13,6 +13,10 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+/**
+ * parse input CLI args<br/>
+ * cli > env > config
+ */
 public class ParamManager {
 
     public static ParamManager parse(String commandLineOptionString, String[] commandLineArgs) {
@@ -39,7 +43,12 @@ public class ParamManager {
 
     private void init(String commandLineOptString, String[] commandLineArgs, String commandLineConfigFileKey, String defaultConfigFilePath) {
         commandLineParams.addAll(GetOpt.parse(commandLineOptString, commandLineArgs));
-        dotConfigParams.putAll(parseDotConfig(getFromCommandLineOrDefault(commandLineConfigFileKey, defaultConfigFilePath)));
+
+        String configF = getFromCommandLine(commandLineConfigFileKey);
+        if (configF == null) {
+            configF = defaultConfigFilePath;
+        }
+        dotConfigParams.putAll(parseDotConfig(configF));
     }
 
     private Map<String, String> parseDotConfig(String path) {
@@ -66,7 +75,17 @@ public class ParamManager {
     }
 
     public String get(String key) {
-        return getFromCommandLineOrDefault(key, dotConfigParams.getOrDefault(key, getFromSystemEnvironment(key)));
+        String value = getFromCommandLine(key);
+        if (value != null) {
+            return value;
+        }
+
+        value = getFromSystemEnvironment(key);
+        if (value != null) {
+            return value;
+        }
+
+        return dotConfigParams.get(key);
     }
 
     public List<String> getNonOptionArguments() {
@@ -80,14 +99,6 @@ public class ParamManager {
         } else {
             return values.get(values.size() - 1);
         }
-    }
-
-    private String getFromCommandLineOrDefault(String key, String defaultValue) {
-        String value = getFromCommandLine(key);
-        if (value != null) {
-            return value;
-        }
-        return defaultValue;
     }
 
     private List<String> getAllFromCommandLine(String key) {
