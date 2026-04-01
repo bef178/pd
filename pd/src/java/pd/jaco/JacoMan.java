@@ -219,6 +219,7 @@ public class JacoMan {
             } else if (index < a.length) {
                 Object old = a[index];
                 System.arraycopy(a, index + 1, a, index, a.length - 1 - index);
+                a[a.length - 1] = null;
                 return old;
             } else {
                 throw JacoException.indexTooLarge(index, a.length);
