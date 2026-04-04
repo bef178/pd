@@ -1,5 +1,7 @@
 package pd.util;
 
+import lombok.NonNull;
+
 /**
  * `byte` or `byte[]` as BitStream
  */
@@ -13,8 +15,7 @@ public class Int8ArrayExtension {
         return (mem & mask) != 0;
     }
 
-    public static boolean getBit(byte[] a, int offset) {
-        assert a != null;
+    public static boolean getBit(byte @NonNull [] a, int offset) {
         assert offset >= 0 && offset < a.length * BITS_PER_BYTE;
         return getBit(a[offset / BITS_PER_BYTE], offset % BITS_PER_BYTE);
     }
@@ -24,11 +25,10 @@ public class Int8ArrayExtension {
         return setBits(mem, 1 << (BITS_PER_BYTE - 1 - offset), value);
     }
 
-    public static void setBit(byte[] a, int offset, boolean value) {
-        assert a != null;
+    public static void setBit(byte @NonNull [] a, int offset, boolean value) {
         assert offset >= 0 && offset < a.length * BITS_PER_BYTE;
         final int p = offset / BITS_PER_BYTE;
-        a[p] = setBit(a[p], offset % BITS_PER_BYTE, true);
+        a[p] = setBit(a[p], offset % BITS_PER_BYTE, value);
     }
 
     public static byte setBits(byte mem, int bitsMask, boolean value) {
@@ -62,8 +62,7 @@ public class Int8ArrayExtension {
         return mem;
     }
 
-    public static void shiftL(byte[] a, int offset) {
-        assert a != null;
+    public static void shiftL(byte @NonNull [] a, int offset) {
         assert offset >= 0;
 
         final int p = offset / BITS_PER_BYTE;
