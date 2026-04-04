@@ -101,10 +101,10 @@ public class SimpleNumber extends Number {
         if (s == null) {
             throw new NullPointerException();
         }
-        if (s.indexOf('.') < 0) {
-            numberValue = Long.parseLong(s);
-        } else {
+        if (s.indexOf('.') >= 0 || s.indexOf('e') >= 0 || s.indexOf('E') >= 0) {
             numberValue = Double.parseDouble(s);
+        } else {
+            numberValue = Long.parseLong(s);
         }
         return this;
     }
