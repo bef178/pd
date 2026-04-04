@@ -265,56 +265,38 @@ public class PathExtension {
     }
 
     public static int compare(@NonNull String path, @NonNull String another) {
-        // directory first
-        if (path.endsWith("/")) {
-            if (!another.endsWith("/")) {
-                return -1;
-            }
-        } else {
-            if (another.endsWith("/")) {
-                return 1;
-            }
-        }
-
-        int[] endIndexes;
-        {
-            endIndexes = new int[] {path.length(), another.length()};
-            int i = endIndexes[0] - 1;
-            int j = endIndexes[1] - 1;
-            while (i >= 0 && j >= 0) {
-                if (path.charAt(i) != another.charAt(j)) {
-                    break;
-                }
-                if (path.charAt(i) == '.') {
-                    endIndexes[0] = i;
-                    endIndexes[1] = j;
-                }
-                i--;
-                j--;
-            }
-        }
-
-        int i = 0;
-        while (i < endIndexes[0] && i < endIndexes[1]) {
-            int ch = path.charAt(i);
-            int ch2 = another.charAt(i);
-            if (ch != ch2) {
-                if (ch == '/') {
+        int[] a = path.codePoints().toArray();
+        int[] b = another.codePoints().toArray();
+        for (int i = 0; i < a.length && i < b.length; i++) {
+            if (a[i] != b[i]) {
+                // directory first
+                if (a[i] == '/') {
                     return -1;
-                } else if (ch2 == '/') {
+                } else if (b[i] == '/') {
                     return 1;
-                } else {
-                    return ch - ch2;
+                }
+                // given name first
+                if (a[i] == '.') {
+                    return -1;
+                } else if (b[i] == '.') {
+                    return 1;
+                }
+                return Integer.compare(a[i], b[i]);
+            }
+        }
+        if (a.length > b.length) {
+            for (int i = b.length; i < a.length; i++) {
+                if (a[i] == '/') {
+                    return -1;
                 }
             }
-            i++;
+        } else if (a.length < b.length) {
+            for (int i = a.length; i < b.length; i++) {
+                if (b[i] == '/') {
+                    return 1;
+                }
+            }
         }
-        if (endIndexes[0] == endIndexes[1]) {
-            return 0;
-        } else if (i == endIndexes[0]) {
-            return -1;
-        } else {
-            return 1;
-        }
+        return Integer.compare(a.length, b.length);
     }
 }

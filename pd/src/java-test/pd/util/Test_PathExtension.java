@@ -122,14 +122,15 @@ public class Test_PathExtension {
     public void test_compare() {
         assertEquals(0, PathExtension.compare("abc", "abc"));
         assertEquals(-1, PathExtension.compare("abc", "bc"));
-        assertEquals(1, PathExtension.compare("bc", "abc"));
         assertEquals(-1, PathExtension.compare("a", "abc"));
-        assertEquals(1, PathExtension.compare("abc", "a"));
-        assertEquals(-1, PathExtension.compare("abc/", "a"));
+        assertEquals(1, PathExtension.compare("abc", "abc/"));
+        assertEquals(-1, PathExtension.compare("a/", "abc"));
         assertEquals(1, PathExtension.compare("a", "abc/"));
-        assertEquals(-1, PathExtension.compare("a", "abc/a"));
-        assertEquals(1, PathExtension.compare("abc/a", "a"));
-        assertEquals(-1, PathExtension.compare("abc.txt", "abc (abc).txt"));
-        assertEquals(1, PathExtension.compare("abc (copy).txt", "abc.txt"));
+        assertEquals(-1, PathExtension.compare("a/", "abc/"));
+        assertEquals(1, PathExtension.compare("a", "abc/a"));
+        assertEquals(-1, PathExtension.compare("abc.txt", "abc (1).txt"));
+        assertEquals(-1, PathExtension.compare("abc", "abc.txt"));
+        assertEquals(-1, PathExtension.compare("a.txt", "abc.txt"));
+        assertEquals(-1, PathExtension.compare("a.txt", "abc"));
     }
 }
