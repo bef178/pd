@@ -2,41 +2,43 @@ package pd.fstore;
 
 import java.util.List;
 
+import lombok.NonNull;
+
 /**
  * abstract file management operations
  */
 public interface FileAccessor {
 
     /**
-     * List next level paths starting with `keyPrefix`, stopping after `/`(directory-like) or before `EOF`(key).<br/>
+     * List keys starting with `prefix`, truncated at the next '/'.<br/>
      * Results are sorted.<br/>
-     * e.g.<br/>
+     * Assuming objects: ["d/d/", "d/f", "f", "lo/", "long", "lower/"]<br/>
      * - "d" => ["d/"]<br/>
      * - "d/" => ["d/d/", "d/f"]<br/>
      * - "f" => ["f"]<br/>
-     * - "lo" => ["lo/", "long/", "lower"]<br/>
+     * - "lo" => ["lo/", "lower/", "long"]<br/>
      */
-    List<String> list(String keyPrefix);
+    List<String> list(@NonNull String prefix);
 
     /**
-     * List all keys starting with `keyPrefix`.<br/>
+     * List all keys starting with `prefix`.<br/>
      */
-    List<String> listAll(String keyPrefix);
+    List<String> listAll(@NonNull String prefix);
 
-    FileStat stat(String key);
+    /**
+     * Remove all keys starting with `prefix`.<br/>
+     */
+    boolean removeAll(@NonNull String prefix);
+
+    FileStat stat(@NonNull String key);
 
     /**
      * Remove a single key.<br/>
      * Return `true` if the operation succeeds.<br/>
      */
-    boolean remove(String key);
+    boolean remove(@NonNull String key);
 
-    /**
-     * Remove all keys starting with `keyPrefix`.<br/>
-     */
-    boolean removeAll(String keyPrefix);
+    byte[] load(@NonNull String key);
 
-    byte[] load(String key);
-
-    boolean save(String key, byte[] bytes);
+    boolean save(@NonNull String key, byte[] bytes);
 }

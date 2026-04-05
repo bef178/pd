@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.NonNull;
 import pd.fstore.FileAccessor;
 import pd.fstore.FileStat;
 import pd.util.InputStreamExtension;
@@ -52,10 +53,10 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public List<String> list(String keyPrefix) {
+    public List<String> list(@NonNull String prefix) {
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucket)
-                .prefix(keyPrefix)
+                .prefix(prefix)
                 .delimiter("/")
                 .maxKeys(1000)
                 .build();
@@ -86,10 +87,10 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public List<String> listAll(String keyPrefix) {
+    public List<String> listAll(@NonNull String prefix) {
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucket)
-                .prefix(keyPrefix)
+                .prefix(prefix)
                 .build();
         return s3Client.listObjectsV2Paginator(request).stream()
                 .flatMap(a -> a.contents().stream())
@@ -97,13 +98,13 @@ public class AwsS3Accessor implements FileAccessor {
                 .collect(Collectors.toList());
     }
 
-    private List<S3Object> listS3Objects(String keyPrefix, int limit) {
+    private List<S3Object> listS3Objects(String prefix, int limit) {
         if (limit <= 0) {
             return Collections.emptyList();
         }
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucket)
-                .prefix(keyPrefix)
+                .prefix(prefix)
                 .maxKeys(limit)
                 .build();
         ListObjectsV2Response response = s3Client.listObjectsV2(request);
@@ -111,40 +112,9 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public FileStat stat(String key) {
-        HeadObjectRequest request = HeadObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-        HeadObjectResponse response = s3Client.headObject(request);
-        FileStat fileStat = new FileStat();
-        fileStat.key = key;
-        fileStat.contentLength = response.contentLength();
-        fileStat.lastModified = request.ifModifiedSince().toEpochMilli();
-        return fileStat;
-    }
-
-    @Override
-    public boolean remove(String key) {
-        DeleteObjectRequest request = DeleteObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-        DeleteObjectResponse response = s3Client.deleteObject(request);
-        return response.sdkHttpResponse().isSuccessful();
-    }
-
-    public boolean remove(Collection<String> keys) {
-        List<ObjectIdentifier> objectIdentifiers = keys.stream()
-                .map(a -> ObjectIdentifier.builder().key(a).build())
-                .collect(Collectors.toList());
-        return removeObjectIdentifiers(objectIdentifiers);
-    }
-
-    @Override
-    public boolean removeAll(String keyPrefix) {
+    public boolean removeAll(@NonNull String prefix) {
         while (true) {
-            List<S3Object> s3Objects = listS3Objects(keyPrefix, 1000);
+            List<S3Object> s3Objects = listS3Objects(prefix, 1000);
             if (s3Objects == null || s3Objects.isEmpty()) {
                 break;
             }
@@ -156,6 +126,37 @@ public class AwsS3Accessor implements FileAccessor {
             }
         }
         return true;
+    }
+
+    @Override
+    public FileStat stat(@NonNull String key) {
+        HeadObjectRequest request = HeadObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+        HeadObjectResponse response = s3Client.headObject(request);
+        FileStat fileStat = new FileStat();
+        fileStat.key = key;
+        fileStat.contentLength = response.contentLength();
+        fileStat.lastModified = response.lastModified().toEpochMilli();
+        return fileStat;
+    }
+
+    @Override
+    public boolean remove(@NonNull String key) {
+        DeleteObjectRequest request = DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+        DeleteObjectResponse response = s3Client.deleteObject(request);
+        return response.sdkHttpResponse().isSuccessful();
+    }
+
+    public boolean remove(@NonNull Collection<String> keys) {
+        List<ObjectIdentifier> objectIdentifiers = keys.stream()
+                .map(a -> ObjectIdentifier.builder().key(a).build())
+                .collect(Collectors.toList());
+        return removeObjectIdentifiers(objectIdentifiers);
     }
 
     private boolean removeObjectIdentifiers(Collection<ObjectIdentifier> objectIdentifiers) {
@@ -170,7 +171,7 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public byte[] load(String key) {
+    public byte[] load(@NonNull String key) {
         return loadObject(key).asByteArray();
     }
 
@@ -182,7 +183,7 @@ public class AwsS3Accessor implements FileAccessor {
         return s3Client.getObjectAsBytes(request);
     }
 
-    public void download(String key, String localParity) throws IOException {
+    public void download(@NonNull String key, String localParity) throws IOException {
         try (InputStream inputStream = loadObject(key).asInputStream()) {
             new File(localParity).getParentFile().mkdirs();
             InputStreamExtension.save(inputStream, localParity);
@@ -190,11 +191,11 @@ public class AwsS3Accessor implements FileAccessor {
     }
 
     @Override
-    public boolean save(String key, byte[] bytes) {
+    public boolean save(@NonNull String key, byte[] bytes) {
         return save(key, RequestBody.fromBytes(bytes));
     }
 
-    private boolean save(String key, RequestBody requestBody) {
+    private boolean save(@NonNull String key, RequestBody requestBody) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
@@ -203,7 +204,7 @@ public class AwsS3Accessor implements FileAccessor {
         return response.sdkHttpResponse().isSuccessful();
     }
 
-    public boolean upload(String key, String localParity) {
+    public boolean upload(@NonNull String key, String localParity) {
         return save(key, RequestBody.fromFile(new File(localParity)));
     }
 }
