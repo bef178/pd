@@ -16,9 +16,8 @@ public interface UnicodeConsumer {
         return this;
     }
 
-    int position();
-
     static UnicodeConsumer wrap(StringBuilder sb) {
+
         return new UnicodeConsumer() {
 
             @Override
@@ -30,11 +29,6 @@ public interface UnicodeConsumer {
                 }
                 sb.appendCodePoint(value);
                 return this;
-            }
-
-            @Override
-            public int position() {
-                return sb.length();
             }
         };
     }

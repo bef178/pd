@@ -7,6 +7,12 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.PrimitiveIterator;
+
+import pd.fenc.ParsingException;
+
+import static pd.util.AsciiExtension.EOF;
 
 public class InputStreamExtension {
 
@@ -48,6 +54,45 @@ public class InputStreamExtension {
                 outputStream.write(buffer, 0, nRead);
             }
         }
+    }
+
+    public static PrimitiveIterator.OfInt toIterator(InputStream inputStream) {
+
+        return new PrimitiveIterator.OfInt() {
+
+            private final int NO_VALUE = -9;
+
+            private int nextValue = NO_VALUE;
+
+            @Override
+            public boolean hasNext() {
+                if (nextValue == NO_VALUE) {
+                    try {
+                        nextValue = inputStream.read();
+                    } catch (IOException e) {
+                        throw new ParsingException(e);
+                    }
+                }
+                return nextValue != EOF;
+            }
+
+            @Override
+            public int nextInt() {
+                if (nextValue == NO_VALUE) {
+                    try {
+                        nextValue = inputStream.read();
+                    } catch (IOException e) {
+                        throw new ParsingException(e);
+                    }
+                }
+                if (nextValue == EOF) {
+                    throw new NoSuchElementException();
+                }
+                int result = nextValue;
+                nextValue = NO_VALUE;
+                return result;
+            }
+        };
     }
 
     public static void consumeAndCloseSilently(InputStream stream) {

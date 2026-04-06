@@ -1,5 +1,7 @@
 package pd.fenc;
 
+import static pd.util.AsciiExtension.EOF;
+
 public class ParsingException extends RuntimeException {
 
     /**
@@ -7,12 +9,24 @@ public class ParsingException extends RuntimeException {
      */
     private static final long serialVersionUID = -4161558132029391877L;
 
-    public ParsingException() {
-        super();
+    public static ParsingException unexpected(int actual) {
+        if (actual == EOF) {
+            return new ParsingException("E: unexpected value EOF");
+        } else {
+            return new ParsingException(String.format("E: unexpected value `0x%X`", actual));
+        }
     }
 
-    public ParsingException(int actual) {
-        this(String.format("E: unexpected value `0x%X`", actual));
+    public static ParsingException expectedAndActual(int expected, int actual) {
+        if (actual == EOF) {
+            return new ParsingException(String.format("E: expected `0x%X`, actual EOF", expected));
+        } else {
+            return new ParsingException(String.format("E: expected `0x%X`, actual `0x%X`", expected, actual));
+        }
+    }
+
+    public ParsingException() {
+        super();
     }
 
     public ParsingException(String message) {

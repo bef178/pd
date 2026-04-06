@@ -50,13 +50,6 @@ public class NumberPicker {
         } else {
             src.back();
         }
-
-        ch = src.hasNext() ? src.next() : EOF;
-        if (ch == EOF) {
-            return;
-        } else {
-            src.back();
-        }
     }
 
     public float pickFloat32(UnicodeProvider src) {
@@ -98,7 +91,7 @@ public class NumberPicker {
                             state = 2;
                             break;
                         default:
-                            throw new ParsingException(ch);
+                            throw ParsingException.unexpected(ch);
                     }
                     break;
                 }
@@ -142,8 +135,7 @@ public class NumberPicker {
             pickIntToken(src, dst);
             return;
         }
-        String actual = new String(Character.toChars(ch));
-        throw new ParsingException(String.format("unexpected [%s], expecting [E] or [e]", actual));
+        throw ParsingException.unexpected(ch);
     }
 
     public String pickIntToken(UnicodeProvider src) {
@@ -183,7 +175,7 @@ public class NumberPicker {
                             state = 3;
                             break;
                         default:
-                            throw new ParsingException(ch);
+                            throw ParsingException.unexpected(ch);
                     }
                     break;
                 }
@@ -205,7 +197,7 @@ public class NumberPicker {
                             break;
                         default:
                             // specially, "-0" is not acceptable
-                            throw new ParsingException(ch);
+                            throw ParsingException.unexpected(ch);
                     }
                     break;
                 }

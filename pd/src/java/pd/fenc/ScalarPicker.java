@@ -62,7 +62,7 @@ public class ScalarPicker {
      * return `false` if `src` ends with escaping state<br/>
      * - `charset` always contains `\`<br/>
      * - `charset` always contains escaped unicodes<br/>
-     * - a unicode not in charset is a terminator<br/>
+     * - a Unicode not in charset is a terminator<br/>
      */
     private boolean tryPickBackSlashEscapedString(UnicodeProvider src, UnicodeConsumer dst, IntPredicate charset) {
         boolean isEscaping = false;
@@ -127,7 +127,9 @@ public class ScalarPicker {
                         dst.next(ch);
                         stat = 1;
                     } else {
-                        src.back();
+                        if (ch != EOF) {
+                            src.back();
+                        }
                         return false;
                     }
                     break;
@@ -135,7 +137,9 @@ public class ScalarPicker {
                     if (isAlpha(ch) || ch == '_' || isDigit(ch)) {
                         dst.next(ch);
                     } else {
-                        src.back();
+                        if (ch != EOF) {
+                            src.back();
+                        }
                         return true;
                     }
                     break;
@@ -148,11 +152,11 @@ public class ScalarPicker {
     public void eatOneOrThrow(UnicodeProvider src, int expected) {
         if (!tryEatOne(src, ch -> ch == expected)) {
             if (src.hasNext()) {
-                int value = src.next();
+                int actual = src.next();
                 src.back();
-                throw new ParsingException(String.format("E: expected `0x%X`, actual `0x%X`", expected, value));
+                throw ParsingException.expectedAndActual(expected, actual);
             } else {
-                throw new ParsingException(String.format("E: expected `0x%X`, actual `EOF`", expected));
+                throw ParsingException.expectedAndActual(expected, EOF);
             }
         }
     }
