@@ -6,13 +6,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.NonNull;
+import pd.util.FileExtension;
 import pd.util.PathExtension;
+
+import static pd.util.FileExtension.listDirectory;
+import static pd.util.FileExtension.removeRecursively;
 
 public class LocalFileAccessor implements FileAccessor {
 
@@ -36,160 +40,44 @@ public class LocalFileAccessor implements FileAccessor {
             }
         }
         List<Path> a = listDirectory(Paths.get(d));
-        if (a != null) {
-            return a.stream()
-                    .map(this::pathToString)
-                    .filter(s1 -> s1.startsWith(prefix))
-                    .sorted(PathExtension::compare)
-                    .collect(Collectors.toList());
+        if (a == null) {
+            return Collections.emptyList();
         }
-        return null;
-    }
-
-    private LinkedList<Path> listDirectory(Path path) {
-        try (Stream<Path> stream = Files.list(path)) {
-            return stream.collect(Collectors.toCollection(LinkedList::new));
-        } catch (IOException ignored) {
-        }
-        return null;
-    }
-
-    private String pathToString(Path p) {
-        String s = p.toString();
-        if (s.startsWith("./")) {
-            s = s.substring(2);
-        }
-        if (Files.isDirectory(p)) {
-            s += "/";
-        }
-        return s;
+        return a.stream()
+                .map(FileExtension::pathToString)
+                .filter(s1 -> s1.startsWith(prefix))
+                .sorted(PathExtension::compare)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<String> listAll(@NonNull String prefix) {
-        List<String> a = list(prefix);
-        if (a == null) {
-            return null;
-        }
-        return a.stream()
+        return list(prefix).stream()
                 .flatMap(s -> {
                     Path p = Paths.get(s);
                     if (Files.isDirectory(p)) {
-                        LinkedList<Path> a1 = listDirectoryDepthFirstSearch(p, Integer.MAX_VALUE);
+                        List<Path> a1 = listDirectory(p, Integer.MAX_VALUE, null);
                         if (a1 == null) {
-                            a1 = new LinkedList<>();
+                            a1 = Collections.emptyList();
                         }
                         return a1.stream().filter(p1 -> !Files.isDirectory(p1));
                     } else {
                         return Stream.of(p);
                     }
                 })
-                .map(this::pathToString)
+                .map(FileExtension::pathToString)
                 .sorted(PathExtension::compare)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * List offspring of the given directory up to specified depth.<br/>
-     * `depth` should be positive.<br/>
-     * - Leading "./" will be trimmed.<br/>
-     * - A trailing "/" will be present for directory.<br/>
-     */
-    private LinkedList<Path> listDirectoryDepthFirstSearch(@NonNull Path p, final int depth) {
-        if (!Files.isDirectory(p)) {
-            return null;
-        }
-
-        LinkedList<Path> results = new LinkedList<>();
-        if (depth > 0) {
-            LinkedList<Path> a1 = listDirectory(p);
-            if (a1 != null) {
-                for (Path p1 : a1) {
-                    results.add(p1);
-                    if (Files.isDirectory(p1)) {
-                        LinkedList<Path> a2 = listDirectoryDepthFirstSearch(p1, depth - 1);
-                        if (a2 != null) {
-                            results.addAll(a2);
-                        }
-                    }
-                }
-            }
-        }
-        return results;
-    }
-
-    private List<Path> listDirectoryBreadthFirstSearch(@NonNull Path p, int depth) {
-        if (!Files.isDirectory(p)) {
-            return null;
-        }
-
-        List<Path> results = new LinkedList<>();
-        List<Path> thisQ = new LinkedList<>();
-        thisQ.add(p);
-        while (depth != 0) {
-            List<Path> nextQ = new LinkedList<>();
-            while (!thisQ.isEmpty()) {
-                Path first = thisQ.remove(0);
-                try (Stream<Path> stream = Files.list(first)) {
-                    stream.forEach(p1 -> {
-                        results.add(p1);
-                        if (Files.isDirectory(p1)) {
-                            nextQ.add(p1);
-                        }
-                    });
-                } catch (IOException ignored) {
-                }
-            }
-            if (nextQ.isEmpty()) {
-                break;
-            }
-            thisQ = nextQ;
-            depth--;
-        }
-        return results;
-    }
-
     @Override
     public boolean removeAll(@NonNull String prefix) {
-        List<String> paths = list(prefix);
-        if (paths == null) {
-            return false;
-        }
-
-        for (String path : paths) {
-            Path p = Paths.get(path);
-            if (Files.isDirectory(p)) {
-                removeDirectoryDepthFirstSearch(Paths.get(path));
-                new File(path).delete();
-            } else {
-                remove(path);
+        for (String path : list(prefix)) {
+            if (!removeRecursively(Paths.get(path), null)) {
+                return false;
             }
         }
         return true;
-    }
-
-    private LinkedList<Path> removeDirectoryDepthFirstSearch(@NonNull Path p) {
-        if (!Files.isDirectory(p)) {
-            return null;
-        }
-
-        LinkedList<Path> results = new LinkedList<>();
-        LinkedList<Path> a1 = listDirectory(p);
-        if (a1 != null) {
-            for (Path p1 : a1) {
-                if (Files.isDirectory(p1)) {
-                    LinkedList<Path> a2 = removeDirectoryDepthFirstSearch(p1);
-                    if (a2 != null) {
-                        results.addAll(a2);
-                    }
-                    new File(p1.toString()).delete();
-                    results.add(p1);
-                } else {
-                    remove(p1.toString());
-                }
-            }
-        }
-        return results;
     }
 
     @Override
