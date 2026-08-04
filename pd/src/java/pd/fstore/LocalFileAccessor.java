@@ -6,74 +6,27 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.NonNull;
-import pd.util.FileExtension;
-import pd.util.PathExtension;
-
-import static pd.util.FileExtension.listDirectory;
-import static pd.util.FileExtension.removeRecursively;
+import pd.util.FileOps;
 
 public class LocalFileAccessor implements FileAccessor {
 
     @Override
-    public List<String> list(String prefix) {
-        String d;
-        if (prefix.equals(".")) {
-            d = "";
-        } else if (prefix.equals("./")) {
-            d = "";
-        } else if (prefix.equals("..")) {
-            d = "../";
-        } else if (prefix.endsWith("/")) {
-            d = prefix;
-        } else {
-            int lastIndex = prefix.lastIndexOf('/');
-            if (lastIndex >= 0) {
-                d = prefix.substring(0, lastIndex + 1);
-            } else {
-                d = "";
-            }
-        }
-        List<Path> a = listDirectory(Paths.get(d));
-        if (a == null) {
-            return Collections.emptyList();
-        }
-        return a.stream()
-                .map(FileExtension::pathToString)
-                .filter(s1 -> s1.startsWith(prefix))
-                .sorted(PathExtension::compare)
-                .collect(Collectors.toList());
+    public List<String> list(@NonNull String prefix) {
+        return FileOps.singleton.list(prefix);
     }
 
     @Override
     public List<String> listAll(@NonNull String prefix) {
-        return list(prefix).stream()
-                .flatMap(s -> {
-                    Path p = Paths.get(s);
-                    if (Files.isDirectory(p)) {
-                        List<Path> a1 = listDirectory(p, Integer.MAX_VALUE, null);
-                        if (a1 == null) {
-                            a1 = Collections.emptyList();
-                        }
-                        return a1.stream().filter(p1 -> !Files.isDirectory(p1));
-                    } else {
-                        return Stream.of(p);
-                    }
-                })
-                .map(FileExtension::pathToString)
-                .sorted(PathExtension::compare)
-                .collect(Collectors.toList());
+        return FileOps.singleton.listAll(prefix);
     }
 
     @Override
     public boolean removeAll(@NonNull String prefix) {
         for (String path : list(prefix)) {
-            if (!removeRecursively(Paths.get(path), null)) {
+            if (!FileOps.singleton.removeRecursively(path, null)) {
                 return false;
             }
         }

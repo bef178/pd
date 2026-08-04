@@ -295,11 +295,11 @@ public class PathOps {
         return Integer.compare(a.length, b.length);
     }
 
-    private void throwIfEmpty(String path) {
+    static void throwIfEmpty(String path) {
         throwIfEmpty(path, "path");
     }
 
-    private void throwIfEmpty(String path, String argLiteral) {
+    static void throwIfEmpty(String path, String argLiteral) {
         if (path.isEmpty()) {
             throw new IllegalArgumentException(String.format("`%s` should not be empty", argLiteral));
         }
