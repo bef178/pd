@@ -42,7 +42,7 @@ public class ZipExtension {
             ZipEntry zipEntry;
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                 String zipEntryName = zipEntry.getName();
-                File dstFile = new File(PathExtension.join(pathToParityDirectory, zipEntryName));
+                File dstFile = new File(PathOps.singleton.join(pathToParityDirectory, zipEntryName));
                 if (zipEntry.isDirectory()) {
                     if (!dstFile.mkdir()) {
                         return false;

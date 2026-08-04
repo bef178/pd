@@ -6,7 +6,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,7 +13,7 @@ import java.util.Map;
 
 import pd.fenc.ParsingException;
 import pd.util.ObjectExtension;
-import pd.util.PathExtension;
+import pd.util.PathOps;
 import pd.util.PathPattern;
 
 public class JacoToEntityConverter {
@@ -78,7 +77,7 @@ public class JacoToEntityConverter {
                 constructor.setAccessible(true);
                 List<Object> a = (List<Object>) constructor.newInstance();
                 for (int i = 0; i < o1.size(); i++) {
-                    String path1 = PathExtension.join(path, String.valueOf(i));
+                    String path1 = PathOps.singleton.join(path, String.valueOf(i));
                     a.add(jacoToEntity(o1.get(i), Object.class, path1));
                 }
                 return retargetedClass.cast(a);
@@ -101,7 +100,7 @@ public class JacoToEntityConverter {
                 Class<?> elementClass = retargetedClass.getComponentType();
                 Object a = Array.newInstance(elementClass, o1.size());
                 for (int i = 0; i < o1.size(); i++) {
-                    String path1 = PathExtension.join(path, String.valueOf(i));
+                    String path1 = PathOps.singleton.join(path, String.valueOf(i));
                     Array.set(a, i, jacoToEntity(o1.get(i), elementClass, path1));
                 }
                 return targetClass.cast(a);
@@ -115,7 +114,7 @@ public class JacoToEntityConverter {
                 constructor.setAccessible(true);
                 Map<Object, Object> m = (Map<Object, Object>) constructor.newInstance();
                 for (Map.Entry<Object, Object> entry : o1.entrySet()) {
-                    String path1 = PathExtension.join(path, String.valueOf(entry.getKey()));
+                    String path1 = PathOps.singleton.join(path, String.valueOf(entry.getKey()));
                     m.put(entry.getKey(), jacoToEntity(entry.getValue(), Object.class, path1));
                 }
                 return retargetedClass.cast(m);
@@ -133,7 +132,7 @@ public class JacoToEntityConverter {
                     String fieldName = field.getName();
                     if (o1.containsKey(fieldName)) {
                         field.setAccessible(true);
-                        String path1 = PathExtension.join(path, fieldName);
+                        String path1 = PathOps.singleton.join(path, fieldName);
                         field.set(object, jacoToEntity(o1.get(fieldName), field.getType(), path1));
                     }
                 }

@@ -80,7 +80,7 @@ public class FileOps {
                     }
                 })
                 .map(this::pathToString)
-                .sorted(PathExtension::compare)
+                .sorted(PathOps.singleton::compare)
                 .collect(Collectors.toList());
     }
 
