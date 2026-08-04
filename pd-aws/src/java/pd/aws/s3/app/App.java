@@ -9,7 +9,6 @@ import pd.aws.s3.app.executor.CommandDownloadExecutor;
 import pd.aws.s3.app.executor.CommandExecutor;
 import pd.aws.s3.app.executor.CommandListAllExecutor;
 import pd.aws.s3.app.executor.CommandListExecutor;
-import pd.aws.s3.app.executor.CommandRemoveAllExecutor;
 import pd.aws.s3.app.executor.CommandRemoveExecutor;
 import pd.aws.s3.app.executor.CommandUploadAllExecutor;
 import pd.aws.s3.app.executor.CommandUploadExecutor;
@@ -28,8 +27,7 @@ public class App {
                 new CommandDownloadAllExecutor(),
                 new CommandUploadExecutor(),
                 new CommandUploadAllExecutor(),
-                new CommandRemoveExecutor(),
-                new CommandRemoveAllExecutor());
+                new CommandRemoveExecutor());
         new App(executors).execute(args);
     }
 

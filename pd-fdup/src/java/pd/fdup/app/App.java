@@ -13,17 +13,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import pd.fstore.FileStat;
-import pd.fstore.LocalFileAccessor;
 import pd.util.DigestCodec;
+import pd.util.FileOps;
+import pd.util.FileStat;
 import pd.util.ParamManager;
 
 import static pd.util.AppLogger.stderr;
 import static pd.util.AppLogger.stdout;
 
 public class App {
-
-    public static final LocalFileAccessor accessor = new LocalFileAccessor();
 
     private static final DigestCodec md5Digest = DigestCodec.md5();
 
@@ -84,10 +82,10 @@ public class App {
 
         List<FileStat> stats = paths.stream()
                 .flatMap(a -> {
-                    List<String> b = accessor.listAll(a);
+                    List<String> b = FileOps.singleton.listAll(a);
                     return b == null ? Stream.empty() : b.stream();
                 })
-                .map(accessor::stat)
+                .map(FileOps.singleton::stat)
                 .collect(Collectors.toList());
         stdout("found {} file(s)", stats.size());
 
@@ -109,7 +107,7 @@ public class App {
             Map<String, List<FileStat>> sameHashFiles = new LinkedHashMap<>();
             for (FileStat stat : a) {
                 String checksum;
-                try (InputStream inputStream = Files.newInputStream(Paths.get(stat.key))) {
+                try (InputStream inputStream = Files.newInputStream(Paths.get(stat.path))) {
                     checksum = md5Digest.checksum(inputStream);
                 } catch (IOException e) {
                     checksum = null;
@@ -136,7 +134,7 @@ public class App {
                 stdout("");
                 stdout("size: {}", group.get(0).contentLength);
                 for (FileStat stat : group) {
-                    stdout(stat.key);
+                    stdout(stat.path);
                 }
                 stdout("");
                 break;
@@ -146,7 +144,7 @@ public class App {
                     stdout("size: {}", group.get(0).contentLength);
                     for (int i = 1; i < group.size(); i++) {
                         FileStat stat = group.get(i);
-                        stdout(stat.key);
+                        stdout(stat.path);
                     }
                 }
                 break;
@@ -155,11 +153,11 @@ public class App {
                     stdout("");
                     stdout("size: {}", group.get(0).contentLength);
                     FileStat stat = group.get(0);
-                    stdout("o {}", stat.key);
+                    stdout("o {}", stat.path);
                     for (int i = 1; i < group.size(); i++) {
                         stat = group.get(i);
-                        if (accessor.remove(stat.key)) {
-                            stdout("x {}", stat.key);
+                        if (FileOps.singleton.removeFile(stat.path)) {
+                            stdout("x {}", stat.path);
                         }
                     }
                 }

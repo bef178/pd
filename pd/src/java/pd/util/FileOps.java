@@ -2,6 +2,7 @@ package pd.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,19 +18,187 @@ import lombok.SneakyThrows;
 
 import static pd.util.PathOps.throwIfEmpty;
 
-public class FileOps {
+/**
+ * 目录树中只有两种结点：目录、文件。目录可以是叶结点，文件只能是叶结点。
+ * 文件再分为常规文件和特殊文件。其中，符号链接影响了目录树的结构。
+ * 基本操作集：枚举目录子结点(读目录)，创建/删除叶结点(写目录)，读/写文件，读/写结点属性。
+ * 没有"原地编辑"符号链接内容的系统调用。因此，读写符号链接内容即为读写目标结点内容；读/写符号链接属性则与目标结点无关。
+ * 日常操作无需区分符号链接。
+ */
+class FileOpsCore {
+
+    public List<String> listDirectory(@NonNull String pathToDirectory) {
+        throwIfEmpty(pathToDirectory, "pathToDirectory");
+
+        // no explicit isDirectory check: NoSuchFileException / NotDirectoryException will be caught
+        try (Stream<Path> stream = Files.list(Paths.get(pathToDirectory))) {
+            return stream
+                    .map(this::pathToString)
+                    .sorted(PathOps.singleton::compare)
+                    .collect(Collectors.toList());
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
+
+    protected String pathToString(Path p) {
+        String s = p.toString();
+        if (s.startsWith("./")) {
+            s = s.substring(2);
+        }
+        if (Files.isDirectory(p)) {
+            s += "/";
+        }
+        return s;
+    }
+
+    public boolean createDirectory(@NonNull String pathToDirectory, boolean parents) {
+        throwIfEmpty(pathToDirectory, "pathToDirectory");
+
+        try {
+            Path d = Paths.get(pathToDirectory);
+            if (parents) {
+                Files.createDirectories(d);
+            } else {
+                Files.createDirectory(d);
+            }
+            return true;
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents) {
+        throwIfEmpty(pathToDirectory, "pathToDirectory");
+
+        if (!removeDirectory(Paths.get(pathToDirectory), recursive)) {
+            return false;
+        }
+        if (parents) {
+            Path p = Paths.get(pathToDirectory).getParent();
+            while (p != null) {
+                // only remove empty ancestor directories; stop at the first non-empty one
+                if (!removeDirectory(p, false)) {
+                    break;
+                }
+                p = p.getParent();
+            }
+        }
+        return true;
+    }
+
+    private boolean removeDirectory(Path src, boolean recursive) {
+        if (recursive) {
+            List<String> children = listDirectory(src.toString());
+            if (children == null) {
+                return false;
+            }
+            for (String child : children) {
+                if (Files.isDirectory(Paths.get(child))) {
+                    if (!removeDirectory(Paths.get(child), true)) {
+                        return false;
+                    }
+                } else {
+                    if (!removeFile(child)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        try {
+            return Files.deleteIfExists(src);
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    public boolean removeFile(@NonNull String pathToFile) {
+        throwIfEmpty(pathToFile, "pathToFile");
+
+        try {
+            return Files.deleteIfExists(Paths.get(pathToFile));
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    public byte[] load(@NonNull String pathToFile) {
+        throwIfEmpty(pathToFile, "pathToFile");
+
+        Path p = Paths.get(pathToFile);
+        if (!Files.exists(p)) {
+            return null;
+        }
+        if (Files.isDirectory(p)) {
+            return null;
+        }
+
+        try {
+            return Files.readAllBytes(p);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public boolean save(@NonNull String pathToFile, byte[] bytes) {
+        throwIfEmpty(pathToFile, "pathToFile");
+
+        Path p = Paths.get(pathToFile);
+        if (Files.exists(p) && Files.isDirectory(p)) {
+            return false;
+        }
+
+        Path parent = p.getParent();
+        if (parent != null) {
+            try {
+                Files.createDirectories(parent);
+            } catch (IOException e) {
+                return false;
+            }
+        }
+
+        try {
+            Files.write(p, bytes);
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public FileStat stat(@NonNull String path) {
+        throwIfEmpty(path);
+
+        File f = new File(path);
+        FileStat fileStat = new FileStat();
+        fileStat.path = path;
+        if (f.isFile()) {
+            fileStat.type = FileStat.TYPE_FILE;
+            fileStat.contentLength = f.length();
+        } else if (f.isDirectory()) {
+            fileStat.type = FileStat.TYPE_DIRECTORY;
+        } else {
+            return null;
+        }
+        fileStat.lastModified = f.lastModified();
+        return fileStat;
+    }
+}
+
+public class FileOps extends FileOpsCore {
 
     public static final FileOps singleton = new FileOps();
 
     /**
      * Starting from `pathPrefix`, list the next nodes in the file tree. `pathPrefix` need not be an existing file or directory.
      * `pathPrefix` might be empty.
-     * Results are sorted.
-     * Directories end with `/`.
+     * Results are sorted. Directories end with `/`.
+     * e.g.
      * - "d" => ["d/"]
      * - "d/" => ["d/d/", "d/f"]
      * - "f" => ["f"]
      * - "lo" => ["lo/", "lower/", "long"]
+     * - "." => [".git/", ".gitignore", "...a"]
+     * - ".." => ["...a"]
      */
     public List<String> list(@NonNull String pathPrefix) {
         String d;
@@ -52,7 +221,7 @@ public class FileOps {
         if (d.isEmpty()) {
             d = ".";
         }
-        List<String> a = listDirectory(d, 1, null);
+        List<String> a = listDirectory(d);
         if (a == null) {
             return Collections.emptyList();
         }
@@ -173,17 +342,6 @@ public class FileOps {
         return results;
     }
 
-    private String pathToString(Path p) {
-        String s = p.toString();
-        if (s.startsWith("./")) {
-            s = s.substring(2);
-        }
-        if (Files.isDirectory(p)) {
-            s += "/";
-        }
-        return s;
-    }
-
     public boolean copyRecursively(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
         throwIfEmpty(src, "src");
         throwIfEmpty(dst, "dst");
@@ -236,9 +394,9 @@ public class FileOps {
         }
     }
 
-    public boolean removeRecursively(@NonNull String directory, AtomicBoolean abortRequested) {
-        throwIfEmpty(directory, "directory");
-        return removeRecursively(Paths.get(directory), abortRequested);
+    public boolean removeRecursively(@NonNull String path, AtomicBoolean abortRequested) {
+        throwIfEmpty(path);
+        return removeRecursively(Paths.get(path), abortRequested);
     }
 
     private boolean removeRecursively(@NonNull Path src, AtomicBoolean abortRequested) {
@@ -266,5 +424,17 @@ public class FileOps {
             return false;
         }
         return true;
+    }
+
+    public String loadString(@NonNull String pathToFile) {
+        byte[] a = load(pathToFile);
+        if (a == null) {
+            return null;
+        }
+        return new String(a, StandardCharsets.UTF_8);
+    }
+
+    public boolean saveString(@NonNull String pathToFile, String s) {
+        return save(pathToFile, s.getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -235,6 +235,48 @@ class Test_FileOps {
     }
 
     @Nested
+    class listDirectorySingleArg {
+
+        @Test
+        void listsDirectChildrenWithTrailingSlashForDirectories(@TempDir Path tmp) throws IOException {
+            Path root = buildTree(tmp.resolve("root"));
+
+            List<String> result = fileOps.listDirectory(root.resolve("docs").toString());
+
+            assertEquals(2, result.size());
+            assertEquals(root.resolve("docs/img").toString() + "/", result.get(0));
+            assertEquals(root.resolve("docs/readme.md").toString(), result.get(1));
+        }
+
+        @Test
+        void returnsNullWhenDirectoryDoesNotExist(@TempDir Path tmp) {
+            assertNull(fileOps.listDirectory(tmp.resolve("nope").toString()));
+        }
+
+        @Test
+        void returnsNullWhenPathIsAFile(@TempDir Path tmp) throws IOException {
+            Path root = buildTree(tmp.resolve("root"));
+
+            // a file is not a directory -> null
+            assertNull(fileOps.listDirectory(root.resolve(".gitignore").toString()));
+        }
+
+        @Test
+        void returnsEmptyForEmptyDirectory(@TempDir Path tmp) throws IOException {
+            Path root = buildTree(tmp.resolve("root"));
+
+            List<String> result = fileOps.listDirectory(root.resolve("empty").toString());
+
+            assertTrue(result.isEmpty());
+        }
+
+        @Test
+        void throwsWhenDirectoryIsEmpty() {
+            assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory(""));
+        }
+    }
+
+    @Nested
     class copyRecursively {
 
         @Test
@@ -371,6 +413,160 @@ class Test_FileOps {
         @Test
         void throwsWhenDirectoryIsEmpty() {
             assertThrows(IllegalArgumentException.class, () -> fileOps.removeRecursively("", null));
+        }
+    }
+
+    @Nested
+    class removeFile {
+
+        @Test
+        void removesExistingFile(@TempDir Path tmp) throws IOException {
+            Path f = tmp.resolve("a.txt");
+            writeFile(f, "x");
+
+            assertTrue(fileOps.removeFile(f.toString()));
+            assertFalse(Files.exists(f));
+        }
+
+        @Test
+        void returnsFalseWhenFileDoesNotExist(@TempDir Path tmp) {
+            assertFalse(fileOps.removeFile(tmp.resolve("nope").toString()));
+        }
+
+        @Test
+        void removesEmptyDirectory(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("empty");
+            mkdir(d);
+
+            assertTrue(fileOps.removeFile(d.toString()));
+            assertFalse(Files.exists(d));
+        }
+
+        @Test
+        void returnsFalseForNonEmptyDirectory(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+            writeFile(d.resolve("f"), "f");
+
+            assertFalse(fileOps.removeFile(d.toString()));
+            // the directory and its content remain
+            assertTrue(Files.exists(d));
+            assertTrue(Files.exists(d.resolve("f")));
+        }
+
+        @Test
+        void throwsWhenPathIsEmpty() {
+            assertThrows(IllegalArgumentException.class, () -> fileOps.removeFile(""));
+        }
+    }
+
+    @Nested
+    class createDirectory {
+
+        @Test
+        void createsSingleLevelWhenParentsFalse(@TempDir Path tmp) {
+            assertTrue(fileOps.createDirectory(tmp.resolve("d").toString(), false));
+            assertTrue(Files.isDirectory(tmp.resolve("d")));
+        }
+
+        @Test
+        void returnsFalseWhenAlreadyExists(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+
+            assertFalse(fileOps.createDirectory(d.toString(), false));
+        }
+
+        @Test
+        void returnsFalseWhenParentMissingAndParentsFalse(@TempDir Path tmp) {
+            assertFalse(fileOps.createDirectory(tmp.resolve("missing/d").toString(), false));
+            assertFalse(Files.exists(tmp.resolve("missing")));
+        }
+
+        @Test
+        void createsIntermediateParentsWhenParentsTrue(@TempDir Path tmp) {
+            assertTrue(fileOps.createDirectory(tmp.resolve("a/b/c").toString(), true));
+            assertTrue(Files.isDirectory(tmp.resolve("a/b/c")));
+        }
+
+        @Test
+        void isIdempotentWhenAlreadyExistsAndParentsTrue(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+
+            assertTrue(fileOps.createDirectory(d.toString(), true));
+        }
+
+        @Test
+        void throwsWhenPathIsEmpty() {
+            assertThrows(IllegalArgumentException.class, () -> fileOps.createDirectory("", false));
+        }
+    }
+
+    @Nested
+    class removeDirectory {
+
+        @Test
+        void removesEmptyDirectoryWhenNotRecursive(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+
+            assertTrue(fileOps.removeDirectory(d.toString(), false, false));
+            assertFalse(Files.exists(d));
+        }
+
+        @Test
+        void returnsFalseForNonEmptyWhenNotRecursive(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+            writeFile(d.resolve("f"), "f");
+
+            assertFalse(fileOps.removeDirectory(d.toString(), false, false));
+            assertTrue(Files.exists(d));
+            assertTrue(Files.exists(d.resolve("f")));
+        }
+
+        @Test
+        void removesTreeWhenRecursive(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d.resolve("sub"));
+            writeFile(d.resolve("f"), "f");
+            writeFile(d.resolve("sub/g"), "g");
+
+            assertTrue(fileOps.removeDirectory(d.toString(), true, false));
+            assertFalse(Files.exists(d));
+        }
+
+        @Test
+        void returnsFalseWhenTargetDoesNotExist(@TempDir Path tmp) {
+            assertFalse(fileOps.removeDirectory(tmp.resolve("nope").toString(), false, false));
+        }
+
+        @Test
+        void removesEmptyAncestorsWhenParentsTrue(@TempDir Path tmp) throws IOException {
+            Path leaf = tmp.resolve("p/q/r");
+            mkdir(leaf);
+
+            assertTrue(fileOps.removeDirectory(leaf.toString(), false, true));
+            assertFalse(Files.exists(tmp.resolve("p")));
+        }
+
+        @Test
+        void stopsAtNonEmptyAncestorWhenParentsTrue(@TempDir Path tmp) throws IOException {
+            // p holds a file, so it must survive removing the empty p/q/r chain
+            Path leaf = tmp.resolve("p/q/r");
+            mkdir(leaf);
+            writeFile(tmp.resolve("p/keep"), "k");
+
+            assertTrue(fileOps.removeDirectory(leaf.toString(), false, true));
+            assertTrue(Files.exists(tmp.resolve("p")));
+            assertFalse(Files.exists(tmp.resolve("p/q")));
+            assertTrue(Files.exists(tmp.resolve("p/keep")));
+        }
+
+        @Test
+        void throwsWhenPathIsEmpty() {
+            assertThrows(IllegalArgumentException.class, () -> fileOps.removeDirectory("", false, false));
         }
     }
 

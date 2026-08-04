@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.NonNull;
-import pd.fstore.FileAccessor;
-import pd.fstore.FileStat;
+import pd.util.FileStat;
 import pd.util.InputStreamExtension;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.core.ResponseBytes;
@@ -37,7 +36,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-public class AwsS3Accessor implements FileAccessor {
+public class AwsS3Accessor {
 
     private final S3Client s3Client;
 
@@ -52,7 +51,6 @@ public class AwsS3Accessor implements FileAccessor {
         this.bucket = bucket;
     }
 
-    @Override
     public List<String> list(@NonNull String prefix) {
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucket)
@@ -86,7 +84,6 @@ public class AwsS3Accessor implements FileAccessor {
         return a;
     }
 
-    @Override
     public List<String> listAll(@NonNull String prefix) {
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucket)
@@ -111,7 +108,6 @@ public class AwsS3Accessor implements FileAccessor {
         return response.contents();
     }
 
-    @Override
     public boolean removeAll(@NonNull String prefix) {
         while (true) {
             List<S3Object> s3Objects = listS3Objects(prefix, 1000);
@@ -128,7 +124,6 @@ public class AwsS3Accessor implements FileAccessor {
         return true;
     }
 
-    @Override
     public FileStat stat(@NonNull String key) {
         HeadObjectRequest request = HeadObjectRequest.builder()
                 .bucket(bucket)
@@ -136,13 +131,12 @@ public class AwsS3Accessor implements FileAccessor {
                 .build();
         HeadObjectResponse response = s3Client.headObject(request);
         FileStat fileStat = new FileStat();
-        fileStat.key = key;
+        fileStat.path = key;
         fileStat.contentLength = response.contentLength();
         fileStat.lastModified = response.lastModified().toEpochMilli();
         return fileStat;
     }
 
-    @Override
     public boolean remove(@NonNull String key) {
         DeleteObjectRequest request = DeleteObjectRequest.builder()
                 .bucket(bucket)
@@ -170,7 +164,6 @@ public class AwsS3Accessor implements FileAccessor {
         return response.sdkHttpResponse().isSuccessful();
     }
 
-    @Override
     public byte[] load(@NonNull String key) {
         return loadObject(key).asByteArray();
     }
@@ -190,7 +183,6 @@ public class AwsS3Accessor implements FileAccessor {
         }
     }
 
-    @Override
     public boolean save(@NonNull String key, byte[] bytes) {
         return save(key, RequestBody.fromBytes(bytes));
     }

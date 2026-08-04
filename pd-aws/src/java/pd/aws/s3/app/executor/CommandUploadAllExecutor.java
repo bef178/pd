@@ -8,14 +8,12 @@ import java.util.stream.Collectors;
 import pd.aws.s3.AwsS3Accessor;
 import pd.aws.s3.app.CommandKey;
 import pd.aws.s3.app.ParamKey;
-import pd.fstore.LocalFileAccessor;
+import pd.util.FileOps;
 import pd.util.ParamManager;
 
 import static pd.util.AppLogger.stdout;
 
 public class CommandUploadAllExecutor extends CommandExecutor {
-
-    private final LocalFileAccessor localFileAccessor = new LocalFileAccessor();
 
     public CommandUploadAllExecutor() {
         super(CommandKey.upload_all, Arrays.stream(new ParamKey[] { ParamKey.remote_prefix, ParamKey.prefix }).collect(Collectors.toList()));
@@ -28,7 +26,7 @@ public class CommandUploadAllExecutor extends CommandExecutor {
         checkNotNull(remotePrefix, localParity);
         AwsS3Accessor accessor = checkAndCreateAccessor(paramManager);
 
-        List<String> localFiles = localFileAccessor.listAll(localParity);
+        List<String> localFiles = FileOps.singleton.listAll(localParity);
         stdout("upload: find {} file(s)", localFiles.size());
 
         AtomicBoolean allSuccessful = new AtomicBoolean(true);
