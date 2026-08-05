@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -215,25 +216,44 @@ class FileOpsCore {
     public FileStat stat(@NonNull String path) {
         throwIfEmpty(path);
 
-        Path p = Paths.get(path);
-        FileStat fileStat = new FileStat();
-        fileStat.path = path;
-        if (Files.isRegularFile(p)) {
-            fileStat.type = FileStat.TYPE_FILE;
-            try {
-                fileStat.contentLength = Files.size(p);
-            } catch (IOException e) {
-                return null;
-            }
-        } else if (Files.isDirectory(p)) {
-            fileStat.type = FileStat.TYPE_DIRECTORY;
-        } else {
-            return null;
-        }
+        Path src = Paths.get(path);
+        BasicFileAttributes ownAttrs;
         try {
-            fileStat.lastModified = Files.getLastModifiedTime(p).toMillis();
+            ownAttrs = Files.readAttributes(src, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
         } catch (IOException e) {
             return null;
+        }
+
+        FileStat fileStat = new FileStat();
+        fileStat.path = path;
+        if (ownAttrs.isSymbolicLink()) {
+            String targetType;
+            try {
+                BasicFileAttributes targetAttrs = Files.readAttributes(src, BasicFileAttributes.class);
+                if (targetAttrs.isRegularFile()) {
+                    targetType = FileStat.TYPE_FILE;
+                } else if (targetAttrs.isDirectory()) {
+                    targetType = FileStat.TYPE_DIRECTORY;
+                } else {
+                    targetType = FileStat.TYPE_UNKNOWN;
+                }
+            } catch (IOException e) {
+                // broken symlink
+                targetType = "";
+            }
+            fileStat.type = "l" + targetType;
+            fileStat.contentLength = ownAttrs.size();
+            fileStat.lastModified = ownAttrs.lastModifiedTime().toMillis();
+        } else if (ownAttrs.isRegularFile()) {
+            fileStat.type = FileStat.TYPE_FILE;
+            fileStat.contentLength = ownAttrs.size();
+            fileStat.lastModified = ownAttrs.lastModifiedTime().toMillis();
+        } else if (ownAttrs.isDirectory()) {
+            fileStat.type = FileStat.TYPE_DIRECTORY;
+            fileStat.lastModified = ownAttrs.lastModifiedTime().toMillis();
+        } else {
+            fileStat.type = FileStat.TYPE_UNKNOWN;
+            fileStat.lastModified = ownAttrs.lastModifiedTime().toMillis();
         }
         return fileStat;
     }

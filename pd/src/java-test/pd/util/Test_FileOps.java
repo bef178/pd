@@ -486,7 +486,7 @@ class Test_FileOps {
             FileStat result = fileOps.stat(f.toString());
 
             assertNotNull(result);
-            assertEquals(FileStat.TYPE_FILE, result.type);
+            assertEquals("f", result.type);
             assertEquals(5, result.contentLength);
             assertEquals(f.toString(), result.path);
         }
@@ -499,7 +499,7 @@ class Test_FileOps {
             FileStat result = fileOps.stat(d.toString());
 
             assertNotNull(result);
-            assertEquals(FileStat.TYPE_DIRECTORY, result.type);
+            assertEquals("d", result.type);
         }
 
         @Test
@@ -508,8 +508,8 @@ class Test_FileOps {
         }
 
         @Test
-        void followsSymbolicLinkToFile(@TempDir Path tmp) throws IOException {
-            // File.isFile follows symlinks → returns TYPE_FILE for symlink-to-file
+        void returnsSymlinkTypeAndOwnAttributesForSymlinkToFile(@TempDir Path tmp) throws IOException {
+            // symlink to file: type = "lf", contentLength/lastModified are the link's own
             Path target = tmp.resolve("target");
             writeFile(target, "content");
             Path link = tmp.resolve("link");
@@ -518,12 +518,15 @@ class Test_FileOps {
             FileStat result = fileOps.stat(link.toString());
 
             assertNotNull(result);
-            assertEquals(FileStat.TYPE_FILE, result.type);
+            assertEquals("lf", result.type);
+            // symlink's own size = length of the target path it stores
+            assertEquals(target.toString().length(), result.contentLength,
+                    String.format("E: symlink own size, target path: `%s`", target));
         }
 
         @Test
-        void followsSymbolicLinkToDirectory(@TempDir Path tmp) throws IOException {
-            // File.isDirectory follows symlinks → returns TYPE_DIRECTORY for symlink-to-dir
+        void returnsSymlinkTypeAndOwnAttributesForSymlinkToDirectory(@TempDir Path tmp) throws IOException {
+            // symlink to directory: type = "ld", attributes are the link's own
             Path dir = tmp.resolve("dir");
             mkdir(dir);
             Path link = tmp.resolve("link");
@@ -532,17 +535,26 @@ class Test_FileOps {
             FileStat result = fileOps.stat(link.toString());
 
             assertNotNull(result);
-            assertEquals(FileStat.TYPE_DIRECTORY, result.type);
+            assertEquals("ld", result.type);
+            // symlink's own size = length of the target path it stores
+            assertEquals(dir.toString().length(), result.contentLength,
+                    String.format("E: symlink own size, target path: `%s`", dir));
         }
 
         @Test
-        void returnsNullForBrokenSymbolicLink(@TempDir Path tmp) throws IOException {
-            // File.isFile and File.isDirectory both return false for broken symlink
+        void returnsSymlinkOnlyForBrokenSymlink(@TempDir Path tmp) throws IOException {
+            // broken symlink: type = "l" (no target type), attributes are the link's own
             Path target = tmp.resolve("missing");
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, target));
 
-            assertNull(fileOps.stat(link.toString()));
+            FileStat result = fileOps.stat(link.toString());
+
+            assertNotNull(result);
+            assertEquals("l", result.type);
+            // symlink's own size = length of the stored target path
+            assertEquals(target.toString().length(), result.contentLength,
+                    String.format("E: symlink own size, target path: `%s`", target));
         }
 
         @Test
