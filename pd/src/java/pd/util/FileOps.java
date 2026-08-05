@@ -1,12 +1,15 @@
 package pd.util;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,8 +33,9 @@ class FileOpsCore {
     public List<String> listDirectory(@NonNull String pathToDirectory) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
 
+        String directory = pathToDirectory.equals(".") ? "" : pathToDirectory;
         // no explicit isDirectory check: NoSuchFileException / NotDirectoryException will be caught
-        try (Stream<Path> stream = Files.list(Paths.get(pathToDirectory))) {
+        try (Stream<Path> stream = Files.list(Paths.get(directory))) {
             return stream
                     .map(this::pathToString)
                     .sorted(PathOps.singleton::compare)
@@ -68,17 +72,33 @@ class FileOpsCore {
         }
     }
 
-    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents) {
+    /**
+     * Remove the directory at `pathToDirectory`.
+     * Accept a directory or a symlink to directory.
+     * Not follow symlink.
+     */
+    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
 
-        if (!removeDirectory(Paths.get(pathToDirectory), recursive)) {
+        Path d = Paths.get(pathToDirectory);
+        if (!Files.isDirectory(d)) {
+            return false;
+        }
+
+        if (abortRequested != null && abortRequested.get()) {
+            return false;
+        }
+        if (!removeDirectory(d, recursive, abortRequested)) {
             return false;
         }
         if (parents) {
-            Path p = Paths.get(pathToDirectory).getParent();
+            Path p = d.getParent();
             while (p != null) {
+                if (abortRequested != null && abortRequested.get()) {
+                    return false;
+                }
                 // only remove empty ancestor directories; stop at the first non-empty one
-                if (!removeDirectory(p, false)) {
+                if (!removeDirectory(p, false, abortRequested)) {
                     break;
                 }
                 p = p.getParent();
@@ -87,15 +107,35 @@ class FileOpsCore {
         return true;
     }
 
-    private boolean removeDirectory(Path src, boolean recursive) {
+    private boolean removeDirectory(Path src, boolean recursive, AtomicBoolean abortRequested) {
+        if (Files.isSymbolicLink(src)) {
+            try {
+                return Files.deleteIfExists(src);
+            } catch (IOException ignored) {
+                return false;
+            }
+        }
+        if (abortRequested != null && abortRequested.get()) {
+            return false;
+        }
         if (recursive) {
             List<String> children = listDirectory(src.toString());
             if (children == null) {
                 return false;
             }
             for (String child : children) {
-                if (Files.isDirectory(Paths.get(child))) {
-                    if (!removeDirectory(Paths.get(child), true)) {
+                if (abortRequested != null && abortRequested.get()) {
+                    return false;
+                }
+                Path childPath = Paths.get(child);
+                // a symlink is removed as the link itself, never followed to its target;
+                // a real directory is recursed into; everything else is removed as a file
+                if (Files.isSymbolicLink(childPath)) {
+                    if (!removeFile(child)) {
+                        return false;
+                    }
+                } else if (Files.isDirectory(childPath)) {
+                    if (!removeDirectory(childPath, true, abortRequested)) {
                         return false;
                     }
                 } else {
@@ -112,11 +152,21 @@ class FileOpsCore {
         }
     }
 
+    /**
+     * Remove the file at `pathToFile`.
+     * Accept a file(non-directory).
+     * Not follow symlink.
+     */
     public boolean removeFile(@NonNull String pathToFile) {
         throwIfEmpty(pathToFile, "pathToFile");
 
+        Path p = Paths.get(pathToFile);
+        if (Files.isDirectory(p, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
         try {
-            return Files.deleteIfExists(Paths.get(pathToFile));
+            return Files.deleteIfExists(p);
         } catch (IOException ignored) {
             return false;
         }
@@ -126,10 +176,7 @@ class FileOpsCore {
         throwIfEmpty(pathToFile, "pathToFile");
 
         Path p = Paths.get(pathToFile);
-        if (!Files.exists(p)) {
-            return null;
-        }
-        if (Files.isDirectory(p)) {
+        if (!Files.exists(p) || Files.isDirectory(p)) {
             return null;
         }
 
@@ -144,7 +191,7 @@ class FileOpsCore {
         throwIfEmpty(pathToFile, "pathToFile");
 
         Path p = Paths.get(pathToFile);
-        if (Files.exists(p) && Files.isDirectory(p)) {
+        if (Files.isDirectory(p)) {
             return false;
         }
 
@@ -168,18 +215,26 @@ class FileOpsCore {
     public FileStat stat(@NonNull String path) {
         throwIfEmpty(path);
 
-        File f = new File(path);
+        Path p = Paths.get(path);
         FileStat fileStat = new FileStat();
         fileStat.path = path;
-        if (f.isFile()) {
+        if (Files.isRegularFile(p)) {
             fileStat.type = FileStat.TYPE_FILE;
-            fileStat.contentLength = f.length();
-        } else if (f.isDirectory()) {
+            try {
+                fileStat.contentLength = Files.size(p);
+            } catch (IOException e) {
+                return null;
+            }
+        } else if (Files.isDirectory(p)) {
             fileStat.type = FileStat.TYPE_DIRECTORY;
         } else {
             return null;
         }
-        fileStat.lastModified = f.lastModified();
+        try {
+            fileStat.lastModified = Files.getLastModifiedTime(p).toMillis();
+        } catch (IOException e) {
+            return null;
+        }
         return fileStat;
     }
 }
@@ -269,7 +324,7 @@ public class FileOps extends FileOpsCore {
         return paths.stream().map(this::pathToString).collect(Collectors.toList());
     }
 
-    private List<Path> listDirectoryDepthFirstSearch(@NonNull Path src, final int depth, AtomicBoolean abortRequested) {
+    private List<Path> listDirectoryDepthFirstSearch(Path src, final int depth, AtomicBoolean abortRequested) {
         if (!Files.isDirectory(src)) {
             return null;
         }
@@ -285,6 +340,7 @@ public class FileOps extends FileOpsCore {
                 children = null;
             }
             if (children != null) {
+                children.sort(Comparator.comparing(Path::toString, PathOps.singleton::compare));
                 for (Path child : children) {
                     if (abortRequested != null && abortRequested.get()) {
                         return null;
@@ -304,7 +360,7 @@ public class FileOps extends FileOpsCore {
 
     @SneakyThrows
     @SuppressWarnings("unused")
-    private List<Path> listDirectoryBreadthFirstSearch(@NonNull Path src, int depth, AtomicBoolean abortRequested) {
+    private List<Path> listDirectoryBreadthFirstSearch(Path src, int depth, AtomicBoolean abortRequested) {
         if (!Files.isDirectory(src)) {
             return null;
         }
@@ -342,88 +398,122 @@ public class FileOps extends FileOpsCore {
         return results;
     }
 
-    public boolean copyRecursively(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
+    /**
+     * Copy `src` to `dst`.
+     * `src` must exist; `dst` must not exist and its parent must be a directory.
+     * Not follow symlink.
+     */
+    public boolean copyDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
         throwIfEmpty(src, "src");
         throwIfEmpty(dst, "dst");
 
-        return copyRecursively(Paths.get(src), Paths.get(dst), abortRequested);
+        return copyDirectory(Paths.get(src), Paths.get(dst), abortRequested);
     }
 
     /**
      * `src` must exist
      * `dst` must not exist but its parent must be directory
      */
-    private boolean copyRecursively(@NonNull Path src, @NonNull Path dst, AtomicBoolean abortRequested) {
+    private boolean copyDirectory(Path src, Path dst, AtomicBoolean abortRequested) {
         if (!Files.exists(src) || Files.exists(dst)) {
+            return false;
+        }
+        // a single-segment dst has no parent; treat that as the current directory
+        Path dstParent = dst.getParent();
+        if (dstParent == null) {
+            dstParent = Paths.get(".");
+        }
+        if (!Files.isDirectory(dstParent)) {
             return false;
         }
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
-        if (Files.isDirectory(src)) {
+        if (Files.isSymbolicLink(src)) {
+            // create a new symlink pointing to the same target
+            try {
+                Files.copy(src, dst, LinkOption.NOFOLLOW_LINKS);
+                return true;
+            } catch (IOException ignored) {
+                return false;
+            }
+        } else if (Files.isDirectory(src)) {
             try {
                 Files.createDirectory(dst);
             } catch (IOException ignored) {
                 return false;
             }
+            List<Path> children;
             try (Stream<Path> stream = Files.list(src)) {
-                List<Path> children = stream.collect(Collectors.toList());
-                for (Path child : children) {
-                    if (abortRequested != null && abortRequested.get()) {
-                        return false;
-                    }
-                    Path dstChild = dst.resolve(child.getFileName());
-                    if (!copyRecursively(child, dstChild, abortRequested)) {
-                        return false;
-                    }
-                }
+                children = stream.collect(Collectors.toList());
             } catch (IOException ignored) {
                 return false;
+            }
+            children.sort(Comparator.comparing(Path::toString, PathOps.singleton::compare));
+            for (Path child : children) {
+                if (abortRequested != null && abortRequested.get()) {
+                    return false;
+                }
+                Path dstChild = dst.resolve(child.getFileName());
+                if (!copyDirectory(child, dstChild, abortRequested)) {
+                    return false;
+                }
             }
             return true;
         } else {
             if (abortRequested != null && abortRequested.get()) {
                 return false;
             }
-            try {
-                Files.copy(src, dst);
-                return true;
-            } catch (IOException ignored) {
-            }
-            return false;
+            return copyFile(src, dst, abortRequested);
         }
     }
 
-    public boolean removeRecursively(@NonNull String path, AtomicBoolean abortRequested) {
-        throwIfEmpty(path);
-        return removeRecursively(Paths.get(path), abortRequested);
+    /**
+     * Copy the file `src` to `dst` by content.
+     * `src` must exist; `dst` must not exist and its parent must be a directory.
+     * `src` must be a file or a symlink to a file.
+     * If aborted in halfway, the partially written `dst` is deleted.
+     */
+    public boolean copyFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
+        throwIfEmpty(src, "src");
+        throwIfEmpty(dst, "dst");
+        return copyFile(Paths.get(src), Paths.get(dst), abortRequested);
     }
 
-    private boolean removeRecursively(@NonNull Path src, AtomicBoolean abortRequested) {
+    private boolean copyFile(Path src, Path dst, AtomicBoolean abortRequested) {
+        if (!Files.exists(src) || !Files.isRegularFile(src) || Files.exists(dst) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
+            // dst.getParent() == null: current directory
+            return false;
+        }
+
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
-        if (Files.isDirectory(src)) {
-            List<Path> children = listDirectoryDepthFirstSearch(src, 1, abortRequested);
-            if (children != null) {
-                for (Path child : children) {
-                    if (abortRequested != null && abortRequested.get()) {
-                        return false;
-                    }
-                    if (!removeRecursively(child, abortRequested)) {
-                        return false;
-                    }
+
+        boolean succeeded = false;
+        try (InputStream fis = Files.newInputStream(src);
+             OutputStream fos = Files.newOutputStream(dst)) {
+            byte[] a = new byte[8192];
+            int nRead;
+            while ((nRead = fis.read(a)) > 0) {
+                if (abortRequested != null && abortRequested.get()) {
+                    return false;
+                }
+                fos.write(a, 0, nRead);
+            }
+            fos.flush();
+            succeeded = true;
+            return true;
+        } catch (IOException ignored) {
+            return false;
+        } finally {
+            if (!succeeded) {
+                try {
+                    Files.deleteIfExists(dst);
+                } catch (IOException ignored) {
                 }
             }
         }
-        try {
-            if (!Files.deleteIfExists(src)) {
-                return false;
-            }
-        } catch (IOException ignored) {
-            return false;
-        }
-        return true;
     }
 
     public String loadString(@NonNull String pathToFile) {
