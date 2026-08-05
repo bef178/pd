@@ -78,12 +78,12 @@ class FileOpsCore {
      * Accept a directory or a symlink to directory.
      * Not follow symlink.
      */
-    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested) {
+    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, FileRemoveListener onRemoved) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
-        return removeDirectory(Paths.get(pathToDirectory), recursive, parents, abortRequested);
+        return removeDirectory(Paths.get(pathToDirectory), recursive, parents, abortRequested, onRemoved);
     }
 
-    private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested) {
+    private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, FileRemoveListener onRemoved) {
         if (!Files.isDirectory(src)) {
             return false;
         }
@@ -91,11 +91,14 @@ class FileOpsCore {
             return false;
         }
         if (Files.isSymbolicLink(src)) {
+            boolean ok;
             try {
-                if (!Files.deleteIfExists(src)) {
-                    return false;
-                }
+                ok = Files.deleteIfExists(src);
             } catch (IOException ignored) {
+                ok = false;
+            }
+            acceptRemoved(onRemoved, src.toString(), ok);
+            if (!ok) {
                 return false;
             }
         } else {
@@ -112,25 +115,32 @@ class FileOpsCore {
                     // a symlink is removed as the link itself, never followed to its target;
                     // a real directory is recursed into; everything else is removed as a file
                     if (Files.isSymbolicLink(childPath)) {
-                        if (!removeFile(child)) {
+                        boolean ok = removeFile(child);
+                        acceptRemoved(onRemoved, child, ok);
+                        if (!ok) {
                             return false;
                         }
                     } else if (Files.isDirectory(childPath)) {
-                        if (!removeDirectory(childPath, true, false, abortRequested)) {
+                        if (!removeDirectory(childPath, true, false, abortRequested, onRemoved)) {
                             return false;
                         }
                     } else {
-                        if (!removeFile(child)) {
+                        boolean ok = removeFile(child);
+                        acceptRemoved(onRemoved, child, ok);
+                        if (!ok) {
                             return false;
                         }
                     }
                 }
             }
+            boolean ok;
             try {
-                if (!Files.deleteIfExists(src)) {
-                    return false;
-                }
+                ok = Files.deleteIfExists(src);
             } catch (IOException ignored) {
+                ok = false;
+            }
+            acceptRemoved(onRemoved, src.toString(), ok);
+            if (!ok) {
                 return false;
             }
         }
@@ -142,13 +152,19 @@ class FileOpsCore {
                     return false;
                 }
                 // only remove empty ancestor directories; stop at the first non-empty one
-                if (!removeDirectory(p, false, false, abortRequested)) {
+                if (!removeDirectory(p, false, false, abortRequested, onRemoved)) {
                     break;
                 }
                 p = p.getParent();
             }
         }
         return true;
+    }
+
+    private void acceptRemoved(FileRemoveListener onRemoved, String path, boolean ok) {
+        if (onRemoved != null) {
+            onRemoved.accept(path, ok);
+        }
     }
 
     /**
