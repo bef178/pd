@@ -80,77 +80,75 @@ class FileOpsCore {
      */
     public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
+        return removeDirectory(Paths.get(pathToDirectory), recursive, parents, abortRequested);
+    }
 
-        Path d = Paths.get(pathToDirectory);
-        if (!Files.isDirectory(d)) {
+    private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested) {
+        if (!Files.isDirectory(src)) {
             return false;
         }
-
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
-        if (!removeDirectory(d, recursive, abortRequested)) {
-            return false;
+        if (Files.isSymbolicLink(src)) {
+            try {
+                if (!Files.deleteIfExists(src)) {
+                    return false;
+                }
+            } catch (IOException ignored) {
+                return false;
+            }
+        } else {
+            if (recursive) {
+                List<String> children = listDirectory(src.toString());
+                if (children == null) {
+                    return false;
+                }
+                for (String child : children) {
+                    if (abortRequested != null && abortRequested.get()) {
+                        return false;
+                    }
+                    Path childPath = Paths.get(child);
+                    // a symlink is removed as the link itself, never followed to its target;
+                    // a real directory is recursed into; everything else is removed as a file
+                    if (Files.isSymbolicLink(childPath)) {
+                        if (!removeFile(child)) {
+                            return false;
+                        }
+                    } else if (Files.isDirectory(childPath)) {
+                        if (!removeDirectory(childPath, true, false, abortRequested)) {
+                            return false;
+                        }
+                    } else {
+                        if (!removeFile(child)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            try {
+                if (!Files.deleteIfExists(src)) {
+                    return false;
+                }
+            } catch (IOException ignored) {
+                return false;
+            }
         }
+
         if (parents) {
-            Path p = d.getParent();
+            Path p = src.getParent();
             while (p != null) {
                 if (abortRequested != null && abortRequested.get()) {
                     return false;
                 }
                 // only remove empty ancestor directories; stop at the first non-empty one
-                if (!removeDirectory(p, false, abortRequested)) {
+                if (!removeDirectory(p, false, false, abortRequested)) {
                     break;
                 }
                 p = p.getParent();
             }
         }
         return true;
-    }
-
-    private boolean removeDirectory(Path src, boolean recursive, AtomicBoolean abortRequested) {
-        if (Files.isSymbolicLink(src)) {
-            try {
-                return Files.deleteIfExists(src);
-            } catch (IOException ignored) {
-                return false;
-            }
-        }
-        if (abortRequested != null && abortRequested.get()) {
-            return false;
-        }
-        if (recursive) {
-            List<String> children = listDirectory(src.toString());
-            if (children == null) {
-                return false;
-            }
-            for (String child : children) {
-                if (abortRequested != null && abortRequested.get()) {
-                    return false;
-                }
-                Path childPath = Paths.get(child);
-                // a symlink is removed as the link itself, never followed to its target;
-                // a real directory is recursed into; everything else is removed as a file
-                if (Files.isSymbolicLink(childPath)) {
-                    if (!removeFile(child)) {
-                        return false;
-                    }
-                } else if (Files.isDirectory(childPath)) {
-                    if (!removeDirectory(childPath, true, abortRequested)) {
-                        return false;
-                    }
-                } else {
-                    if (!removeFile(child)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        try {
-            return Files.deleteIfExists(src);
-        } catch (IOException ignored) {
-            return false;
-        }
     }
 
     /**
@@ -426,7 +424,6 @@ public class FileOps extends FileOpsCore {
     public boolean copyDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
         throwIfEmpty(src, "src");
         throwIfEmpty(dst, "dst");
-
         return copyDirectory(Paths.get(src), Paths.get(dst), abortRequested);
     }
 
