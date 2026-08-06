@@ -7,9 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Comparator;
@@ -524,7 +524,8 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * `src` must exist; `dst` must not exist but its parent must exist.
+     * `src` must be a directory.
+     * `dst` must not exist but its parent must exist.
      * Not follow symlink.
      */
     public boolean copyDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnAddedListener onAdded) {
@@ -533,85 +534,87 @@ public class FileOps extends FileOpsCore {
         return copyDirectory(Paths.get(src), Paths.get(dst), abortRequested, onAdded);
     }
 
-    /**
-     * `src` must exist; `dst` must not exist but its parent must exist
-     */
     private boolean copyDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnAddedListener onAdded) {
-        if (!Files.exists(src) || Files.exists(dst)) {
+        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
-        // a single-segment dst has no parent; treat that as the current directory
-        Path dstParent = dst.getParent();
-        if (dstParent == null) {
-            dstParent = Paths.get(".");
-        }
-        if (!Files.isDirectory(dstParent)) {
+        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
+            // a single-segment dst has no parent; treat that as the current directory
             return false;
         }
+
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
-        if (Files.isSymbolicLink(src)) {
-            // create a new symlink pointing to the same target
-            boolean ok;
-            try {
-                Files.copy(src, dst, LinkOption.NOFOLLOW_LINKS);
-                ok = true;
-            } catch (IOException ignored) {
-                ok = false;
-            }
-            if (onAdded != null) {
-                onAdded.accept(dst.toString(), ok);
-            }
-            return ok;
-        } else if (Files.isDirectory(src)) {
-            boolean ok;
-            try {
-                Files.createDirectory(dst);
-                ok = true;
-            } catch (IOException ignored) {
-                ok = false;
-            }
-            if (onAdded != null) {
-                onAdded.accept(dst.toString(), ok);
-            }
-            if (!ok) {
-                return false;
-            }
-            List<Path> children;
-            try (Stream<Path> stream = Files.list(src)) {
-                children = stream.collect(Collectors.toList());
-            } catch (IOException ignored) {
-                return false;
-            }
-            children.sort(Comparator.comparing(Path::toString, PathOps.singleton::compare));
-            for (Path child : children) {
-                if (abortRequested != null && abortRequested.get()) {
-                    return false;
-                }
-                Path dstChild = dst.resolve(child.getFileName());
-                if (!copyDirectory(child, dstChild, abortRequested, onAdded)) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
+        boolean ok;
+        try {
+            Files.createDirectory(dst);
+            ok = true;
+        } catch (IOException ignored) {
+            ok = false;
+        }
+        if (onAdded != null) {
+            onAdded.accept(dst.toString(), ok);
+        }
+        if (!ok) {
+            return false;
+        }
+        List<Path> children;
+        try (Stream<Path> stream = Files.list(src)) {
+            children = stream.collect(Collectors.toList());
+        } catch (IOException ignored) {
+            return false;
+        }
+        children.sort(Comparator.comparing(Path::toString, PathOps.singleton::compare));
+        for (Path child : children) {
             if (abortRequested != null && abortRequested.get()) {
                 return false;
             }
-            boolean ok = copyFile(src, dst, abortRequested);
-            if (onAdded != null) {
-                onAdded.accept(dst.toString(), ok);
+            Path dstChild = dst.resolve(child.getFileName());
+            if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
+                if (!copyDirectory(child, dstChild, abortRequested, onAdded)) {
+                    return false;
+                }
+            } else if (Files.isRegularFile(child, LinkOption.NOFOLLOW_LINKS)) {
+                if (abortRequested != null && abortRequested.get()) {
+                    return false;
+                }
+                boolean fileOK = copyFile(child, dstChild, abortRequested);
+                if (onAdded != null) {
+                    onAdded.accept(dstChild.toString(), fileOK);
+                }
+                if (!fileOK) {
+                    return false;
+                }
+            } else if (Files.isSymbolicLink(child)) {
+                boolean symlinkOK;
+                try {
+                    Files.copy(child, dstChild, LinkOption.NOFOLLOW_LINKS);
+                    symlinkOK = true;
+                } catch (IOException ignored) {
+                    symlinkOK = false;
+                }
+                if (onAdded != null) {
+                    onAdded.accept(dstChild.toString(), symlinkOK);
+                }
+                if (!symlinkOK) {
+                    return false;
+                }
+            } else {
+                if (onAdded != null) {
+                    onAdded.accept(dstChild.toString(), false);
+                }
+                return false;
             }
-            return ok;
         }
+        return true;
     }
 
     /**
-     * Copy the file `src` to `dst` by content.
-     * `src` must exist; `dst` must not exist but its parent must exist.
      * `src` must be a file or a symlink to a file.
+     * `dst` must not exist but its parent must exist.
      * If aborted in halfway, the partially written `dst` is deleted.
+     * Follow symlink.
      */
     public boolean copyFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
         throwIfEmpty(src, "src");
@@ -620,7 +623,10 @@ public class FileOps extends FileOpsCore {
     }
 
     private boolean copyFile(Path src, Path dst, AtomicBoolean abortRequested) {
-        if (!Files.exists(src) || !Files.isRegularFile(src) || Files.exists(dst) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
+        if (!Files.isRegularFile(src)) {
+            return false;
+        }
+        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
             // dst.getParent() == null: current directory
             return false;
         }
@@ -656,7 +662,8 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * `src` must exist; `dst` must not exist but its parent must exist
+     * `src` must be a directory, must not be a symlink
+     * `dst` must not exist but its parent must exist
      */
     public boolean moveDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnAddedListener onAdded, OnRemovedListener onRemoved, OnMovedListener onMoved) {
         throwIfEmpty(src, "src");
@@ -665,12 +672,13 @@ public class FileOps extends FileOpsCore {
     }
 
     public boolean moveDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnAddedListener onAdded, OnRemovedListener onRemoved, OnMovedListener onMoved) {
-        if (!Files.isDirectory(src)) {
+        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
-        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS)) {
+        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
             return false;
         }
+
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
@@ -691,8 +699,8 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * `src` must exist; `dst` must not exist but its parent must exist.
      * `src` must be a file or a symlink.
+     * `dst` must not exist but its parent must exist.
      * If aborted in halfway, the partially written `dst` is deleted.
      */
     public boolean moveFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
@@ -705,7 +713,7 @@ public class FileOps extends FileOpsCore {
         if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
             return false;
         }
-        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS)) {
+        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
             return false;
         }
         if (abortRequested != null && abortRequested.get()) {

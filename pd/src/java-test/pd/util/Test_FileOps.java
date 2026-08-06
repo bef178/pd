@@ -935,7 +935,7 @@ class Test_FileOps {
             writeFile(src, "git");
             Path dst = tmp.resolve(".gitignore.copy");
 
-            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null));
             assertArrayEquals("git".getBytes(), Files.readAllBytes(dst));
         }
 
@@ -1016,8 +1016,8 @@ class Test_FileOps {
         }
 
         @Test
-        void copiesSymbolicLinkAsLink(@TempDir Path tmp) throws IOException {
-            // a symlink is copied as a symlink (the node itself), not as a copy of its target
+        void returnsFalseForSymbolicLink(@TempDir Path tmp) throws IOException {
+            // copyDirectory does not follow symlinks; a symlink (even to a directory) is rejected
             Path dir = tmp.resolve("dir");
             mkdir(dir);
             writeFile(dir.resolve("f"), "f");
@@ -1025,10 +1025,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
             Path dst = tmp.resolve("link.copy");
 
-            assertTrue(fileOps.copyDirectory(link.toString(), dst.toString(), null, null));
-            assertTrue(Files.isSymbolicLink(dst));
-            // the link resolves to the original target, so f is reachable through the copied link
-            assertTrue(Files.exists(dst.resolve("f")));
+            assertFalse(fileOps.copyDirectory(link.toString(), dst.toString(), null, null));
         }
 
         @Test
@@ -1311,7 +1308,8 @@ class Test_FileOps {
         }
 
         @Test
-        void movesSymlinkToDirectory(@TempDir Path tmp) throws IOException {
+        void returnsFalseForSymlinkToDirectory(@TempDir Path tmp) throws IOException {
+            // moveDirectory does not accept symlinks; src must be a real directory
             Path target = tmp.resolve("target");
             mkdir(target);
             writeFile(target.resolve("f"), "f");
@@ -1319,10 +1317,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(link, target));
             Path dst = tmp.resolve("link.moved");
 
-            assertTrue(fileOps.moveDirectory(link.toString(), dst.toString(), null, null, null, null));
-            assertFalse(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
-            assertTrue(Files.isSymbolicLink(dst));
-            assertTrue(Files.exists(dst.resolve("f")));
+            assertFalse(fileOps.moveDirectory(link.toString(), dst.toString(), null, null, null, null));
         }
 
         @Test
