@@ -15,6 +15,13 @@
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>local-maven-repo</id>
+            <url>file://${project.basedir}/../m2/repository</url>
+        </repository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -104,8 +111,6 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>fdup</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
                             <mainClass>pd.fdup.app.App</mainClass>
@@ -117,7 +122,7 @@
                         <id>make-assembly</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>assembly</goal>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
