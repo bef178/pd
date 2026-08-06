@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -509,9 +511,20 @@ public class FileOps extends FileOpsCore {
         return true;
     }
 
+    public String loadString(@NonNull String pathToFile) {
+        byte[] a = load(pathToFile);
+        if (a == null) {
+            return null;
+        }
+        return new String(a, StandardCharsets.UTF_8);
+    }
+
+    public boolean saveString(@NonNull String pathToFile, String s) {
+        return save(pathToFile, s.getBytes(StandardCharsets.UTF_8));
+    }
+
     /**
-     * Copy `src` to `dst`.
-     * `src` must exist; `dst` must not exist and its parent must be a directory.
+     * `src` must exist; `dst` must not exist but its parent must exist.
      * Not follow symlink.
      */
     public boolean copyDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnAddedListener onAdded) {
@@ -521,8 +534,7 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * `src` must exist
-     * `dst` must not exist but its parent must be directory
+     * `src` must exist; `dst` must not exist but its parent must exist
      */
     private boolean copyDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnAddedListener onAdded) {
         if (!Files.exists(src) || Files.exists(dst)) {
@@ -597,7 +609,7 @@ public class FileOps extends FileOpsCore {
 
     /**
      * Copy the file `src` to `dst` by content.
-     * `src` must exist; `dst` must not exist and its parent must be a directory.
+     * `src` must exist; `dst` must not exist but its parent must exist.
      * `src` must be a file or a symlink to a file.
      * If aborted in halfway, the partially written `dst` is deleted.
      */
@@ -643,16 +655,78 @@ public class FileOps extends FileOpsCore {
         }
     }
 
-    public String loadString(@NonNull String pathToFile) {
-        byte[] a = load(pathToFile);
-        if (a == null) {
-            return null;
-        }
-        return new String(a, StandardCharsets.UTF_8);
+    /**
+     * `src` must exist; `dst` must not exist but its parent must exist
+     */
+    public boolean moveDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnAddedListener onAdded, OnRemovedListener onRemoved, OnMovedListener onMoved) {
+        throwIfEmpty(src, "src");
+        throwIfEmpty(dst, "dst");
+        return moveDirectory(Paths.get(src), Paths.get(dst), abortRequested, onAdded, onRemoved, onMoved);
     }
 
-    public boolean saveString(@NonNull String pathToFile, String s) {
-        return save(pathToFile, s.getBytes(StandardCharsets.UTF_8));
+    public boolean moveDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnAddedListener onAdded, OnRemovedListener onRemoved, OnMovedListener onMoved) {
+        if (!Files.isDirectory(src)) {
+            return false;
+        }
+        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+        if (abortRequested != null && abortRequested.get()) {
+            return false;
+        }
+        try {
+            Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
+            if (onMoved != null) {
+                onMoved.accept(src.toString(), dst.toString());
+            }
+            return true;
+        } catch (AtomicMoveNotSupportedException e) {
+            if (!copyDirectory(src, dst, abortRequested, onAdded)) {
+                return false;
+            }
+            return removeDirectory(src, true, false, abortRequested, onRemoved);
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * `src` must exist; `dst` must not exist but its parent must exist.
+     * `src` must be a file or a symlink.
+     * If aborted in halfway, the partially written `dst` is deleted.
+     */
+    public boolean moveFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
+        throwIfEmpty(src, "src");
+        throwIfEmpty(dst, "dst");
+        return moveFile(Paths.get(src), Paths.get(dst), abortRequested);
+    }
+
+    public boolean moveFile(Path src, Path dst, AtomicBoolean abortRequested) {
+        if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
+            return false;
+        }
+        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+        if (abortRequested != null && abortRequested.get()) {
+            return false;
+        }
+        try {
+            Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
+            return true;
+        } catch (AtomicMoveNotSupportedException e) {
+            if (!copyFile(src, dst, abortRequested)) {
+                return false;
+            }
+            try {
+                Files.deleteIfExists(src);
+                return true;
+            } catch (IOException ignored) {
+                return false;
+            }
+        } catch (IOException ignored) {
+            return false;
+        }
     }
 
     public interface OnListedListener {
@@ -668,5 +742,10 @@ public class FileOps extends FileOpsCore {
     public interface OnRemovedListener {
 
         void accept(String path, boolean succeeded);
+    }
+
+    public interface OnMovedListener {
+
+        void accept(String src, String dst);
     }
 }

@@ -1101,6 +1101,81 @@ class Test_FileOps {
     }
 
     @Nested
+    class moveFile {
+
+        @Test
+        void movesRegularFile(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("a.txt");
+            writeFile(src, "hello");
+            Path dst = tmp.resolve("b.txt");
+
+            assertTrue(fileOps.moveFile(src.toString(), dst.toString(), null));
+            assertFalse(Files.exists(src));
+            assertTrue(Files.exists(dst));
+            assertArrayEquals("hello".getBytes(), Files.readAllBytes(dst));
+        }
+
+        @Test
+        void movesSymlinkToFile(@TempDir Path tmp) throws IOException {
+            Path target = tmp.resolve("target");
+            writeFile(target, "content");
+            Path link = tmp.resolve("link");
+            Assumptions.assumeTrue(createSymbolicLink(link, target));
+            Path dst = tmp.resolve("link.moved");
+
+            assertTrue(fileOps.moveFile(link.toString(), dst.toString(), null));
+            assertFalse(Files.exists(link));
+            assertTrue(Files.isSymbolicLink(dst));
+            assertEquals(target.toString(), Files.readSymbolicLink(dst).toString());
+        }
+
+        @Test
+        void returnsFalseWhenSrcDoesNotExist(@TempDir Path tmp) {
+            assertFalse(fileOps.moveFile(tmp.resolve("nope").toString(), tmp.resolve("dst").toString(), null));
+        }
+
+        @Test
+        void returnsFalseWhenSrcIsDirectory(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("d");
+            mkdir(src);
+
+            assertFalse(fileOps.moveFile(src.toString(), tmp.resolve("dst").toString(), null));
+        }
+
+        @Test
+        void returnsFalseWhenDstAlreadyExists(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("a");
+            writeFile(src, "x");
+            Path dst = tmp.resolve("b");
+            writeFile(dst, "y");
+
+            assertFalse(fileOps.moveFile(src.toString(), dst.toString(), null));
+            assertTrue(Files.exists(src));
+        }
+
+        @Test
+        void returnsFalseWhenAbortRequested(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("a");
+            writeFile(src, "x");
+
+            assertFalse(fileOps.moveFile(src.toString(), tmp.resolve("b").toString(), new AtomicBoolean(true)));
+            assertTrue(Files.exists(src));
+        }
+
+        @Test
+        void throwsWhenSrcIsEmpty() {
+            assertThrows(IllegalArgumentException.class, () -> fileOps.moveFile("", "dst", null));
+        }
+
+        @Test
+        void throwsWhenDstIsEmpty(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("a");
+            writeFile(src, "x");
+            assertThrows(IllegalArgumentException.class, () -> fileOps.moveFile(src.toString(), "", null));
+        }
+    }
+
+    @Nested
     class loadString {
 
         @Test
