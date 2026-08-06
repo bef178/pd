@@ -389,12 +389,12 @@ public class FileOps extends FileOpsCore {
      * Accept a directory or a symlink to directory.
      * Not follow symlink.
      */
-    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, FileRemoveListener onRemoved) {
+    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnRemovedListener onRemoved) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
         return removeDirectory(Paths.get(pathToDirectory), recursive, parents, abortRequested, onRemoved);
     }
 
-    private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, FileRemoveListener onRemoved) {
+    private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnRemovedListener onRemoved) {
         if (!Files.isDirectory(src)) {
             return false;
         }
@@ -472,7 +472,7 @@ public class FileOps extends FileOpsCore {
         return true;
     }
 
-    private void acceptRemoved(FileRemoveListener onRemoved, String path, boolean ok) {
+    private void acceptRemoved(OnRemovedListener onRemoved, String path, boolean ok) {
         if (onRemoved != null) {
             onRemoved.accept(path, ok);
         }
@@ -639,5 +639,10 @@ public class FileOps extends FileOpsCore {
     public interface OnListedListener {
 
         void accept(String path);
+    }
+
+    public interface OnRemovedListener {
+
+        void accept(String path, boolean isSucceeded);
     }
 }

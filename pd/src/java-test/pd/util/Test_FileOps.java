@@ -297,7 +297,7 @@ class Test_FileOps {
             writeFile(d.resolve("sub/g"), "g");
 
             List<String> removed = new java.util.ArrayList<>();
-            FileRemoveListener listener = (path, ok) -> removed.add(path);
+            FileOps.OnRemovedListener listener = (path, ok) -> removed.add(path);
 
             assertTrue(fileOps.removeDirectory(d.toString(), true, false, null, listener));
             assertEquals(4, removed.size());
@@ -314,7 +314,7 @@ class Test_FileOps {
             mkdir(leaf);
 
             List<String> removed = new java.util.ArrayList<>();
-            FileRemoveListener listener = (path, ok) -> removed.add(path);
+            FileOps.OnRemovedListener listener = (path, ok) -> removed.add(path);
 
             assertTrue(fileOps.removeDirectory(leaf.toString(), false, true, null, listener));
             assertTrue(removed.contains(leaf.toString()));
@@ -330,7 +330,7 @@ class Test_FileOps {
             writeFile(d.resolve("f"), "f");
 
             List<String> removed = new java.util.ArrayList<>();
-            FileRemoveListener listener = (path, ok) -> removed.add(path);
+            FileOps.OnRemovedListener listener = (path, ok) -> removed.add(path);
 
             assertFalse(fileOps.removeDirectory(d.toString(), true, false, new AtomicBoolean(true), listener));
             assertTrue(removed.isEmpty());
