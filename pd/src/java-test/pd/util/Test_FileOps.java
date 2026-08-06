@@ -862,7 +862,7 @@ class Test_FileOps {
             writeFile(src, "git");
             Path dst = tmp.resolve(".gitignore.copy");
 
-            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
             assertArrayEquals("git".getBytes(), Files.readAllBytes(dst));
         }
 
@@ -871,7 +871,7 @@ class Test_FileOps {
             Path src = buildTree(tmp.resolve("root"));
             Path dst = tmp.resolve("root.copy");
 
-            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
 
             assertArrayEquals("readme".getBytes(), Files.readAllBytes(dst.resolve("docs/readme.md")));
             assertArrayEquals("png".getBytes(), Files.readAllBytes(dst.resolve("docs/img/a.png")));
@@ -885,7 +885,7 @@ class Test_FileOps {
             mkdir(src);
             Path dst = tmp.resolve("empty.copy");
 
-            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
             assertTrue(Files.isDirectory(dst));
             assertFalse(Files.list(dst).findAny().isPresent());
         }
@@ -894,7 +894,7 @@ class Test_FileOps {
         void returnsFalseWhenSrcDoesNotExist(@TempDir Path tmp) {
             Path dst = tmp.resolve("dst");
 
-            assertFalse(fileOps.copyDirectory(tmp.resolve("nope").toString(), dst.toString(), null));
+            assertFalse(fileOps.copyDirectory(tmp.resolve("nope").toString(), dst.toString(), null, null));
             assertFalse(Files.exists(dst));
         }
 
@@ -905,7 +905,7 @@ class Test_FileOps {
             Path dst = tmp.resolve("b");
             Files.createFile(dst);
 
-            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), null));
+            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
         }
 
         @Test
@@ -914,7 +914,7 @@ class Test_FileOps {
             writeFile(src, "x");
             Path dst = tmp.resolve("b");
 
-            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), new AtomicBoolean(true)));
+            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), new AtomicBoolean(true), null));
             assertFalse(Files.exists(dst));
         }
 
@@ -926,20 +926,20 @@ class Test_FileOps {
             // dst's parent does not exist; Files.createDirectory(dst) throws -> false
             Path dst = tmp.resolve("missing").resolve("dst");
 
-            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), null));
+            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
         }
 
         @Test
         void throwsWhenSrcIsEmpty(@TempDir Path tmp) throws IOException {
             Path dst = tmp.resolve("b");
-            assertThrows(IllegalArgumentException.class, () -> fileOps.copyDirectory("", dst.toString(), null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.copyDirectory("", dst.toString(), null, null));
         }
 
         @Test
         void throwsWhenDstIsEmpty(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("a");
             writeFile(src, "x");
-            assertThrows(IllegalArgumentException.class, () -> fileOps.copyDirectory(src.toString(), "", null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.copyDirectory(src.toString(), "", null, null));
         }
 
         @Test
@@ -952,7 +952,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
             Path dst = tmp.resolve("link.copy");
 
-            assertTrue(fileOps.copyDirectory(link.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyDirectory(link.toString(), dst.toString(), null, null));
             assertTrue(Files.isSymbolicLink(dst));
             // the link resolves to the original target, so f is reachable through the copied link
             assertTrue(Files.exists(dst.resolve("f")));
@@ -970,7 +970,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(sl, dir));
             Path dst = tmp.resolve("root.copy");
 
-            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
             // the child was copied as a symlink, not as a real directory
             assertTrue(Files.isSymbolicLink(dst.resolve("sl")));
             assertFalse(Files.isDirectory(dst.resolve("sl"), LinkOption.NOFOLLOW_LINKS));
@@ -1304,7 +1304,7 @@ class Test_FileOps {
                 Files.write(root.resolve("d/f"), "f".getBytes());
                 Files.write(root.resolve("top"), "t".getBytes());
 
-                assertTrue(fileOps.copyDirectory(rel, rel + ".copy", null));
+                assertTrue(fileOps.copyDirectory(rel, rel + ".copy", null, null));
                 assertTrue(Files.exists(Paths.get(rel + ".copy/d/f")));
                 assertTrue(Files.exists(Paths.get(rel + ".copy/top")));
                 assertArrayEquals("f".getBytes(), Files.readAllBytes(Paths.get(rel + ".copy/d/f")));
