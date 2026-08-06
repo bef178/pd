@@ -250,7 +250,7 @@ public class FileOps extends FileOpsCore {
                 .flatMap(s -> {
                     Path p = Paths.get(s);
                     if (Files.isDirectory(p)) {
-                        List<Path> a1 = listDirectoryDepthFirstSearch(p, Integer.MAX_VALUE, null);
+                        List<Path> a1 = listDirectoryDepthFirstSearch(p, Integer.MAX_VALUE, null, null);
                         if (a1 == null) {
                             a1 = Collections.emptyList();
                         }
@@ -270,17 +270,17 @@ public class FileOps extends FileOpsCore {
      * - Leading "./" will be trimmed.
      * - A trailing "/" will be present for directory.
      */
-    public List<String> listDirectory(@NonNull String directory, int depth, AtomicBoolean abortRequested) {
+    public List<String> listDirectory(@NonNull String directory, int depth, AtomicBoolean abortRequested, OnListedListener onListed) {
         throwIfEmpty(directory, "directory");
 
-        List<Path> paths = listDirectoryDepthFirstSearch(Paths.get(directory), depth, abortRequested);
+        List<Path> paths = listDirectoryDepthFirstSearch(Paths.get(directory), depth, abortRequested, onListed);
         if (paths == null) {
             return null;
         }
         return paths.stream().map(this::pathToString).collect(Collectors.toList());
     }
 
-    private List<Path> listDirectoryDepthFirstSearch(Path src, final int depth, AtomicBoolean abortRequested) {
+    private List<Path> listDirectoryDepthFirstSearch(Path src, final int depth, AtomicBoolean abortRequested, OnListedListener onListed) {
         if (!Files.isDirectory(src)) {
             return null;
         }
@@ -296,16 +296,30 @@ public class FileOps extends FileOpsCore {
                 children = null;
             }
             if (children != null) {
-                children.sort(Comparator.comparing(Path::toString, PathOps.singleton::compare));
+                children.sort(Comparator.comparing(this::pathToString, PathOps.singleton::compare));
                 for (Path child : children) {
                     if (abortRequested != null && abortRequested.get()) {
                         return null;
                     }
-                    results.add(child);
                     if (Files.isDirectory(child)) {
-                        List<Path> childrenOfChild = listDirectoryDepthFirstSearch(child, depth - 1, abortRequested);
+                        results.add(child);
+                        if (onListed != null) {
+                            onListed.accept(pathToString(child));
+                        }
+                        List<Path> childrenOfChild = listDirectoryDepthFirstSearch(child, depth - 1, abortRequested, onListed);
                         if (childrenOfChild != null) {
                             results.addAll(childrenOfChild);
+                        }
+                    }
+                }
+                for (Path child : children) {
+                    if (abortRequested != null && abortRequested.get()) {
+                        return null;
+                    }
+                    if (!Files.isDirectory(child)) {
+                        results.add(child);
+                        if (onListed != null) {
+                            onListed.accept(pathToString(child));
                         }
                     }
                 }
@@ -620,5 +634,10 @@ public class FileOps extends FileOpsCore {
 
     public boolean saveString(@NonNull String pathToFile, String s) {
         return save(pathToFile, s.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public interface OnListedListener {
+
+        void accept(String path);
     }
 }

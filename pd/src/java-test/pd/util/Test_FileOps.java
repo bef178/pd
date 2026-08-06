@@ -775,7 +775,7 @@ class Test_FileOps {
         void listsOneLevelDeep(@TempDir Path tmp) throws IOException {
             Path root = buildTree(tmp.resolve("root"));
 
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 1, null);
+            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 1, null, null);
 
             assertEquals(2, result.size());
             assertEquals(root.resolve("docs/img").toString() + "/", result.get(0));
@@ -786,7 +786,7 @@ class Test_FileOps {
         void listsTwoLevelsDeep(@TempDir Path tmp) throws IOException {
             Path root = buildTree(tmp.resolve("root"));
 
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 2, null);
+            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 2, null, null);
 
             assertEquals(3, result.size());
             assertEquals(root.resolve("docs/img").toString() + "/", result.get(0));
@@ -798,7 +798,7 @@ class Test_FileOps {
         void returnsEmptyForEmptyDirectory(@TempDir Path tmp) throws IOException {
             Path root = buildTree(tmp.resolve("root"));
 
-            List<String> result = fileOps.listDirectory(root.resolve("empty").toString(), 1, null);
+            List<String> result = fileOps.listDirectory(root.resolve("empty").toString(), 1, null, null);
 
             assertTrue(result.isEmpty());
         }
@@ -807,14 +807,14 @@ class Test_FileOps {
         void returnsEmptyWhenDepthIsZero(@TempDir Path tmp) throws IOException {
             Path root = buildTree(tmp.resolve("root"));
 
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 0, null);
+            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 0, null, null);
 
             assertTrue(result.isEmpty());
         }
 
         @Test
         void returnsNullWhenDirectoryDoesNotExist(@TempDir Path tmp) {
-            List<String> result = fileOps.listDirectory(tmp.resolve("nope").toString(), 1, null);
+            List<String> result = fileOps.listDirectory(tmp.resolve("nope").toString(), 1, null, null);
 
             assertNull(result);
         }
@@ -823,7 +823,7 @@ class Test_FileOps {
         void returnsNullWhenAbortAlreadyRequested(@TempDir Path tmp) throws IOException {
             Path root = buildTree(tmp.resolve("root"));
 
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 1, new AtomicBoolean(true));
+            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 1, new AtomicBoolean(true), null);
 
             assertNull(result);
         }
@@ -831,7 +831,25 @@ class Test_FileOps {
         @Test
         void throwsWhenDirectoryIsEmpty() {
             // empty string is rejected; callers must pass "." for the current directory
-            assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory("", 1, null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory("", 1, null, null));
+        }
+
+        @Test
+        void listsDirectoriesBeforeFiles(@TempDir Path tmp) throws IOException {
+            // dir-first: b/ (and its child) before a.txt and c.txt
+            Path root = tmp.resolve("root");
+            mkdir(root.resolve("d/b"));
+            writeFile(root.resolve("d/a.txt"), "a");
+            writeFile(root.resolve("d/b/c.txt"), "c");
+            writeFile(root.resolve("d/c.txt"), "c");
+
+            List<String> result = fileOps.listDirectory(root.resolve("d").toString(), 2, null, null);
+
+            assertEquals(4, result.size());
+            assertEquals(root.resolve("d/b").toString() + "/", result.get(0));
+            assertEquals(root.resolve("d/b/c.txt").toString(), result.get(1));
+            assertEquals(root.resolve("d/a.txt").toString(), result.get(2));
+            assertEquals(root.resolve("d/c.txt").toString(), result.get(3));
         }
     }
 
