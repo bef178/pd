@@ -49,14 +49,7 @@ class FileOpsCore {
     }
 
     protected String pathToString(Path p) {
-        String s = p.toString();
-        if (s.startsWith("./")) {
-            s = s.substring(2);
-        }
-        if (Files.isDirectory(p)) {
-            s += "/";
-        }
-        return s;
+        return PathOps.singleton.pathToString(p);
     }
 
     /**
