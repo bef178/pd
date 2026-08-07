@@ -370,13 +370,17 @@ class Test_FileOps {
             writeFile(d.resolve("sub/g"), "g");
 
             List<String> removed = new java.util.ArrayList<>();
-            FileOps.OnRemovedListener listener = (path, ok) -> removed.add(path);
+            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
+                if (action == FileOps.Action.REMOVE && succeeded != null) {
+                    removed.add(from);
+                }
+            };
 
             assertTrue(fileOps.removeDirectory(d.toString(), true, false, null, listener));
             assertEquals(4, removed.size());
-            assertEquals(d.resolve("f").toString(), removed.get(0));
-            assertEquals(d.resolve("sub/g").toString(), removed.get(1));
-            assertEquals(d.resolve("sub").toString(), removed.get(2));
+            assertEquals(d.resolve("sub/g").toString(), removed.get(0));
+            assertEquals(d.resolve("sub").toString(), removed.get(1));
+            assertEquals(d.resolve("f").toString(), removed.get(2));
             assertEquals(d.toString(), removed.get(3));
             assertFalse(Files.exists(d));
         }
@@ -387,7 +391,11 @@ class Test_FileOps {
             mkdir(leaf);
 
             List<String> removed = new java.util.ArrayList<>();
-            FileOps.OnRemovedListener listener = (path, ok) -> removed.add(path);
+            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
+                if (action == FileOps.Action.REMOVE && succeeded != null) {
+                    removed.add(from);
+                }
+            };
 
             assertTrue(fileOps.removeDirectory(leaf.toString(), false, true, null, listener));
             assertTrue(removed.contains(leaf.toString()));
@@ -403,7 +411,11 @@ class Test_FileOps {
             writeFile(d.resolve("f"), "f");
 
             List<String> removed = new java.util.ArrayList<>();
-            FileOps.OnRemovedListener listener = (path, ok) -> removed.add(path);
+            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
+                if (action == FileOps.Action.REMOVE && succeeded != null) {
+                    removed.add(from);
+                }
+            };
 
             assertFalse(fileOps.removeDirectory(d.toString(), true, false, new AtomicBoolean(true), listener));
             assertTrue(removed.isEmpty());
@@ -749,8 +761,8 @@ class Test_FileOps {
 
             assertEquals(3, result.size());
             assertEquals(root.resolve("lo").toString() + "/", result.get(0));
-            assertEquals(root.resolve("long").toString(), result.get(1));
-            assertEquals(root.resolve("lower").toString() + "/", result.get(2));
+            assertEquals(root.resolve("lower").toString() + "/", result.get(1));
+            assertEquals(root.resolve("long").toString(), result.get(2));
         }
 
         @Test
@@ -1254,7 +1266,7 @@ class Test_FileOps {
             mkdir(src);
             Path dst = tmp.resolve("d.moved");
 
-            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, null, null, null));
+            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, null));
             assertFalse(Files.exists(src));
             assertTrue(Files.isDirectory(dst));
         }
@@ -1267,7 +1279,7 @@ class Test_FileOps {
             writeFile(src.resolve("sub/g"), "g");
             Path dst = tmp.resolve("root.moved");
 
-            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, null, null, null));
+            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, null));
             assertFalse(Files.exists(src));
             assertTrue(Files.isDirectory(dst));
             assertArrayEquals("f".getBytes(), Files.readAllBytes(dst.resolve("f")));
@@ -1276,7 +1288,7 @@ class Test_FileOps {
 
         @Test
         void returnsFalseWhenSrcDoesNotExist(@TempDir Path tmp) {
-            assertFalse(fileOps.moveDirectory(tmp.resolve("nope").toString(), tmp.resolve("dst").toString(), null, null, null, null));
+            assertFalse(fileOps.moveDirectory(tmp.resolve("nope").toString(), tmp.resolve("dst").toString(), null, null));
         }
 
         @Test
@@ -1284,7 +1296,7 @@ class Test_FileOps {
             Path src = tmp.resolve("f");
             writeFile(src, "x");
 
-            assertFalse(fileOps.moveDirectory(src.toString(), tmp.resolve("dst").toString(), null, null, null, null));
+            assertFalse(fileOps.moveDirectory(src.toString(), tmp.resolve("dst").toString(), null, null));
         }
 
         @Test
@@ -1294,7 +1306,7 @@ class Test_FileOps {
             Path dst = tmp.resolve("existing");
             mkdir(dst);
 
-            assertFalse(fileOps.moveDirectory(src.toString(), dst.toString(), null, null, null, null));
+            assertFalse(fileOps.moveDirectory(src.toString(), dst.toString(), null, null));
             assertTrue(Files.exists(src));
         }
 
@@ -1303,7 +1315,7 @@ class Test_FileOps {
             Path src = tmp.resolve("d");
             mkdir(src);
 
-            assertFalse(fileOps.moveDirectory(src.toString(), tmp.resolve("dst").toString(), new AtomicBoolean(true), null, null, null));
+            assertFalse(fileOps.moveDirectory(src.toString(), tmp.resolve("dst").toString(), new AtomicBoolean(true), null));
             assertTrue(Files.exists(src));
         }
 
@@ -1317,7 +1329,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(link, target));
             Path dst = tmp.resolve("link.moved");
 
-            assertFalse(fileOps.moveDirectory(link.toString(), dst.toString(), null, null, null, null));
+            assertFalse(fileOps.moveDirectory(link.toString(), dst.toString(), null, null));
         }
 
         @Test
@@ -1327,23 +1339,27 @@ class Test_FileOps {
             Path dst = tmp.resolve("d.moved");
 
             List<String> moved = new java.util.ArrayList<>();
-            FileOps.OnMovedListener onMoved = (s, d, ok) -> moved.add(s + " -> " + d);
+            FileOps.OnActionListener onAction = (action, from, to, succeeded) -> {
+                if (action == FileOps.Action.MOVE && succeeded != null) {
+                    moved.add(from + " -> " + to);
+                }
+            };
 
-            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, null, null, onMoved));
+            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, onAction));
             assertEquals(1, moved.size());
             assertEquals(src.toString() + " -> " + dst.toString(), moved.get(0));
         }
 
         @Test
         void throwsWhenSrcIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.moveDirectory("", "dst", null, null, null, null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.moveDirectory("", "dst", null, null));
         }
 
         @Test
         void throwsWhenDstIsEmpty(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("d");
             mkdir(src);
-            assertThrows(IllegalArgumentException.class, () -> fileOps.moveDirectory(src.toString(), "", null, null, null, null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.moveDirectory(src.toString(), "", null, null));
         }
     }
 
@@ -1479,8 +1495,8 @@ class Test_FileOps {
                 List<String> result = fileOps.list(rel + "/lo");
                 assertEquals(3, result.size());
                 assertEquals(rel + "/lo/", result.get(0));
-                assertEquals(rel + "/long", result.get(1));
-                assertEquals(rel + "/lower/", result.get(2));
+                assertEquals(rel + "/lower/", result.get(1));
+                assertEquals(rel + "/long", result.get(2));
             } finally {
                 rm(root);
             }

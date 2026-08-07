@@ -39,9 +39,8 @@ class FileOpsCore {
         String directory = pathToDirectory.equals(".") ? "" : pathToDirectory;
         // no explicit isDirectory check: NoSuchFileException / NotDirectoryException will be caught
         try (Stream<Path> stream = Files.list(Paths.get(directory))) {
-            return stream
+            return sortPaths(stream.collect(Collectors.toList())).stream()
                     .map(this::pathToString)
-                    .sorted(PathOps.singleton::compare)
                     .collect(Collectors.toList());
         } catch (IOException ignored) {
             return null;
@@ -50,6 +49,13 @@ class FileOpsCore {
 
     protected String pathToString(Path p) {
         return PathOps.singleton.pathToString(p);
+    }
+
+    protected List<Path> sortPaths(List<Path> paths) {
+        paths.sort(Comparator
+                .<Path, Boolean>comparing(p -> !Files.isDirectory(p))
+                .thenComparing(Path::toString, PathOps.singleton::compare));
+        return paths;
     }
 
     /**
@@ -233,7 +239,6 @@ public class FileOps extends FileOpsCore {
         }
         return a.stream()
                 .filter(s1 -> s1.startsWith(pathPrefix))
-                .sorted(PathOps.singleton::compare)
                 .collect(Collectors.toList());
     }
 
@@ -260,22 +265,21 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * List offspring of `directory` down to specified depth.
+     * List offspring of `directory` down to `depth`.
      * `depth` should be positive.
-     * - Leading "./" will be trimmed.
-     * - A trailing "/" will be present for directory.
+     * Follow symlink.
      */
-    public List<String> listDirectory(@NonNull String directory, int depth, AtomicBoolean abortRequested, OnListedListener onListed) {
+    public List<String> listDirectory(@NonNull String directory, int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(directory, "directory");
 
-        List<Path> paths = listDirectoryDepthFirstSearch(Paths.get(directory), depth, abortRequested, onListed);
+        List<Path> paths = listDirectoryDepthFirstSearch(Paths.get(directory), depth, abortRequested, onAction);
         if (paths == null) {
             return null;
         }
         return paths.stream().map(this::pathToString).collect(Collectors.toList());
     }
 
-    private List<Path> listDirectoryDepthFirstSearch(Path src, final int depth, AtomicBoolean abortRequested, OnListedListener onListed) {
+    private List<Path> listDirectoryDepthFirstSearch(Path src, final int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isDirectory(src)) {
             return null;
         }
@@ -291,30 +295,26 @@ public class FileOps extends FileOpsCore {
                 children = null;
             }
             if (children != null) {
-                children.sort(Comparator.comparing(this::pathToString, PathOps.singleton::compare));
-                for (Path child : children) {
+                for (Path child : sortPaths(children)) {
                     if (abortRequested != null && abortRequested.get()) {
                         return null;
                     }
                     if (Files.isDirectory(child)) {
                         results.add(child);
-                        if (onListed != null) {
-                            onListed.accept(pathToString(child));
+                        if (onAction != null) {
+                            onAction.accept(Action.REACH, child, null, null);
                         }
-                        List<Path> childrenOfChild = listDirectoryDepthFirstSearch(child, depth - 1, abortRequested, onListed);
+                        List<Path> childrenOfChild = listDirectoryDepthFirstSearch(child, depth - 1, abortRequested, onAction);
                         if (childrenOfChild != null) {
                             results.addAll(childrenOfChild);
                         }
-                    }
-                }
-                for (Path child : children) {
-                    if (abortRequested != null && abortRequested.get()) {
-                        return null;
-                    }
-                    if (!Files.isDirectory(child)) {
+                        if (onAction != null) {
+                            onAction.accept(Action.REACH, child, null, true);
+                        }
+                    } else {
                         results.add(child);
-                        if (onListed != null) {
-                            onListed.accept(pathToString(child));
+                        if (onAction != null) {
+                            onAction.accept(Action.REACH, child, null, true);
                         }
                     }
                 }
@@ -384,12 +384,12 @@ public class FileOps extends FileOpsCore {
      * Accept a directory or a symlink to directory.
      * Not follow symlink.
      */
-    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnRemovedListener onRemoved) {
+    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
-        return removeDirectory(Paths.get(pathToDirectory), recursive, parents, abortRequested, onRemoved);
+        return removeDirectory(Paths.get(pathToDirectory), recursive, parents, abortRequested, onAction);
     }
 
-    private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnRemovedListener onRemoved) {
+    private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isDirectory(src)) {
             return false;
         }
@@ -397,14 +397,17 @@ public class FileOps extends FileOpsCore {
             return false;
         }
         if (Files.isSymbolicLink(src)) {
-            boolean ok;
+            Boolean ok = null;
+            if (onAction != null) {
+                onAction.accept(Action.REMOVE, src, null, ok);
+            }
             try {
                 ok = Files.deleteIfExists(src);
             } catch (IOException ignored) {
                 ok = false;
             }
-            if (onRemoved != null) {
-                onRemoved.accept(src.toString(), ok);
+            if (onAction != null) {
+                onAction.accept(Action.REMOVE, src, null, ok);
             }
             if (!ok) {
                 return false;
@@ -423,21 +426,27 @@ public class FileOps extends FileOpsCore {
                     // a symlink is removed as the link itself, never followed to its target;
                     // a real directory is recursed into; everything else is removed as a file
                     if (Files.isSymbolicLink(childPath)) {
+                        if (onAction != null) {
+                            onAction.accept(Action.REMOVE, child, null, null);
+                        }
                         boolean ok = removeFile(child);
-                        if (onRemoved != null) {
-                            onRemoved.accept(child, ok);
+                        if (onAction != null) {
+                            onAction.accept(Action.REMOVE, child, null, ok);
                         }
                         if (!ok) {
                             return false;
                         }
                     } else if (Files.isDirectory(childPath)) {
-                        if (!removeDirectory(childPath, true, false, abortRequested, onRemoved)) {
+                        if (!removeDirectory(childPath, true, false, abortRequested, onAction)) {
                             return false;
                         }
                     } else {
+                        if (onAction != null) {
+                            onAction.accept(Action.REMOVE, child, null, null);
+                        }
                         boolean ok = removeFile(child);
-                        if (onRemoved != null) {
-                            onRemoved.accept(child, ok);
+                        if (onAction != null) {
+                            onAction.accept(Action.REMOVE, child, null, ok);
                         }
                         if (!ok) {
                             return false;
@@ -445,14 +454,17 @@ public class FileOps extends FileOpsCore {
                     }
                 }
             }
-            boolean ok;
+            Boolean ok = null;
+            if (onAction != null) {
+                onAction.accept(Action.REMOVE, src, null, ok);
+            }
             try {
                 ok = Files.deleteIfExists(src);
             } catch (IOException ignored) {
                 ok = false;
             }
-            if (onRemoved != null) {
-                onRemoved.accept(src.toString(), ok);
+            if (onAction != null) {
+                onAction.accept(Action.REMOVE, src, null, ok);
             }
             if (!ok) {
                 return false;
@@ -466,7 +478,7 @@ public class FileOps extends FileOpsCore {
                     return false;
                 }
                 // only remove empty ancestor directories; stop at the first non-empty one
-                if (!removeDirectory(p, false, false, abortRequested, onRemoved)) {
+                if (!removeDirectory(p, false, false, abortRequested, onAction)) {
                     break;
                 }
                 p = p.getParent();
@@ -521,13 +533,13 @@ public class FileOps extends FileOpsCore {
      * `dst` must not exist but its parent must exist.
      * Not follow symlink.
      */
-    public boolean copyDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnAddedListener onAdded) {
+    public boolean copyDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(src, "src");
         throwIfEmpty(dst, "dst");
-        return copyDirectory(Paths.get(src), Paths.get(dst), abortRequested, onAdded);
+        return copyDirectory(Paths.get(src), Paths.get(dst), abortRequested, onAction);
     }
 
-    private boolean copyDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnAddedListener onAdded) {
+    private boolean copyDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
@@ -539,17 +551,20 @@ public class FileOps extends FileOpsCore {
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
-        boolean ok;
+        Boolean succeeded = null;
+        if (onAction != null) {
+            onAction.accept(Action.CREATE, null, dst, succeeded);
+        }
         try {
             Files.createDirectory(dst);
-            ok = true;
+            succeeded = true;
         } catch (IOException ignored) {
-            ok = false;
+            succeeded = false;
         }
-        if (onAdded != null) {
-            onAdded.accept(dst.toString(), ok);
+        if (onAction != null) {
+            onAction.accept(Action.CREATE, null, dst, succeeded);
         }
-        if (!ok) {
+        if (!succeeded) {
             return false;
         }
         List<Path> children;
@@ -558,44 +573,49 @@ public class FileOps extends FileOpsCore {
         } catch (IOException ignored) {
             return false;
         }
-        children.sort(Comparator.comparing(Path::toString, PathOps.singleton::compare));
-        for (Path child : children) {
+        for (Path child : sortPaths(children)) {
             if (abortRequested != null && abortRequested.get()) {
                 return false;
             }
             Path dstChild = dst.resolve(child.getFileName());
             if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
-                if (!copyDirectory(child, dstChild, abortRequested, onAdded)) {
+                if (!copyDirectory(child, dstChild, abortRequested, onAction)) {
                     return false;
                 }
             } else if (Files.isRegularFile(child, LinkOption.NOFOLLOW_LINKS)) {
                 if (abortRequested != null && abortRequested.get()) {
                     return false;
                 }
+                if (onAction != null) {
+                    onAction.accept(Action.COPY, child, dstChild, null);
+                }
                 boolean fileOK = copyFile(child, dstChild, abortRequested);
-                if (onAdded != null) {
-                    onAdded.accept(dstChild.toString(), fileOK);
+                if (onAction != null) {
+                    onAction.accept(Action.COPY, child, dstChild, fileOK);
                 }
                 if (!fileOK) {
                     return false;
                 }
             } else if (Files.isSymbolicLink(child)) {
-                boolean symlinkOK;
+                Boolean symlinkOK = null;
+                if (onAction != null) {
+                    onAction.accept(Action.COPY, child, dstChild, symlinkOK);
+                }
                 try {
                     Files.copy(child, dstChild, LinkOption.NOFOLLOW_LINKS);
                     symlinkOK = true;
                 } catch (IOException ignored) {
                     symlinkOK = false;
                 }
-                if (onAdded != null) {
-                    onAdded.accept(dstChild.toString(), symlinkOK);
+                if (onAction != null) {
+                    onAction.accept(Action.COPY, child, dstChild, symlinkOK);
                 }
                 if (!symlinkOK) {
                     return false;
                 }
             } else {
-                if (onAdded != null) {
-                    onAdded.accept(dstChild.toString(), false);
+                if (onAction != null) {
+                    onAction.accept(Action.COPY, child, dstChild, false);
                 }
                 return false;
             }
@@ -658,13 +678,13 @@ public class FileOps extends FileOpsCore {
      * `src` must be a directory, must not be a symlink
      * `dst` must not exist but its parent must exist
      */
-    public boolean moveDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnAddedListener onAdded, OnRemovedListener onRemoved, OnMovedListener onMoved) {
+    public boolean moveDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(src, "src");
         throwIfEmpty(dst, "dst");
-        return moveDirectory(Paths.get(src), Paths.get(dst), abortRequested, onAdded, onRemoved, onMoved);
+        return moveDirectory(Paths.get(src), Paths.get(dst), abortRequested, onAction);
     }
 
-    public boolean moveDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnAddedListener onAdded, OnRemovedListener onRemoved, OnMovedListener onMoved) {
+    public boolean moveDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
@@ -675,17 +695,20 @@ public class FileOps extends FileOpsCore {
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
+        if (onAction != null) {
+            onAction.accept(Action.MOVE, src, dst, null);
+        }
         try {
             Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
-            if (onMoved != null) {
-                onMoved.accept(src.toString(), dst.toString(), true);
+            if (onAction != null) {
+                onAction.accept(Action.MOVE, src, dst, true);
             }
             return true;
         } catch (AtomicMoveNotSupportedException e) {
-            if (!copyDirectory(src, dst, abortRequested, onAdded)) {
+            if (!copyDirectory(src, dst, abortRequested, onAction)) {
                 return false;
             }
-            return removeDirectory(src, true, false, abortRequested, onRemoved);
+            return removeDirectory(src, true, false, abortRequested, onAction);
         } catch (IOException ignored) {
             return false;
         }
@@ -720,23 +743,23 @@ public class FileOps extends FileOpsCore {
         }
     }
 
-    public interface OnListedListener {
+    public interface OnActionListener {
 
-        void accept(String path);
+        default void accept(Action action, Path src, Path dst, Boolean succeeded) {
+            accept(action,
+                    src == null ? null : src.toString(),
+                    dst == null ? null : dst.toString(),
+                    succeeded);
+        }
+
+        void accept(Action action, String from, String to, Boolean succeeded);
     }
 
-    public interface OnAddedListener {
-
-        void accept(String path, boolean succeeded);
-    }
-
-    public interface OnRemovedListener {
-
-        void accept(String path, boolean succeeded);
-    }
-
-    public interface OnMovedListener {
-
-        void accept(String src, String dst, boolean succeeded);
+    public enum Action {
+        REACH,
+        CREATE,
+        REMOVE,
+        COPY,
+        MOVE,
     }
 }
