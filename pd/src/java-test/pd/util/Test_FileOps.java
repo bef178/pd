@@ -1327,7 +1327,7 @@ class Test_FileOps {
             Path dst = tmp.resolve("d.moved");
 
             List<String> moved = new java.util.ArrayList<>();
-            FileOps.OnMovedListener onMoved = (s, d) -> moved.add(s + " -> " + d);
+            FileOps.OnMovedListener onMoved = (s, d, ok) -> moved.add(s + " -> " + d);
 
             assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, null, null, onMoved));
             assertEquals(1, moved.size());

@@ -685,7 +685,7 @@ public class FileOps extends FileOpsCore {
         try {
             Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
             if (onMoved != null) {
-                onMoved.accept(src.toString(), dst.toString());
+                onMoved.accept(src.toString(), dst.toString(), true);
             }
             return true;
         } catch (AtomicMoveNotSupportedException e) {
@@ -701,7 +701,7 @@ public class FileOps extends FileOpsCore {
     /**
      * `src` must be a file or a symlink.
      * `dst` must not exist but its parent must exist.
-     * If aborted in halfway, the partially written `dst` is deleted.
+     * Not follow symlink.
      */
     public boolean moveFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
         throwIfEmpty(src, "src");
@@ -722,16 +722,6 @@ public class FileOps extends FileOpsCore {
         try {
             Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
             return true;
-        } catch (AtomicMoveNotSupportedException e) {
-            if (!copyFile(src, dst, abortRequested)) {
-                return false;
-            }
-            try {
-                Files.deleteIfExists(src);
-                return true;
-            } catch (IOException ignored) {
-                return false;
-            }
         } catch (IOException ignored) {
             return false;
         }
@@ -754,6 +744,6 @@ public class FileOps extends FileOpsCore {
 
     public interface OnMovedListener {
 
-        void accept(String src, String dst);
+        void accept(String src, String dst, boolean succeeded);
     }
 }
