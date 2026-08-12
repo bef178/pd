@@ -192,32 +192,28 @@ class Test_FileOps {
 
         @Test
         void abortStopsParentChainRemoval(@TempDir Path tmp) throws IOException {
-            // p/q/r: r is removed, then abort stops the upward sweep at q
+            // leaf is removed before parent loop; abort stops the upward sweep at q
             Path leaf = tmp.resolve("p/q/r");
             mkdir(leaf);
-            AtomicBoolean abort = new AtomicBoolean(false);
+            AtomicBoolean abort = new AtomicBoolean(true);
 
-            // cannot inject mid-call; pre-setting abort would stop r itself. So assert that
-            // with abort pre-set, the leaf is not removed at all (entry check).
-            abort.set(true);
             assertFalse(fileOps.removeDirectory(leaf.toString(), false, true, abort, null));
-            assertTrue(Files.exists(leaf));
+            assertFalse(Files.exists(leaf));
+            assertTrue(Files.exists(tmp.resolve("p/q")));
+            assertTrue(Files.exists(tmp.resolve("p")));
         }
 
         @Test
-        void removesSymbolicLinkItselfNotTarget(@TempDir Path tmp) throws IOException {
-            // removeDirectory on a symlink-to-directory deletes the link itself, not the target:
-            // the target directory and all its content are left untouched
+        void returnsFalseForSymlinkToDirectory(@TempDir Path tmp) throws IOException {
+            // removeDirectory rejects a symlink-to-directory; the target is left untouched
             Path dir = tmp.resolve("dir");
             mkdir(dir.resolve("sub"));
             writeFile(dir.resolve("f"), "f");
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
 
-            assertTrue(fileOps.removeDirectory(link.toString(), true, false, null, null));
-            // the symlink is gone...
-            assertFalse(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
-            // ...and the target directory is fully intact (not followed into)
+            assertFalse(fileOps.removeDirectory(link.toString(), true, false, null, null));
+            assertTrue(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
             assertTrue(Files.exists(dir));
             assertTrue(Files.exists(dir.resolve("f")));
             assertTrue(Files.exists(dir.resolve("sub")));
@@ -316,13 +312,13 @@ class Test_FileOps {
             Path f = tmp.resolve("a.txt");
             writeFile(f, "x");
 
-            assertTrue(fileOps.removeFile(f.toString()));
+            assertTrue(fileOps.removeFile(f.toString(), null));
             assertFalse(Files.exists(f));
         }
 
         @Test
         void returnsFalseWhenFileDoesNotExist(@TempDir Path tmp) {
-            assertFalse(fileOps.removeFile(tmp.resolve("nope").toString()));
+            assertFalse(fileOps.removeFile(tmp.resolve("nope").toString(), null));
         }
 
         @Test
@@ -330,13 +326,13 @@ class Test_FileOps {
             // removeFile only deletes files; a directory (empty or not) is left untouched
             Path empty = tmp.resolve("empty");
             mkdir(empty);
-            assertFalse(fileOps.removeFile(empty.toString()));
+            assertFalse(fileOps.removeFile(empty.toString(), null));
             assertTrue(Files.exists(empty));
 
             Path nonEmpty = tmp.resolve("d");
             mkdir(nonEmpty);
             writeFile(nonEmpty.resolve("f"), "f");
-            assertFalse(fileOps.removeFile(nonEmpty.toString()));
+            assertFalse(fileOps.removeFile(nonEmpty.toString(), null));
             assertTrue(Files.exists(nonEmpty));
             assertTrue(Files.exists(nonEmpty.resolve("f")));
         }
@@ -348,7 +344,7 @@ class Test_FileOps {
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, target));
 
-            assertTrue(fileOps.removeFile(link.toString()));
+            assertTrue(fileOps.removeFile(link.toString(), null));
             assertFalse(Files.exists(link));
             // the link target survives
             assertTrue(Files.exists(target));
@@ -362,14 +358,14 @@ class Test_FileOps {
             Path link = tmp.resolve("linkdir");
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
 
-            assertTrue(fileOps.removeFile(link.toString()));
+            assertTrue(fileOps.removeFile(link.toString(), null));
             assertFalse(Files.exists(link));
             assertTrue(Files.exists(dir));
         }
 
         @Test
         void throwsWhenPathIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.removeFile(""));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.removeFile("", null));
         }
     }
 

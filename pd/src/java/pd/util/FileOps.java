@@ -267,8 +267,10 @@ public class FileOps extends FileOpsCore {
 
     /**
      * Remove the directory at `pathToDirectory`.
-     * Accept a directory or a symlink to directory.
+     * `pathToDirectory` must be a directory.
      * Not follow symlink.
+     * No callback if abort recognized.
+     * Callbacks paired if no abort.
      */
     public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
@@ -276,99 +278,77 @@ public class FileOps extends FileOpsCore {
     }
 
     private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
-        if (!Files.isDirectory(src)) {
+        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
 
-        if (abortRequested != null && abortRequested.get()) {
-            return false;
+        if (onAction != null) {
+            onAction.accept(Action.REMOVE, src, null, null);
         }
 
-        if (Files.isSymbolicLink(src)) {
-            Boolean ok = null;
-            if (onAction != null) {
-                onAction.accept(Action.REMOVE, src, null, ok);
-            }
-            try {
-                ok = Files.deleteIfExists(src);
-            } catch (IOException ignored) {
-                ok = false;
-            }
-            if (onAction != null) {
-                onAction.accept(Action.REMOVE, src, null, ok);
-            }
-            if (!ok) {
-                return false;
-            }
-        } else {
-            if (recursive) {
-                List<Path> children = listDirectory(src);
-                if (children == null) {
-                    return false;
-                }
+        boolean succeeded = true;
+
+        if (recursive) {
+            List<Path> children = listDirectory(src);
+            if (children != null) {
                 for (Path child : sortPaths(children)) {
                     if (abortRequested != null && abortRequested.get()) {
                         return false;
                     }
-                    // a symlink is removed as the link itself, never followed to its target;
-                    // a real directory is recursed into; everything else is removed as a file
                     if (Files.isSymbolicLink(child)) {
-                        if (onAction != null) {
-                            onAction.accept(Action.REMOVE, child, null, null);
+                        if (!removeFile(child, onAction)) {
+                            succeeded = false;
+                            break;
                         }
-                        boolean ok = removeFile(child);
-                        if (onAction != null) {
-                            onAction.accept(Action.REMOVE, child, null, ok);
+                    } else if (Files.isRegularFile(child, LinkOption.NOFOLLOW_LINKS)) {
+                        if (!removeFile(child, onAction)) {
+                            succeeded = false;
+                            break;
                         }
-                        if (!ok) {
-                            return false;
-                        }
-                    } else if (Files.isDirectory(child)) {
+                    } else if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
                         if (!removeDirectory(child, true, false, abortRequested, onAction)) {
-                            return false;
+                            if (abortRequested != null && abortRequested.get()) {
+                                return false;
+                            }
+                            succeeded = false;
+                            break;
                         }
                     } else {
                         if (onAction != null) {
                             onAction.accept(Action.REMOVE, child, null, null);
+                            onAction.accept(Action.REMOVE, child, null, false);
                         }
-                        boolean ok = removeFile(child);
-                        if (onAction != null) {
-                            onAction.accept(Action.REMOVE, child, null, ok);
-                        }
-                        if (!ok) {
-                            return false;
-                        }
+                        succeeded = false;
+                        break;
                     }
                 }
             }
-            Boolean ok = null;
-            if (onAction != null) {
-                onAction.accept(Action.REMOVE, src, null, ok);
-            }
-            try {
-                ok = Files.deleteIfExists(src);
-            } catch (IOException ignored) {
-                ok = false;
-            }
-            if (onAction != null) {
-                onAction.accept(Action.REMOVE, src, null, ok);
-            }
-            if (!ok) {
-                return false;
-            }
+        }
+
+        try {
+            succeeded = succeeded && Files.deleteIfExists(src);
+        } catch (IOException ignored) {
+            succeeded = false;
+        }
+
+        if (onAction != null) {
+            onAction.accept(Action.REMOVE, src, null, succeeded);
+        }
+
+        if (!succeeded) {
+            return false;
         }
 
         if (parents) {
-            Path p = src.getParent();
-            while (p != null) {
+            Path parent = src.getParent();
+            while (parent != null) {
                 if (abortRequested != null && abortRequested.get()) {
                     return false;
                 }
-                // only remove empty ancestor directories; stop at the first non-empty one
-                if (!removeDirectory(p, false, false, abortRequested, onAction)) {
+                if (!removeDirectory(parent, false, false, abortRequested, onAction)) {
                     break;
                 }
-                p = p.getParent();
+                parent = parent.getParent();
             }
         }
         return true;
@@ -378,22 +358,30 @@ public class FileOps extends FileOpsCore {
      * `pathToFile` must be a regular file or a symlink.
      * Not follow symlink.
      */
-    public boolean removeFile(@NonNull String pathToFile) {
+    public boolean removeFile(@NonNull String pathToFile, OnActionListener onAction) {
         throwIfEmpty(pathToFile, "pathToFile");
-        return removeFile(Paths.get(pathToFile));
+        return removeFile(Paths.get(pathToFile), onAction);
     }
 
-    private boolean removeFile(Path src) {
+    private boolean removeFile(Path src, OnActionListener onAction) {
         if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
             return false;
         }
 
+        if (onAction != null) {
+            onAction.accept(Action.REMOVE, src, null, null);
+        }
+        boolean succeeded;
         try {
             // can remove a symlink to a non-empty directory
-            return Files.deleteIfExists(src);
+            succeeded = Files.deleteIfExists(src);
         } catch (IOException ignored) {
-            return false;
+            succeeded = false;
         }
+        if (onAction != null) {
+            onAction.accept(Action.REMOVE, src, null, succeeded);
+        }
+        return succeeded;
     }
 
     /**

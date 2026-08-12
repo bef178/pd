@@ -156,7 +156,7 @@ public class App {
                     stdout("o {}", stat.path);
                     for (int i = 1; i < group.size(); i++) {
                         stat = group.get(i);
-                        if (FileOps.singleton.removeFile(stat.path)) {
+                        if (FileOps.singleton.removeFile(stat.path, null)) {
                             stdout("x {}", stat.path);
                         }
                     }
