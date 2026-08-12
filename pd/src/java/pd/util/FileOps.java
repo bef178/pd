@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.NonNull;
-import lombok.SneakyThrows;
 
 import static pd.util.PathOps.throwIfEmpty;
 
@@ -33,20 +32,6 @@ import static pd.util.PathOps.throwIfEmpty;
  */
 class FileOpsCore {
 
-    public List<String> listDirectory(@NonNull String pathToDirectory) {
-        throwIfEmpty(pathToDirectory, "pathToDirectory");
-
-        String directory = pathToDirectory.equals(".") ? "" : pathToDirectory;
-        // no explicit isDirectory check: NoSuchFileException / NotDirectoryException will be caught
-        try (Stream<Path> stream = Files.list(Paths.get(directory))) {
-            return sortPaths(stream.collect(Collectors.toList())).stream()
-                    .map(this::pathToString)
-                    .collect(Collectors.toList());
-        } catch (IOException ignored) {
-            return null;
-        }
-    }
-
     protected String pathToString(Path p) {
         return PathOps.singleton.pathToString(p);
     }
@@ -56,62 +41,6 @@ class FileOpsCore {
                 .<Path, Boolean>comparing(p -> !Files.isDirectory(p))
                 .thenComparing(Path::toString, PathOps.singleton::compare));
         return paths;
-    }
-
-    /**
-     * The input must be a regular file or a symlink.
-     * Not follow symlink.
-     */
-    public boolean removeFile(@NonNull String pathToFile) {
-        throwIfEmpty(pathToFile, "pathToFile");
-
-        Path src = Paths.get(pathToFile);
-        if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
-            return false;
-        }
-
-        try {
-            return Files.deleteIfExists(src);
-        } catch (IOException ignored) {
-            return false;
-        }
-    }
-
-    /**
-     * The input must exist and be a regular file or a symlink to a regular file.
-     */
-    public byte[] load(@NonNull String pathToFile) {
-        throwIfEmpty(pathToFile, "pathToFile");
-
-        Path p = Paths.get(pathToFile);
-        if (!Files.exists(p) || Files.isDirectory(p)) {
-            return null;
-        }
-
-        try {
-            return Files.readAllBytes(p);
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    /**
-     * The input must not exist but its parent must exist.
-     */
-    public boolean save(@NonNull String pathToFile, byte[] bytes) {
-        throwIfEmpty(pathToFile, "pathToFile");
-
-        Path p = Paths.get(pathToFile);
-        if (Files.exists(p) && !Files.isRegularFile(p)) {
-            return false;
-        }
-
-        try {
-            Files.write(p, bytes);
-        } catch (IOException e) {
-            return false;
-        }
-        return true;
     }
 
     public FileStat stat(@NonNull String path) {
@@ -226,6 +155,20 @@ public class FileOps extends FileOpsCore {
                 .map(this::pathToString)
                 .sorted(PathOps.singleton::compare)
                 .collect(Collectors.toList());
+    }
+
+    public List<String> listDirectory(@NonNull String pathToDirectory) {
+        throwIfEmpty(pathToDirectory, "pathToDirectory");
+
+        String directory = pathToDirectory.equals(".") ? "" : pathToDirectory;
+        // no explicit isDirectory check: NoSuchFileException / NotDirectoryException will be caught
+        try (Stream<Path> stream = Files.list(Paths.get(directory))) {
+            return sortPaths(stream.collect(Collectors.toList())).stream()
+                    .map(this::pathToString)
+                    .collect(Collectors.toList());
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     /**
@@ -418,44 +361,23 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * It creates parents directories if necessary.
+     * `pathToFile` must be a regular file or a symlink.
+     * Not follow symlink.
      */
-    @Override
-    public boolean save(@NonNull String pathToFile, byte[] bytes) {
+    public boolean removeFile(@NonNull String pathToFile) {
         throwIfEmpty(pathToFile, "pathToFile");
 
-        Path p = Paths.get(pathToFile);
-        if (Files.exists(p) && !Files.isRegularFile(p)) {
+        Path src = Paths.get(pathToFile);
+        if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
             return false;
-        }
-
-        Path parent = p.getParent();
-        if (parent != null) {
-            try {
-                Files.createDirectories(parent);
-            } catch (IOException e) {
-                return false;
-            }
         }
 
         try {
-            Files.write(p, bytes);
-        } catch (IOException e) {
+            // can remove a symlink to a non-empty directory
+            return Files.deleteIfExists(src);
+        } catch (IOException ignored) {
             return false;
         }
-        return true;
-    }
-
-    public String loadString(@NonNull String pathToFile) {
-        byte[] a = load(pathToFile);
-        if (a == null) {
-            return null;
-        }
-        return new String(a, StandardCharsets.UTF_8);
-    }
-
-    public boolean saveString(@NonNull String pathToFile, String s) {
-        return save(pathToFile, s.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -671,6 +593,71 @@ public class FileOps extends FileOpsCore {
         } catch (IOException ignored) {
             return false;
         }
+    }
+
+    /**
+     * `pathToFile` must exist and be a regular file or a symlink to a regular file.
+     */
+    public byte[] load(@NonNull String pathToFile) {
+        throwIfEmpty(pathToFile, "pathToFile");
+
+        Path src = Paths.get(pathToFile);
+        if (!Files.exists(src) || !Files.isRegularFile(src)) {
+            return null;
+        }
+
+        try {
+            return Files.readAllBytes(src);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public String loadString(@NonNull String pathToFile) {
+        byte[] a = load(pathToFile);
+        if (a == null) {
+            return null;
+        }
+        return new String(a, StandardCharsets.UTF_8);
+    }
+
+    public boolean save(@NonNull String pathToFile, byte[] bytes) {
+        return save(pathToFile, bytes, true);
+    }
+
+    /**
+     * `pathToFile` must not exist or be a regular file or be a symlink to a regular file.
+     */
+    public boolean save(@NonNull String pathToFile, byte[] bytes, boolean parents) {
+        throwIfEmpty(pathToFile, "pathToFile");
+
+        Path dst = Paths.get(pathToFile);
+        if (Files.exists(dst) && !Files.isRegularFile(dst)) {
+            return false;
+        }
+
+        if (parents) {
+            Path parent = dst.getParent();
+            if (parent == null) {
+                parent = Paths.get("");
+            }
+            try {
+                Files.createDirectories(parent);
+            } catch (IOException e) {
+                return false;
+            }
+        }
+
+        try {
+            Files.write(dst, bytes);
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean saveString(@NonNull String pathToFile, String s) {
+        return save(pathToFile, s.getBytes(StandardCharsets.UTF_8));
     }
 
     public interface OnActionListener {
