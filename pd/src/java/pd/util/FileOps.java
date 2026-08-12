@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -32,15 +33,120 @@ import static pd.util.PathOps.throwIfEmpty;
  */
 class FileOpsCore {
 
+    public List<String> list(@NonNull String pathPrefix) {
+        return list(pathPrefix, 1);
+    }
+
+    /**
+     * Starting from `pathPrefix`, list the next nodes in the file tree.
+     * `pathPrefix` might be empty.
+     * Results are sorted.
+     * Directories end with `/`.
+     * e.g.
+     * - "d" => ["d/"]
+     * - "d/" => ["d/d/", "d/f"]
+     * - "f" => ["f"]
+     * - "lo" => ["lo/", "lower/", "long"]
+     * - "." => [".git/", ".gitignore", "...a"]
+     * - ".." => ["...a"]
+     */
+    public List<String> list(@NonNull String pathPrefix, int depth) {
+        if (depth < 1) {
+            return null;
+        }
+
+        // look up the capping directory
+        String d;
+        if (pathPrefix.equals(".")) {
+            d = "";
+        } else if (pathPrefix.equals("./")) {
+            d = "";
+        } else if (pathPrefix.equals("..")) {
+            d = "../";
+        } else if (pathPrefix.endsWith("/")) {
+            d = pathPrefix;
+        } else {
+            int lastIndex = pathPrefix.lastIndexOf('/');
+            if (lastIndex >= 0) {
+                d = pathPrefix.substring(0, lastIndex + 1);
+            } else {
+                d = "";
+            }
+        }
+        List<Path> a = listDirectory(Paths.get(d));
+        if (a == null) {
+            return Collections.emptyList();
+        } else if (depth == 1) {
+            return sortPaths(a).stream()
+                    .map(this::pathToString)
+                    .filter(s -> s.startsWith(pathPrefix))
+                    .collect(Collectors.toList());
+        }
+
+        a = sortPaths(a).stream()
+                .filter(p -> pathToString(p).startsWith(pathPrefix))
+                .collect(Collectors.toList());
+
+        List<String> results = new LinkedList<>();
+        LinkedList<SimpleEntry<Path, Integer>> stack = new LinkedList<>();
+        // reversed order
+        for (int i = a.size() - 1; i >= 0; i--) {
+            stack.push(new SimpleEntry<>(a.get(i), depth - 1));
+        }
+        while (!stack.isEmpty()) {
+            SimpleEntry<Path, Integer> frame = stack.pop();
+            Path path1 = frame.getKey();
+            int depth1 = frame.getValue();
+            if (depth1 == 0 || Files.isRegularFile(path1)) {
+                results.add(pathToString(path1));
+                continue;
+            }
+            List<Path> children;
+            try (Stream<Path> stream = Files.list(path1)) {
+                children = stream.collect(Collectors.toList());
+            } catch (IOException e) {
+                continue;
+            }
+            children = sortPaths(children);
+            // reversed order
+            for (int i = children.size() - 1; i >= 0; i--) {
+                Path child = children.get(i);
+                stack.push(new SimpleEntry<>(child, depth1 - 1));
+            }
+        }
+        return results;
+    }
+
+    /**
+     * `src` must be a directory or a symlink to a directory.
+     * Results not sorted.
+     * Follow symlink.
+     */
+    protected List<Path> listDirectory(Path src) {
+        if (!Files.isDirectory(src)) {
+            return null;
+        }
+
+        try (Stream<Path> stream = Files.list(src)) {
+            return stream.collect(Collectors.toList());
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
+
     protected String pathToString(Path p) {
         return PathOps.singleton.pathToString(p);
     }
 
-    protected List<Path> sortPaths(List<Path> paths) {
-        paths.sort(Comparator
+    protected List<Path> sortPaths(List<Path> a) {
+        a.sort(Comparator
                 .<Path, Boolean>comparing(p -> !Files.isDirectory(p))
                 .thenComparing(Path::toString, PathOps.singleton::compare));
-        return paths;
+        return a;
+    }
+
+    public List<String> listAll(@NonNull String pathPrefix) {
+        return list(pathPrefix, Integer.MAX_VALUE);
     }
 
     public FileStat stat(@NonNull String path) {
@@ -94,84 +200,6 @@ public class FileOps extends FileOpsCore {
     public static final FileOps singleton = new FileOps();
 
     /**
-     * Starting from `pathPrefix`, list the next nodes in the file tree. `pathPrefix` need not be an existing file or directory.
-     * `pathPrefix` might be empty.
-     * Results are sorted. Directories end with `/`.
-     * e.g.
-     * - "d" => ["d/"]
-     * - "d/" => ["d/d/", "d/f"]
-     * - "f" => ["f"]
-     * - "lo" => ["lo/", "lower/", "long"]
-     * - "." => [".git/", ".gitignore", "...a"]
-     * - ".." => ["...a"]
-     */
-    public List<String> list(@NonNull String pathPrefix) {
-        String d;
-        if (pathPrefix.equals(".")) {
-            d = "";
-        } else if (pathPrefix.equals("./")) {
-            d = "";
-        } else if (pathPrefix.equals("..")) {
-            d = "../";
-        } else if (pathPrefix.endsWith("/")) {
-            d = pathPrefix;
-        } else {
-            int lastIndex = pathPrefix.lastIndexOf('/');
-            if (lastIndex >= 0) {
-                d = pathPrefix.substring(0, lastIndex + 1);
-            } else {
-                d = "";
-            }
-        }
-        if (d.isEmpty()) {
-            d = ".";
-        }
-        List<String> a = listDirectory(d);
-        if (a == null) {
-            return Collections.emptyList();
-        }
-        return a.stream()
-                .filter(s1 -> s1.startsWith(pathPrefix))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * `pathPrefix` might be empty.
-     */
-    public List<String> listAll(@NonNull String pathPrefix) {
-        return list(pathPrefix).stream()
-                .flatMap(s -> {
-                    Path p = Paths.get(s);
-                    if (Files.isDirectory(p)) {
-                        List<Path> a1 = listDirectoryDepthFirstSearch(p, Integer.MAX_VALUE, null, null);
-                        if (a1 == null) {
-                            a1 = Collections.emptyList();
-                        }
-                        return a1.stream().filter(p1 -> !Files.isDirectory(p1));
-                    } else {
-                        return Stream.of(p);
-                    }
-                })
-                .map(this::pathToString)
-                .sorted(PathOps.singleton::compare)
-                .collect(Collectors.toList());
-    }
-
-    public List<String> listDirectory(@NonNull String pathToDirectory) {
-        throwIfEmpty(pathToDirectory, "pathToDirectory");
-
-        String directory = pathToDirectory.equals(".") ? "" : pathToDirectory;
-        // no explicit isDirectory check: NoSuchFileException / NotDirectoryException will be caught
-        try (Stream<Path> stream = Files.list(Paths.get(directory))) {
-            return sortPaths(stream.collect(Collectors.toList())).stream()
-                    .map(this::pathToString)
-                    .collect(Collectors.toList());
-        } catch (IOException ignored) {
-            return null;
-        }
-    }
-
-    /**
      * List offspring of `directory` down to `depth`.
      * `depth` should be positive.
      * Follow symlink.
@@ -179,11 +207,10 @@ public class FileOps extends FileOpsCore {
     public List<String> listDirectory(@NonNull String directory, int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(directory, "directory");
 
-        List<Path> paths = listDirectoryDepthFirstSearch(Paths.get(directory), depth, abortRequested, onAction);
-        if (paths == null) {
-            return null;
-        }
-        return paths.stream().map(this::pathToString).collect(Collectors.toList());
+        List<Path> a = listDirectoryDepthFirstSearch(Paths.get(directory), depth, abortRequested, onAction);
+        return a == null
+                ? null
+                : a.stream().map(Path::toString).collect(Collectors.toList());
     }
 
     private List<Path> listDirectoryDepthFirstSearch(Path src, final int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
@@ -287,18 +314,17 @@ public class FileOps extends FileOpsCore {
             }
         } else {
             if (recursive) {
-                List<String> children = listDirectory(src.toString());
+                List<Path> children = listDirectory(src);
                 if (children == null) {
                     return false;
                 }
-                for (String child : children) {
+                for (Path child : sortPaths(children)) {
                     if (abortRequested != null && abortRequested.get()) {
                         return false;
                     }
-                    Path childPath = Paths.get(child);
                     // a symlink is removed as the link itself, never followed to its target;
                     // a real directory is recursed into; everything else is removed as a file
-                    if (Files.isSymbolicLink(childPath)) {
+                    if (Files.isSymbolicLink(child)) {
                         if (onAction != null) {
                             onAction.accept(Action.REMOVE, child, null, null);
                         }
@@ -309,8 +335,8 @@ public class FileOps extends FileOpsCore {
                         if (!ok) {
                             return false;
                         }
-                    } else if (Files.isDirectory(childPath)) {
-                        if (!removeDirectory(childPath, true, false, abortRequested, onAction)) {
+                    } else if (Files.isDirectory(child)) {
+                        if (!removeDirectory(child, true, false, abortRequested, onAction)) {
                             return false;
                         }
                     } else {
@@ -366,8 +392,10 @@ public class FileOps extends FileOpsCore {
      */
     public boolean removeFile(@NonNull String pathToFile) {
         throwIfEmpty(pathToFile, "pathToFile");
+        return removeFile(Paths.get(pathToFile));
+    }
 
-        Path src = Paths.get(pathToFile);
+    private boolean removeFile(Path src) {
         if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
             return false;
         }

@@ -62,48 +62,6 @@ class Test_FileOps {
     // ---- FileOpsCore methods ----
 
     @Nested
-    class listDirectory {
-
-        @Test
-        void listsDirectChildrenWithTrailingSlashForDirectories(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString());
-
-            assertEquals(2, result.size());
-            assertEquals(root.resolve("docs/img").toString() + "/", result.get(0));
-            assertEquals(root.resolve("docs/readme.md").toString(), result.get(1));
-        }
-
-        @Test
-        void returnsNullWhenDirectoryDoesNotExist(@TempDir Path tmp) {
-            assertNull(fileOps.listDirectory(tmp.resolve("nope").toString()));
-        }
-
-        @Test
-        void returnsNullWhenPathIsAFile(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            // a file is not a directory -> null
-            assertNull(fileOps.listDirectory(root.resolve(".gitignore").toString()));
-        }
-
-        @Test
-        void returnsEmptyForEmptyDirectory(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listDirectory(root.resolve("empty").toString());
-
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
-        void throwsWhenDirectoryIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory(""));
-        }
-    }
-
-    @Nested
     class createDirectory {
 
         @Test
@@ -791,7 +749,7 @@ class Test_FileOps {
             List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 1, null, null);
 
             assertEquals(2, result.size());
-            assertEquals(root.resolve("docs/img").toString() + "/", result.get(0));
+            assertEquals(root.resolve("docs/img").toString(), result.get(0));
             assertEquals(root.resolve("docs/readme.md").toString(), result.get(1));
         }
 
@@ -802,7 +760,7 @@ class Test_FileOps {
             List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 2, null, null);
 
             assertEquals(3, result.size());
-            assertEquals(root.resolve("docs/img").toString() + "/", result.get(0));
+            assertEquals(root.resolve("docs/img").toString(), result.get(0));
             assertEquals(root.resolve("docs/img/a.png").toString(), result.get(1));
             assertEquals(root.resolve("docs/readme.md").toString(), result.get(2));
         }
@@ -828,6 +786,15 @@ class Test_FileOps {
         @Test
         void returnsNullWhenDirectoryDoesNotExist(@TempDir Path tmp) {
             List<String> result = fileOps.listDirectory(tmp.resolve("nope").toString(), 1, null, null);
+
+            assertNull(result);
+        }
+
+        @Test
+        void returnsNullWhenPathIsAFile(@TempDir Path tmp) throws IOException {
+            Path root = buildTree(tmp.resolve("root"));
+
+            List<String> result = fileOps.listDirectory(root.resolve(".gitignore").toString(), 1, null, null);
 
             assertNull(result);
         }
@@ -859,7 +826,7 @@ class Test_FileOps {
             List<String> result = fileOps.listDirectory(root.resolve("d").toString(), 2, null, null);
 
             assertEquals(4, result.size());
-            assertEquals(root.resolve("d/b").toString() + "/", result.get(0));
+            assertEquals(root.resolve("d/b").toString(), result.get(0));
             assertEquals(root.resolve("d/b/c.txt").toString(), result.get(1));
             assertEquals(root.resolve("d/a.txt").toString(), result.get(2));
             assertEquals(root.resolve("d/c.txt").toString(), result.get(3));
