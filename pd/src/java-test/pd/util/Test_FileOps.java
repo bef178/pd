@@ -137,7 +137,7 @@ class Test_FileOps {
             Path d = tmp.resolve("d");
             mkdir(d);
 
-            assertTrue(fileOps.createDirectory(d.toString(), true));
+            assertFalse(fileOps.createDirectory(d.toString(), true));
         }
 
         @Test
@@ -154,82 +154,10 @@ class Test_FileOps {
             assertThrows(IllegalArgumentException.class, () -> fileOps.createDirectory("", false));
         }
 
-        @Test
-        void createsDirectoryWhenNotExistsSingleArg(@TempDir Path tmp) {
-            assertTrue(fileOps.createDirectory(tmp.resolve("d").toString()));
-            assertTrue(Files.isDirectory(tmp.resolve("d")));
-        }
-
-        @Test
-        void returnsFalseWhenAlreadyExistsSingleArg(@TempDir Path tmp) throws IOException {
-            Path d = tmp.resolve("d");
-            mkdir(d);
-
-            assertFalse(fileOps.createDirectory(d.toString()));
-        }
-
-        @Test
-        void returnsFalseWhenParentMissingSingleArg(@TempDir Path tmp) {
-            assertFalse(fileOps.createDirectory(tmp.resolve("missing/d").toString()));
-        }
-
-        @Test
-        void doesNotFollowSymlinkForCreate(@TempDir Path tmp) throws IOException {
-            Path target = tmp.resolve("target");
-            mkdir(target);
-            Path link = tmp.resolve("link");
-            Assumptions.assumeTrue(createSymbolicLink(link, target));
-
-            assertFalse(fileOps.createDirectory(link.toString()));
-        }
-
-        @Test
-        void throwsWhenPathIsEmptySingleArgCreate() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.createDirectory(""));
-        }
     }
 
     @Nested
     class removeDirectory {
-
-        @Test
-        void removesExistingEmptyDirectory(@TempDir Path tmp) throws IOException {
-            Path d = tmp.resolve("d");
-            mkdir(d);
-
-            assertTrue(fileOps.removeDirectory(d.toString()));
-            assertFalse(Files.exists(d));
-        }
-
-        @Test
-        void returnsFalseWhenNotExists(@TempDir Path tmp) {
-            assertFalse(fileOps.removeDirectory(tmp.resolve("nope").toString()));
-        }
-
-        @Test
-        void returnsFalseWhenNotEmpty(@TempDir Path tmp) throws IOException {
-            Path d = tmp.resolve("d");
-            mkdir(d);
-            writeFile(d.resolve("f"), "f");
-
-            assertFalse(fileOps.removeDirectory(d.toString()));
-            assertTrue(Files.exists(d));
-        }
-
-        @Test
-        void returnsFalseForSymlinkToDirectory(@TempDir Path tmp) throws IOException {
-            Path target = tmp.resolve("target");
-            mkdir(target);
-            Path link = tmp.resolve("link");
-            Assumptions.assumeTrue(createSymbolicLink(link, target));
-
-            assertFalse(fileOps.removeDirectory(link.toString()));
-        }
-
-        @Test
-        void throwsWhenPathIsEmptySingleArg() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.removeDirectory(""));
-        }
 
         @Test
         void removesEmptyDirectoryWhenNotRecursive(@TempDir Path tmp) throws IOException {

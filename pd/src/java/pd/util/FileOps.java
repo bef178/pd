@@ -59,42 +59,6 @@ class FileOpsCore {
     }
 
     /**
-     * The input must not exist but its parent must exist.
-     */
-    public boolean createDirectory(@NonNull String pathToDirectory) {
-        throwIfEmpty(pathToDirectory, "pathToDirectory");
-
-        Path src = Paths.get(pathToDirectory);
-        if (Files.exists(src, LinkOption.NOFOLLOW_LINKS)) {
-            return false;
-        }
-        try {
-            Files.createDirectory(src);
-            return true;
-        } catch (IOException ignored) {
-            return false;
-        }
-    }
-
-    /**
-     * The input must be an existing empty directory.
-     * Not follow symlink.
-     */
-    public boolean removeDirectory(@NonNull String pathToDirectory) {
-        throwIfEmpty(pathToDirectory, "pathToDirectory");
-
-        Path src = Paths.get(pathToDirectory);
-        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
-            return false;
-        }
-        try {
-            return Files.deleteIfExists(src);
-        } catch (IOException ignored) {
-            return false;
-        }
-    }
-
-    /**
      * The input must be a regular file or a symlink.
      * Not follow symlink.
      */
@@ -323,51 +287,15 @@ public class FileOps extends FileOpsCore {
         return results;
     }
 
-    @SneakyThrows
-    @SuppressWarnings("unused")
-    private List<Path> listDirectoryBreadthFirstSearch(Path src, int depth, AtomicBoolean abortRequested) {
-        if (!Files.isDirectory(src)) {
-            return null;
-        }
-
-        if (abortRequested != null && abortRequested.get()) {
-            return null;
-        }
-
-        List<Path> results = new LinkedList<>();
-        List<Path> thisQ = new LinkedList<>();
-        thisQ.add(src);
-        while (depth != 0) {
-            if (abortRequested != null && abortRequested.get()) {
-                return null;
-            }
-
-            List<Path> nextQ = new LinkedList<>();
-            while (!thisQ.isEmpty()) {
-                Path first = thisQ.remove(0);
-                try (Stream<Path> stream = Files.list(first)) {
-                    stream.forEach(p -> {
-                        results.add(p);
-                        if (Files.isDirectory(p)) {
-                            nextQ.add(p);
-                        }
-                    });
-                }
-            }
-            if (nextQ.isEmpty()) {
-                break;
-            }
-            thisQ = nextQ;
-            depth--;
-        }
-        return results;
-    }
-
     public boolean createDirectory(@NonNull String pathToDirectory, boolean parents) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
 
+        Path src = Paths.get(pathToDirectory);
+        if (Files.exists(src, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
         try {
-            Path src = Paths.get(pathToDirectory);
             if (parents) {
                 Files.createDirectories(src);
             } else {
@@ -393,9 +321,11 @@ public class FileOps extends FileOpsCore {
         if (!Files.isDirectory(src)) {
             return false;
         }
+
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
+
         if (Files.isSymbolicLink(src)) {
             Boolean ok = null;
             if (onAction != null) {
