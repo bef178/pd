@@ -245,24 +245,50 @@ public class FileOps extends FileOpsCore {
         return results;
     }
 
-    public boolean createDirectory(@NonNull String pathToDirectory, boolean parents) {
+    public boolean createDirectory(@NonNull String pathToDirectory, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
+        return createDirectory(Paths.get(pathToDirectory), parents, abortRequested, onAction);
+    }
 
-        Path src = Paths.get(pathToDirectory);
+    public boolean createDirectory(Path src, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (Files.exists(src, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
 
-        try {
-            if (parents) {
-                Files.createDirectories(src);
-            } else {
-                Files.createDirectory(src);
-            }
-            return true;
-        } catch (IOException ignored) {
-            return false;
+        if (onAction != null) {
+            onAction.accept(Action.CREATE, null, src, null);
         }
+
+        boolean succeeded = true;
+
+        if (parents) {
+            Path parent = src.getParent();
+            if (parent != null && !Files.exists(parent)) {
+                if (abortRequested != null && abortRequested.get()) {
+                    return false;
+                }
+                if (!createDirectory(parent, true, abortRequested, onAction)) {
+                    if (abortRequested != null && abortRequested.get()) {
+                        return false;
+                    }
+                    succeeded = false;
+                }
+            }
+        }
+
+        if (succeeded) {
+            try {
+                Files.createDirectory(src);
+            } catch (IOException ignored) {
+                succeeded = false;
+            }
+        }
+
+        if (onAction != null) {
+            onAction.accept(Action.CREATE, null, src, succeeded);
+        }
+
+        return succeeded;
     }
 
     /**

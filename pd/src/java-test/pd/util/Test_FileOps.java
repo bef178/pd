@@ -66,7 +66,7 @@ class Test_FileOps {
 
         @Test
         void createsSingleLevelWhenParentsFalse(@TempDir Path tmp) {
-            assertTrue(fileOps.createDirectory(tmp.resolve("d").toString(), false));
+            assertTrue(fileOps.createDirectory(tmp.resolve("d").toString(), false, null, null));
             assertTrue(Files.isDirectory(tmp.resolve("d")));
         }
 
@@ -75,18 +75,18 @@ class Test_FileOps {
             Path d = tmp.resolve("d");
             mkdir(d);
 
-            assertFalse(fileOps.createDirectory(d.toString(), false));
+            assertFalse(fileOps.createDirectory(d.toString(), false, null, null));
         }
 
         @Test
         void returnsFalseWhenParentMissingAndParentsFalse(@TempDir Path tmp) {
-            assertFalse(fileOps.createDirectory(tmp.resolve("missing/d").toString(), false));
+            assertFalse(fileOps.createDirectory(tmp.resolve("missing/d").toString(), false, null, null));
             assertFalse(Files.exists(tmp.resolve("missing")));
         }
 
         @Test
         void createsIntermediateParentsWhenParentsTrue(@TempDir Path tmp) {
-            assertTrue(fileOps.createDirectory(tmp.resolve("a/b/c").toString(), true));
+            assertTrue(fileOps.createDirectory(tmp.resolve("a/b/c").toString(), true, null, null));
             assertTrue(Files.isDirectory(tmp.resolve("a/b/c")));
         }
 
@@ -95,7 +95,7 @@ class Test_FileOps {
             Path d = tmp.resolve("d");
             mkdir(d);
 
-            assertFalse(fileOps.createDirectory(d.toString(), true));
+            assertFalse(fileOps.createDirectory(d.toString(), true, null, null));
         }
 
         @Test
@@ -103,13 +103,13 @@ class Test_FileOps {
             Path f = tmp.resolve("f");
             writeFile(f, "x");
 
-            assertFalse(fileOps.createDirectory(f.toString(), false));
+            assertFalse(fileOps.createDirectory(f.toString(), false, null, null));
             assertTrue(Files.isRegularFile(f));
         }
 
         @Test
         void throwsWhenPathIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.createDirectory("", false));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.createDirectory("", false, null, null));
         }
 
     }
