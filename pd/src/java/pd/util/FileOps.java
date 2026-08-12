@@ -207,53 +207,41 @@ public class FileOps extends FileOpsCore {
     public List<String> listDirectory(@NonNull String directory, int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(directory, "directory");
 
-        List<Path> a = listDirectoryDepthFirstSearch(Paths.get(directory), depth, abortRequested, onAction);
+        List<Path> a = listDirectory(Paths.get(directory), depth, abortRequested, onAction);
         return a == null
                 ? null
                 : a.stream().map(Path::toString).collect(Collectors.toList());
     }
 
-    private List<Path> listDirectoryDepthFirstSearch(Path src, final int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
+    private List<Path> listDirectory(Path src, final int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isDirectory(src)) {
             return null;
         }
-        if (abortRequested != null && abortRequested.get()) {
+        if (depth < 1) {
             return null;
         }
+
         LinkedList<Path> results = new LinkedList<>();
-        if (depth > 0) {
-            List<Path> children;
-            try (Stream<Path> stream = Files.list(src)) {
-                children = stream.collect(Collectors.toList());
-            } catch (IOException e) {
-                children = null;
-            }
-            if (children != null) {
-                for (Path child : sortPaths(children)) {
-                    if (abortRequested != null && abortRequested.get()) {
-                        return null;
-                    }
-                    if (Files.isDirectory(child)) {
-                        results.add(child);
-                        if (onAction != null) {
-                            onAction.accept(Action.REACH, child, null, null);
-                        }
-                        List<Path> childrenOfChild = listDirectoryDepthFirstSearch(child, depth - 1, abortRequested, onAction);
-                        if (childrenOfChild != null) {
-                            results.addAll(childrenOfChild);
-                        }
-                        if (onAction != null) {
-                            onAction.accept(Action.REACH, child, null, true);
-                        }
-                    } else {
-                        results.add(child);
-                        if (onAction != null) {
-                            onAction.accept(Action.REACH, child, null, true);
-                        }
+        List<Path> children = listDirectory(src);
+        if (children != null) {
+            for (Path child : sortPaths(children)) {
+                if (abortRequested != null && abortRequested.get()) {
+                    return null;
+                }
+
+                results.add(child);
+                if (onAction != null) {
+                    onAction.accept(Action.REACH, child, null, null);
+                }
+                if (Files.isDirectory(child)) {
+                    List<Path> childResults = listDirectory(child, depth - 1, abortRequested, onAction);
+                    if (childResults != null) {
+                        results.addAll(childResults);
                     }
                 }
             }
         }
+
         return results;
     }
 

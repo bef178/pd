@@ -775,12 +775,12 @@ class Test_FileOps {
         }
 
         @Test
-        void returnsEmptyWhenDepthIsZero(@TempDir Path tmp) throws IOException {
+        void returnsNullWhenDepthIsZero(@TempDir Path tmp) throws IOException {
             Path root = buildTree(tmp.resolve("root"));
 
             List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 0, null, null);
 
-            assertTrue(result.isEmpty());
+            assertNull(result);
         }
 
         @Test
