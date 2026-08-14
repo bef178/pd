@@ -230,7 +230,7 @@ public class FileOps extends FileOpsCore {
 
                 results.add(child);
                 if (onAction != null) {
-                    onAction.accept(Action.REACH, child, null, null);
+                    onAction.accept(Action.MEET, child, null, null);
                 }
                 if (Files.isDirectory(child)) {
                     List<Path> childResults = listDirectory(child, depth - 1, abortRequested, onAction);
@@ -660,7 +660,7 @@ public class FileOps extends FileOpsCore {
     }
 
     public enum Action {
-        REACH,
+        MEET,
         CREATE,
         DELETE,
         COPY,
