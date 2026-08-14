@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -545,72 +544,42 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * `src` must be a directory, must not be a symlink
-     * `dst` must not exist but its parent must exist
-     */
-    public boolean moveDirectory(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnActionListener onAction) {
-        throwIfEmpty(src, "src");
-        throwIfEmpty(dst, "dst");
-        return moveDirectory(Paths.get(src), Paths.get(dst), abortRequested, onAction);
-    }
-
-    public boolean moveDirectory(Path src, Path dst, AtomicBoolean abortRequested, OnActionListener onAction) {
-        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
-            return false;
-        }
-        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
-            return false;
-        }
-
-        if (abortRequested != null && abortRequested.get()) {
-            return false;
-        }
-        if (onAction != null) {
-            onAction.accept(Action.MOVE, src, dst, null);
-        }
-        try {
-            Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
-            if (onAction != null) {
-                onAction.accept(Action.MOVE, src, dst, true);
-            }
-            return true;
-        } catch (AtomicMoveNotSupportedException e) {
-            if (!copyDirectory(src, dst, abortRequested, onAction)) {
-                return false;
-            }
-            return removeDirectory(src, true, false, abortRequested, onAction);
-        } catch (IOException ignored) {
-            return false;
-        }
-    }
-
-    /**
-     * `src` must be a file or a symlink.
+     * `src` must be a directory, a regular file or a symlink.
      * `dst` must not exist but its parent must exist.
      * Not follow symlink.
      */
-    public boolean moveFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
+    public boolean rename(@NonNull String src, @NonNull String dst, OnActionListener onAction) {
         throwIfEmpty(src, "src");
         throwIfEmpty(dst, "dst");
-        return moveFile(Paths.get(src), Paths.get(dst), abortRequested);
+        return rename(Paths.get(src), Paths.get(dst), onAction);
     }
 
-    public boolean moveFile(Path src, Path dst, AtomicBoolean abortRequested) {
-        if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
+    public boolean rename(Path src, Path dst, OnActionListener onAction) {
+        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)
+                && !Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS)
+                && !Files.isSymbolicLink(src)) {
             return false;
         }
         if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
             return false;
         }
-        if (abortRequested != null && abortRequested.get()) {
-            return false;
+
+        if (onAction != null) {
+            onAction.accept(Action.RENAME, src, dst, null);
         }
+
+        boolean succeeded = false;
         try {
             Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
-            return true;
+            succeeded = true;
         } catch (IOException ignored) {
-            return false;
         }
+
+        if (onAction != null) {
+            onAction.accept(Action.RENAME, src, dst, succeeded);
+        }
+
+        return succeeded;
     }
 
     /**
@@ -695,6 +664,6 @@ public class FileOps extends FileOpsCore {
         CREATE,
         REMOVE,
         COPY,
-        MOVE,
+        RENAME,
     }
 }

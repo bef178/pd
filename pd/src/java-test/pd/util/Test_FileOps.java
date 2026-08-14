@@ -1074,29 +1074,29 @@ class Test_FileOps {
     }
 
     @Nested
-    class moveFile {
+    class rename {
 
         @Test
-        void movesRegularFile(@TempDir Path tmp) throws IOException {
+        void renamesRegularFile(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("a.txt");
             writeFile(src, "hello");
             Path dst = tmp.resolve("b.txt");
 
-            assertTrue(fileOps.moveFile(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.rename(src.toString(), dst.toString(), null));
             assertFalse(Files.exists(src));
             assertTrue(Files.exists(dst));
             assertArrayEquals("hello".getBytes(), Files.readAllBytes(dst));
         }
 
         @Test
-        void movesSymlinkToFile(@TempDir Path tmp) throws IOException {
+        void renamesSymlinkToFile(@TempDir Path tmp) throws IOException {
             Path target = tmp.resolve("target");
             writeFile(target, "content");
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, target));
             Path dst = tmp.resolve("link.moved");
 
-            assertTrue(fileOps.moveFile(link.toString(), dst.toString(), null));
+            assertTrue(fileOps.rename(link.toString(), dst.toString(), null));
             assertFalse(Files.exists(link));
             assertTrue(Files.isSymbolicLink(dst));
             assertEquals(target.toString(), Files.readSymbolicLink(dst).toString());
@@ -1104,15 +1104,7 @@ class Test_FileOps {
 
         @Test
         void returnsFalseWhenSrcDoesNotExist(@TempDir Path tmp) {
-            assertFalse(fileOps.moveFile(tmp.resolve("nope").toString(), tmp.resolve("dst").toString(), null));
-        }
-
-        @Test
-        void returnsFalseWhenSrcIsDirectory(@TempDir Path tmp) throws IOException {
-            Path src = tmp.resolve("d");
-            mkdir(src);
-
-            assertFalse(fileOps.moveFile(src.toString(), tmp.resolve("dst").toString(), null));
+            assertFalse(fileOps.rename(tmp.resolve("nope").toString(), tmp.resolve("dst").toString(), null));
         }
 
         @Test
@@ -1122,55 +1114,42 @@ class Test_FileOps {
             Path dst = tmp.resolve("b");
             writeFile(dst, "y");
 
-            assertFalse(fileOps.moveFile(src.toString(), dst.toString(), null));
-            assertTrue(Files.exists(src));
-        }
-
-        @Test
-        void returnsFalseWhenAbortRequested(@TempDir Path tmp) throws IOException {
-            Path src = tmp.resolve("a");
-            writeFile(src, "x");
-
-            assertFalse(fileOps.moveFile(src.toString(), tmp.resolve("b").toString(), new AtomicBoolean(true)));
+            assertFalse(fileOps.rename(src.toString(), dst.toString(), null));
             assertTrue(Files.exists(src));
         }
 
         @Test
         void throwsWhenSrcIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.moveFile("", "dst", null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.rename("", "dst", null));
         }
 
         @Test
         void throwsWhenDstIsEmpty(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("a");
             writeFile(src, "x");
-            assertThrows(IllegalArgumentException.class, () -> fileOps.moveFile(src.toString(), "", null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.rename(src.toString(), "", null));
         }
-    }
-
-    @Nested
-    class moveDirectory {
 
         @Test
-        void movesEmptyDirectory(@TempDir Path tmp) throws IOException {
+        void renamesEmptyDirectory(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("d");
             mkdir(src);
             Path dst = tmp.resolve("d.moved");
 
-            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.rename(src.toString(), dst.toString(), null));
             assertFalse(Files.exists(src));
             assertTrue(Files.isDirectory(dst));
         }
 
         @Test
-        void movesDirectoryTree(@TempDir Path tmp) throws IOException {
+        void renamesDirectoryTree(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("root");
             mkdir(src.resolve("sub"));
             writeFile(src.resolve("f"), "f");
             writeFile(src.resolve("sub/g"), "g");
             Path dst = tmp.resolve("root.moved");
 
-            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.rename(src.toString(), dst.toString(), null));
             assertFalse(Files.exists(src));
             assertTrue(Files.isDirectory(dst));
             assertArrayEquals("f".getBytes(), Files.readAllBytes(dst.resolve("f")));
@@ -1178,80 +1157,40 @@ class Test_FileOps {
         }
 
         @Test
-        void returnsFalseWhenSrcDoesNotExist(@TempDir Path tmp) {
-            assertFalse(fileOps.moveDirectory(tmp.resolve("nope").toString(), tmp.resolve("dst").toString(), null, null));
-        }
-
-        @Test
-        void returnsFalseWhenSrcIsAFile(@TempDir Path tmp) throws IOException {
-            Path src = tmp.resolve("f");
-            writeFile(src, "x");
-
-            assertFalse(fileOps.moveDirectory(src.toString(), tmp.resolve("dst").toString(), null, null));
-        }
-
-        @Test
-        void returnsFalseWhenDstAlreadyExists(@TempDir Path tmp) throws IOException {
-            Path src = tmp.resolve("d");
-            mkdir(src);
-            Path dst = tmp.resolve("existing");
-            mkdir(dst);
-
-            assertFalse(fileOps.moveDirectory(src.toString(), dst.toString(), null, null));
-            assertTrue(Files.exists(src));
-        }
-
-        @Test
-        void returnsFalseWhenAbortRequested(@TempDir Path tmp) throws IOException {
-            Path src = tmp.resolve("d");
-            mkdir(src);
-
-            assertFalse(fileOps.moveDirectory(src.toString(), tmp.resolve("dst").toString(), new AtomicBoolean(true), null));
-            assertTrue(Files.exists(src));
-        }
-
-        @Test
-        void returnsFalseForSymlinkToDirectory(@TempDir Path tmp) throws IOException {
-            // moveDirectory does not accept symlinks; src must be a real directory
+        void renamesSymlinkToDirectoryAsLinkItself(@TempDir Path tmp) throws IOException {
+            // a symlink is renamed as the link itself; the target directory is left untouched
             Path target = tmp.resolve("target");
             mkdir(target);
             writeFile(target.resolve("f"), "f");
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, target));
-            Path dst = tmp.resolve("link.moved");
+            Path dst = tmp.resolve("link.renamed");
 
-            assertFalse(fileOps.moveDirectory(link.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.rename(link.toString(), dst.toString(), null));
+            assertFalse(Files.exists(link));
+            assertTrue(Files.isSymbolicLink(dst));
+            assertTrue(Files.exists(target));
+            assertTrue(Files.exists(target.resolve("f")));
         }
 
         @Test
-        void onMovedCalledForAtomicRename(@TempDir Path tmp) throws IOException {
+        void onRenamedCalledForAtomicRename(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("d");
             mkdir(src);
             Path dst = tmp.resolve("d.moved");
 
             List<String> moved = new java.util.ArrayList<>();
             FileOps.OnActionListener onAction = (action, from, to, succeeded) -> {
-                if (action == FileOps.Action.MOVE && succeeded != null) {
+                if (action == FileOps.Action.RENAME && succeeded != null) {
                     moved.add(from + " -> " + to);
                 }
             };
 
-            assertTrue(fileOps.moveDirectory(src.toString(), dst.toString(), null, onAction));
+            assertTrue(fileOps.rename(src.toString(), dst.toString(), onAction));
             assertEquals(1, moved.size());
             assertEquals(src.toString() + " -> " + dst.toString(), moved.get(0));
         }
 
-        @Test
-        void throwsWhenSrcIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.moveDirectory("", "dst", null, null));
-        }
-
-        @Test
-        void throwsWhenDstIsEmpty(@TempDir Path tmp) throws IOException {
-            Path src = tmp.resolve("d");
-            mkdir(src);
-            assertThrows(IllegalArgumentException.class, () -> fileOps.moveDirectory(src.toString(), "", null, null));
-        }
     }
 
     @Nested
