@@ -426,98 +426,81 @@ public class FileOps extends FileOpsCore {
             return false;
         }
         if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
-            // a single-segment dst has no parent; treat that as the current directory
             return false;
         }
 
-        if (abortRequested != null && abortRequested.get()) {
-            return false;
-        }
-        Boolean succeeded = null;
         if (onAction != null) {
-            onAction.accept(Action.CREATE, null, dst, succeeded);
+            onAction.accept(Action.COPY, src, dst, null);
         }
-        try {
-            Files.createDirectory(dst);
-            succeeded = true;
-        } catch (IOException ignored) {
-            succeeded = false;
-        }
-        if (onAction != null) {
-            onAction.accept(Action.CREATE, null, dst, succeeded);
-        }
-        if (!succeeded) {
-            return false;
-        }
-        List<Path> children;
-        try (Stream<Path> stream = Files.list(src)) {
-            children = stream.collect(Collectors.toList());
-        } catch (IOException ignored) {
-            return false;
-        }
-        for (Path child : sortPaths(children)) {
-            if (abortRequested != null && abortRequested.get()) {
-                return false;
-            }
-            Path dstChild = dst.resolve(child.getFileName());
-            if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
-                if (!copyDirectory(child, dstChild, abortRequested, onAction)) {
-                    return false;
-                }
-            } else if (Files.isRegularFile(child, LinkOption.NOFOLLOW_LINKS)) {
-                if (abortRequested != null && abortRequested.get()) {
-                    return false;
-                }
-                if (onAction != null) {
-                    onAction.accept(Action.COPY, child, dstChild, null);
-                }
-                boolean fileOK = copyFile(child, dstChild, abortRequested);
-                if (onAction != null) {
-                    onAction.accept(Action.COPY, child, dstChild, fileOK);
-                }
-                if (!fileOK) {
-                    return false;
-                }
-            } else if (Files.isSymbolicLink(child)) {
-                Boolean symlinkOK = null;
-                if (onAction != null) {
-                    onAction.accept(Action.COPY, child, dstChild, symlinkOK);
-                }
-                try {
-                    Files.copy(child, dstChild, LinkOption.NOFOLLOW_LINKS);
-                    symlinkOK = true;
-                } catch (IOException ignored) {
-                    symlinkOK = false;
-                }
-                if (onAction != null) {
-                    onAction.accept(Action.COPY, child, dstChild, symlinkOK);
-                }
-                if (!symlinkOK) {
-                    return false;
-                }
+
+        boolean succeeded = createDirectory(dst, false, abortRequested, onAction);
+        if (succeeded) {
+            List<Path> children = listDirectory(src);
+            if (children == null) {
+                succeeded = false;
             } else {
-                if (onAction != null) {
-                    onAction.accept(Action.COPY, child, dstChild, false);
+                for (Path child : sortPaths(children)) {
+                    if (abortRequested != null && abortRequested.get()) {
+                        return false;
+                    }
+
+                    Path dstChild = dst.resolve(child.getFileName());
+                    if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
+                        succeeded = copyDirectory(child, dstChild, abortRequested, onAction);
+                    } else if (Files.isRegularFile(child, LinkOption.NOFOLLOW_LINKS)) {
+                        succeeded = copyFile(child, dstChild, abortRequested, onAction);
+                    } else if (Files.isSymbolicLink(child)) {
+                        // copy symlink itself
+                        succeeded = false;
+                        if (onAction != null) {
+                            onAction.accept(Action.COPY, child, dstChild, null);
+                        }
+                        try {
+                            Files.copy(child, dstChild, LinkOption.NOFOLLOW_LINKS);
+                            succeeded = true;
+                        } catch (IOException ignored) {
+                        }
+                        if (onAction != null) {
+                            onAction.accept(Action.COPY, child, dstChild, succeeded);
+                        }
+                    } else {
+                        if (onAction != null) {
+                            onAction.accept(Action.COPY, child, dstChild, null);
+                            onAction.accept(Action.COPY, child, dstChild, false);
+                        }
+                        succeeded = false;
+                    }
+
+                    if (!succeeded) {
+                        if (abortRequested != null && abortRequested.get()) {
+                            return false;
+                        }
+                        break;
+                    }
                 }
-                return false;
             }
         }
-        return true;
+
+        if (onAction != null) {
+            onAction.accept(Action.COPY, src, dst, succeeded);
+        }
+
+        return succeeded;
     }
 
     /**
-     * `src` must be a file or a symlink to a file.
+     * `src` must be a regular file or a symlink to a regular file.
      * `dst` must not exist but its parent must exist.
      * If aborted in halfway, the partially written `dst` is deleted.
      * Follow symlink.
      */
-    public boolean copyFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested) {
+    public boolean copyFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(src, "src");
         throwIfEmpty(dst, "dst");
-        return copyFile(Paths.get(src), Paths.get(dst), abortRequested);
+        return copyFile(Paths.get(src), Paths.get(dst), abortRequested, onAction);
     }
 
-    private boolean copyFile(Path src, Path dst, AtomicBoolean abortRequested) {
+    private boolean copyFile(Path src, Path dst, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isRegularFile(src)) {
             return false;
         }
@@ -526,8 +509,8 @@ public class FileOps extends FileOpsCore {
             return false;
         }
 
-        if (abortRequested != null && abortRequested.get()) {
-            return false;
+        if (onAction != null) {
+            onAction.accept(Action.COPY, src, dst, null);
         }
 
         boolean succeeded = false;
@@ -543,9 +526,8 @@ public class FileOps extends FileOpsCore {
             }
             fos.flush();
             succeeded = true;
-            return true;
         } catch (IOException ignored) {
-            return false;
+            // failure: report below
         } finally {
             if (!succeeded) {
                 try {
@@ -554,6 +536,12 @@ public class FileOps extends FileOpsCore {
                 }
             }
         }
+
+        if (onAction != null) {
+            onAction.accept(Action.COPY, src, dst, succeeded);
+        }
+
+        return succeeded;
     }
 
     /**

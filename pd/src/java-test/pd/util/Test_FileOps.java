@@ -838,7 +838,7 @@ class Test_FileOps {
             writeFile(src, "git");
             Path dst = tmp.resolve(".gitignore.copy");
 
-            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null, null));
             assertArrayEquals("git".getBytes(), Files.readAllBytes(dst));
         }
 
@@ -959,7 +959,7 @@ class Test_FileOps {
             writeFile(src, "hello");
             Path dst = tmp.resolve("a.copy");
 
-            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null, null));
             assertArrayEquals("hello".getBytes(), Files.readAllBytes(dst));
         }
 
@@ -969,7 +969,7 @@ class Test_FileOps {
             writeFile(src, "");
             Path dst = tmp.resolve("empty.copy");
 
-            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null, null));
             assertEquals(0, Files.size(dst));
         }
 
@@ -983,7 +983,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(link, target));
             Path dst = tmp.resolve("link.copy");
 
-            assertTrue(fileOps.copyFile(link.toString(), dst.toString(), null));
+            assertTrue(fileOps.copyFile(link.toString(), dst.toString(), null, null));
             assertFalse(Files.isSymbolicLink(dst));
             assertArrayEquals("content".getBytes(), Files.readAllBytes(dst));
         }
@@ -997,7 +997,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
             Path dst = tmp.resolve("link.copy");
 
-            assertFalse(fileOps.copyFile(link.toString(), dst.toString(), null));
+            assertFalse(fileOps.copyFile(link.toString(), dst.toString(), null, null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1007,7 +1007,7 @@ class Test_FileOps {
             mkdir(d);
             Path dst = tmp.resolve("d.copy");
 
-            assertFalse(fileOps.copyFile(d.toString(), dst.toString(), null));
+            assertFalse(fileOps.copyFile(d.toString(), dst.toString(), null, null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1015,7 +1015,7 @@ class Test_FileOps {
         void returnsFalseWhenSrcDoesNotExist(@TempDir Path tmp) {
             Path dst = tmp.resolve("dst");
 
-            assertFalse(fileOps.copyFile(tmp.resolve("nope").toString(), dst.toString(), null));
+            assertFalse(fileOps.copyFile(tmp.resolve("nope").toString(), dst.toString(), null, null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1026,7 +1026,7 @@ class Test_FileOps {
             Path dst = tmp.resolve("b");
             Files.createFile(dst);
 
-            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), null));
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), null, null));
         }
 
         @Test
@@ -1035,7 +1035,7 @@ class Test_FileOps {
             writeFile(src, "x");
             Path dst = tmp.resolve("b");
 
-            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), new AtomicBoolean(true)));
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), new AtomicBoolean(true), null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1055,21 +1055,21 @@ class Test_FileOps {
             });
             flipper.start();
 
-            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), abort));
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), abort, null));
             flipper.join();
             assertFalse(Files.exists(dst));
         }
 
         @Test
         void throwsWhenSrcIsEmpty(@TempDir Path tmp) {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile("", "dst", null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile("", "dst", null, null));
         }
 
         @Test
         void throwsWhenDstIsEmpty(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("a");
             writeFile(src, "x");
-            assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile(src.toString(), "", null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile(src.toString(), "", null, null));
         }
     }
 
