@@ -291,24 +291,24 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * Remove the directory at `pathToDirectory`.
+     * Delete the directory at `pathToDirectory`.
      * `pathToDirectory` must be a directory.
      * Not follow symlink.
      * No callback if abort recognized.
      * Callbacks paired if no abort.
      */
-    public boolean removeDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
+    public boolean deleteDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
-        return removeDirectory(Paths.get(pathToDirectory), recursive, parents, abortRequested, onAction);
+        return deleteDirectory(Paths.get(pathToDirectory), recursive, parents, abortRequested, onAction);
     }
 
-    private boolean removeDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
+    private boolean deleteDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
 
         if (onAction != null) {
-            onAction.accept(Action.REMOVE, src, null, null);
+            onAction.accept(Action.DELETE, src, null, null);
         }
 
         boolean succeeded = true;
@@ -321,17 +321,17 @@ public class FileOps extends FileOpsCore {
                         return false;
                     }
                     if (Files.isSymbolicLink(child)) {
-                        if (!removeFile(child, onAction)) {
+                        if (!deleteFile(child, onAction)) {
                             succeeded = false;
                             break;
                         }
                     } else if (Files.isRegularFile(child, LinkOption.NOFOLLOW_LINKS)) {
-                        if (!removeFile(child, onAction)) {
+                        if (!deleteFile(child, onAction)) {
                             succeeded = false;
                             break;
                         }
                     } else if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
-                        if (!removeDirectory(child, true, false, abortRequested, onAction)) {
+                        if (!deleteDirectory(child, true, false, abortRequested, onAction)) {
                             if (abortRequested != null && abortRequested.get()) {
                                 return false;
                             }
@@ -340,8 +340,8 @@ public class FileOps extends FileOpsCore {
                         }
                     } else {
                         if (onAction != null) {
-                            onAction.accept(Action.REMOVE, child, null, null);
-                            onAction.accept(Action.REMOVE, child, null, false);
+                            onAction.accept(Action.DELETE, child, null, null);
+                            onAction.accept(Action.DELETE, child, null, false);
                         }
                         succeeded = false;
                         break;
@@ -357,7 +357,7 @@ public class FileOps extends FileOpsCore {
         }
 
         if (onAction != null) {
-            onAction.accept(Action.REMOVE, src, null, succeeded);
+            onAction.accept(Action.DELETE, src, null, succeeded);
         }
 
         if (!succeeded) {
@@ -370,7 +370,7 @@ public class FileOps extends FileOpsCore {
                 if (abortRequested != null && abortRequested.get()) {
                     return false;
                 }
-                if (!removeDirectory(parent, false, false, abortRequested, onAction)) {
+                if (!deleteDirectory(parent, false, false, abortRequested, onAction)) {
                     break;
                 }
                 parent = parent.getParent();
@@ -383,28 +383,28 @@ public class FileOps extends FileOpsCore {
      * `pathToFile` must be a regular file or a symlink.
      * Not follow symlink.
      */
-    public boolean removeFile(@NonNull String pathToFile, OnActionListener onAction) {
+    public boolean deleteFile(@NonNull String pathToFile, OnActionListener onAction) {
         throwIfEmpty(pathToFile, "pathToFile");
-        return removeFile(Paths.get(pathToFile), onAction);
+        return deleteFile(Paths.get(pathToFile), onAction);
     }
 
-    private boolean removeFile(Path src, OnActionListener onAction) {
+    private boolean deleteFile(Path src, OnActionListener onAction) {
         if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
             return false;
         }
 
         if (onAction != null) {
-            onAction.accept(Action.REMOVE, src, null, null);
+            onAction.accept(Action.DELETE, src, null, null);
         }
         boolean succeeded;
         try {
-            // can remove a symlink to a non-empty directory
+            // can delete a symlink to a non-empty directory
             succeeded = Files.deleteIfExists(src);
         } catch (IOException ignored) {
             succeeded = false;
         }
         if (onAction != null) {
-            onAction.accept(Action.REMOVE, src, null, succeeded);
+            onAction.accept(Action.DELETE, src, null, succeeded);
         }
         return succeeded;
     }
@@ -662,7 +662,7 @@ public class FileOps extends FileOpsCore {
     public enum Action {
         REACH,
         CREATE,
-        REMOVE,
+        DELETE,
         COPY,
         RENAME,
     }
