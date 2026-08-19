@@ -86,7 +86,7 @@ class FileOpsCore {
                 .filter(p -> {
                     String s = pathToString(p);
                     return s.startsWith(pathPrefix) && !s.equals(pathPrefix);
-                } )
+                })
                 .collect(Collectors.toList());
         if (a.isEmpty() && !Files.exists(Paths.get(pathPrefix), LinkOption.NOFOLLOW_LINKS)) {
             return null;
@@ -229,6 +229,10 @@ public class FileOps extends FileOpsCore {
             return null;
         }
 
+        if (abortRequested != null && abortRequested.get()) {
+            return null;
+        }
+
         LinkedList<Path> results = new LinkedList<>();
         List<Path> children = listDirectory(src);
         if (children != null) {
@@ -260,6 +264,10 @@ public class FileOps extends FileOpsCore {
 
     public boolean createDirectory(Path src, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (Files.exists(src, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
+        if (abortRequested != null && abortRequested.get()) {
             return false;
         }
 
@@ -313,6 +321,10 @@ public class FileOps extends FileOpsCore {
 
     private boolean deleteDirectory(Path src, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
+        if (abortRequested != null && abortRequested.get()) {
             return false;
         }
 
@@ -440,6 +452,10 @@ public class FileOps extends FileOpsCore {
             return false;
         }
 
+        if (abortRequested != null && abortRequested.get()) {
+            return false;
+        }
+
         if (onAction != null) {
             onAction.accept(Action.COPY, src, dst, null);
         }
@@ -462,6 +478,9 @@ public class FileOps extends FileOpsCore {
                         succeeded = copyFile(child, dstChild, abortRequested, onAction);
                     } else if (Files.isSymbolicLink(child)) {
                         // copy symlink itself
+                        if (abortRequested != null && abortRequested.get()) {
+                            return false;
+                        }
                         succeeded = false;
                         if (onAction != null) {
                             onAction.accept(Action.COPY, child, dstChild, null);
@@ -548,7 +567,10 @@ public class FileOps extends FileOpsCore {
             return false;
         }
         if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
-            // dst.getParent() == null: current directory
+            return false;
+        }
+
+        if (abortRequested != null && abortRequested.get()) {
             return false;
         }
 
@@ -566,6 +588,9 @@ public class FileOps extends FileOpsCore {
                     return false;
                 }
                 fos.write(a, 0, nRead);
+            }
+            if (abortRequested != null && abortRequested.get()) {
+                return false;
             }
             fos.flush();
             succeeded = true;

@@ -97,6 +97,16 @@ class Test_FileOps {
         }
 
         @Test
+        void list_abortsBeforeTraversingWhenRequested(@TempDir Path root) throws IOException {
+            Path dir = root.resolve("dir");
+            mkdir(dir);
+            writeFile(dir.resolve("child.txt"), "x");
+
+            assertNull(fileOps.listDirectory(dir.toString(), 3, new AtomicBoolean(true), null));
+            assertTrue(Files.exists(dir.resolve("child.txt")));
+        }
+
+        @Test
         void list_returnEmptyForDot() {
             assertTrue(FileOps.singleton.list(".").isEmpty());
             assertTrue(FileOps.singleton.list("./").contains("./src/"));
@@ -272,14 +282,22 @@ class Test_FileOps {
         }
 
         @Test
-        void abortStopsParentChainDeletion(@TempDir Path tmp) throws IOException {
-            // leaf is removed before parent loop; abort stops the upward sweep at q
+        void returnsFalseAndKeepsEmptyDirectoryWhenAbortRequestedBeforeStart(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+
+            assertFalse(fileOps.deleteDirectory(d.toString(), true, false, new AtomicBoolean(true), null));
+            assertTrue(Files.exists(d));
+        }
+
+        @Test
+        void abortStopsDeleteBeforeAnyDeletionStarts(@TempDir Path tmp) throws IOException {
             Path leaf = tmp.resolve("p/q/r");
             mkdir(leaf);
             AtomicBoolean abort = new AtomicBoolean(true);
 
             assertFalse(fileOps.deleteDirectory(leaf.toString(), false, true, abort, null));
-            assertFalse(Files.exists(leaf));
+            assertTrue(Files.exists(leaf));
             assertTrue(Files.exists(tmp.resolve("p/q")));
             assertTrue(Files.exists(tmp.resolve("p")));
         }
@@ -991,6 +1009,16 @@ class Test_FileOps {
             Path src = tmp.resolve("a");
             writeFile(src, "x");
             Path dst = tmp.resolve("b");
+
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), new AtomicBoolean(true), null));
+            assertFalse(Files.exists(dst));
+        }
+
+        @Test
+        void returnsFalseWhenAbortAlreadyRequestedForEmptyFile(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("empty");
+            writeFile(src, "");
+            Path dst = tmp.resolve("empty.copy");
 
             assertFalse(fileOps.copyFile(src.toString(), dst.toString(), new AtomicBoolean(true), null));
             assertFalse(Files.exists(dst));
