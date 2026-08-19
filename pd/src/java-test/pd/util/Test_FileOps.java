@@ -756,6 +756,16 @@ class Test_FileOps {
     class copyDirectory {
 
         @Test
+        void identifiesDescendantPath(@TempDir Path tmp) throws IOException {
+            Path ancestor = tmp.resolve("ancestor");
+            mkdir(ancestor);
+
+            assertTrue(fileOps.isDescendantOf(ancestor.resolve("child"), ancestor));
+            assertFalse(fileOps.isDescendantOf(ancestor, ancestor));
+            assertFalse(fileOps.isDescendantOf(tmp.resolve("ancestor-copy"), ancestor));
+        }
+
+        @Test
         void copiesSingleFile(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve(".gitignore");
             writeFile(src, "git");
@@ -805,6 +815,30 @@ class Test_FileOps {
             Files.createFile(dst);
 
             assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
+        }
+
+        @Test
+        void returnsFalseWhenDstIsInsideSrc(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            mkdir(src);
+            writeFile(src.resolve("file"), "x");
+            Path dst = src.resolve("copy");
+
+            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
+            assertFalse(Files.exists(dst));
+        }
+
+        @Test
+        void returnsFalseWhenDstAliasIsInsideSrc(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            mkdir(src);
+            writeFile(src.resolve("file"), "x");
+            Path alias = tmp.resolve("alias");
+            Assumptions.assumeTrue(createSymbolicLink(alias, src));
+            Path dst = alias.resolve("copy");
+
+            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
+            assertFalse(Files.exists(src.resolve("copy")));
         }
 
         @Test

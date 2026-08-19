@@ -436,6 +436,9 @@ public class FileOps extends FileOpsCore {
         if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
             return false;
         }
+        if (isDescendantOf(dst, src)) {
+            return false;
+        }
 
         if (onAction != null) {
             onAction.accept(Action.COPY, src, dst, null);
@@ -494,6 +497,38 @@ public class FileOps extends FileOpsCore {
         }
 
         return succeeded;
+    }
+
+    protected boolean isDescendantOf(Path path, Path ancestor) {
+        Path readPath = getReadPath(path);
+        Path readAncestor = getReadPath(ancestor);
+        return readPath != null
+                && readAncestor != null
+                && !readPath.equals(readAncestor)
+                && readPath.startsWith(readAncestor);
+    }
+
+    private Path getReadPath(Path path) {
+        Path p = path.toAbsolutePath().normalize();
+        List<Path> a = new LinkedList<>();
+        while (!Files.exists(p, LinkOption.NOFOLLOW_LINKS)) {
+            Path parent = p.getParent();
+            if (parent == null) {
+                return null;
+            }
+            a.add(0, p.getFileName());
+            p = parent;
+        }
+
+        try {
+            p = p.toRealPath();
+        } catch (IOException ignored) {
+            return null;
+        }
+        for (Path name : a) {
+            p = p.resolve(name);
+        }
+        return p;
     }
 
     /**
