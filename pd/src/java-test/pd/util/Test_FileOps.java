@@ -154,6 +154,108 @@ class Test_FileOps {
     // ---- FileOpsCore methods ----
 
     @Nested
+    class createEmptyDirectory {
+
+        @Test
+        void createsDirectoryWhenParentExists(@TempDir Path tmp) {
+            assertTrue(fileOps.createEmptyDirectory(tmp.resolve("d").toString()));
+            assertTrue(Files.isDirectory(tmp.resolve("d")));
+        }
+
+        @Test
+        void returnsFalseWhenAlreadyExists(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+
+            assertFalse(fileOps.createEmptyDirectory(d.toString()));
+        }
+
+        @Test
+        void returnsFalseWhenPathIsAnExistingFile(@TempDir Path tmp) throws IOException {
+            Path f = tmp.resolve("f");
+            writeFile(f, "x");
+
+            assertFalse(fileOps.createEmptyDirectory(f.toString()));
+            assertTrue(Files.isRegularFile(f));
+        }
+
+        @Test
+        void returnsFalseWhenParentDoesNotExist(@TempDir Path tmp) {
+            assertFalse(fileOps.createEmptyDirectory(tmp.resolve("missing/d").toString()));
+            assertFalse(Files.exists(tmp.resolve("missing")));
+        }
+
+        @Test
+        void returnsFalseWhenPathIsSymbolicLink(@TempDir Path tmp) throws IOException {
+            // a symlink at the target path already "exists" (NOFOLLOW_LINKS), even if broken
+            Path link = tmp.resolve("link");
+            Assumptions.assumeTrue(createSymbolicLink(link, tmp.resolve("missing")));
+
+            assertFalse(fileOps.createEmptyDirectory(link.toString()));
+        }
+
+        @Test
+        void throwsWhenPathIsEmpty() {
+            assertThrows(IllegalArgumentException.class, () -> fileOps.createEmptyDirectory(""));
+        }
+    }
+
+    @Nested
+    class deleteEmptyDirectory {
+
+        @Test
+        void deletesEmptyDirectory(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+
+            assertTrue(fileOps.deleteEmptyDirectory(d.toString()));
+            assertFalse(Files.exists(d));
+        }
+
+        @Test
+        void returnsFalseWhenNotEmpty(@TempDir Path tmp) throws IOException {
+            Path d = tmp.resolve("d");
+            mkdir(d);
+            writeFile(d.resolve("f"), "f");
+
+            assertFalse(fileOps.deleteEmptyDirectory(d.toString()));
+            assertTrue(Files.exists(d.resolve("f")));
+        }
+
+        @Test
+        void returnsFalseWhenDoesNotExist(@TempDir Path tmp) {
+            assertFalse(fileOps.deleteEmptyDirectory(tmp.resolve("nope").toString()));
+        }
+
+        @Test
+        void returnsFalseForRegularFile(@TempDir Path tmp) throws IOException {
+            Path f = tmp.resolve("f");
+            writeFile(f, "x");
+
+            assertFalse(fileOps.deleteEmptyDirectory(f.toString()));
+            assertTrue(Files.exists(f));
+        }
+
+        @Test
+        void returnsFalseForSymbolicLinkToDirectory(@TempDir Path tmp) throws IOException {
+            // a symlink to a directory is not itself a directory (NOFOLLOW_LINKS); rejected, target untouched
+            Path dir = tmp.resolve("dir");
+            mkdir(dir);
+            Path link = tmp.resolve("link");
+            Assumptions.assumeTrue(createSymbolicLink(link, dir));
+
+            assertFalse(fileOps.deleteEmptyDirectory(link.toString()));
+            assertTrue(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
+            assertTrue(Files.exists(dir));
+        }
+
+        @Test
+        void throwsWhenPathIsEmpty() {
+            assertThrows(IllegalArgumentException.class, () -> fileOps.deleteEmptyDirectory(""));
+        }
+    }
+
+    @Nested
     class createDirectory {
 
         @Test

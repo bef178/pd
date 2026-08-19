@@ -157,6 +157,41 @@ class FileOpsCore {
         return list(pathPrefix, Integer.MAX_VALUE);
     }
 
+    /**
+     * `path` must not exist but its parent must exist.
+     * Not follow symlink.
+     */
+    public boolean createEmptyDirectory(@NonNull String path) {
+        throwIfEmpty(path);
+        Path src = Paths.get(path);
+        if (Files.exists(src, LinkOption.NOFOLLOW_LINKS) || (src.getParent() != null && !Files.exists(src.getParent()))) {
+            return false;
+        }
+        try {
+            Files.createDirectory(src);
+            return true;
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * `path` must be an empty directory.
+     * Not follow symlink.
+     */
+    public boolean deleteEmptyDirectory(@NonNull String path) {
+        throwIfEmpty(path);
+        Path src = Paths.get(path);
+        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+        try {
+            return Files.deleteIfExists(src);
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
     public FileStat stat(@NonNull String path) {
         throwIfEmpty(path);
 
@@ -293,11 +328,7 @@ public class FileOps extends FileOpsCore {
         }
 
         if (succeeded) {
-            try {
-                Files.createDirectory(src);
-            } catch (IOException ignored) {
-                succeeded = false;
-            }
+            succeeded = createEmptyDirectory(src.toString());
         }
 
         if (onAction != null) {
@@ -371,11 +402,7 @@ public class FileOps extends FileOpsCore {
             }
         }
 
-        try {
-            succeeded = succeeded && Files.deleteIfExists(src);
-        } catch (IOException ignored) {
-            succeeded = false;
-        }
+        succeeded = succeeded && deleteEmptyDirectory(src.toString());
 
         if (onAction != null) {
             onAction.accept(Action.DELETE, src, null, succeeded);
