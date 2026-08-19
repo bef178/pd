@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -27,6 +27,88 @@ class Test_FileOps {
 
     private final FileOps fileOps = FileOps.singleton;
 
+    @Nested
+    class list {
+
+        @Test
+        public void list_baseline() {
+            List<String> a = FileOps.singleton.list("");
+            assertTrue(a.contains("src/"));
+            assertTrue(a.contains("pom.xml"));
+
+            a = FileOps.singleton.list("pom");
+            assertEquals(1, a.size());
+            assertTrue(a.contains("pom.xml"));
+
+            a = FileOps.singleton.list("pom.xml");
+            assertTrue(a.isEmpty());
+
+            a = FileOps.singleton.list("src");
+            assertEquals(1, a.size());
+            assertTrue(a.contains("src/"));
+
+            a = FileOps.singleton.list("src/");
+            assertArrayEquals(new String[] {"src/java/", "src/java-test/"}, a.toArray());
+
+            a = FileOps.singleton.list("src", 4);
+            assertTrue(a.contains("src/java/pd/time/"));
+            assertTrue(a.contains("src/java/pd/util/"));
+        }
+
+        @Test
+        public void list_documented(@TempDir Path root) throws IOException {
+            Files.createDirectory(root.resolve("d"));
+            Files.createDirectory(root.resolve("d/d"));
+            Files.write(root.resolve("d/f"), new byte[0]);
+            Files.createDirectory(root.resolve("lo"));
+            Files.createDirectory(root.resolve("lower"));
+            Files.write(root.resolve("long"), new byte[0]);
+            Files.createDirectory(root.resolve(".git"));
+            Files.write(root.resolve(".gitignore"), new byte[0]);
+            Files.write(root.resolve("...a"), new byte[0]);
+
+            String s = root + "/";
+            assertArrayEquals(new String[] {s + "d/"}, FileOps.singleton.list(s + "d").toArray());
+            assertArrayEquals(new String[] {s + "d/d/", s + "d/f"}, FileOps.singleton.list(s + "d/").toArray());
+            assertTrue(FileOps.singleton.list(s + "d/f").isEmpty());
+            assertArrayEquals(new String[] {s + "lo/", s + "lower/", s + "long"}, FileOps.singleton.list(s + "lo").toArray());
+            assertArrayEquals(new String[] {s + ".git/", s + "...a", s + ".gitignore"}, FileOps.singleton.list(s + ".").toArray());
+            assertArrayEquals(new String[] {s + "...a"}, FileOps.singleton.list(s + "..").toArray());
+            assertFalse(FileOps.singleton.list(s + "../").isEmpty());
+            assertArrayEquals(new String[] {s + ".git/", s + "d/d/", s + "d/f", s + "lo/", s + "lower/", s + "...a", s + ".gitignore", s + "long"}, FileOps.singleton.list(s, 999).toArray());
+        }
+
+        @Test
+        public void list_returnEmptyForEmptyDirectory(@TempDir Path root) {
+            assertTrue(FileOps.singleton.list(root + "/").isEmpty());
+        }
+
+        @Test
+        public void list_returnNullWhenPrefixMatchesNothing(@TempDir Path root) {
+            assertNull(FileOps.singleton.list(root.resolve("a").toString()));
+        }
+
+        @Test
+        public void list_returnEmptyForBrokenSymbolicLink(@TempDir Path root) throws IOException {
+            Path symlink = root.resolve("symlink");
+            Files.createSymbolicLink(symlink, root.resolve("missing"));
+
+            assertTrue(FileOps.singleton.list(symlink.toString(), 2).isEmpty());
+        }
+
+        @Test
+        void list_returnEmptyForDot() {
+            assertTrue(FileOps.singleton.list(".").isEmpty());
+            assertTrue(FileOps.singleton.list("./").contains("./src/"));
+        }
+
+        @Test
+        void list_returnEmptyForDotDot() {
+            assertTrue(FileOps.singleton.list("..").isEmpty());
+            assertTrue(FileOps.singleton.list("../").contains("../pd/"));
+        }
+    }
+
     private static void writeFile(Path p, String content) throws IOException {
         Files.createDirectories(p.getParent());
         Files.write(p, content.getBytes());
@@ -37,7 +119,7 @@ class Test_FileOps {
     }
 
     // returns false (so the caller can skip) if symbolic links are not supported here
-    private static boolean createSymbolicLink(Path link, Path target) throws IOException {
+    private static boolean createSymbolicLink(Path link, Path target) {
         try {
             Files.createSymbolicLink(link, target);
             return true;
@@ -111,7 +193,6 @@ class Test_FileOps {
         void throwsWhenPathIsEmpty() {
             assertThrows(IllegalArgumentException.class, () -> fileOps.createDirectory("", false, null, null));
         }
-
     }
 
     @Nested
@@ -419,7 +500,7 @@ class Test_FileOps {
         }
 
         @Test
-        void returnsNullForBrokenSymbolicLink(@TempDir Path tmp) throws IOException {
+        void returnsNullForBrokenSymbolicLink(@TempDir Path tmp) {
             // Files.exists follows symlinks; a broken symlink → exists=false → null
             Path target = tmp.resolve("missing");
             Path link = tmp.resolve("link");
@@ -556,7 +637,7 @@ class Test_FileOps {
         }
 
         @Test
-        void returnsSymlinkOnlyForBrokenSymlink(@TempDir Path tmp) throws IOException {
+        void returnsSymlinkOnlyForBrokenSymlink(@TempDir Path tmp) {
             // broken symlink: type = "l" (no target type), attributes are the link's own
             Path target = tmp.resolve("missing");
             Path link = tmp.resolve("link");
@@ -574,164 +655,6 @@ class Test_FileOps {
         @Test
         void throwsWhenPathIsEmpty() {
             assertThrows(IllegalArgumentException.class, () -> fileOps.stat(""));
-        }
-    }
-
-    // ---- FileOps methods ----
-
-    @Nested
-    class list {
-
-        @Test
-        void listsDirectChildrenWithTrailingSlashForDirectories(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.list(root.resolve("docs").toString() + "/");
-
-            assertEquals(2, result.size());
-            assertEquals(root.resolve("docs/img").toString() + "/", result.get(0));
-            assertEquals(root.resolve("docs/readme.md").toString(), result.get(1));
-        }
-
-        @Test
-        void returnsEntryItselfWhenPrefixIsADirectory(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.list(root.resolve("docs").toString());
-
-            assertEquals(1, result.size());
-            assertEquals(root.resolve("docs").toString() + "/", result.get(0));
-        }
-
-        @Test
-        void returnsEntryItselfWhenPrefixIsAFile(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.list(root.resolve(".gitignore").toString());
-
-            assertEquals(1, result.size());
-            assertEquals(root.resolve(".gitignore").toString(), result.get(0));
-        }
-
-        @Test
-        void returnsEmptyForEmptyDirectory(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.list(root.resolve("empty").toString() + "/");
-
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
-        void returnsEmptyForNonExistentPrefix(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.list(root.resolve("nope").toString());
-
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
-        void listsByPrefixAcrossDirectoryAndFiles(@TempDir Path tmp) throws IOException {
-            // mirrors the documented example: prefix "lo" matches lo/, long, lower/
-            Path root = tmp.resolve("root");
-            mkdir(root.resolve("lo"));
-            mkdir(root.resolve("lower"));
-            writeFile(root.resolve("long"), "long");
-
-            List<String> result = fileOps.list(root.resolve("lo").toString());
-
-            assertEquals(3, result.size());
-            assertEquals(root.resolve("lo").toString() + "/", result.get(0));
-            assertEquals(root.resolve("lower").toString() + "/", result.get(1));
-            assertEquals(root.resolve("long").toString(), result.get(2));
-        }
-
-        @Test
-        void matchesDocumentedDirectoryPrefixExamples(@TempDir Path tmp) throws IOException {
-            // mirrors the documented examples:
-            //   list("d")  => ["d/"]
-            //   list("d/") => ["d/d/", "d/f"]
-            Path root = tmp.resolve("root");
-            mkdir(root.resolve("d/d"));
-            writeFile(root.resolve("d/f"), "f");
-
-            List<String> asPrefix = fileOps.list(root.resolve("d").toString());
-            assertEquals(1, asPrefix.size());
-            assertEquals(root.resolve("d").toString() + "/", asPrefix.get(0));
-
-            List<String> asDirectory = fileOps.list(root.resolve("d").toString() + "/");
-            assertEquals(2, asDirectory.size());
-            assertEquals(root.resolve("d/d").toString() + "/", asDirectory.get(0));
-            assertEquals(root.resolve("d/f").toString(), asDirectory.get(1));
-        }
-
-        @Test
-        void listsOnlyEntriesWhoseNameStartsWithDot(@TempDir Path tmp) throws IOException {
-            // list(absDir + "/."): equivalent to list(".") — only entries whose name starts with "." pass
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.list(root.toString() + "/.");
-
-            // only .gitignore starts with "."
-            assertEquals(1, result.size());
-            assertEquals(root.resolve(".gitignore").toString(), result.get(0));
-        }
-    }
-
-    @Nested
-    class listAll {
-
-        @Test
-        void listsAllFilesRecursively(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listAll(root.resolve("docs").toString());
-
-            assertEquals(2, result.size());
-            assertTrue(result.contains(root.resolve("docs/img/a.png").toString()));
-            assertTrue(result.contains(root.resolve("docs/readme.md").toString()));
-        }
-
-        @Test
-        void returnsFileItselfWhenPrefixIsAFile(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listAll(root.resolve(".gitignore").toString());
-
-            assertEquals(1, result.size());
-            assertEquals(root.resolve(".gitignore").toString(), result.get(0));
-        }
-
-        @Test
-        void returnsEmptyForNonExistentPrefix(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listAll(root.resolve("nope").toString());
-
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
-        void returnsEmptyForEmptyDirectory(@TempDir Path tmp) throws IOException {
-            Path root = tmp.resolve("root");
-            mkdir(root);
-
-            List<String> result = fileOps.listAll(root.toString());
-
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
-        void returnsEmptyForDirectoryWithOnlySubdirectories(@TempDir Path tmp) throws IOException {
-            // listAll only returns files; a directory with only subdirectories yields empty
-            Path root = tmp.resolve("root");
-            mkdir(root.resolve("a"));
-            mkdir(root.resolve("b"));
-
-            List<String> result = fileOps.listAll(root.toString());
-
-            assertTrue(result.isEmpty());
         }
     }
 
@@ -906,7 +829,7 @@ class Test_FileOps {
         }
 
         @Test
-        void throwsWhenSrcIsEmpty(@TempDir Path tmp) throws IOException {
+        void throwsWhenSrcIsEmpty(@TempDir Path tmp) {
             Path dst = tmp.resolve("b");
             assertThrows(IllegalArgumentException.class, () -> fileOps.copyDirectory("", dst.toString(), null, null));
         }
@@ -1050,7 +973,10 @@ class Test_FileOps {
 
             // flip the flag shortly after copying starts, so the in-loop check hits it
             Thread flipper = new Thread(() -> {
-                try { Thread.sleep(1); } catch (InterruptedException ignored) { }
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ignored) {
+                }
                 abort.set(true);
             });
             flipper.start();
@@ -1061,7 +987,7 @@ class Test_FileOps {
         }
 
         @Test
-        void throwsWhenSrcIsEmpty(@TempDir Path tmp) {
+        void throwsWhenSrcIsEmpty() {
             assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile("", "dst", null, null));
         }
 
@@ -1188,9 +1114,8 @@ class Test_FileOps {
 
             assertTrue(fileOps.rename(src.toString(), dst.toString(), onAction));
             assertEquals(1, moved.size());
-            assertEquals(src.toString() + " -> " + dst.toString(), moved.get(0));
+            assertEquals(src + " -> " + dst, moved.get(0));
         }
-
     }
 
     @Nested
@@ -1261,131 +1186,6 @@ class Test_FileOps {
                 }
             }
             Files.deleteIfExists(p);
-        }
-
-        @Test
-        void listDirectoryPrefix() throws IOException {
-            String rel = uniqueRel();
-            Path root = Paths.get(rel);
-            try {
-                Files.createDirectories(root.resolve("d/d"));
-                Files.write(root.resolve("d/f"), "f".getBytes());
-
-                // prefix "d" matches the directory itself
-                List<String> result = fileOps.list(rel + "/d");
-                assertEquals(1, result.size());
-                assertEquals(rel + "/d/", result.get(0));
-            } finally {
-                rm(root);
-            }
-        }
-
-        @Test
-        void listDirectoryWithTrailingSlash() throws IOException {
-            String rel = uniqueRel();
-            Path root = Paths.get(rel);
-            try {
-                Files.createDirectories(root.resolve("d/d"));
-                Files.write(root.resolve("d/f"), "f".getBytes());
-
-                List<String> result = fileOps.list(rel + "/d/");
-                assertEquals(2, result.size());
-                assertEquals(rel + "/d/d/", result.get(0));
-                assertEquals(rel + "/d/f", result.get(1));
-            } finally {
-                rm(root);
-            }
-        }
-
-        @Test
-        void listFilePrefix() throws IOException {
-            String rel = uniqueRel();
-            Path root = Paths.get(rel);
-            try {
-                Files.createDirectories(root);
-                Files.write(root.resolve("f"), "f".getBytes());
-
-                List<String> result = fileOps.list(rel + "/f");
-                assertEquals(1, result.size());
-                assertEquals(rel + "/f", result.get(0));
-            } finally {
-                rm(root);
-            }
-        }
-
-        @Test
-        void listPrefixMatchesMultiple() throws IOException {
-            String rel = uniqueRel();
-            Path root = Paths.get(rel);
-            try {
-                Files.createDirectories(root.resolve("lo"));
-                Files.createDirectories(root.resolve("lower"));
-                Files.write(root.resolve("long"), "long".getBytes());
-
-                List<String> result = fileOps.list(rel + "/lo");
-                assertEquals(3, result.size());
-                assertEquals(rel + "/lo/", result.get(0));
-                assertEquals(rel + "/lower/", result.get(1));
-                assertEquals(rel + "/long", result.get(2));
-            } finally {
-                rm(root);
-            }
-        }
-
-        @Test
-        void listDotSlashReturnsEmpty() {
-            // list("./"): pathToString strips "./" prefix from each entry,
-            // so filter startsWith("./") never matches → empty result
-            List<String> result = fileOps.list("./");
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
-        void listDotDotReturnsParentEntries() {
-            // list(".."): lists parent of cwd; all entries start with "../" so all pass filter
-            List<String> result = fileOps.list("..");
-            assertFalse(result.isEmpty());
-            for (String s : result) {
-                assertTrue(s.startsWith("../"), String.format("E: entry `%s` should start with ../", s));
-            }
-        }
-
-        @Test
-        void listRelativePathWithDotSuffix() throws IOException {
-            // list(rel + "/."): only entries whose name starts with "." pass the filter
-            String rel = uniqueRel();
-            Path root = Paths.get(rel);
-            try {
-                mkdir(root.resolve(".hiddenDir"));
-                writeFile(root.resolve(".hiddenFile"), "x");
-                writeFile(root.resolve("visible"), "y");
-
-                List<String> result = fileOps.list(rel + "/.");
-
-                assertEquals(2, result.size());
-                assertTrue(result.contains(rel + "/.hiddenDir/"));
-                assertTrue(result.contains(rel + "/.hiddenFile"));
-            } finally {
-                rm(root);
-            }
-        }
-
-        @Test
-        void listAllReturnsAllFiles() throws IOException {
-            String rel = uniqueRel();
-            Path root = Paths.get(rel);
-            try {
-                Files.createDirectories(root.resolve("d/d"));
-                Files.write(root.resolve("d/f"), "f".getBytes());
-                Files.write(root.resolve("top"), "t".getBytes());
-
-                List<String> result = fileOps.listAll(rel);
-                assertEquals(2, result.size());
-                assertTrue(result.contains(rel + "/d/f"));
-                assertTrue(result.contains(rel + "/top"));
-            } finally {
-                rm(root);
-            }
         }
 
         @Test

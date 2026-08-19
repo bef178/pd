@@ -37,34 +37,31 @@ class FileOpsCore {
     }
 
     /**
-     * Starting from `pathPrefix`, list the next nodes in the file tree.
+     * List stop nodes matching `pathPrefix` up to `depth` in the file tree.
      * `pathPrefix` might be empty.
+     * Return `null` if `pathPrefix` matches nothing.
      * Results are sorted.
      * Directories end with `/`.
      * e.g.
      * - "d" => ["d/"]
      * - "d/" => ["d/d/", "d/f"]
-     * - "f" => ["f"]
+     * - "d/f" => []
      * - "lo" => ["lo/", "lower/", "long"]
-     * - "." => [".git/", ".gitignore", "...a"]
+     * - "." => [".git/", "...a", ".gitignore"]
+     * - "./" => ["./d/", "./lo/", ...]
      * - ".." => ["...a"]
+     * - "../" => ["../{name}/", ...]
      */
-    public List<String> list(@NonNull String pathPrefix, int depth) {
+    public List<String> list(@NonNull final String pathPrefix, int depth) {
         if (depth < 1) {
             return null;
         }
 
-        // look up the capping directory
         String d;
-        if (pathPrefix.equals(".")) {
-            d = "";
-        } else if (pathPrefix.equals("./")) {
-            d = "";
-        } else if (pathPrefix.equals("..")) {
-            d = "../";
-        } else if (pathPrefix.endsWith("/")) {
+        if (pathPrefix.endsWith("/")) {
             d = pathPrefix;
         } else {
+            // look up the capping directory
             int lastIndex = pathPrefix.lastIndexOf('/');
             if (lastIndex >= 0) {
                 d = pathPrefix.substring(0, lastIndex + 1);
@@ -74,17 +71,26 @@ class FileOpsCore {
         }
         List<Path> a = listDirectory(Paths.get(d));
         if (a == null) {
-            return Collections.emptyList();
+            return null;
         } else if (depth == 1) {
-            return sortPaths(a).stream()
+            List<String> results = sortPaths(a).stream()
                     .map(this::pathToString)
-                    .filter(s -> s.startsWith(pathPrefix))
+                    .filter(s -> s.startsWith(pathPrefix) && !s.equals(pathPrefix))
                     .collect(Collectors.toList());
+            return results.isEmpty() && !Files.exists(Paths.get(pathPrefix), LinkOption.NOFOLLOW_LINKS)
+                    ? null
+                    : results;
         }
 
         a = sortPaths(a).stream()
-                .filter(p -> pathToString(p).startsWith(pathPrefix))
+                .filter(p -> {
+                    String s = pathToString(p);
+                    return s.startsWith(pathPrefix) && !s.equals(pathPrefix);
+                } )
                 .collect(Collectors.toList());
+        if (a.isEmpty() && !Files.exists(Paths.get(pathPrefix), LinkOption.NOFOLLOW_LINKS)) {
+            return null;
+        }
 
         List<String> results = new LinkedList<>();
         LinkedList<SimpleEntry<Path, Integer>> stack = new LinkedList<>();
@@ -100,10 +106,12 @@ class FileOpsCore {
                 results.add(pathToString(path1));
                 continue;
             }
-            List<Path> children;
-            try (Stream<Path> stream = Files.list(path1)) {
-                children = stream.collect(Collectors.toList());
-            } catch (IOException e) {
+            List<Path> children = listDirectory(path1);
+            if (children == null) {
+                continue;
+            }
+            if (children.isEmpty()) {
+                results.add(pathToString(path1));
                 continue;
             }
             children = sortPaths(children);
@@ -129,7 +137,8 @@ class FileOpsCore {
         try (Stream<Path> stream = Files.list(src)) {
             return stream.collect(Collectors.toList());
         } catch (IOException ignored) {
-            return null;
+            // it is a directory but read nothing
+            return Collections.emptyList();
         }
     }
 

@@ -304,15 +304,14 @@ public class PathOps {
     }
 
     /**
-     * Leading "./" will be trimmed. A trailing "/" will be added for directory.
+     * A trailing "/" will be added for directory.
      */
     public String pathToString(Path path) {
         String s = path.toString();
-        if (s.startsWith("./")) {
-            s = s.substring(2);
-        }
         if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-            s += "/";
+            if (!s.endsWith("/")) {
+                s += "/";
+            }
         }
         return s;
     }
