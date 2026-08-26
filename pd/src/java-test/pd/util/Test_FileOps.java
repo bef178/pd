@@ -50,6 +50,9 @@ class Test_FileOps {
             a = FileOps.singleton.list("src/");
             assertArrayEquals(new String[] {"src/java/", "src/java-test/"}, a.toArray());
 
+            a = FileOps.singleton.list("src", 0);
+            assertNull(a);
+
             a = FileOps.singleton.list("src", 4);
             assertTrue(a.contains("src/java/pd/time/"));
             assertTrue(a.contains("src/java/pd/util/"));
