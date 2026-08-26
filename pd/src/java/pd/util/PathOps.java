@@ -1,9 +1,5 @@
 package pd.util;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -297,23 +293,6 @@ public class PathOps {
             }
         }
         return Integer.compare(a.length, b.length);
-    }
-
-    public String fileToString(File file) {
-        return pathToString(file.toPath());
-    }
-
-    /**
-     * A trailing "/" will be added for directory.
-     */
-    public String pathToString(Path path) {
-        String s = path.toString();
-        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-            if (!s.endsWith("/")) {
-                s += "/";
-            }
-        }
-        return s;
     }
 
     static void throwIfEmpty(String path) {

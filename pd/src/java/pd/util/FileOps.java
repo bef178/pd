@@ -142,8 +142,17 @@ class FileOpsCore {
         }
     }
 
-    protected String pathToString(Path p) {
-        return PathOps.singleton.pathToString(p);
+    /**
+     * A trailing "/" will be added for directory.
+     */
+    public String pathToString(Path path) {
+        String s = path.toString();
+        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+            if (!s.endsWith("/")) {
+                s += "/";
+            }
+        }
+        return s;
     }
 
     protected List<Path> sortPaths(List<Path> a) {
