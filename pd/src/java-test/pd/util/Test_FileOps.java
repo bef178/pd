@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -105,7 +106,15 @@ class Test_FileOps {
             mkdir(dir);
             writeFile(dir.resolve("child.txt"), "x");
 
-            assertNull(fileOps.listDirectory(dir.toString(), 3, new AtomicBoolean(true), null));
+            List<String> met = new LinkedList<>();
+            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
+                if (action == FileOps.Action.MEET) {
+                    met.add(from);
+                }
+            };
+
+            assertFalse(fileOps.listDirectory(dir.toString(), 3, new AtomicBoolean(true), listener));
+            assertTrue(met.isEmpty());
             assertTrue(Files.exists(dir.resolve("child.txt")));
         }
 
@@ -150,7 +159,9 @@ class Test_FileOps {
         writeFile(root.resolve("src/Main.java"), "main");
         writeFile(root.resolve("src/util/U.java"), "u");
         writeFile(root.resolve(".gitignore"), "git");
+        writeFile(root.resolve("empty-file"), "");
         mkdir(root.resolve("empty"));
+        mkdir(root.resolve("empty-directory"));
         return root;
     }
 
@@ -189,7 +200,7 @@ class Test_FileOps {
         }
 
         @Test
-        void returnsFalseWhenPathIsSymbolicLink(@TempDir Path tmp) throws IOException {
+        void returnsFalseWhenPathIsSymbolicLink(@TempDir Path tmp) {
             // a symlink at the target path already "exists" (NOFOLLOW_LINKS), even if broken
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, tmp.resolve("missing")));
@@ -455,7 +466,7 @@ class Test_FileOps {
             writeFile(d.resolve("f"), "f");
             writeFile(d.resolve("sub/g"), "g");
 
-            List<String> removed = new java.util.ArrayList<>();
+            List<String> removed = new LinkedList<>();
             FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
                 if (action == FileOps.Action.DELETE && succeeded != null) {
                     removed.add(from);
@@ -476,7 +487,7 @@ class Test_FileOps {
             Path leaf = tmp.resolve("p/q/r");
             mkdir(leaf);
 
-            List<String> removed = new java.util.ArrayList<>();
+            List<String> removed = new LinkedList<>();
             FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
                 if (action == FileOps.Action.DELETE && succeeded != null) {
                     removed.add(from);
@@ -496,7 +507,7 @@ class Test_FileOps {
             mkdir(d);
             writeFile(d.resolve("f"), "f");
 
-            List<String> removed = new java.util.ArrayList<>();
+            List<String> removed = new LinkedList<>();
             FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
                 if (action == FileOps.Action.DELETE && succeeded != null) {
                     removed.add(from);
@@ -782,78 +793,73 @@ class Test_FileOps {
     }
 
     @Nested
-    class listDirectoryWithDepth {
+    class listDirectory {
 
-        @Test
-        void listsOneLevelDeep(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 1, null, null);
-
-            assertEquals(2, result.size());
-            assertEquals(root.resolve("docs/img").toString(), result.get(0));
-            assertEquals(root.resolve("docs/readme.md").toString(), result.get(1));
+        // asserts the call succeeded and returns the nodes met via callback
+        private List<String> listAndCollect(String directory, int depth) {
+            List<String> a = new LinkedList<>();
+            boolean succeeded = fileOps.listDirectory(directory, depth, null, (action, from, to, callbackSucceeded) -> {
+                if (action == FileOps.Action.MEET) {
+                    a.add(from);
+                }
+            });
+            assertTrue(succeeded, "expected listDirectory to succeed");
+            return a;
         }
 
         @Test
-        void listsTwoLevelsDeep(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
+        void listDirectory_baseline(@TempDir Path root) throws IOException {
+            buildTree(root);
 
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 2, null, null);
+            assertFalse(FileOps.singleton.listDirectory(root.toString(), 0, null, null));
 
-            assertEquals(3, result.size());
-            assertEquals(root.resolve("docs/img").toString(), result.get(0));
-            assertEquals(root.resolve("docs/img/a.png").toString(), result.get(1));
-            assertEquals(root.resolve("docs/readme.md").toString(), result.get(2));
-        }
-
-        @Test
-        void returnsEmptyForEmptyDirectory(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listDirectory(root.resolve("empty").toString(), 1, null, null);
-
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
-        void returnsNullWhenDepthIsZero(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 0, null, null);
-
-            assertNull(result);
-        }
-
-        @Test
-        void returnsNullWhenDirectoryDoesNotExist(@TempDir Path tmp) {
-            List<String> result = fileOps.listDirectory(tmp.resolve("nope").toString(), 1, null, null);
-
-            assertNull(result);
-        }
-
-        @Test
-        void returnsNullWhenPathIsAFile(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listDirectory(root.resolve(".gitignore").toString(), 1, null, null);
-
-            assertNull(result);
-        }
-
-        @Test
-        void returnsNullWhenAbortAlreadyRequested(@TempDir Path tmp) throws IOException {
-            Path root = buildTree(tmp.resolve("root"));
-
-            List<String> result = fileOps.listDirectory(root.resolve("docs").toString(), 1, new AtomicBoolean(true), null);
-
-            assertNull(result);
-        }
-
-        @Test
-        void throwsWhenDirectoryIsEmpty() {
-            // empty string is rejected; callers must pass "." for the current directory
             assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory("", 1, null, null));
+
+            assertFalse(fileOps.listDirectory(root.resolve("not-exist").toString(), 1, null, null));
+
+            assertFalse(fileOps.listDirectory(root.resolve("empty-file").toString(), 1, null, null));
+
+            List<String> a = listAndCollect(root.resolve("empty").toString(), 1);
+            assertTrue(a.isEmpty());
+
+            a = listAndCollect(root.resolve("docs").toString(), 1);
+            assertArrayEquals(new String[] {root.resolve("docs/img/") + "/", root.resolve("docs/readme.md").toString()}, a.toArray());
+
+            a = listAndCollect(root.resolve("docs").toString(), 2);
+            assertArrayEquals(new String[] {root.resolve("docs/img/") + "/", root.resolve("docs/img/a.png").toString(), root.resolve("docs/readme.md").toString()}, a.toArray());
+        }
+
+        @Test
+        void returnsFalseWhenAbortAlreadyRequested(@TempDir Path tmp) throws IOException {
+            Path root = buildTree(tmp.resolve("root"));
+
+            List<String> met = new LinkedList<>();
+            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
+                if (action == FileOps.Action.MEET) {
+                    met.add(from);
+                }
+            };
+
+            assertFalse(fileOps.listDirectory(root.resolve("docs").toString(), 1, new AtomicBoolean(true), listener));
+            assertTrue(met.isEmpty());
+        }
+
+        @Test
+        void reportsSymlinkWithoutTrailingSlash(@TempDir Path tmp) throws IOException {
+            // pathToString does not follow symlink: a symlink to a directory keeps no trailing "/"
+            Path root = buildTree(tmp.resolve("root"));
+            Path link = root.resolve("docs/link");
+            if (!createSymbolicLink(link, root.resolve("docs/img"))) {
+                return;
+            }
+
+            List<String> result = listAndCollect(root.resolve("docs").toString(), 1);
+
+            // dir-first order: "img/" and the symlink (not a directory itself) before readme.md
+            assertEquals(3, result.size());
+            assertEquals(root.resolve("docs/img") + "/", result.get(0));
+            assertEquals(link.toString(), result.get(1));
+            assertEquals(root.resolve("docs/readme.md").toString(), result.get(2));
         }
 
         @Test
@@ -865,10 +871,10 @@ class Test_FileOps {
             writeFile(root.resolve("d/b/c.txt"), "c");
             writeFile(root.resolve("d/c.txt"), "c");
 
-            List<String> result = fileOps.listDirectory(root.resolve("d").toString(), 2, null, null);
+            List<String> result = listAndCollect(root.resolve("d").toString(), 2);
 
             assertEquals(4, result.size());
-            assertEquals(root.resolve("d/b").toString(), result.get(0));
+            assertEquals(root.resolve("d/b") + "/", result.get(0));
             assertEquals(root.resolve("d/b/c.txt").toString(), result.get(1));
             assertEquals(root.resolve("d/a.txt").toString(), result.get(2));
             assertEquals(root.resolve("d/c.txt").toString(), result.get(3));
@@ -1272,7 +1278,7 @@ class Test_FileOps {
             mkdir(src);
             Path dst = tmp.resolve("d.moved");
 
-            List<String> moved = new java.util.ArrayList<>();
+            List<String> moved = new LinkedList<>();
             FileOps.OnActionListener onAction = (action, from, to, succeeded) -> {
                 if (action == FileOps.Action.RENAME && succeeded != null) {
                     moved.add(from + " -> " + to);
