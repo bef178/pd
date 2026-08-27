@@ -270,7 +270,12 @@ public class PathOps {
                 } else if (b[i] == '/') {
                     return 1;
                 }
-                // given name first
+                boolean aIsDirectory = segmentIsDirectory(a, i);
+                boolean bIsDirectory = segmentIsDirectory(b, i);
+                if (aIsDirectory != bIsDirectory) {
+                    return aIsDirectory ? -1 : 1;
+                }
+                // dot first
                 if (a[i] == '.') {
                     return -1;
                 } else if (b[i] == '.') {
@@ -280,12 +285,19 @@ public class PathOps {
             }
         }
         if (a.length > b.length) {
+            // prefix first
+            if (b[b.length - 1] == '/') {
+                return 1;
+            }
             for (int i = b.length; i < a.length; i++) {
                 if (a[i] == '/') {
                     return -1;
                 }
             }
         } else if (a.length < b.length) {
+            if (a[a.length - 1] == '/') {
+                return -1;
+            }
             for (int i = a.length; i < b.length; i++) {
                 if (b[i] == '/') {
                     return 1;
@@ -293,6 +305,15 @@ public class PathOps {
             }
         }
         return Integer.compare(a.length, b.length);
+    }
+
+    private static boolean segmentIsDirectory(int[] a, int index) {
+        for (int i = index; i < a.length; i++) {
+            if (a[i] == '/') {
+                return true;
+            }
+        }
+        return false;
     }
 
     static void throwIfEmpty(String path) {

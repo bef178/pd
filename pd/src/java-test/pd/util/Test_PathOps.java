@@ -533,6 +533,40 @@ class Test_PathOps {
     class compare {
 
         @Test
+        void compare_baseline() {
+            // directory first
+            assertEquals(-1, PathOps.singleton.compare("ab/c", "ab,c"));
+            assertEquals(-1, PathOps.singleton.compare("ab/c", "ab0c"));
+            assertEquals(-1, PathOps.singleton.compare("bc/", "bc"));
+
+            // prefix first
+            assertEquals(-1, PathOps.singleton.compare("d/", "d/d/"));
+            assertEquals(-1, PathOps.singleton.compare("d/", "d/f"));
+            assertEquals(-1, PathOps.singleton.compare("g", "ga"));
+            assertEquals(-1, PathOps.singleton.compare("//", "///"));
+        }
+
+        @Test
+        void directoryFirstWithinSameLevel() {
+            // level 0: directory "a" before file "b", regardless of names
+            assertEquals(-1, pathOps.compare("a/c", "b"));
+            assertEquals(1, pathOps.compare("b", "a/c"));
+            // level 0: both directories, compare by name
+            assertEquals(-1, pathOps.compare("a/c", "b/x"));
+            assertEquals(1, pathOps.compare("b/c", "a/x"));
+            // level 1: directory "a/b" before file "a/c"
+            assertEquals(-1, pathOps.compare("a/b/c", "a/c"));
+        }
+
+        @Test
+        void prefixNameSortsFirstAmongDirectories() {
+            // both directories at level 0: "ab" is a prefix of "ab," and sorts first,
+            // even though '/' (47) > ',' (44) by code point
+            assertEquals(-1, pathOps.compare("ab/c", "ab,/x"));
+            assertEquals(1, pathOps.compare("ab,/x", "ab/c"));
+        }
+
+        @Test
         void returnsZeroForEqual() {
             assertEquals(0, pathOps.compare("xyz/xyz", "xyz/xyz"));
             assertEquals(0, pathOps.compare("a.b", "a.b"));
@@ -549,12 +583,6 @@ class Test_PathOps {
         void comparesSupplementaryCodePointsByValue() {
             // U+00E9 (é = 233) > U+007A (z = 122), so "café" > "cafz"
             assertEquals(1, pathOps.compare("café", "cafz"));
-        }
-
-        @Test
-        void slashSortsBeforeDigits() {
-            assertEquals(-1, pathOps.compare("ab/c", "ab0c"));
-            assertEquals(1, pathOps.compare("ab0c", "ab/c"));
         }
 
         @Test
@@ -589,11 +617,6 @@ class Test_PathOps {
         @Test
         void prefixWithoutSlashComparesByLength() {
             assertEquals(-1, pathOps.compare("ab", "abc"));
-        }
-
-        @Test
-        void allSlashesCompareByLength() {
-            assertEquals(1, pathOps.compare("//", "///"));
         }
 
         @Test
