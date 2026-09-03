@@ -93,11 +93,104 @@ class Test_FileOps {
         }
 
         @Test
-        public void list_returnEmptyForBrokenSymbolicLink(@TempDir Path root) throws IOException {
+        public void list_brokenSymbolicLink(@TempDir Path root) throws IOException {
             Path symlink = root.resolve("symlink");
             Files.createSymbolicLink(symlink, root.resolve("missing"));
 
-            assertTrue(FileOps.singleton.list(symlink.toString(), 2).isEmpty());
+            // follow: a broken symlink resolves to nothing, hence invisible
+            assertNull(FileOps.singleton.list(symlink.toString(), 2));
+            // not follow: the symlink itself is a node
+            assertTrue(FileOps.singleton.list(symlink.toString(), 2, false).isEmpty());
+        }
+
+        @Test
+        public void list_followSymlinks(@TempDir Path tmp) throws IOException {
+            Path root = tmp.resolve("root");
+            mkdir(root.resolve("d/full"));
+            writeFile(root.resolve("d/full/x"), "x");
+            mkdir(root.resolve("d/empty"));
+            writeFile(root.resolve("d/b.txt"), "x");
+            if (!createSymbolicLink(root.resolve("d/lkN"), root.resolve("d/full"))) {
+                return;
+            }
+            if (!createSymbolicLink(root.resolve("d/lkB"), root.resolve("d/missing"))) {
+                return;
+            }
+            String d = root.resolve("d").toString();
+
+            // follow (default): a symlink is its target; a broken one is invisible
+            assertArrayEquals(new String[] {d + "/empty/", d + "/full/x", d + "/lkN/x", d + "/b.txt"},
+                    FileOps.singleton.list(d, 3).toArray());
+
+            // not follow: a symlink is a leaf node
+            assertArrayEquals(new String[] {d + "/empty/", d + "/full/x", d + "/b.txt", d + "/lkB", d + "/lkN"},
+                    FileOps.singleton.list(d, 3, false).toArray());
+        }
+
+        @Test
+        public void list_symlinkBoundaryAndAnchor(@TempDir Path tmp) throws IOException {
+            Path root = tmp.resolve("root");
+            mkdir(root.resolve("d/full"));
+            writeFile(root.resolve("d/full/x"), "x");
+            mkdir(root.resolve("d/empty"));
+            writeFile(root.resolve("d/b.txt"), "x");
+            if (!createSymbolicLink(root.resolve("d/lkN"), root.resolve("d/full"))) {
+                return;
+            }
+            if (!createSymbolicLink(root.resolve("d/lkE"), root.resolve("d/empty"))) {
+                return;
+            }
+            if (!createSymbolicLink(root.resolve("d/lkB"), root.resolve("d/missing"))) {
+                return;
+            }
+            // broken symlink nested inside a directory: exercises the DFS-level filter
+            if (!createSymbolicLink(root.resolve("d/full/lkB"), root.resolve("d/missing"))) {
+                return;
+            }
+            String d = root.resolve("d").toString();
+
+            // boundary (depth=1): a symlink to a directory ends with "/"; a broken one is invisible
+            assertArrayEquals(new String[] {d + "/empty/", d + "/full/", d + "/lkE/", d + "/lkN/", d + "/b.txt"},
+                    FileOps.singleton.list(d + "/", 1).toArray());
+            assertArrayEquals(new String[] {d + "/empty/", d + "/full/", d + "/b.txt", d + "/lkB", d + "/lkE", d + "/lkN"},
+                    FileOps.singleton.list(d + "/", 1, false).toArray());
+
+            // a symlink to an empty directory is reported like the empty directory itself;
+            // the nested broken symlink never appears
+            assertArrayEquals(new String[] {d + "/empty/", d + "/full/x", d + "/lkE/", d + "/lkN/x", d + "/b.txt"},
+                    FileOps.singleton.list(d, 3).toArray());
+
+            // prefix anchored at a symlink to a directory: a directory when following, a file otherwise
+            assertArrayEquals(new String[] {d + "/lkN/x"},
+                    FileOps.singleton.list(d + "/lkN", 3).toArray());
+            assertTrue(FileOps.singleton.list(d + "/lkN", 3, false).isEmpty());
+
+            // a trailing "/" declares a directory even when not following symlinks
+            assertArrayEquals(new String[] {d + "/lkN/x"},
+                    FileOps.singleton.list(d + "/lkN/", 3).toArray());
+            assertArrayEquals(new String[] {d + "/lkN/lkB", d + "/lkN/x"},
+                    FileOps.singleton.list(d + "/lkN/", 3, false).toArray());
+        }
+
+        @Test
+        public void list_symlinkToFile(@TempDir Path tmp) throws IOException {
+            Path root = tmp.resolve("root");
+            writeFile(root.resolve("d/target.txt"), "t");
+            if (!createSymbolicLink(root.resolve("d/lkF"), root.resolve("d/target.txt"))) {
+                return;
+            }
+            String d = root.resolve("d").toString();
+
+            // a symlink to an existing file is a file in both modes
+            // (following: the exists filter must not mistake it for a broken link)
+            assertArrayEquals(new String[] {d + "/lkF", d + "/target.txt"},
+                    FileOps.singleton.list(d, 2).toArray());
+            assertArrayEquals(new String[] {d + "/lkF", d + "/target.txt"},
+                    FileOps.singleton.list(d, 2, false).toArray());
+
+            // prefix anchored at it: a file in both modes
+            assertTrue(FileOps.singleton.list(d + "/lkF", 2).isEmpty());
+            assertTrue(FileOps.singleton.list(d + "/lkF", 2, false).isEmpty());
         }
 
         @Test

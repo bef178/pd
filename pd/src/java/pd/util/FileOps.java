@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,12 +29,16 @@ import static pd.util.PathOps.throwIfEmpty;
  * 文件再分为常规文件和特殊文件。其中，符号链接影响了目录树的结构。
  * 基本操作集：枚举目录子结点(读目录)，创建/删除叶结点(写目录)，读/写文件，读/写结点属性。
  * 没有"原地编辑"符号链接内容的系统调用。因此，读写符号链接内容即为读写目标结点内容；读/写符号链接属性则与目标结点无关。
- * 日常操作无需区分符号链接。
+ * 日常操作默认跟随符号链接。
  */
 class FileOpsCore {
 
     public List<String> list(@NonNull String pathPrefix) {
         return list(pathPrefix, 1);
+    }
+
+    public List<String> list(@NonNull final String pathPrefix, int depth) {
+        return list(pathPrefix, depth, true);
     }
 
     /**
@@ -52,7 +57,7 @@ class FileOpsCore {
      * - ".." => ["...a"]
      * - "../" => ["../{name}/", ...]
      */
-    public List<String> list(@NonNull final String pathPrefix, int depth) {
+    public List<String> list(@NonNull final String pathPrefix, int depth, boolean followSymlinks) {
         if (depth < 1) {
             return null;
         }
@@ -72,54 +77,54 @@ class FileOpsCore {
         List<Path> a = listDirectory(Paths.get(d));
         if (a == null) {
             return null;
-        } else if (depth == 1) {
-            List<String> results = sortPaths(a).stream()
-                    .map(p -> pathToString(p, false))
-                    .filter(s -> s.startsWith(pathPrefix) && !s.equals(pathPrefix))
-                    .collect(Collectors.toList());
-            return results.isEmpty() && !Files.exists(Paths.get(pathPrefix), LinkOption.NOFOLLOW_LINKS)
-                    ? null
-                    : results;
         }
-
-        a = sortPaths(a).stream()
-                .filter(p -> {
-                    String s = pathToString(p, false);
-                    return s.startsWith(pathPrefix) && !s.equals(pathPrefix);
-                })
+        List<String> filtered = a.stream()
+                .map(p -> pathToStringByAttributes(p, followSymlinks))
+                .filter(Objects::nonNull)
+                .filter(s -> s.startsWith(pathPrefix) && !s.equals(pathPrefix))
+                .sorted(PathOps.singleton::compare)
                 .collect(Collectors.toList());
-        if (a.isEmpty() && !Files.exists(Paths.get(pathPrefix), LinkOption.NOFOLLOW_LINKS)) {
-            return null;
+        if (filtered.isEmpty()) {
+            Path p = Paths.get(pathPrefix);
+            boolean exists = followSymlinks
+                    ? Files.exists(p)
+                    : Files.exists(p, LinkOption.NOFOLLOW_LINKS);
+            if (!exists) {
+                return null;
+            }
+        }
+        if (depth == 1) {
+            return filtered;
         }
 
         List<String> results = new LinkedList<>();
-        LinkedList<SimpleEntry<Path, Integer>> stack = new LinkedList<>();
+        LinkedList<SimpleEntry<String, Integer>> stack = new LinkedList<>();
         // reversed order
-        for (int i = a.size() - 1; i >= 0; i--) {
-            stack.push(new SimpleEntry<>(a.get(i), depth - 1));
+        for (int i = filtered.size() - 1; i >= 0; i--) {
+            stack.push(new SimpleEntry<>(filtered.get(i), depth - 1));
         }
         while (!stack.isEmpty()) {
-            SimpleEntry<Path, Integer> frame = stack.pop();
-            Path path1 = frame.getKey();
+            SimpleEntry<String, Integer> frame = stack.pop();
+            String s1 = frame.getKey();
             int depth1 = frame.getValue();
-            if (depth1 == 0 || Files.isRegularFile(path1)) {
-                results.add(pathToString(path1, false));
+            if (depth1 == 0 || !s1.endsWith("/")) {
+                results.add(s1);
                 continue;
             }
-            List<Path> children = listDirectory(path1);
-            if (children == null) {
+            Path path1 = Paths.get(s1);
+            List<Path> children2 = listDirectory(path1);
+            if (children2 == null) {
                 continue;
             }
-            if (children.isEmpty()) {
-                results.add(pathToString(path1, false));
+            if (children2.isEmpty()) {
+                results.add(s1);
                 continue;
             }
-            children = sortPaths(children);
-            // reversed order
-            for (int i = children.size() - 1; i >= 0; i--) {
-                Path child = children.get(i);
-                stack.push(new SimpleEntry<>(child, depth1 - 1));
-            }
+            children2.stream()
+                    .map(p -> pathToStringByAttributes(p, followSymlinks))
+                    .filter(Objects::nonNull)
+                    .sorted((x, y) -> -PathOps.singleton.compare(x, y))
+                    .forEachOrdered(s -> stack.push(new SimpleEntry<>(s, depth1 - 1)));
         }
         return results;
     }
@@ -158,6 +163,29 @@ class FileOpsCore {
                 ? Files.isDirectory(path)
                 : Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS);
         if (isDirectory) {
+            if (!s.endsWith("/")) {
+                s += "/";
+            }
+        }
+        return s;
+    }
+
+    /**
+     * `pathToString` in a single attribute read.
+     * Return `null` if follow broken symlinks.
+     */
+    public String pathToStringByAttributes(Path path, boolean followSymlinks) {
+        BasicFileAttributes attrs;
+        try {
+            attrs = followSymlinks
+                    ? Files.readAttributes(path, BasicFileAttributes.class)
+                    : Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+        } catch (IOException e) {
+            // broken symlink, permission, security, etc.
+            return followSymlinks ? null : path.toString();
+        }
+        String s = path.toString();
+        if (attrs.isDirectory()) {
             if (!s.endsWith("/")) {
                 s += "/";
             }
