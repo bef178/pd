@@ -846,7 +846,6 @@ class Test_FileOps {
 
         @Test
         void reportsSymlinkWithoutTrailingSlash(@TempDir Path tmp) throws IOException {
-            // pathToString does not follow symlink: a symlink to a directory keeps no trailing "/"
             Path root = buildTree(tmp.resolve("root"));
             Path link = root.resolve("docs/link");
             if (!createSymbolicLink(link, root.resolve("docs/img"))) {

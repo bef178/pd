@@ -74,7 +74,7 @@ class FileOpsCore {
             return null;
         } else if (depth == 1) {
             List<String> results = sortPaths(a).stream()
-                    .map(this::pathToString)
+                    .map(p -> pathToString(p, false))
                     .filter(s -> s.startsWith(pathPrefix) && !s.equals(pathPrefix))
                     .collect(Collectors.toList());
             return results.isEmpty() && !Files.exists(Paths.get(pathPrefix), LinkOption.NOFOLLOW_LINKS)
@@ -84,7 +84,7 @@ class FileOpsCore {
 
         a = sortPaths(a).stream()
                 .filter(p -> {
-                    String s = pathToString(p);
+                    String s = pathToString(p, false);
                     return s.startsWith(pathPrefix) && !s.equals(pathPrefix);
                 })
                 .collect(Collectors.toList());
@@ -103,7 +103,7 @@ class FileOpsCore {
             Path path1 = frame.getKey();
             int depth1 = frame.getValue();
             if (depth1 == 0 || Files.isRegularFile(path1)) {
-                results.add(pathToString(path1));
+                results.add(pathToString(path1, false));
                 continue;
             }
             List<Path> children = listDirectory(path1);
@@ -111,7 +111,7 @@ class FileOpsCore {
                 continue;
             }
             if (children.isEmpty()) {
-                results.add(pathToString(path1));
+                results.add(pathToString(path1, false));
                 continue;
             }
             children = sortPaths(children);
@@ -143,10 +143,10 @@ class FileOpsCore {
     }
 
     /**
-     * i.e. pathToString(path, false)
+     * Follow symlink.
      */
     public String pathToString(Path path) {
-        return pathToString(path, false);
+        return pathToString(path, true);
     }
 
     /**
@@ -289,7 +289,7 @@ public class FileOps extends FileOpsCore {
                     return false;
                 }
                 if (onAction != null) {
-                    onAction.accept(Action.MEET, pathToString(child), null, null);
+                    onAction.accept(Action.MEET, pathToString(child, false), null, null);
                 }
                 if (depth > 1 && Files.isDirectory(child)) {
                     if (!listDirectory(child, depth - 1, abortRequested, onAction)) {
