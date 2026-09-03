@@ -200,10 +200,6 @@ class FileOpsCore {
         return a;
     }
 
-    public List<String> listAll(@NonNull String pathPrefix) {
-        return list(pathPrefix, Integer.MAX_VALUE);
-    }
-
     /**
      * `path` must not exist but its parent must exist.
      * Not follow symlink.

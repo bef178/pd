@@ -26,7 +26,7 @@ public class CommandUploadAllExecutor extends CommandExecutor {
         checkNotNull(remotePrefix, localParity);
         AwsS3Accessor accessor = checkAndCreateAccessor(paramManager);
 
-        List<String> localFiles = FileOps.singleton.listAll(localParity);
+        List<String> localFiles = FileOps.singleton.list(localParity, Integer.MAX_VALUE);
         stdout("upload: find {} file(s)", localFiles.size());
 
         AtomicBoolean allSuccessful = new AtomicBoolean(true);
