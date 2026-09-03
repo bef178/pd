@@ -260,60 +260,54 @@ public class PathOps {
         throwIfEmpty(path);
         throwIfEmpty(another, "another");
 
-        int[] a = path.codePoints().toArray();
-        int[] b = another.codePoints().toArray();
-        for (int i = 0; i < a.length && i < b.length; i++) {
-            if (a[i] != b[i]) {
+        int i = 0;
+        int j = 0;
+        while (i < path.length() && j < another.length()) {
+            int ai = path.codePointAt(i);
+            int bi = another.codePointAt(j);
+            if (ai != bi) {
                 // directory first
-                if (a[i] == '/') {
+                if (ai == '/') {
                     return -1;
-                } else if (b[i] == '/') {
+                } else if (bi == '/') {
                     return 1;
                 }
-                boolean aIsDirectory = segmentIsDirectory(a, i);
-                boolean bIsDirectory = segmentIsDirectory(b, i);
+                boolean aIsDirectory = path.indexOf('/', i) >= 0;
+                boolean bIsDirectory = another.indexOf('/', j) >= 0;
                 if (aIsDirectory != bIsDirectory) {
                     return aIsDirectory ? -1 : 1;
                 }
                 // dot first
-                if (a[i] == '.') {
+                if (ai == '.') {
                     return -1;
-                } else if (b[i] == '.') {
+                } else if (bi == '.') {
                     return 1;
                 }
-                return Integer.compare(a[i], b[i]);
+                return Integer.compare(ai, bi);
             }
+            i += Character.charCount(ai);
+            j += Character.charCount(bi);
         }
-        if (a.length > b.length) {
+        // one is a code-point prefix of the other
+        int remainingA = Character.codePointCount(path, i, path.length());
+        int remainingB = Character.codePointCount(another, j, another.length());
+        if (remainingA > remainingB) {
             // prefix first
-            if (b[b.length - 1] == '/') {
+            if (another.charAt(another.length() - 1) == '/') {
                 return 1;
             }
-            for (int i = b.length; i < a.length; i++) {
-                if (a[i] == '/') {
-                    return -1;
-                }
-            }
-        } else if (a.length < b.length) {
-            if (a[a.length - 1] == '/') {
+            if (path.indexOf('/', i) >= 0) {
                 return -1;
             }
-            for (int i = a.length; i < b.length; i++) {
-                if (b[i] == '/') {
-                    return 1;
-                }
+        } else if (remainingA < remainingB) {
+            if (path.charAt(path.length() - 1) == '/') {
+                return -1;
+            }
+            if (another.indexOf('/', j) >= 0) {
+                return 1;
             }
         }
-        return Integer.compare(a.length, b.length);
-    }
-
-    private static boolean segmentIsDirectory(int[] a, int index) {
-        for (int i = index; i < a.length; i++) {
-            if (a[i] == '/') {
-                return true;
-            }
-        }
-        return false;
+        return Integer.compare(remainingA, remainingB);
     }
 
     static void throwIfEmpty(String path) {
