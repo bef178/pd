@@ -143,11 +143,21 @@ class FileOpsCore {
     }
 
     /**
-     * A trailing "/" will be added for directory.
+     * i.e. pathToString(path, false)
      */
     public String pathToString(Path path) {
+        return pathToString(path, false);
+    }
+
+    /**
+     * A trailing "/" will be added for directory.
+     */
+    public String pathToString(Path path, boolean followSymlinks) {
         String s = path.toString();
-        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+        boolean isDirectory = followSymlinks
+                ? Files.isDirectory(path)
+                : Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS);
+        if (isDirectory) {
             if (!s.endsWith("/")) {
                 s += "/";
             }
