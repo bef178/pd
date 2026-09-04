@@ -535,6 +535,38 @@ class Test_FileOps {
         }
 
         @Test
+        void deletesChildrenInLeafOrderWithSymlink(@TempDir Path tmp) throws IOException {
+            // children sort by their own strings, not following symlinks:
+            // the real directory first, then the symlink among the leaves by name
+            Path d = tmp.resolve("d");
+            mkdir(d.resolve("sub"));
+            writeFile(d.resolve("sub/x"), "x");
+            writeFile(d.resolve("a.txt"), "a");
+            Path ext = tmp.resolve("ext");
+            mkdir(ext);
+            Path link = d.resolve("zlink");
+            if (!createSymbolicLink(link, ext)) {
+                return;
+            }
+
+            List<String> removed = new LinkedList<>();
+            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
+                if (action == FileOps.Action.DELETE && succeeded != null) {
+                    removed.add(from);
+                }
+            };
+
+            assertTrue(fileOps.deleteDirectory(d.toString(), true, false, null, listener));
+            assertEquals(5, removed.size());
+            assertEquals(d.resolve("sub/x").toString(), removed.get(0));
+            assertEquals(d.resolve("sub").toString(), removed.get(1));
+            assertEquals(d.resolve("a.txt").toString(), removed.get(2));
+            assertEquals(link.toString(), removed.get(3));
+            assertEquals(d.toString(), removed.get(4));
+            assertTrue(Files.exists(ext));
+        }
+
+        @Test
         void listenerNotifiedForEachRemovedEntry(@TempDir Path tmp) throws IOException {
             Path d = tmp.resolve("d");
             mkdir(d.resolve("sub"));
@@ -1251,6 +1283,40 @@ class Test_FileOps {
             // the child was copied as a symlink, not as a real directory
             assertTrue(Files.isSymbolicLink(dst.resolve("sl")));
             assertFalse(Files.isDirectory(dst.resolve("sl"), LinkOption.NOFOLLOW_LINKS));
+        }
+
+        @Test
+        void copiesChildrenInLeafOrderWithSymlink(@TempDir Path tmp) throws IOException {
+            // children sort by their own strings, not following symlinks:
+            // the real directory first, then the symlink among the leaves by name
+            Path src = tmp.resolve("root");
+            mkdir(src.resolve("sub"));
+            writeFile(src.resolve("sub/x"), "x");
+            writeFile(src.resolve("a.txt"), "a");
+            Path dir = tmp.resolve("dir");
+            mkdir(dir);
+            Path link = src.resolve("zlink");
+            if (!createSymbolicLink(link, dir)) {
+                return;
+            }
+            Path dst = tmp.resolve("root.copy");
+
+            List<String> copied = new LinkedList<>();
+            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
+                if (action == FileOps.Action.COPY && succeeded != null && from != null) {
+                    copied.add(from);
+                }
+            };
+
+            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, listener));
+            assertEquals(5, copied.size());
+            assertEquals(src.resolve("sub/x").toString(), copied.get(0));
+            assertEquals(src.resolve("sub").toString(), copied.get(1));
+            assertEquals(src.resolve("a.txt").toString(), copied.get(2));
+            assertEquals(link.toString(), copied.get(3));
+            assertEquals(src.toString(), copied.get(4));
+            // the child was copied as a symlink
+            assertTrue(Files.isSymbolicLink(dst.resolve("zlink")));
         }
     }
 

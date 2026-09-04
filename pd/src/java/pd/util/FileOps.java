@@ -191,13 +191,6 @@ class FileOpsCore {
                 : Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
     }
 
-    protected List<Path> sortPaths(List<Path> a) {
-        a.sort(Comparator
-                .<Path, Boolean>comparing(p -> !Files.isDirectory(p))
-                .thenComparing(Path::toString, PathOps.singleton::compare));
-        return a;
-    }
-
     /**
      * `path` must not exist but its parent must exist.
      * Not follow symlink.
@@ -414,10 +407,15 @@ public class FileOps extends FileOpsCore {
         if (recursive) {
             List<Path> children = listDirectory(src);
             if (children != null) {
-                for (Path child : sortPaths(children)) {
+                List<String> a = children.stream()
+                        .map(p -> pathToString(p, false))
+                        .sorted(PathOps.singleton::compare)
+                        .collect(Collectors.toList());
+                for (String s : a) {
                     if (abortRequested != null && abortRequested.get()) {
                         return false;
                     }
+                    Path child = Paths.get(s);
                     if (Files.isSymbolicLink(child)) {
                         if (!deleteFile(child, onAction)) {
                             succeeded = false;
@@ -438,8 +436,8 @@ public class FileOps extends FileOpsCore {
                         }
                     } else {
                         if (onAction != null) {
-                            onAction.accept(Action.DELETE, child, null, null);
-                            onAction.accept(Action.DELETE, child, null, false);
+                            onAction.accept(Action.DELETE, s, null, null);
+                            onAction.accept(Action.DELETE, s, null, false);
                         }
                         succeeded = false;
                         break;
@@ -539,11 +537,16 @@ public class FileOps extends FileOpsCore {
             if (children == null) {
                 succeeded = false;
             } else {
-                for (Path child : sortPaths(children)) {
+                List<String> sorted = children.stream()
+                        .map(p -> pathToString(p, false))
+                        .sorted(PathOps.singleton::compare)
+                        .collect(Collectors.toList());
+                for (String s : sorted) {
                     if (abortRequested != null && abortRequested.get()) {
                         return false;
                     }
 
+                    Path child = Paths.get(s);
                     Path dstChild = dst.resolve(child.getFileName());
                     if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
                         succeeded = copyDirectory(child, dstChild, abortRequested, onAction);
