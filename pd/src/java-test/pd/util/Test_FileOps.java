@@ -1021,6 +1021,55 @@ class Test_FileOps {
     }
 
     @Nested
+    class pathToStringByAttributes {
+
+        @Test
+        void appendsSlashToDirectories(@TempDir Path tmp) throws IOException {
+            Path dir = tmp.resolve("d");
+            mkdir(dir);
+
+            assertEquals(dir + "/", fileOps.pathToStringByAttributes(dir, true));
+            assertEquals(dir + "/", fileOps.pathToStringByAttributes(dir, false));
+        }
+
+        @Test
+        void fileHasNoSlash(@TempDir Path tmp) throws IOException {
+            Path f = tmp.resolve("f");
+            writeFile(f, "x");
+
+            assertEquals(f.toString(), fileOps.pathToStringByAttributes(f, true));
+            assertEquals(f.toString(), fileOps.pathToStringByAttributes(f, false));
+        }
+
+        @Test
+        void symlinkToDirectoryFollowsTheFlag(@TempDir Path tmp) throws IOException {
+            Path dir = tmp.resolve("d");
+            mkdir(dir);
+            Path link = tmp.resolve("link");
+            if (!createSymbolicLink(link, dir)) {
+                return;
+            }
+
+            // following: the link is its target (a directory); not following: a leaf
+            assertEquals(link + "/", fileOps.pathToStringByAttributes(link, true));
+            assertEquals(link.toString(), fileOps.pathToStringByAttributes(link, false));
+        }
+
+        @Test
+        void brokenSymlink(@TempDir Path tmp) throws IOException {
+            Path link = tmp.resolve("link");
+            if (!createSymbolicLink(link, tmp.resolve("missing"))) {
+                return;
+            }
+
+            // following: a broken symlink resolves to nothing, hence invisible
+            assertNull(fileOps.pathToStringByAttributes(link, true));
+            // not following: the symlink itself is a node
+            assertEquals(link.toString(), fileOps.pathToStringByAttributes(link, false));
+        }
+    }
+
+    @Nested
     class copyDirectory {
 
         @Test

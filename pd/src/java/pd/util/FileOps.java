@@ -177,12 +177,21 @@ class FileOpsCore {
     public String pathToStringByAttributes(Path path, boolean followSymlinks) {
         BasicFileAttributes attrs;
         try {
-            attrs = followSymlinks
-                    ? Files.readAttributes(path, BasicFileAttributes.class)
-                    : Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+            attrs = readAttributes(path, followSymlinks);
         } catch (IOException e) {
-            // broken symlink, permission, security, etc.
-            return followSymlinks ? null : path.toString();
+            if (followSymlinks) {
+                try {
+                    BasicFileAttributes own = readAttributes(path, false);
+                    if (own.isSymbolicLink()) {
+                        // broken symlink
+                        return null;
+                    }
+                } catch (IOException ignored) {
+                    // permission etc.
+                }
+            }
+            // not a symlink, report the bare path
+            return path.toString();
         }
         String s = path.toString();
         if (attrs.isDirectory()) {
@@ -191,6 +200,12 @@ class FileOpsCore {
             }
         }
         return s;
+    }
+
+    private BasicFileAttributes readAttributes(Path path, boolean followSymlinks) throws IOException {
+        return followSymlinks
+                ? Files.readAttributes(path, BasicFileAttributes.class)
+                : Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
     }
 
     protected List<Path> sortPaths(List<Path> a) {
@@ -241,7 +256,7 @@ class FileOpsCore {
         Path src = Paths.get(path);
         BasicFileAttributes ownAttrs;
         try {
-            ownAttrs = Files.readAttributes(src, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+            ownAttrs = readAttributes(src, false);
         } catch (IOException e) {
             return null;
         }
@@ -251,7 +266,7 @@ class FileOpsCore {
         if (ownAttrs.isSymbolicLink()) {
             String targetType;
             try {
-                BasicFileAttributes targetAttrs = Files.readAttributes(src, BasicFileAttributes.class);
+                BasicFileAttributes targetAttrs = readAttributes(src, true);
                 if (targetAttrs.isRegularFile()) {
                     targetType = FileStat.TYPE_FILE;
                 } else if (targetAttrs.isDirectory()) {
