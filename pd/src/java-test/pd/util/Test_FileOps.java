@@ -194,24 +194,6 @@ class Test_FileOps {
         }
 
         @Test
-        void list_abortsBeforeTraversingWhenRequested(@TempDir Path root) throws IOException {
-            Path dir = root.resolve("dir");
-            mkdir(dir);
-            writeFile(dir.resolve("child.txt"), "x");
-
-            List<String> met = new LinkedList<>();
-            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
-                if (action == FileOps.Action.MEET) {
-                    met.add(from);
-                }
-            };
-
-            assertFalse(fileOps.listDirectory(dir.toString(), 3, new AtomicBoolean(true), listener));
-            assertTrue(met.isEmpty());
-            assertTrue(Files.exists(dir.resolve("child.txt")));
-        }
-
-        @Test
         void list_returnEmptyForDot() {
             assertTrue(FileOps.singleton.list(".").isEmpty());
             assertTrue(FileOps.singleton.list("./").contains("./src/"));
@@ -938,20 +920,33 @@ class Test_FileOps {
         }
 
         @Test
-        void reportsSymlinkWithoutTrailingSlash(@TempDir Path tmp) throws IOException {
+        void reportsSymlinkToDirectoryWithTrailingSlash(@TempDir Path tmp) throws IOException {
             Path root = buildTree(tmp.resolve("root"));
             Path link = root.resolve("docs/link");
             if (!createSymbolicLink(link, root.resolve("docs/img"))) {
                 return;
             }
 
+            // follow (default): a symlink to a directory is a directory, reported with "/"
             List<String> result = listAndCollect(root.resolve("docs").toString(), 1);
-
-            // dir-first order: "img/" and the symlink (not a directory itself) before readme.md
             assertEquals(3, result.size());
             assertEquals(root.resolve("docs/img") + "/", result.get(0));
-            assertEquals(link.toString(), result.get(1));
+            assertEquals(link.toString() + "/", result.get(1));
             assertEquals(root.resolve("docs/readme.md").toString(), result.get(2));
+
+            // not follow: the symlink is a leaf node, reported without "/"
+            List<String> notFollowed = new LinkedList<>();
+            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 1, false, null,
+                    (action, from, to, callbackSucceeded) -> {
+                        if (action == FileOps.Action.MEET) {
+                            notFollowed.add(from);
+                        }
+                    });
+            assertTrue(succeeded);
+            assertEquals(3, notFollowed.size());
+            assertEquals(root.resolve("docs/img") + "/", notFollowed.get(0));
+            assertEquals(link.toString(), notFollowed.get(1));
+            assertEquals(root.resolve("docs/readme.md").toString(), notFollowed.get(2));
         }
 
         @Test
@@ -970,6 +965,58 @@ class Test_FileOps {
             assertEquals(root.resolve("d/b/c.txt").toString(), result.get(1));
             assertEquals(root.resolve("d/a.txt").toString(), result.get(2));
             assertEquals(root.resolve("d/c.txt").toString(), result.get(3));
+        }
+
+        @Test
+        void followsSymlinkIntoDirectoryPerMode(@TempDir Path tmp) throws IOException {
+            Path root = tmp.resolve("root");
+            mkdir(root.resolve("d/full"));
+            writeFile(root.resolve("d/full/x"), "x");
+            mkdir(root.resolve("d/empty"));
+            writeFile(root.resolve("d/b.txt"), "x");
+            if (!createSymbolicLink(root.resolve("d/lkN"), root.resolve("d/full"))) {
+                return;
+            }
+            if (!createSymbolicLink(root.resolve("d/lkB"), root.resolve("d/missing"))) {
+                return;
+            }
+            String d = root.resolve("d").toString();
+
+            // follow: the symlink is traversed into; a broken symlink is invisible;
+            // an empty directory is met once with "/"
+            assertArrayEquals(new String[] {d + "/empty/", d + "/full/", d + "/full/x", d + "/lkN/", d + "/lkN/x", d + "/b.txt"},
+                    listAndCollect(d, 2).toArray());
+
+            // not follow: the symlink is a leaf; a broken symlink is a node too;
+            // real directories still expand
+            List<String> met = new LinkedList<>();
+            boolean succeeded = fileOps.listDirectory(d, 2, false, null, (action, from, to, callbackSucceeded) -> {
+                if (action == FileOps.Action.MEET) {
+                    met.add(from);
+                }
+            });
+            assertTrue(succeeded);
+            assertArrayEquals(new String[] {d + "/empty/", d + "/full/", d + "/full/x", d + "/b.txt", d + "/lkB", d + "/lkN"},
+                    met.toArray());
+        }
+
+        @Test
+        void stopsMidWalkWhenAbortRequested(@TempDir Path tmp) throws IOException {
+            Path root = buildTree(tmp.resolve("root"));
+
+            AtomicBoolean abort = new AtomicBoolean(false);
+            List<String> met = new LinkedList<>();
+            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 3, abort,
+                    (action, from, to, callbackSucceeded) -> {
+                        if (action == FileOps.Action.MEET) {
+                            met.add(from);
+                            // request the abort right after the first node is met
+                            abort.set(true);
+                        }
+                    });
+
+            assertFalse(succeeded);
+            assertEquals(1, met.size());
         }
     }
 

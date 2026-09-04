@@ -286,17 +286,27 @@ public class FileOps extends FileOpsCore {
     public static final FileOps singleton = new FileOps();
 
     /**
-     * List offspring of `directory` down to `depth`.
-     * `depth` should be positive.
      * Follow symlink.
-     * Discovered directory/file is reported in pre-order; Directories end with "/".
      */
-    public boolean listDirectory(@NonNull String directory, int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
-        throwIfEmpty(directory, "directory");
-        return listDirectory(Paths.get(directory), depth, abortRequested, onAction);
+    public boolean listDirectory(@NonNull String directory, int depth,
+            AtomicBoolean abortRequested, OnActionListener onAction) {
+        return listDirectory(directory, depth, true, abortRequested, onAction);
     }
 
-    protected boolean listDirectory(Path src, final int depth, AtomicBoolean abortRequested, OnActionListener onAction) {
+    /**
+     * List `directory` down to `depth`.
+     * `directory` must be a directory or a symlink to a directory.
+     * `depth` should be positive.
+     * Discovered directory/file is reported in pre-order; Directories end with "/".
+     */
+    public boolean listDirectory(@NonNull String directory, int depth, boolean followSymlinks,
+            AtomicBoolean abortRequested, OnActionListener onAction) {
+        throwIfEmpty(directory, "directory");
+        return listDirectory(Paths.get(directory), depth, followSymlinks, abortRequested, onAction);
+    }
+
+    protected boolean listDirectory(Path src, final int depth, boolean followSymlinks,
+            AtomicBoolean abortRequested, OnActionListener onAction) {
         if (!Files.isDirectory(src)) {
             return false;
         }
@@ -306,17 +316,22 @@ public class FileOps extends FileOpsCore {
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
-        List<Path> children = listDirectory(src);
-        if (children != null) {
-            for (Path child : sortPaths(children)) {
+        List<Path> a = listDirectory(src);
+        if (a != null) {
+            List<String> children = a.stream()
+                    .map(p -> pathToStringByAttributes(p, followSymlinks))
+                    .filter(Objects::nonNull)
+                    .sorted(PathOps.singleton::compare)
+                    .collect(Collectors.toList());
+            for (String child : children) {
                 if (abortRequested != null && abortRequested.get()) {
                     return false;
                 }
                 if (onAction != null) {
-                    onAction.accept(Action.MEET, pathToString(child, false), null, null);
+                    onAction.accept(Action.MEET, child, null, null);
                 }
-                if (depth > 1 && Files.isDirectory(child)) {
-                    if (!listDirectory(child, depth - 1, abortRequested, onAction)) {
+                if (depth > 1 && child.endsWith("/")) {
+                    if (!listDirectory(Paths.get(child), depth - 1, followSymlinks, abortRequested, onAction)) {
                         return false;
                     }
                 }
