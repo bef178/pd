@@ -79,7 +79,7 @@ class FileOpsCore {
             return null;
         }
         List<String> filtered = a.stream()
-                .map(p -> pathToStringByAttributes(p, followSymlinks))
+                .map(p -> pathToString(p, followSymlinks))
                 .filter(Objects::nonNull)
                 .filter(s -> s.startsWith(pathPrefix) && !s.equals(pathPrefix))
                 .sorted(PathOps.singleton::compare)
@@ -121,7 +121,7 @@ class FileOpsCore {
                 continue;
             }
             children2.stream()
-                    .map(p -> pathToStringByAttributes(p, followSymlinks))
+                    .map(p -> pathToString(p, followSymlinks))
                     .filter(Objects::nonNull)
                     .sorted((x, y) -> -PathOps.singleton.compare(x, y))
                     .forEachOrdered(s -> stack.push(new SimpleEntry<>(s, depth1 - 1)));
@@ -158,23 +158,6 @@ class FileOpsCore {
      * A trailing "/" will be added for directory.
      */
     public String pathToString(Path path, boolean followSymlinks) {
-        String s = path.toString();
-        boolean isDirectory = followSymlinks
-                ? Files.isDirectory(path)
-                : Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS);
-        if (isDirectory) {
-            if (!s.endsWith("/")) {
-                s += "/";
-            }
-        }
-        return s;
-    }
-
-    /**
-     * `pathToString` in a single attribute read.
-     * Return `null` if follow broken symlinks.
-     */
-    public String pathToStringByAttributes(Path path, boolean followSymlinks) {
         BasicFileAttributes attrs;
         try {
             attrs = readAttributes(path, followSymlinks);
@@ -334,7 +317,7 @@ public class FileOps extends FileOpsCore {
         List<Path> a = listDirectory(src);
         if (a != null) {
             List<String> children = a.stream()
-                    .map(p -> pathToStringByAttributes(p, followSymlinks))
+                    .map(p -> pathToString(p, followSymlinks))
                     .filter(Objects::nonNull)
                     .sorted(PathOps.singleton::compare)
                     .collect(Collectors.toList());

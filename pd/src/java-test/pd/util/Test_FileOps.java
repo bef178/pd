@@ -926,15 +926,23 @@ class Test_FileOps {
             if (!createSymbolicLink(link, root.resolve("docs/img"))) {
                 return;
             }
+            Path broken = root.resolve("docs/broken");
+            if (!createSymbolicLink(broken, root.resolve("docs/missing"))) {
+                return;
+            }
+            String img = root.resolve("docs/img") + "/";
+            String readme = root.resolve("docs/readme.md").toString();
 
-            // follow (default): a symlink to a directory is a directory, reported with "/"
+            // follow (default): a symlink to a directory is a directory, reported with "/";
+            // a broken symlink is invisible
             List<String> result = listAndCollect(root.resolve("docs").toString(), 1);
-            assertEquals(3, result.size());
-            assertEquals(root.resolve("docs/img") + "/", result.get(0));
-            assertEquals(link.toString() + "/", result.get(1));
-            assertEquals(root.resolve("docs/readme.md").toString(), result.get(2));
+            assertArrayEquals(new String[] {img, link + "/", readme}, result.toArray());
 
-            // not follow: the symlink is a leaf node, reported without "/"
+            // depth=2: the symlink is traversed into, its content reported under the link path
+            result = listAndCollect(root.resolve("docs").toString(), 2);
+            assertArrayEquals(new String[] {img, img + "a.png", link + "/", link + "/a.png", readme}, result.toArray());
+
+            // not follow: symlinks are leaf nodes; a broken one is a node too
             List<String> notFollowed = new LinkedList<>();
             boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 1, false, null,
                     (action, from, to, callbackSucceeded) -> {
@@ -943,10 +951,18 @@ class Test_FileOps {
                         }
                     });
             assertTrue(succeeded);
-            assertEquals(3, notFollowed.size());
-            assertEquals(root.resolve("docs/img") + "/", notFollowed.get(0));
-            assertEquals(link.toString(), notFollowed.get(1));
-            assertEquals(root.resolve("docs/readme.md").toString(), notFollowed.get(2));
+            assertArrayEquals(new String[] {img, broken.toString(), link.toString(), readme}, notFollowed.toArray());
+
+            // depth=2: real directories still expand, the symlink does not
+            notFollowed.clear();
+            succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 2, false, null,
+                    (action, from, to, callbackSucceeded) -> {
+                        if (action == FileOps.Action.MEET) {
+                            notFollowed.add(from);
+                        }
+                    });
+            assertTrue(succeeded);
+            assertArrayEquals(new String[] {img, img + "a.png", broken.toString(), link.toString(), readme}, notFollowed.toArray());
         }
 
         @Test
@@ -1018,18 +1034,32 @@ class Test_FileOps {
             assertFalse(succeeded);
             assertEquals(1, met.size());
         }
+
+        @Test
+        void reportsEmptyDirectoryChildOnce(@TempDir Path tmp) throws IOException {
+            Path root = tmp.resolve("root");
+            mkdir(root.resolve("d/sub"));
+            writeFile(root.resolve("d/sub/x"), "x");
+            mkdir(root.resolve("d/empty"));
+            String d = root.resolve("d").toString();
+
+            List<String> result = listAndCollect(d, 2);
+
+            // an empty directory is met once with "/", nothing below it
+            assertArrayEquals(new String[] {d + "/empty/", d + "/sub/", d + "/sub/x"}, result.toArray());
+        }
     }
 
     @Nested
-    class pathToStringByAttributes {
+    class pathToString {
 
         @Test
         void appendsSlashToDirectories(@TempDir Path tmp) throws IOException {
             Path dir = tmp.resolve("d");
             mkdir(dir);
 
-            assertEquals(dir + "/", fileOps.pathToStringByAttributes(dir, true));
-            assertEquals(dir + "/", fileOps.pathToStringByAttributes(dir, false));
+            assertEquals(dir + "/", fileOps.pathToString(dir, true));
+            assertEquals(dir + "/", fileOps.pathToString(dir, false));
         }
 
         @Test
@@ -1037,8 +1067,8 @@ class Test_FileOps {
             Path f = tmp.resolve("f");
             writeFile(f, "x");
 
-            assertEquals(f.toString(), fileOps.pathToStringByAttributes(f, true));
-            assertEquals(f.toString(), fileOps.pathToStringByAttributes(f, false));
+            assertEquals(f.toString(), fileOps.pathToString(f, true));
+            assertEquals(f.toString(), fileOps.pathToString(f, false));
         }
 
         @Test
@@ -1051,8 +1081,8 @@ class Test_FileOps {
             }
 
             // following: the link is its target (a directory); not following: a leaf
-            assertEquals(link + "/", fileOps.pathToStringByAttributes(link, true));
-            assertEquals(link.toString(), fileOps.pathToStringByAttributes(link, false));
+            assertEquals(link + "/", fileOps.pathToString(link, true));
+            assertEquals(link.toString(), fileOps.pathToString(link, false));
         }
 
         @Test
@@ -1063,9 +1093,9 @@ class Test_FileOps {
             }
 
             // following: a broken symlink resolves to nothing, hence invisible
-            assertNull(fileOps.pathToStringByAttributes(link, true));
+            assertNull(fileOps.pathToString(link, true));
             // not following: the symlink itself is a node
-            assertEquals(link.toString(), fileOps.pathToStringByAttributes(link, false));
+            assertEquals(link.toString(), fileOps.pathToString(link, false));
         }
     }
 
