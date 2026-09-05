@@ -12,7 +12,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -345,10 +344,6 @@ public class FileOps extends FileOpsCore {
             return false;
         }
 
-        if (onAction != null) {
-            onAction.accept(Action.CREATE, null, src, null);
-        }
-
         boolean succeeded = true;
 
         if (parents) {
@@ -382,7 +377,6 @@ public class FileOps extends FileOpsCore {
      * `pathToDirectory` must be a directory.
      * Not follow symlink.
      * No callback if abort recognized.
-     * Callbacks paired if no abort.
      */
     public boolean deleteDirectory(@NonNull String pathToDirectory, boolean recursive, boolean parents, AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(pathToDirectory, "pathToDirectory");
@@ -396,10 +390,6 @@ public class FileOps extends FileOpsCore {
 
         if (abortRequested != null && abortRequested.get()) {
             return false;
-        }
-
-        if (onAction != null) {
-            onAction.accept(Action.DELETE, src, null, null);
         }
 
         boolean succeeded = true;
@@ -436,7 +426,6 @@ public class FileOps extends FileOpsCore {
                         }
                     } else {
                         if (onAction != null) {
-                            onAction.accept(Action.DELETE, s, null, null);
                             onAction.accept(Action.DELETE, s, null, false);
                         }
                         succeeded = false;
@@ -485,9 +474,6 @@ public class FileOps extends FileOpsCore {
             return false;
         }
 
-        if (onAction != null) {
-            onAction.accept(Action.DELETE, src, null, null);
-        }
         boolean succeeded;
         try {
             // can delete a symlink to a non-empty directory
@@ -527,10 +513,6 @@ public class FileOps extends FileOpsCore {
             return false;
         }
 
-        if (onAction != null) {
-            onAction.accept(Action.COPY, src, dst, null);
-        }
-
         boolean succeeded = createDirectory(dst, false, abortRequested, onAction);
         if (succeeded) {
             List<Path> children = listDirectory(src);
@@ -558,9 +540,6 @@ public class FileOps extends FileOpsCore {
                             return false;
                         }
                         succeeded = false;
-                        if (onAction != null) {
-                            onAction.accept(Action.COPY, child, dstChild, null);
-                        }
                         try {
                             Files.copy(child, dstChild, LinkOption.NOFOLLOW_LINKS);
                             succeeded = true;
@@ -571,7 +550,6 @@ public class FileOps extends FileOpsCore {
                         }
                     } else {
                         if (onAction != null) {
-                            onAction.accept(Action.COPY, child, dstChild, null);
                             onAction.accept(Action.COPY, child, dstChild, false);
                         }
                         succeeded = false;
@@ -650,10 +628,6 @@ public class FileOps extends FileOpsCore {
             return false;
         }
 
-        if (onAction != null) {
-            onAction.accept(Action.COPY, src, dst, null);
-        }
-
         boolean succeeded = false;
         try (InputStream fis = Files.newInputStream(src);
              OutputStream fos = Files.newOutputStream(dst)) {
@@ -707,10 +681,6 @@ public class FileOps extends FileOpsCore {
         }
         if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
             return false;
-        }
-
-        if (onAction != null) {
-            onAction.accept(Action.RENAME, src, dst, null);
         }
 
         boolean succeeded = false;

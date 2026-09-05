@@ -1679,4 +1679,36 @@ class Test_FileOps {
             }
         }
     }
+
+    // a mutating op reports an action only once, with its outcome; there is no "pre" report
+    // (succeeded == null) announcing an action before it runs. MEET in listDirectory is the
+    // single exception: discovery has no outcome.
+    @Nested
+    class reportsOnOutcome {
+
+        @Test
+        void noPreReportFromMutatingOps(@TempDir Path tmp) throws IOException {
+            Path root = buildTree(tmp.resolve("root"));
+            Path dst = tmp.resolve("root.copy");
+
+            List<String> pre = new LinkedList<>();
+            FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
+                if (succeeded == null) {
+                    pre.add(action + ": " + from + (to == null ? "" : " -> " + to));
+                }
+            };
+
+            assertTrue(fileOps.copyDirectory(root.toString(), dst.toString(), null, listener));
+            assertTrue(fileOps.deleteDirectory(dst.toString(), true, false, null, listener));
+            assertTrue(fileOps.createDirectory(tmp.resolve("p/q").toString(), true, null, listener));
+
+            Path f = tmp.resolve("a.txt");
+            writeFile(f, "x");
+            assertTrue(fileOps.copyFile(f.toString(), tmp.resolve("a.copy").toString(), null, listener));
+            assertTrue(fileOps.rename(tmp.resolve("a.copy").toString(), tmp.resolve("b.txt").toString(), listener));
+            assertTrue(fileOps.deleteFile(tmp.resolve("b.txt").toString(), listener));
+
+            assertTrue(pre.isEmpty(), "unexpected pre reports: " + pre);
+        }
+    }
 }
