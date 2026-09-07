@@ -171,7 +171,7 @@ class FileOpsCore {
     public boolean createEmptyDirectory(@NonNull String path) {
         throwIfEmpty(path);
         Path src = Paths.get(path);
-        if (Files.exists(src, LinkOption.NOFOLLOW_LINKS) || (src.getParent() != null && !Files.exists(src.getParent()))) {
+        if (!notExistsButParentExists(src)) {
             return false;
         }
         try {
@@ -252,6 +252,14 @@ class FileOpsCore {
         return followSymlinks
                 ? Files.readAttributes(path, BasicFileAttributes.class)
                 : Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+    }
+
+    protected boolean notExistsButParentExists(Path src) {
+        if (Files.exists(src, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+        Path parent = src.getParent();
+        return parent == null || Files.exists(parent, LinkOption.NOFOLLOW_LINKS);
     }
 }
 
@@ -382,21 +390,17 @@ public class FileOps extends FileOpsCore {
                         return false;
                     }
                     Path child = Paths.get(s);
-                    if (Files.isSymbolicLink(child)) {
-                        if (!removeFile(child, onAction)) {
-                            succeeded = false;
-                            break;
-                        }
-                    } else if (Files.isRegularFile(child, LinkOption.NOFOLLOW_LINKS)) {
-                        if (!removeFile(child, onAction)) {
-                            succeeded = false;
-                            break;
-                        }
-                    } else if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
+                    FileStat childStat = stat(s);
+                    if (childStat.isDirectory(false)) {
                         if (!removeDirectory(child, true, false, abortRequested, onAction)) {
                             if (abortRequested != null && abortRequested.get()) {
                                 return false;
                             }
+                            succeeded = false;
+                            break;
+                        }
+                    } else if (childStat.isAnyTypeOf("f", "l*")) {
+                        if (!removeFile(child, onAction)) {
                             succeeded = false;
                             break;
                         }
@@ -478,7 +482,7 @@ public class FileOps extends FileOpsCore {
         if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
-        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
+        if (!notExistsButParentExists(dst)) {
             return false;
         }
         if (isDescendantOf(dst, src)) {
@@ -505,12 +509,13 @@ public class FileOps extends FileOpsCore {
                     }
 
                     Path child = Paths.get(s);
+                    FileStat childStat = stat(s);
                     Path dstChild = dst.resolve(child.getFileName());
-                    if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
+                    if (childStat.isDirectory(false)) {
                         succeeded = copyDirectory(child, dstChild, abortRequested, onAction);
-                    } else if (Files.isRegularFile(child, LinkOption.NOFOLLOW_LINKS)) {
+                    } else if (childStat.isFile(false)) {
                         succeeded = copyFile(child, dstChild, abortRequested, onAction);
-                    } else if (Files.isSymbolicLink(child)) {
+                    } else if (childStat.isSymlink()) {
                         // copy symlink itself
                         if (abortRequested != null && abortRequested.get()) {
                             return false;
@@ -596,7 +601,7 @@ public class FileOps extends FileOpsCore {
         if (!Files.isRegularFile(src)) {
             return false;
         }
-        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
+        if (!notExistsButParentExists(dst)) {
             return false;
         }
 
@@ -653,7 +658,7 @@ public class FileOps extends FileOpsCore {
         if (!stat(src.toString()).isAnyTypeOf("d", "f", "l*")) {
             return false;
         }
-        if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
+        if (!notExistsButParentExists(dst)) {
             return false;
         }
 
@@ -678,7 +683,7 @@ public class FileOps extends FileOpsCore {
         throwIfEmpty(pathToFile, "pathToFile");
 
         Path src = Paths.get(pathToFile);
-        if (!Files.exists(src) || !Files.isRegularFile(src)) {
+        if (!Files.isRegularFile(src)) {
             return null;
         }
 
