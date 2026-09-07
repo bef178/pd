@@ -148,13 +148,6 @@ class FileOpsCore {
     }
 
     /**
-     * Follow symlink.
-     */
-    public String pathToString(Path path) {
-        return pathToString(path, true);
-    }
-
-    /**
      * A trailing "/" will be added for directory.
      */
     public String pathToString(Path path, boolean followSymlinks) {
@@ -275,14 +268,6 @@ class FileOpsCore {
 public class FileOps extends FileOpsCore {
 
     public static final FileOps singleton = new FileOps();
-
-    /**
-     * Follow symlink.
-     */
-    public boolean listDirectory(@NonNull String directory, int depth,
-            AtomicBoolean abortRequested, OnActionListener onAction) {
-        return listDirectory(directory, depth, true, abortRequested, onAction);
-    }
 
     /**
      * List `directory` down to `depth`.

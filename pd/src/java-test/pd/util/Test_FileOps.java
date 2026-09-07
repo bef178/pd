@@ -905,7 +905,7 @@ class Test_FileOps {
         // asserts the call succeeded and returns the nodes met via callback
         private List<String> listAndCollect(String directory, int depth) {
             List<String> a = new LinkedList<>();
-            boolean succeeded = fileOps.listDirectory(directory, depth, null, (action, from, to, callbackSucceeded) -> {
+            boolean succeeded = fileOps.listDirectory(directory, depth, true, null, (action, from, to, callbackSucceeded) -> {
                 if (action == FileOps.Action.MEET) {
                     a.add(from);
                 }
@@ -918,13 +918,13 @@ class Test_FileOps {
         void listDirectory_baseline(@TempDir Path root) throws IOException {
             buildTree(root);
 
-            assertFalse(FileOps.singleton.listDirectory(root.toString(), 0, null, null));
+            assertFalse(FileOps.singleton.listDirectory(root.toString(), 0, true, null, null));
 
-            assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory("", 1, null, null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory("", 1, true, null, null));
 
-            assertFalse(fileOps.listDirectory(root.resolve("not-exist").toString(), 1, null, null));
+            assertFalse(fileOps.listDirectory(root.resolve("not-exist").toString(), 1, true, null, null));
 
-            assertFalse(fileOps.listDirectory(root.resolve("empty-file").toString(), 1, null, null));
+            assertFalse(fileOps.listDirectory(root.resolve("empty-file").toString(), 1, true, null, null));
 
             List<String> a = listAndCollect(root.resolve("empty").toString(), 1);
             assertTrue(a.isEmpty());
@@ -947,7 +947,7 @@ class Test_FileOps {
                 }
             };
 
-            assertFalse(fileOps.listDirectory(root.resolve("docs").toString(), 1, new AtomicBoolean(true), listener));
+            assertFalse(fileOps.listDirectory(root.resolve("docs").toString(), 1, true, new AtomicBoolean(true), listener));
             assertTrue(met.isEmpty());
         }
 
@@ -1054,7 +1054,7 @@ class Test_FileOps {
 
             AtomicBoolean abort = new AtomicBoolean(false);
             List<String> met = new LinkedList<>();
-            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 3, abort,
+            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 3, true, abort,
                     (action, from, to, callbackSucceeded) -> {
                         if (action == FileOps.Action.MEET) {
                             met.add(from);
