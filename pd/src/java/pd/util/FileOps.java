@@ -3,7 +3,6 @@ package pd.util;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -507,35 +506,19 @@ public class FileOps extends FileOpsCore {
                     if (abortRequested != null && abortRequested.get()) {
                         return false;
                     }
-
                     Path child = Paths.get(s);
                     FileStat childStat = stat(s);
                     Path dstChild = dst.resolve(child.getFileName());
                     if (childStat.isDirectory(false)) {
                         succeeded = copyDirectory(child, dstChild, abortRequested, onAction);
-                    } else if (childStat.isFile(false)) {
-                        succeeded = copyFile(child, dstChild, abortRequested, onAction);
-                    } else if (childStat.isSymlink()) {
-                        // copy symlink itself
-                        if (abortRequested != null && abortRequested.get()) {
-                            return false;
-                        }
-                        succeeded = false;
-                        try {
-                            Files.copy(child, dstChild, LinkOption.NOFOLLOW_LINKS);
-                            succeeded = true;
-                        } catch (IOException ignored) {
-                        }
-                        if (onAction != null) {
-                            onAction.accept(Action.CREATE, child, dstChild, succeeded);
-                        }
+                    } else if (childStat.isAnyTypeOf("f", "l*")) {
+                        succeeded = copyFile(child, dstChild, false, abortRequested, onAction);
                     } else {
                         if (onAction != null) {
                             onAction.accept(Action.CREATE, child, dstChild, false);
                         }
                         succeeded = false;
                     }
-
                     if (!succeeded) {
                         if (abortRequested != null && abortRequested.get()) {
                             return false;
@@ -586,61 +569,81 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * `src` must be a regular file or a symlink to a regular file.
+     * `src` must be a regular file or a symlink.
      * `dst` must not exist but its parent must exist.
-     * If aborted in halfway, the partially written `dst` is deleted.
-     * Follow symlink.
+     * If aborted in halfway, the partially written `dst` will be deleted.
      */
-    public boolean copyFile(@NonNull String src, @NonNull String dst, AtomicBoolean abortRequested, OnActionListener onAction) {
+    public boolean copyFile(@NonNull String src, @NonNull String dst, boolean followSymlinks,
+            AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(src, "src");
         throwIfEmpty(dst, "dst");
-        return copyFile(Paths.get(src), Paths.get(dst), abortRequested, onAction);
+        return copyFile(Paths.get(src), Paths.get(dst), followSymlinks, abortRequested, onAction);
     }
 
-    protected boolean copyFile(Path src, Path dst, AtomicBoolean abortRequested, OnActionListener onAction) {
-        if (!Files.isRegularFile(src)) {
+    protected boolean copyFile(Path src, Path dst, boolean followSymlinks,
+            AtomicBoolean abortRequested, OnActionListener onAction) {
+        FileStat srcStat = stat(src.toString());
+        if (!srcStat.isAnyTypeOf("f", "l*")) {
             return false;
         }
         if (!notExistsButParentExists(dst)) {
             return false;
         }
 
-        if (abortRequested != null && abortRequested.get()) {
-            return false;
-        }
-        boolean created = false;
-        boolean stuffed = false;
-        try (FileChannel fci = FileChannel.open(src, StandardOpenOption.READ);
-             FileChannel fco = FileChannel.open(dst, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-            created = true;
-            long position = 0;
-            long size = fci.size();
-            while (position < size) {
-                if (abortRequested != null && abortRequested.get()) {
-                    return false;
-                }
-                long n = fci.transferTo(position, Math.min(size - position, 4 * 1024 * 1024), fco);
-                if (n <= 0) {
-                    break;
-                }
-                position += n;
+        if (srcStat.isSymlink() && !followSymlinks) {
+            // copy symlink itself, atomic
+            if (abortRequested != null && abortRequested.get()) {
+                return false;
             }
-            stuffed = position == size;
-        } catch (FileAlreadyExistsException ignored) {
-            return false;
-        } catch (IOException ignored) {
-        } finally {
-            if (created && !stuffed) {
-                try {
-                    Files.deleteIfExists(dst);
-                } catch (IOException ignored) {
+            boolean succeeded;
+            try {
+                Files.copy(src, dst, LinkOption.NOFOLLOW_LINKS);
+                succeeded = true;
+            } catch (IOException ignored) {
+                succeeded = false;
+            }
+            if (onAction != null) {
+                onAction.accept(Action.CREATE, src.toString(), dst.toString(), succeeded);
+            }
+            return succeeded;
+        } else if (srcStat.isFile(true)) {
+            // copy file content
+            if (abortRequested != null && abortRequested.get()) {
+                return false;
+            }
+            boolean created = false;
+            boolean stuffed = false;
+            try (FileChannel fci = FileChannel.open(src, StandardOpenOption.READ);
+                 FileChannel fco = FileChannel.open(dst, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+                created = true;
+                long position = 0;
+                long size = fci.size();
+                while (position < size) {
+                    if (abortRequested != null && abortRequested.get()) {
+                        return false;
+                    }
+                    long n = fci.transferTo(position, Math.min(size - position, 4 * 1024 * 1024), fco);
+                    if (n <= 0) {
+                        break;
+                    }
+                    position += n;
+                }
+                stuffed = position == size;
+            } catch (IOException ignored) {
+            } finally {
+                if (created && !stuffed) {
+                    try {
+                        Files.deleteIfExists(dst);
+                    } catch (IOException ignored) {
+                    }
                 }
             }
+            if (onAction != null) {
+                onAction.accept(Action.CREATE, src.toString(), dst.toString(), stuffed);
+            }
+            return stuffed;
         }
-        if (onAction != null) {
-            onAction.accept(Action.CREATE, src.toString(), dst.toString(), stuffed);
-        }
-        return stuffed;
+        return false;
     }
 
     /**

@@ -1156,7 +1156,7 @@ class Test_FileOps {
             writeFile(src, "git");
             Path dst = tmp.resolve(".gitignore.copy");
 
-            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), true, null, null));
             assertArrayEquals("git".getBytes(), Files.readAllBytes(dst));
         }
 
@@ -1335,7 +1335,7 @@ class Test_FileOps {
             writeFile(src, "hello");
             Path dst = tmp.resolve("a.copy");
 
-            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), true, null, null));
             assertArrayEquals("hello".getBytes(), Files.readAllBytes(dst));
         }
 
@@ -1352,7 +1352,7 @@ class Test_FileOps {
             Files.write(src, data);
             Path dst = tmp.resolve("big.copy");
 
-            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), true, null, null));
             assertArrayEquals(data, Files.readAllBytes(dst));
         }
 
@@ -1362,7 +1362,7 @@ class Test_FileOps {
             writeFile(src, "");
             Path dst = tmp.resolve("empty.copy");
 
-            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), true, null, null));
             assertEquals(0, Files.size(dst));
         }
 
@@ -1376,7 +1376,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(link, target));
             Path dst = tmp.resolve("link.copy");
 
-            assertTrue(fileOps.copyFile(link.toString(), dst.toString(), null, null));
+            assertTrue(fileOps.copyFile(link.toString(), dst.toString(), true, null, null));
             assertFalse(Files.isSymbolicLink(dst));
             assertArrayEquals("content".getBytes(), Files.readAllBytes(dst));
         }
@@ -1390,7 +1390,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
             Path dst = tmp.resolve("link.copy");
 
-            assertFalse(fileOps.copyFile(link.toString(), dst.toString(), null, null));
+            assertFalse(fileOps.copyFile(link.toString(), dst.toString(), true, null, null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1400,7 +1400,7 @@ class Test_FileOps {
             mkdir(d);
             Path dst = tmp.resolve("d.copy");
 
-            assertFalse(fileOps.copyFile(d.toString(), dst.toString(), null, null));
+            assertFalse(fileOps.copyFile(d.toString(), dst.toString(), true, null, null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1408,7 +1408,7 @@ class Test_FileOps {
         void returnsFalseWhenSrcDoesNotExist(@TempDir Path tmp) {
             Path dst = tmp.resolve("dst");
 
-            assertFalse(fileOps.copyFile(tmp.resolve("nope").toString(), dst.toString(), null, null));
+            assertFalse(fileOps.copyFile(tmp.resolve("nope").toString(), dst.toString(), true, null, null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1419,7 +1419,7 @@ class Test_FileOps {
             Path dst = tmp.resolve("b");
             Files.createFile(dst);
 
-            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), null, null));
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), true, null, null));
         }
 
         @Test
@@ -1428,7 +1428,7 @@ class Test_FileOps {
             writeFile(src, "x");
             Path dst = tmp.resolve("b");
 
-            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), new AtomicBoolean(true), null));
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), true, new AtomicBoolean(true), null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1438,7 +1438,7 @@ class Test_FileOps {
             writeFile(src, "");
             Path dst = tmp.resolve("empty.copy");
 
-            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), new AtomicBoolean(true), null));
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), true, new AtomicBoolean(true), null));
             assertFalse(Files.exists(dst));
         }
 
@@ -1461,21 +1461,76 @@ class Test_FileOps {
             });
             flipper.start();
 
-            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), abort, null));
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), true, abort, null));
             flipper.join();
             assertFalse(Files.exists(dst));
         }
 
         @Test
+        void copiesSymlinkItselfWhenNotFollowing(@TempDir Path tmp) throws IOException {
+            // follow=false: the symlink itself is copied; dst is a link to the same target
+            Path target = tmp.resolve("target");
+            writeFile(target, "content");
+            Path link = tmp.resolve("link");
+            Assumptions.assumeTrue(createSymbolicLink(link, target));
+            Path dst = tmp.resolve("link.copy");
+
+            assertTrue(fileOps.copyFile(link.toString(), dst.toString(), false, null, null));
+            assertTrue(Files.isSymbolicLink(dst));
+            assertEquals(target.toString(), Files.readSymbolicLink(dst).toString());
+            assertArrayEquals("content".getBytes(), Files.readAllBytes(dst));
+        }
+
+        @Test
+        void copiesBrokenSymlinkItselfWhenNotFollowing(@TempDir Path tmp) throws IOException {
+            // follow=false: a broken symlink is still a node; the dangling link is copied
+            Path link = tmp.resolve("link");
+            Assumptions.assumeTrue(createSymbolicLink(link, tmp.resolve("missing")));
+            Path dst = tmp.resolve("link.copy");
+
+            assertTrue(fileOps.copyFile(link.toString(), dst.toString(), false, null, null));
+            assertTrue(Files.isSymbolicLink(dst));
+            assertFalse(Files.exists(dst));
+        }
+
+        @Test
+        void copiesSymlinkToDirectoryAsLinkWhenNotFollowing(@TempDir Path tmp) throws IOException {
+            // follow=false: a symlink to a directory is copied as the link itself, not dereferenced
+            Path dir = tmp.resolve("dir");
+            mkdir(dir);
+            writeFile(dir.resolve("f"), "f");
+            Path link = tmp.resolve("link");
+            Assumptions.assumeTrue(createSymbolicLink(link, dir));
+            Path dst = tmp.resolve("link.copy");
+
+            assertTrue(fileOps.copyFile(link.toString(), dst.toString(), false, null, null));
+            assertTrue(Files.isSymbolicLink(dst));
+            assertEquals(dir.toString(), Files.readSymbolicLink(dst).toString());
+            // the target directory is not duplicated
+            assertTrue(Files.exists(dir.resolve("f")));
+        }
+
+        @Test
+        void returnsFalseForBrokenSymlinkWhenFollowing(@TempDir Path tmp) throws IOException {
+            // follow=true: a broken symlink resolves to nothing; rejected, nothing created
+            Path link = tmp.resolve("link");
+            Assumptions.assumeTrue(createSymbolicLink(link, tmp.resolve("missing")));
+            Path dst = tmp.resolve("link.copy");
+
+            assertFalse(fileOps.copyFile(link.toString(), dst.toString(), true, null, null));
+            assertFalse(Files.exists(dst));
+        }
+
+        @Test
         void throwsWhenSrcIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile("", "dst", null, null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile("", "dst", true, null, null));
         }
 
         @Test
         void throwsWhenDstIsEmpty(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("a");
             writeFile(src, "x");
-            assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile(src.toString(), "", null, null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.copyFile(src.toString(), "", true, null, null));
         }
     }
 
@@ -1727,7 +1782,7 @@ class Test_FileOps {
 
             Path f = tmp.resolve("a.txt");
             writeFile(f, "x");
-            assertTrue(fileOps.copyFile(f.toString(), tmp.resolve("a.copy").toString(), null, listener));
+            assertTrue(fileOps.copyFile(f.toString(), tmp.resolve("a.copy").toString(), true, null, listener));
             assertTrue(fileOps.move(tmp.resolve("a.copy").toString(), tmp.resolve("b.txt").toString(), listener));
             assertTrue(fileOps.removeFile(tmp.resolve("b.txt").toString(), listener));
 
