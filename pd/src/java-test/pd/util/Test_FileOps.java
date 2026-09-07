@@ -290,14 +290,14 @@ class Test_FileOps {
     }
 
     @Nested
-    class deleteEmptyDirectory {
+    class removeEmptyDirectory {
 
         @Test
-        void deletesEmptyDirectory(@TempDir Path tmp) throws IOException {
+        void removesEmptyDirectory(@TempDir Path tmp) throws IOException {
             Path d = tmp.resolve("d");
             mkdir(d);
 
-            assertTrue(fileOps.deleteEmptyDirectory(d.toString()));
+            assertTrue(fileOps.removeEmptyDirectory(d.toString()));
             assertFalse(Files.exists(d));
         }
 
@@ -307,13 +307,13 @@ class Test_FileOps {
             mkdir(d);
             writeFile(d.resolve("f"), "f");
 
-            assertFalse(fileOps.deleteEmptyDirectory(d.toString()));
+            assertFalse(fileOps.removeEmptyDirectory(d.toString()));
             assertTrue(Files.exists(d.resolve("f")));
         }
 
         @Test
         void returnsFalseWhenDoesNotExist(@TempDir Path tmp) {
-            assertFalse(fileOps.deleteEmptyDirectory(tmp.resolve("nope").toString()));
+            assertFalse(fileOps.removeEmptyDirectory(tmp.resolve("nope").toString()));
         }
 
         @Test
@@ -321,7 +321,7 @@ class Test_FileOps {
             Path f = tmp.resolve("f");
             writeFile(f, "x");
 
-            assertFalse(fileOps.deleteEmptyDirectory(f.toString()));
+            assertFalse(fileOps.removeEmptyDirectory(f.toString()));
             assertTrue(Files.exists(f));
         }
 
@@ -333,14 +333,14 @@ class Test_FileOps {
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
 
-            assertFalse(fileOps.deleteEmptyDirectory(link.toString()));
+            assertFalse(fileOps.removeEmptyDirectory(link.toString()));
             assertTrue(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
             assertTrue(Files.exists(dir));
         }
 
         @Test
         void throwsWhenPathIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.deleteEmptyDirectory(""));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.removeEmptyDirectory(""));
         }
     }
 
@@ -397,14 +397,14 @@ class Test_FileOps {
     }
 
     @Nested
-    class deleteDirectory {
+    class removeDirectory {
 
         @Test
-        void deletesEmptyDirectoryWhenNotRecursive(@TempDir Path tmp) throws IOException {
+        void removesEmptyDirectoryWhenNotRecursive(@TempDir Path tmp) throws IOException {
             Path d = tmp.resolve("d");
             mkdir(d);
 
-            assertTrue(fileOps.deleteDirectory(d.toString(), false, false, null, null));
+            assertTrue(fileOps.removeDirectory(d.toString(), false, false, null, null));
             assertFalse(Files.exists(d));
         }
 
@@ -414,33 +414,33 @@ class Test_FileOps {
             mkdir(d);
             writeFile(d.resolve("f"), "f");
 
-            assertFalse(fileOps.deleteDirectory(d.toString(), false, false, null, null));
+            assertFalse(fileOps.removeDirectory(d.toString(), false, false, null, null));
             assertTrue(Files.exists(d));
             assertTrue(Files.exists(d.resolve("f")));
         }
 
         @Test
-        void deletesTreeWhenRecursive(@TempDir Path tmp) throws IOException {
+        void removesTreeWhenRecursive(@TempDir Path tmp) throws IOException {
             Path d = tmp.resolve("d");
             mkdir(d.resolve("sub"));
             writeFile(d.resolve("f"), "f");
             writeFile(d.resolve("sub/g"), "g");
 
-            assertTrue(fileOps.deleteDirectory(d.toString(), true, false, null, null));
+            assertTrue(fileOps.removeDirectory(d.toString(), true, false, null, null));
             assertFalse(Files.exists(d));
         }
 
         @Test
         void returnsFalseWhenTargetDoesNotExist(@TempDir Path tmp) {
-            assertFalse(fileOps.deleteDirectory(tmp.resolve("nope").toString(), false, false, null, null));
+            assertFalse(fileOps.removeDirectory(tmp.resolve("nope").toString(), false, false, null, null));
         }
 
         @Test
-        void deletesEmptyAncestorsWhenParentsTrue(@TempDir Path tmp) throws IOException {
+        void removesEmptyAncestorsWhenParentsTrue(@TempDir Path tmp) throws IOException {
             Path leaf = tmp.resolve("p/q/r");
             mkdir(leaf);
 
-            assertTrue(fileOps.deleteDirectory(leaf.toString(), false, true, null, null));
+            assertTrue(fileOps.removeDirectory(leaf.toString(), false, true, null, null));
 
             assertFalse(Files.exists(tmp.resolve("p")));
         }
@@ -452,7 +452,7 @@ class Test_FileOps {
             mkdir(leaf);
             writeFile(tmp.resolve("p/keep"), "k");
 
-            assertTrue(fileOps.deleteDirectory(leaf.toString(), false, true, null, null));
+            assertTrue(fileOps.removeDirectory(leaf.toString(), false, true, null, null));
             assertTrue(Files.exists(tmp.resolve("p")));
             assertFalse(Files.exists(tmp.resolve("p/q")));
             assertTrue(Files.exists(tmp.resolve("p/keep")));
@@ -465,8 +465,8 @@ class Test_FileOps {
             writeFile(d.resolve("f"), "f");
             writeFile(d.resolve("sub/g"), "g");
 
-            assertFalse(fileOps.deleteDirectory(d.toString(), true, false, new AtomicBoolean(true), null));
-            // aborted before any deletion: the tree is intact
+            assertFalse(fileOps.removeDirectory(d.toString(), true, false, new AtomicBoolean(true), null));
+            // aborted before any removal: the tree is intact
             assertTrue(Files.exists(d));
             assertTrue(Files.exists(d.resolve("f")));
             assertTrue(Files.exists(d.resolve("sub/g")));
@@ -477,17 +477,17 @@ class Test_FileOps {
             Path d = tmp.resolve("d");
             mkdir(d);
 
-            assertFalse(fileOps.deleteDirectory(d.toString(), true, false, new AtomicBoolean(true), null));
+            assertFalse(fileOps.removeDirectory(d.toString(), true, false, new AtomicBoolean(true), null));
             assertTrue(Files.exists(d));
         }
 
         @Test
-        void abortStopsDeleteBeforeAnyDeletionStarts(@TempDir Path tmp) throws IOException {
+        void abortStopsRemovalBeforeAnyRemovalStarts(@TempDir Path tmp) throws IOException {
             Path leaf = tmp.resolve("p/q/r");
             mkdir(leaf);
             AtomicBoolean abort = new AtomicBoolean(true);
 
-            assertFalse(fileOps.deleteDirectory(leaf.toString(), false, true, abort, null));
+            assertFalse(fileOps.removeDirectory(leaf.toString(), false, true, abort, null));
             assertTrue(Files.exists(leaf));
             assertTrue(Files.exists(tmp.resolve("p/q")));
             assertTrue(Files.exists(tmp.resolve("p")));
@@ -502,7 +502,7 @@ class Test_FileOps {
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
 
-            assertFalse(fileOps.deleteDirectory(link.toString(), true, false, null, null));
+            assertFalse(fileOps.removeDirectory(link.toString(), true, false, null, null));
             assertTrue(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
             assertTrue(Files.exists(dir));
             assertTrue(Files.exists(dir.resolve("f")));
@@ -510,7 +510,7 @@ class Test_FileOps {
         }
 
         @Test
-        void deletesSymlinkChildItselfNotTargetWhenRecursive(@TempDir Path tmp) throws IOException {
+        void removesSymlinkChildItselfNotTargetWhenRecursive(@TempDir Path tmp) throws IOException {
             // when removing a parent tree, a symlink-to-directory child is removed as the link
             // itself; its target (and the target's content) is left untouched
             Path parent = tmp.resolve("p");
@@ -522,7 +522,7 @@ class Test_FileOps {
             Assumptions.assumeTrue(createSymbolicLink(sl, ext));
             writeFile(parent.resolve("file"), "x");
 
-            assertTrue(fileOps.deleteDirectory(parent.toString(), true, false, null, null));
+            assertTrue(fileOps.removeDirectory(parent.toString(), true, false, null, null));
             assertFalse(Files.exists(parent));
             // the external target directory and its content survive (not followed)
             assertTrue(Files.exists(ext));
@@ -531,11 +531,11 @@ class Test_FileOps {
 
         @Test
         void throwsWhenPathIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.deleteDirectory("", false, false, null, null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.removeDirectory("", false, false, null, null));
         }
 
         @Test
-        void deletesChildrenInLeafOrderWithSymlink(@TempDir Path tmp) throws IOException {
+        void removesChildrenInLeafOrderWithSymlink(@TempDir Path tmp) throws IOException {
             // children sort by their own strings, not following symlinks:
             // the real directory first, then the symlink among the leaves by name
             Path d = tmp.resolve("d");
@@ -551,12 +551,12 @@ class Test_FileOps {
 
             List<String> removed = new LinkedList<>();
             FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
-                if (action == FileOps.Action.DELETE && succeeded != null) {
+                if (action == FileOps.Action.REMOVE && succeeded != null) {
                     removed.add(from);
                 }
             };
 
-            assertTrue(fileOps.deleteDirectory(d.toString(), true, false, null, listener));
+            assertTrue(fileOps.removeDirectory(d.toString(), true, false, null, listener));
             assertEquals(5, removed.size());
             assertEquals(d.resolve("sub/x").toString(), removed.get(0));
             assertEquals(d.resolve("sub").toString(), removed.get(1));
@@ -575,12 +575,12 @@ class Test_FileOps {
 
             List<String> removed = new LinkedList<>();
             FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
-                if (action == FileOps.Action.DELETE && succeeded != null) {
+                if (action == FileOps.Action.REMOVE && succeeded != null) {
                     removed.add(from);
                 }
             };
 
-            assertTrue(fileOps.deleteDirectory(d.toString(), true, false, null, listener));
+            assertTrue(fileOps.removeDirectory(d.toString(), true, false, null, listener));
             assertEquals(4, removed.size());
             assertEquals(d.resolve("sub/g").toString(), removed.get(0));
             assertEquals(d.resolve("sub").toString(), removed.get(1));
@@ -596,12 +596,12 @@ class Test_FileOps {
 
             List<String> removed = new LinkedList<>();
             FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
-                if (action == FileOps.Action.DELETE && succeeded != null) {
+                if (action == FileOps.Action.REMOVE && succeeded != null) {
                     removed.add(from);
                 }
             };
 
-            assertTrue(fileOps.deleteDirectory(leaf.toString(), false, true, null, listener));
+            assertTrue(fileOps.removeDirectory(leaf.toString(), false, true, null, listener));
             assertTrue(removed.contains(leaf.toString()));
             assertTrue(removed.contains(tmp.resolve("p/q").toString()));
             assertTrue(removed.contains(tmp.resolve("p").toString()));
@@ -616,78 +616,78 @@ class Test_FileOps {
 
             List<String> removed = new LinkedList<>();
             FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
-                if (action == FileOps.Action.DELETE && succeeded != null) {
+                if (action == FileOps.Action.REMOVE && succeeded != null) {
                     removed.add(from);
                 }
             };
 
-            assertFalse(fileOps.deleteDirectory(d.toString(), true, false, new AtomicBoolean(true), listener));
+            assertFalse(fileOps.removeDirectory(d.toString(), true, false, new AtomicBoolean(true), listener));
             assertTrue(removed.isEmpty());
         }
     }
 
     @Nested
-    class deleteFile {
+    class removeFile {
 
         @Test
-        void deletesExistingFile(@TempDir Path tmp) throws IOException {
+        void removesExistingFile(@TempDir Path tmp) throws IOException {
             Path f = tmp.resolve("a.txt");
             writeFile(f, "x");
 
-            assertTrue(fileOps.deleteFile(f.toString(), null));
+            assertTrue(fileOps.removeFile(f.toString(), null));
             assertFalse(Files.exists(f));
         }
 
         @Test
         void returnsFalseWhenFileDoesNotExist(@TempDir Path tmp) {
-            assertFalse(fileOps.deleteFile(tmp.resolve("nope").toString(), null));
+            assertFalse(fileOps.removeFile(tmp.resolve("nope").toString(), null));
         }
 
         @Test
         void returnsFalseForDirectory(@TempDir Path tmp) throws IOException {
-            // removeFile only deletes files; a directory (empty or not) is left untouched
+            // removeFile only removes files; a directory (empty or not) is left untouched
             Path empty = tmp.resolve("empty");
             mkdir(empty);
-            assertFalse(fileOps.deleteFile(empty.toString(), null));
+            assertFalse(fileOps.removeFile(empty.toString(), null));
             assertTrue(Files.exists(empty));
 
             Path nonEmpty = tmp.resolve("d");
             mkdir(nonEmpty);
             writeFile(nonEmpty.resolve("f"), "f");
-            assertFalse(fileOps.deleteFile(nonEmpty.toString(), null));
+            assertFalse(fileOps.removeFile(nonEmpty.toString(), null));
             assertTrue(Files.exists(nonEmpty));
             assertTrue(Files.exists(nonEmpty.resolve("f")));
         }
 
         @Test
-        void deletesSymbolicLinkToFile(@TempDir Path tmp) throws IOException {
+        void removesSymbolicLinkToFile(@TempDir Path tmp) throws IOException {
             Path target = tmp.resolve("target");
             writeFile(target, "x");
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, target));
 
-            assertTrue(fileOps.deleteFile(link.toString(), null));
+            assertTrue(fileOps.removeFile(link.toString(), null));
             assertFalse(Files.exists(link));
             // the link target survives
             assertTrue(Files.exists(target));
         }
 
         @Test
-        void deletesSymbolicLinkToDirectory(@TempDir Path tmp) throws IOException {
-            // a symlink to a directory is not itself a directory; removeFile deletes the link, not the target
+        void removesSymbolicLinkToDirectory(@TempDir Path tmp) throws IOException {
+            // a symlink to a directory is not itself a directory; removeFile removes the link, not the target
             Path dir = tmp.resolve("dir");
             mkdir(dir);
             Path link = tmp.resolve("linkdir");
             Assumptions.assumeTrue(createSymbolicLink(link, dir));
 
-            assertTrue(fileOps.deleteFile(link.toString(), null));
+            assertTrue(fileOps.removeFile(link.toString(), null));
             assertFalse(Files.exists(link));
             assertTrue(Files.exists(dir));
         }
 
         @Test
         void throwsWhenPathIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.deleteFile("", null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.removeFile("", null));
         }
     }
 
@@ -1303,7 +1303,7 @@ class Test_FileOps {
 
             List<String> copied = new LinkedList<>();
             FileOps.OnActionListener listener = (action, from, to, succeeded) -> {
-                if (action == FileOps.Action.COPY && succeeded != null && from != null) {
+                if (action == FileOps.Action.CREATE && succeeded != null && from != null) {
                     copied.add(from);
                 }
             };
@@ -1420,7 +1420,7 @@ class Test_FileOps {
         }
 
         @Test
-        void deletesPartialFileWhenAbortedMidCopy(@TempDir Path tmp) throws Exception {
+        void removesPartialFileWhenAbortedMidCopy(@TempDir Path tmp) throws Exception {
             // a large source spans multiple read chunks; aborting mid-copy must leave no dst behind
             Path src = tmp.resolve("big");
             byte[] data = new byte[1_000_000];
@@ -1457,29 +1457,29 @@ class Test_FileOps {
     }
 
     @Nested
-    class rename {
+    class move {
 
         @Test
-        void renamesRegularFile(@TempDir Path tmp) throws IOException {
+        void movesRegularFile(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("a.txt");
             writeFile(src, "hello");
             Path dst = tmp.resolve("b.txt");
 
-            assertTrue(fileOps.rename(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.move(src.toString(), dst.toString(), null));
             assertFalse(Files.exists(src));
             assertTrue(Files.exists(dst));
             assertArrayEquals("hello".getBytes(), Files.readAllBytes(dst));
         }
 
         @Test
-        void renamesSymlinkToFile(@TempDir Path tmp) throws IOException {
+        void movesSymlinkToFile(@TempDir Path tmp) throws IOException {
             Path target = tmp.resolve("target");
             writeFile(target, "content");
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, target));
             Path dst = tmp.resolve("link.moved");
 
-            assertTrue(fileOps.rename(link.toString(), dst.toString(), null));
+            assertTrue(fileOps.move(link.toString(), dst.toString(), null));
             assertFalse(Files.exists(link));
             assertTrue(Files.isSymbolicLink(dst));
             assertEquals(target.toString(), Files.readSymbolicLink(dst).toString());
@@ -1487,7 +1487,7 @@ class Test_FileOps {
 
         @Test
         void returnsFalseWhenSrcDoesNotExist(@TempDir Path tmp) {
-            assertFalse(fileOps.rename(tmp.resolve("nope").toString(), tmp.resolve("dst").toString(), null));
+            assertFalse(fileOps.move(tmp.resolve("nope").toString(), tmp.resolve("dst").toString(), null));
         }
 
         @Test
@@ -1497,42 +1497,42 @@ class Test_FileOps {
             Path dst = tmp.resolve("b");
             writeFile(dst, "y");
 
-            assertFalse(fileOps.rename(src.toString(), dst.toString(), null));
+            assertFalse(fileOps.move(src.toString(), dst.toString(), null));
             assertTrue(Files.exists(src));
         }
 
         @Test
         void throwsWhenSrcIsEmpty() {
-            assertThrows(IllegalArgumentException.class, () -> fileOps.rename("", "dst", null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.move("", "dst", null));
         }
 
         @Test
         void throwsWhenDstIsEmpty(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("a");
             writeFile(src, "x");
-            assertThrows(IllegalArgumentException.class, () -> fileOps.rename(src.toString(), "", null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.move(src.toString(), "", null));
         }
 
         @Test
-        void renamesEmptyDirectory(@TempDir Path tmp) throws IOException {
+        void movesEmptyDirectory(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("d");
             mkdir(src);
             Path dst = tmp.resolve("d.moved");
 
-            assertTrue(fileOps.rename(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.move(src.toString(), dst.toString(), null));
             assertFalse(Files.exists(src));
             assertTrue(Files.isDirectory(dst));
         }
 
         @Test
-        void renamesDirectoryTree(@TempDir Path tmp) throws IOException {
+        void movesDirectoryTree(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("root");
             mkdir(src.resolve("sub"));
             writeFile(src.resolve("f"), "f");
             writeFile(src.resolve("sub/g"), "g");
             Path dst = tmp.resolve("root.moved");
 
-            assertTrue(fileOps.rename(src.toString(), dst.toString(), null));
+            assertTrue(fileOps.move(src.toString(), dst.toString(), null));
             assertFalse(Files.exists(src));
             assertTrue(Files.isDirectory(dst));
             assertArrayEquals("f".getBytes(), Files.readAllBytes(dst.resolve("f")));
@@ -1540,16 +1540,16 @@ class Test_FileOps {
         }
 
         @Test
-        void renamesSymlinkToDirectoryAsLinkItself(@TempDir Path tmp) throws IOException {
-            // a symlink is renamed as the link itself; the target directory is left untouched
+        void movesSymlinkToDirectoryAsLinkItself(@TempDir Path tmp) throws IOException {
+            // a symlink is moved as the link itself; the target directory is left untouched
             Path target = tmp.resolve("target");
             mkdir(target);
             writeFile(target.resolve("f"), "f");
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, target));
-            Path dst = tmp.resolve("link.renamed");
+            Path dst = tmp.resolve("link.moved");
 
-            assertTrue(fileOps.rename(link.toString(), dst.toString(), null));
+            assertTrue(fileOps.move(link.toString(), dst.toString(), null));
             assertFalse(Files.exists(link));
             assertTrue(Files.isSymbolicLink(dst));
             assertTrue(Files.exists(target));
@@ -1557,19 +1557,19 @@ class Test_FileOps {
         }
 
         @Test
-        void onRenamedCalledForAtomicRename(@TempDir Path tmp) throws IOException {
+        void onMoveCalledForAtomicMove(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("d");
             mkdir(src);
             Path dst = tmp.resolve("d.moved");
 
             List<String> moved = new LinkedList<>();
             FileOps.OnActionListener onAction = (action, from, to, succeeded) -> {
-                if (action == FileOps.Action.RENAME && succeeded != null) {
+                if (action == FileOps.Action.MOVE && succeeded != null) {
                     moved.add(from + " -> " + to);
                 }
             };
 
-            assertTrue(fileOps.rename(src.toString(), dst.toString(), onAction));
+            assertTrue(fileOps.move(src.toString(), dst.toString(), onAction));
             assertEquals(1, moved.size());
             assertEquals(src + " -> " + dst, moved.get(0));
         }
@@ -1672,7 +1672,7 @@ class Test_FileOps {
                 Files.createDirectories(root.resolve("d"));
                 Files.write(root.resolve("d/f"), "f".getBytes());
 
-                assertTrue(fileOps.deleteDirectory(rel, true, false, null, null));
+                assertTrue(fileOps.removeDirectory(rel, true, false, null, null));
                 assertFalse(Files.exists(root));
             } finally {
                 rm(root);
@@ -1699,14 +1699,14 @@ class Test_FileOps {
             };
 
             assertTrue(fileOps.copyDirectory(root.toString(), dst.toString(), null, listener));
-            assertTrue(fileOps.deleteDirectory(dst.toString(), true, false, null, listener));
+            assertTrue(fileOps.removeDirectory(dst.toString(), true, false, null, listener));
             assertTrue(fileOps.createDirectory(tmp.resolve("p/q").toString(), true, null, listener));
 
             Path f = tmp.resolve("a.txt");
             writeFile(f, "x");
             assertTrue(fileOps.copyFile(f.toString(), tmp.resolve("a.copy").toString(), null, listener));
-            assertTrue(fileOps.rename(tmp.resolve("a.copy").toString(), tmp.resolve("b.txt").toString(), listener));
-            assertTrue(fileOps.deleteFile(tmp.resolve("b.txt").toString(), listener));
+            assertTrue(fileOps.move(tmp.resolve("a.copy").toString(), tmp.resolve("b.txt").toString(), listener));
+            assertTrue(fileOps.removeFile(tmp.resolve("b.txt").toString(), listener));
 
             assertTrue(pre.isEmpty(), "unexpected pre reports: " + pre);
         }
