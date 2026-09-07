@@ -1,14 +1,15 @@
 package pd.util;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
@@ -627,39 +628,39 @@ public class FileOps extends FileOpsCore {
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
-
-        boolean succeeded = false;
-        try (InputStream fis = Files.newInputStream(src);
-             OutputStream fos = Files.newOutputStream(dst)) {
-            byte[] a = new byte[8192];
-            int nRead;
-            while ((nRead = fis.read(a)) > 0) {
+        boolean created = false;
+        boolean stuffed = false;
+        try (FileChannel fci = FileChannel.open(src, StandardOpenOption.READ);
+             FileChannel fco = FileChannel.open(dst, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+            created = true;
+            long position = 0;
+            long size = fci.size();
+            while (position < size) {
                 if (abortRequested != null && abortRequested.get()) {
                     return false;
                 }
-                fos.write(a, 0, nRead);
+                long n = fci.transferTo(position, Math.min(size - position, 4 * 1024 * 1024), fco);
+                if (n <= 0) {
+                    break;
+                }
+                position += n;
             }
-            if (abortRequested != null && abortRequested.get()) {
-                return false;
-            }
-            fos.flush();
-            succeeded = true;
+            stuffed = position == size;
+        } catch (FileAlreadyExistsException ignored) {
+            return false;
         } catch (IOException ignored) {
-            // failure: report below
         } finally {
-            if (!succeeded) {
+            if (created && !stuffed) {
                 try {
                     Files.deleteIfExists(dst);
                 } catch (IOException ignored) {
                 }
             }
         }
-
         if (onAction != null) {
-            onAction.accept(Action.CREATE, src, dst, succeeded);
+            onAction.accept(Action.CREATE, src.toString(), dst.toString(), stuffed);
         }
-
-        return succeeded;
+        return stuffed;
     }
 
     /**

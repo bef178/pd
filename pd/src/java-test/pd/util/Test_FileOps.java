@@ -1334,6 +1334,23 @@ class Test_FileOps {
         }
 
         @Test
+        void copiesLargeFileAcrossTransferChunks(@TempDir Path tmp) throws IOException {
+            // larger than a single 4MB transferTo chunk, with an odd tail:
+            // exercises the chunk loop and position tracking
+            int size = 4 * 1024 * 1024 + 12345;
+            byte[] data = new byte[size];
+            for (int i = 0; i < size; i++) {
+                data[i] = (byte) i;
+            }
+            Path src = tmp.resolve("big");
+            Files.write(src, data);
+            Path dst = tmp.resolve("big.copy");
+
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), null, null));
+            assertArrayEquals(data, Files.readAllBytes(dst));
+        }
+
+        @Test
         void copiesEmptyFile(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve("empty");
             writeFile(src, "");
