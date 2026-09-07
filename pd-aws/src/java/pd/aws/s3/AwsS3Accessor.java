@@ -130,10 +130,10 @@ public class AwsS3Accessor {
                 .key(key)
                 .build();
         HeadObjectResponse response = s3Client.headObject(request);
-        FileStat fileStat = new FileStat();
-        fileStat.path = key;
-        fileStat.contentLength = response.contentLength();
-        fileStat.lastModified = response.lastModified().toEpochMilli();
+        FileStat fileStat = new FileStat(key);
+        fileStat.type = FileStat.TYPE_FILE;
+        fileStat.size = response.contentLength();
+        fileStat.mtime = response.lastModified().toEpochMilli();
         return fileStat;
     }
 

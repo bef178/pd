@@ -90,8 +90,8 @@ public class App {
         stdout("found {} file(s)", stats.size());
 
         List<List<FileStat>> sizeGroupedFiles = stats.stream()
-                .filter(a -> a != null && a.contentLength > 0)
-                .collect(Collectors.groupingBy(a -> a.contentLength))
+                .filter(a -> a.size != null && a.size > 0)
+                .collect(Collectors.groupingBy(a -> a.size))
                 .entrySet().stream()
                 .sorted(Comparator.comparingLong(Map.Entry::getKey))
                 .map(Map.Entry::getValue)
@@ -132,7 +132,7 @@ public class App {
         switch (commandKey) {
             case list:
                 stdout("");
-                stdout("size: {}", group.get(0).contentLength);
+                stdout("size: {}", group.get(0).size);
                 for (FileStat stat : group) {
                     stdout(stat.path);
                 }
@@ -141,7 +141,7 @@ public class App {
             case list_duplicated:
                 if (group.size() > 1) {
                     stdout("");
-                    stdout("size: {}", group.get(0).contentLength);
+                    stdout("size: {}", group.get(0).size);
                     for (int i = 1; i < group.size(); i++) {
                         FileStat stat = group.get(i);
                         stdout(stat.path);
@@ -151,7 +151,7 @@ public class App {
             case remove_duplicated:
                 if (group.size() > 1) {
                     stdout("");
-                    stdout("size: {}", group.get(0).contentLength);
+                    stdout("size: {}", group.get(0).size);
                     FileStat stat = group.get(0);
                     stdout("o {}", stat.path);
                     for (int i = 1; i < group.size(); i++) {

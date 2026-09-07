@@ -151,37 +151,17 @@ class FileOpsCore {
      * A trailing "/" will be added for directory.
      */
     public String pathToString(Path path, boolean followSymlinks) {
-        BasicFileAttributes attrs;
-        try {
-            attrs = readAttributes(path, followSymlinks);
-        } catch (IOException e) {
-            if (followSymlinks) {
-                try {
-                    BasicFileAttributes own = readAttributes(path, false);
-                    if (own.isSymbolicLink()) {
-                        // broken symlink
-                        return null;
-                    }
-                } catch (IOException ignored) {
-                    // permission etc.
-                }
-            }
-            // not a symlink, report the bare path
-            return path.toString();
+        FileStat fileStat = stat(path.toString());
+        if (followSymlinks && fileStat.isDanglingSymlink()) {
+            return null;
         }
         String s = path.toString();
-        if (attrs.isDirectory()) {
+        if (fileStat.isDirectory(followSymlinks)) {
             if (!s.endsWith("/")) {
                 s += "/";
             }
         }
         return s;
-    }
-
-    private BasicFileAttributes readAttributes(Path path, boolean followSymlinks) throws IOException {
-        return followSymlinks
-                ? Files.readAttributes(path, BasicFileAttributes.class)
-                : Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
     }
 
     /**
@@ -219,21 +199,25 @@ class FileOpsCore {
         }
     }
 
+    /**
+     * Return a non-null FileStat object on legal path.
+     * Not follow symlink.
+     */
     public FileStat stat(@NonNull String path) {
         throwIfEmpty(path);
+
+        FileStat result = new FileStat(path);
 
         Path src = Paths.get(path);
         BasicFileAttributes ownAttrs;
         try {
             ownAttrs = readAttributes(src, false);
         } catch (IOException e) {
-            return null;
+            return result;
         }
 
-        FileStat fileStat = new FileStat();
-        fileStat.path = path;
         if (ownAttrs.isSymbolicLink()) {
-            String targetType;
+            int targetType;
             try {
                 BasicFileAttributes targetAttrs = readAttributes(src, true);
                 if (targetAttrs.isRegularFile()) {
@@ -241,27 +225,33 @@ class FileOpsCore {
                 } else if (targetAttrs.isDirectory()) {
                     targetType = FileStat.TYPE_DIRECTORY;
                 } else {
-                    targetType = FileStat.TYPE_UNKNOWN;
+                    targetType = FileStat.TYPE_SPECIAL;
                 }
             } catch (IOException e) {
-                // broken symlink
-                targetType = "";
+                // dangling symlink
+                targetType = 0;
             }
-            fileStat.type = "l" + targetType;
-            fileStat.contentLength = ownAttrs.size();
-            fileStat.lastModified = ownAttrs.lastModifiedTime().toMillis();
+            result.type = FileStat.TYPE_SYMLINK | targetType;
+            result.size = ownAttrs.size();
+            result.mtime = ownAttrs.lastModifiedTime().toMillis();
         } else if (ownAttrs.isRegularFile()) {
-            fileStat.type = FileStat.TYPE_FILE;
-            fileStat.contentLength = ownAttrs.size();
-            fileStat.lastModified = ownAttrs.lastModifiedTime().toMillis();
+            result.type = FileStat.TYPE_FILE;
+            result.size = ownAttrs.size();
+            result.mtime = ownAttrs.lastModifiedTime().toMillis();
         } else if (ownAttrs.isDirectory()) {
-            fileStat.type = FileStat.TYPE_DIRECTORY;
-            fileStat.lastModified = ownAttrs.lastModifiedTime().toMillis();
+            result.type = FileStat.TYPE_DIRECTORY;
+            result.mtime = ownAttrs.lastModifiedTime().toMillis();
         } else {
-            fileStat.type = FileStat.TYPE_UNKNOWN;
-            fileStat.lastModified = ownAttrs.lastModifiedTime().toMillis();
+            result.type = FileStat.TYPE_SPECIAL;
+            result.mtime = ownAttrs.lastModifiedTime().toMillis();
         }
-        return fileStat;
+        return result;
+    }
+
+    private BasicFileAttributes readAttributes(Path path, boolean followSymlinks) throws IOException {
+        return followSymlinks
+                ? Files.readAttributes(path, BasicFileAttributes.class)
+                : Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
     }
 }
 
@@ -456,7 +446,7 @@ public class FileOps extends FileOpsCore {
     }
 
     protected boolean removeFile(Path src, OnActionListener onAction) {
-        if (!Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(src)) {
+        if (!stat(src.toString()).isAnyTypeOf("f", "l*")) {
             return false;
         }
 
@@ -660,9 +650,7 @@ public class FileOps extends FileOpsCore {
     }
 
     protected boolean move(Path src, Path dst, OnActionListener onAction) {
-        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)
-                && !Files.isRegularFile(src, LinkOption.NOFOLLOW_LINKS)
-                && !Files.isSymbolicLink(src)) {
+        if (!stat(src.toString()).isAnyTypeOf("d", "f", "l*")) {
             return false;
         }
         if (Files.exists(dst, LinkOption.NOFOLLOW_LINKS) || (dst.getParent() != null && !Files.exists(dst.getParent()))) {
