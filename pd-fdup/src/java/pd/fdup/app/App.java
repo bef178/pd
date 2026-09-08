@@ -82,7 +82,7 @@ public class App {
 
         List<FileStat> stats = paths.stream()
                 .flatMap(a -> {
-                    List<String> b = FileOps.singleton.list(a, Integer.MAX_VALUE);
+                    List<String> b = FileOps.singleton.list(a, 64);
                     return b == null ? Stream.empty() : b.stream();
                 })
                 .map(FileOps.singleton::stat)
