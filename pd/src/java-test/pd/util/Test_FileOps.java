@@ -559,10 +559,11 @@ class Test_FileOps {
             assertTrue(fileOps.removeDirectory(d.toString(), true, false, null, listener));
             assertEquals(5, removed.size());
             assertEquals(d.resolve("sub/x").toString(), removed.get(0));
-            assertEquals(d.resolve("sub").toString(), removed.get(1));
+            // directories are reported with a trailing "/"
+            assertEquals(d.resolve("sub") + "/", removed.get(1));
             assertEquals(d.resolve("a.txt").toString(), removed.get(2));
             assertEquals(link.toString(), removed.get(3));
-            assertEquals(d.toString(), removed.get(4));
+            assertEquals(d + "/", removed.get(4));
             assertTrue(Files.exists(ext));
         }
 
@@ -583,9 +584,10 @@ class Test_FileOps {
             assertTrue(fileOps.removeDirectory(d.toString(), true, false, null, listener));
             assertEquals(4, removed.size());
             assertEquals(d.resolve("sub/g").toString(), removed.get(0));
-            assertEquals(d.resolve("sub").toString(), removed.get(1));
+            // directories are reported with a trailing "/"
+            assertEquals(d.resolve("sub") + "/", removed.get(1));
             assertEquals(d.resolve("f").toString(), removed.get(2));
-            assertEquals(d.toString(), removed.get(3));
+            assertEquals(d + "/", removed.get(3));
             assertFalse(Files.exists(d));
         }
 
@@ -602,9 +604,9 @@ class Test_FileOps {
             };
 
             assertTrue(fileOps.removeDirectory(leaf.toString(), false, true, null, listener));
-            assertTrue(removed.contains(leaf.toString()));
-            assertTrue(removed.contains(tmp.resolve("p/q").toString()));
-            assertTrue(removed.contains(tmp.resolve("p").toString()));
+            assertTrue(removed.contains(leaf + "/"));
+            assertTrue(removed.contains(tmp.resolve("p/q") + "/"));
+            assertTrue(removed.contains(tmp.resolve("p") + "/"));
             assertFalse(Files.exists(tmp.resolve("p")));
         }
 
@@ -844,7 +846,7 @@ class Test_FileOps {
             FileStat result = fileOps.stat(tmp.resolve("nope").toString());
 
             assertNotNull(result);
-            assertFalse(result.exists());
+            assertFalse(result.exists(false));
             assertEquals(tmp.resolve("nope").toString(), result.path);
         }
 
@@ -1315,12 +1317,13 @@ class Test_FileOps {
             };
 
             assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, listener));
-            assertEquals(5, copied.size());
+            // only actual per-entry operations are reported, no per-directory summary:
+            // sub/x (leaf), a.txt (leaf), zlink (symlink copied); directories are dst-side
+            // events (from = null) and not collected here
+            assertEquals(3, copied.size());
             assertEquals(src.resolve("sub/x").toString(), copied.get(0));
-            assertEquals(src.resolve("sub").toString(), copied.get(1));
-            assertEquals(src.resolve("a.txt").toString(), copied.get(2));
-            assertEquals(link.toString(), copied.get(3));
-            assertEquals(src.toString(), copied.get(4));
+            assertEquals(src.resolve("a.txt").toString(), copied.get(1));
+            assertEquals(link.toString(), copied.get(2));
             // the child was copied as a symlink
             assertTrue(Files.isSymbolicLink(dst.resolve("zlink")));
         }
@@ -1649,7 +1652,8 @@ class Test_FileOps {
 
             assertTrue(fileOps.move(src.toString(), dst.toString(), onAction));
             assertEquals(1, moved.size());
-            assertEquals(src + " -> " + dst, moved.get(0));
+            // the entry is a directory, reported with a trailing "/" on both sides
+            assertEquals(src + "/ -> " + dst + "/", moved.get(0));
         }
     }
 
@@ -1787,6 +1791,307 @@ class Test_FileOps {
             assertTrue(fileOps.removeFile(tmp.resolve("b.txt").toString(), listener));
 
             assertTrue(pre.isEmpty(), "unexpected pre reports: " + pre);
+        }
+    }
+
+    // ---- onAction contract (pinned by the fail-fast rework) ----
+    // file point ops (copyFile/removeFile/move) report every failed request, even when a
+    // precheck rejected it and no syscall ran; directory ops (createDirectory/removeDirectory/
+    // copyDirectory) report only mkdir/rmdir attempts - entry precheck failures are silent;
+    // abort is silent (the caller watches the flag); a trailing "/" marks a directory path and
+    // created directories are reported dst-side (from == null)
+    @Nested
+    class eventContract {
+
+        // records "ACTION|from|to|ok"
+        private FileOps.OnActionListener recorder(List<String> got) {
+            return (action, from, to, ok) -> got.add(action + "|" + from + "|" + to + "|" + ok);
+        }
+
+        @Test
+        void copyFileReportsCreateFalseForEveryFailedRequest(@TempDir Path tmp) throws IOException {
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            // missing src
+            Path missing = tmp.resolve("missing");
+            Path dst1 = tmp.resolve("dst1");
+            assertFalse(fileOps.copyFile(missing.toString(), dst1.toString(), true, null, listener));
+            assertArrayEquals(new String[] {"CREATE|" + missing + "|" + dst1 + "|false"}, got.toArray());
+
+            // src is a directory
+            got.clear();
+            Path dir = tmp.resolve("dir");
+            mkdir(dir);
+            Path dst2 = tmp.resolve("dst2");
+            assertFalse(fileOps.copyFile(dir.toString(), dst2.toString(), true, null, listener));
+            // copyFile expects a leaf at src, so the decline reports it without "/"
+            assertArrayEquals(new String[] {"CREATE|" + dir + "|" + dst2 + "|false"}, got.toArray());
+
+            // dst already exists: rejected, and the pre-existing dst is left untouched
+            got.clear();
+            Path src = tmp.resolve("src");
+            writeFile(src, "x");
+            Path dst3 = tmp.resolve("dst3");
+            writeFile(dst3, "y");
+            assertFalse(fileOps.copyFile(src.toString(), dst3.toString(), true, null, listener));
+            assertArrayEquals(new String[] {"CREATE|" + src + "|" + dst3 + "|false"}, got.toArray());
+            assertArrayEquals("y".getBytes(), Files.readAllBytes(dst3));
+        }
+
+        @Test
+        void copyFileReportsCreateTrueOnSuccess(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            writeFile(src, "x");
+            Path dst = tmp.resolve("dst");
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            assertTrue(fileOps.copyFile(src.toString(), dst.toString(), true, null, listener));
+            assertArrayEquals(new String[] {"CREATE|" + src + "|" + dst + "|true"}, got.toArray());
+        }
+
+        @Test
+        void copyFileSilentWhenAbortPreset(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            writeFile(src, "x");
+            Path dst = tmp.resolve("dst");
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            assertFalse(fileOps.copyFile(src.toString(), dst.toString(), true, new AtomicBoolean(true), listener));
+            assertTrue(got.isEmpty());
+            assertFalse(Files.exists(dst));
+        }
+
+        @Test
+        void copyFileDeclinesDanglingSymlinkWhenFollowingWithNonNullFrom(@TempDir Path tmp) throws IOException {
+            // follow=true on a broken link: declined, and the event still names the src
+            Path link = tmp.resolve("link");
+            Assumptions.assumeTrue(createSymbolicLink(link, tmp.resolve("missing")));
+            Path dst = tmp.resolve("dst");
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            assertFalse(fileOps.copyFile(link.toString(), dst.toString(), true, null, listener));
+            assertArrayEquals(new String[] {"CREATE|" + link + "|" + dst + "|false"}, got.toArray());
+            assertFalse(Files.exists(dst));
+        }
+
+        @Test
+        void removeFileReportsRemoveFalseOnPrecheckFailures(@TempDir Path tmp) throws IOException {
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            // on a directory: removeFile expects a leaf, so the decline reports it without "/"
+            Path dir = tmp.resolve("dir");
+            mkdir(dir);
+            assertFalse(fileOps.removeFile(dir.toString(), listener));
+            assertArrayEquals(new String[] {"REMOVE|" + dir + "|null|false"}, got.toArray());
+
+            // on a missing path
+            got.clear();
+            Path missing = tmp.resolve("missing");
+            assertFalse(fileOps.removeFile(missing.toString(), listener));
+            assertArrayEquals(new String[] {"REMOVE|" + missing + "|null|false"}, got.toArray());
+        }
+
+        @Test
+        void removeFileReportsRemoveTrueOnSuccess(@TempDir Path tmp) throws IOException {
+            Path f = tmp.resolve("f");
+            writeFile(f, "x");
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            assertTrue(fileOps.removeFile(f.toString(), listener));
+            assertArrayEquals(new String[] {"REMOVE|" + f + "|null|true"}, got.toArray());
+        }
+
+        @Test
+        void moveReportsMoveFalseOnMissingSrc(@TempDir Path tmp) {
+            Path src = tmp.resolve("missing");
+            Path dst = tmp.resolve("dst");
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            assertFalse(fileOps.move(src.toString(), dst.toString(), listener));
+            assertArrayEquals(new String[] {"MOVE|" + src + "|" + dst + "|false"}, got.toArray());
+        }
+
+        @Test
+        void createDirectoryReportsOnlyMkdirAttempts(@TempDir Path tmp) throws IOException {
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            // already exists: declined, one false event naming the existing directory
+            Path d = tmp.resolve("d");
+            mkdir(d);
+            assertFalse(fileOps.createDirectory(d.toString(), false, null, listener));
+            assertArrayEquals(new String[] {"CREATE|null|" + d + "/|false"}, got.toArray());
+
+            // success: one dst-side event with a trailing "/"
+            got.clear();
+            Path d2 = tmp.resolve("d2");
+            assertTrue(fileOps.createDirectory(d2.toString(), false, null, listener));
+            assertArrayEquals(new String[] {"CREATE|null|" + d2 + "/|true"}, got.toArray());
+
+            // parent missing (parents=false): mkdir attempted and failed -> reported
+            got.clear();
+            Path deep = tmp.resolve("missing/deep");
+            assertFalse(fileOps.createDirectory(deep.toString(), false, null, listener));
+            assertArrayEquals(new String[] {"CREATE|null|" + deep + "/|false"}, got.toArray());
+        }
+
+        @Test
+        void createDirectorySilentWhenAbortPreset(@TempDir Path tmp) {
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            assertFalse(fileOps.createDirectory(tmp.resolve("d").toString(), false, new AtomicBoolean(true), listener));
+            assertTrue(got.isEmpty());
+        }
+
+        @Test
+        void removeDirectoryReportsOnlyRmdirAttempts(@TempDir Path tmp) throws IOException {
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            // not a directory: removeDirectory expects a directory, so the decline reports it with "/"
+            Path f = tmp.resolve("f");
+            writeFile(f, "x");
+            assertFalse(fileOps.removeDirectory(f.toString(), true, false, null, listener));
+            assertArrayEquals(new String[] {"REMOVE|" + f + "/|null|false"}, got.toArray());
+
+            // empty directory, not recursive: rmdir fired and succeeded
+            got.clear();
+            Path empty = tmp.resolve("empty");
+            mkdir(empty);
+            assertTrue(fileOps.removeDirectory(empty.toString(), false, false, null, listener));
+            assertArrayEquals(new String[] {"REMOVE|" + empty + "/|null|true"}, got.toArray());
+
+            // non-empty, not recursive: rmdir fired but failed; the directory survives
+            got.clear();
+            Path nonEmpty = tmp.resolve("nonempty");
+            mkdir(nonEmpty);
+            writeFile(nonEmpty.resolve("a"), "a");
+            assertFalse(fileOps.removeDirectory(nonEmpty.toString(), false, false, null, listener));
+            assertArrayEquals(new String[] {"REMOVE|" + nonEmpty + "/|null|false"}, got.toArray());
+            assertTrue(Files.exists(nonEmpty));
+        }
+
+        @Test
+        void removeDirectoryStopsWhenAbortSetFromListener(@TempDir Path tmp) throws IOException {
+            // the first REMOVE event sets the abort flag; fail-fast stops the walk before the rmdir
+            Path d = tmp.resolve("d");
+            mkdir(d);
+            writeFile(d.resolve("a"), "a");
+            writeFile(d.resolve("b"), "b");
+            AtomicBoolean abort = new AtomicBoolean(false);
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = (action, from, to, ok) -> {
+                got.add(action + "|" + from + "|" + to + "|" + ok);
+                if (action == FileOps.Action.REMOVE) {
+                    abort.set(true);
+                }
+            };
+
+            assertFalse(fileOps.removeDirectory(d.toString(), true, false, abort, listener));
+            // the directory listing was reported, then only the first leaf removal ran;
+            // the rmdir of d never fired
+            assertArrayEquals(new String[] {
+                    "LIST|" + d + "/|null|true",
+                    "REMOVE|" + d.resolve("a") + "|null|true"
+            }, got.toArray());
+            assertTrue(Files.exists(d));
+            assertFalse(Files.exists(d.resolve("a")));
+            assertTrue(Files.exists(d.resolve("b")));
+        }
+
+        @Test
+        void copyDirectoryReportsPrecheckFailures(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            mkdir(src);
+            writeFile(src.resolve("f"), "f");
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            // dst already exists: declined, one false event naming the existing directory
+            Path dst = tmp.resolve("dst");
+            mkdir(dst);
+            assertFalse(fileOps.copyDirectory(src.toString(), dst.toString(), null, listener));
+            assertArrayEquals(new String[] {"CREATE|null|" + dst + "/|false"}, got.toArray());
+
+            // src is not a directory: declined, one false event naming the expected dst directory
+            got.clear();
+            Path f = tmp.resolve("f");
+            writeFile(f, "x");
+            Path dst2 = tmp.resolve("dst2");
+            assertFalse(fileOps.copyDirectory(f.toString(), dst2.toString(), null, listener));
+            assertArrayEquals(new String[] {"CREATE|null|" + dst2 + "/|false"}, got.toArray());
+        }
+
+        @Test
+        void copyDirectorySilentWhenAbortPreset(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            mkdir(src);
+            writeFile(src.resolve("f"), "f");
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            assertFalse(fileOps.copyDirectory(src.toString(), tmp.resolve("dst").toString(),
+                    new AtomicBoolean(true), listener));
+            assertTrue(got.isEmpty());
+            assertFalse(Files.exists(tmp.resolve("dst")));
+        }
+
+        @Test
+        void copyDirectoryReportsDirectoriesDstSideWithSlash(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            mkdir(src.resolve("sub"));
+            writeFile(src.resolve("f.txt"), "f");
+            Path dst = tmp.resolve("src.copy");
+            List<String> got = new LinkedList<>();
+            FileOps.OnActionListener listener = recorder(got);
+
+            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, listener));
+            // mkdir events are dst-side (from == null) with a trailing "/";
+            // each source directory read is reported as LIST (succeeded = readable);
+            // leaf copies carry both sides without "/"
+            assertArrayEquals(new String[] {
+                    "CREATE|null|" + dst + "/|true",
+                    "LIST|" + src + "/|null|true",
+                    "CREATE|null|" + dst + "/sub/|true",
+                    "LIST|" + src + "/sub/|null|true",
+                    "CREATE|" + src.resolve("f.txt") + "|" + dst.resolve("f.txt") + "|true"
+            }, got.toArray());
+        }
+
+        @Test
+        void copyDirectoryCopiesBrokenSymlinkChildAsLink(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            mkdir(src);
+            Path link = src.resolve("lk");
+            Assumptions.assumeTrue(createSymbolicLink(link, src.resolve("missing")));
+            Path dst = tmp.resolve("src.copy");
+
+            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
+            assertTrue(Files.isSymbolicLink(dst.resolve("lk")));
+            assertFalse(Files.exists(dst.resolve("lk")));
+        }
+
+        @Test
+        void copyDirectoryCopiesSymlinkToFileChildAsLink(@TempDir Path tmp) throws IOException {
+            Path src = tmp.resolve("src");
+            mkdir(src);
+            Path target = tmp.resolve("target");
+            writeFile(target, "content");
+            Path link = src.resolve("lk");
+            Assumptions.assumeTrue(createSymbolicLink(link, target));
+            Path dst = tmp.resolve("src.copy");
+
+            assertTrue(fileOps.copyDirectory(src.toString(), dst.toString(), null, null));
+            assertTrue(Files.isSymbolicLink(dst.resolve("lk")));
+            assertEquals(target.toString(), Files.readSymbolicLink(dst.resolve("lk")).toString());
         }
     }
 }

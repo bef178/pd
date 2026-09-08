@@ -16,8 +16,10 @@ public class FileStat {
         this.path = path;
     }
 
-    public boolean exists() {
-        return type != 0;
+    public boolean exists(boolean followSymlinks) {
+        return followSymlinks
+            ? type != 0 && type != TYPE_SYMLINK
+            : type != 0;
     }
 
     public boolean isSymlink() {
