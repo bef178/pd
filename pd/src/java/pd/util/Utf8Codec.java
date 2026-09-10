@@ -100,7 +100,7 @@ public class Utf8Codec {
 
     public int numBytesByHeadByte(byte headByte) {
         int n = 0;
-        while (n < 8 && Int8ArrayExtension.getBit(headByte, n)) {
+        while (n < 8 && BitExtension.getBit(headByte, n)) {
             ++n;
         }
         switch (n) {
