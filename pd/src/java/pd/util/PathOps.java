@@ -7,7 +7,7 @@ import lombok.NonNull;
 
 /**
  * POSIX file path string manipulation.
- * Not accept empty string. To the kernel, empty string is never `.`.
+ * Does not accept empty path and does not return empty path. To the kernel, empty string never means `.`.
  * <a href="https://tools.ietf.org/rfc/rfc3986.txt">rfc3986</a>
  */
 public class PathOps {
@@ -65,7 +65,7 @@ public class PathOps {
 
         endIndex = path.lastIndexOf('/', endIndex - 1);
         if (endIndex < 0) {
-            return "";
+            return ".";
         }
 
         while (endIndex - 1 >= 0 && path.charAt(endIndex - 1) == '/') {
@@ -124,6 +124,7 @@ public class PathOps {
         throwIfEmpty(path);
         StringBuilder sb = new StringBuilder().append(path);
         for (String another : more) {
+            throwIfEmpty(another, "more[i]");
             sb.append('/').append(another);
         }
         return sb.toString();
@@ -241,16 +242,12 @@ public class PathOps {
 
         StringBuilder sb = new StringBuilder().append(path);
         for (String another : more) {
-            if (another.isEmpty()) {
-                continue;
-            }
+            throwIfEmpty(another, "more[i]");
             if (isAbsolutePath(another)) {
                 sb.setLength(0);
                 sb.append(another);
-            } else if (sb.length() > 0) {
-                sb.append('/').append(another);
             } else {
-                sb.append(another);
+                sb.append('/').append(another);
             }
         }
         return normalize(sb.toString());

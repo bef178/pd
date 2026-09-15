@@ -10,6 +10,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class Test_PathOps {
 
+    @Test
+    void baseline() {
+        assertEquals("b", PathOps.singleton.basename("a/b//"));
+
+        assertEquals(".", PathOps.singleton.dirname("."));
+        assertEquals(".", PathOps.singleton.dirname("a"));
+
+        assertEquals(".c", PathOps.singleton.extname("a/b.c//"));
+        assertEquals(".", PathOps.singleton.extname("a/b."));
+        assertEquals("", PathOps.singleton.extname("a/b"));
+
+        assertEquals("/a", PathOps.singleton.resolve("/", "a"));
+    }
+
     private final PathOps pathOps = PathOps.singleton;
 
     @Nested
@@ -124,8 +138,8 @@ class Test_PathOps {
     class dirname {
 
         @Test
-        void returnsEmptyForNoDirectory() {
-            assertEquals("", pathOps.dirname("abc"));
+        void returnsDotForNoDirectory() {
+            assertEquals(".", pathOps.dirname("abc"));
         }
 
         @Test
@@ -156,16 +170,16 @@ class Test_PathOps {
 
         @Test
         void dropsTrailingSlashes() {
-            assertEquals("", pathOps.dirname("abc/"));
-            assertEquals("", pathOps.dirname("abc///"));
+            assertEquals(".", pathOps.dirname("abc/"));
+            assertEquals(".", pathOps.dirname("abc///"));
             assertEquals("a", pathOps.dirname("a/b//"));
         }
 
         @Test
-        void returnsEmptyForDotSegment() {
-            assertEquals("", pathOps.dirname("."));
-            assertEquals("", pathOps.dirname(".."));
-            assertEquals("", pathOps.dirname("./"));
+        void returnsDotForDotSegment() {
+            assertEquals(".", pathOps.dirname("."));
+            assertEquals(".", pathOps.dirname(".."));
+            assertEquals(".", pathOps.dirname("./"));
         }
 
         @Test
@@ -306,8 +320,9 @@ class Test_PathOps {
         }
 
         @Test
-        void emptyElementAddsSlash() {
-            assertEquals("foo//bar", pathOps.join("foo", "", "bar"));
+        void throwsOnEmptyElement() {
+            assertThrows(IllegalArgumentException.class, () -> pathOps.join("foo", "", "bar"));
+            assertThrows(IllegalArgumentException.class, () -> pathOps.join("foo", "bar", ""));
         }
 
         @Test
@@ -509,8 +524,9 @@ class Test_PathOps {
         }
 
         @Test
-        void skipsEmptyArgs() {
-            assertEquals("a", pathOps.resolve("a", ""));
+        void throwsOnEmptyArgs() {
+            assertThrows(IllegalArgumentException.class, () -> pathOps.resolve("a", ""));
+            assertThrows(IllegalArgumentException.class, () -> pathOps.resolve("/a", "", "b"));
         }
 
         @Test
