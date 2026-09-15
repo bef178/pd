@@ -124,14 +124,10 @@ class FileOpsCore {
     }
 
     /**
-     * `src` must be a directory or a symlink to a directory.
      * Results not sorted.
      * Follow symlink.
      */
     protected List<Path> listDirectory(Path src) {
-        if (!Files.isDirectory(src)) {
-            return null;
-        }
         try (Stream<Path> stream = Files.list(src)) {
             return stream.collect(Collectors.toList());
         } catch (IOException ignored) {
