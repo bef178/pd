@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -76,11 +75,8 @@ class FileOpsCore {
         if (a == null) {
             return null;
         }
-        List<String> filtered = a.stream()
-                .map(p -> pathToString(p, followSymlinks))
-                .filter(Objects::nonNull)
+        List<String> filtered = pathToStringAndFilterAndSort(a, followSymlinks).stream()
                 .filter(s -> s.startsWith(pathPrefix) && !s.equals(pathPrefix))
-                .sorted(PathOps.singleton::compare)
                 .collect(Collectors.toList());
         if (filtered.isEmpty()) {
             Path p = Paths.get(pathPrefix);
@@ -96,15 +92,15 @@ class FileOpsCore {
         }
 
         List<String> results = new LinkedList<>();
-        LinkedList<SimpleEntry<String, Integer>> stack = new LinkedList<>();
+        LinkedList<IntEntry<String>> stack = new LinkedList<>();
         // reversed order
         for (int i = filtered.size() - 1; i >= 0; i--) {
-            stack.push(new SimpleEntry<>(filtered.get(i), depth - 1));
+            stack.push(new IntEntry<>(depth - 1, filtered.get(i)));
         }
         while (!stack.isEmpty()) {
-            SimpleEntry<String, Integer> frame = stack.pop();
-            String s1 = frame.getKey();
-            int depth1 = frame.getValue();
+            IntEntry<String> frame = stack.pop();
+            String s1 = frame.value;
+            int depth1 = frame.key;
             if (depth1 == 0 || !s1.endsWith("/")) {
                 results.add(s1);
                 continue;
@@ -122,7 +118,7 @@ class FileOpsCore {
                     .map(p -> pathToString(p, followSymlinks))
                     .filter(Objects::nonNull)
                     .sorted((x, y) -> -PathOps.singleton.compare(x, y))
-                    .forEachOrdered(s -> stack.push(new SimpleEntry<>(s, depth1 - 1)));
+                    .forEachOrdered(s -> stack.push(new IntEntry<>(depth1 - 1, s)));
         }
         return results;
     }
@@ -158,6 +154,14 @@ class FileOpsCore {
             }
         }
         return s;
+    }
+
+    protected List<String> pathToStringAndFilterAndSort(List<Path> children, boolean followSymlinks) {
+        return children.stream()
+                .map(p -> pathToString(p, followSymlinks))
+                .filter(Objects::nonNull)
+                .sorted(PathOps.singleton::compare)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -286,13 +290,7 @@ public class FileOps extends FileOpsCore {
 
     protected boolean listDirectory(Path src, final int depth, boolean followSymlinks,
             AtomicBoolean abortRequested, OnActionListener onAction) {
-        if (!Files.isDirectory(src)) {
-            if (onAction != null) {
-                onAction.accept(Action.LIST, src + "/", null, false);
-            }
-            return false;
-        }
-        if (depth < 1) {
+        if (!Files.isDirectory(src) || depth < 1) {
             if (onAction != null) {
                 onAction.accept(Action.LIST, src + "/", null, false);
             }
@@ -307,23 +305,20 @@ public class FileOps extends FileOpsCore {
             onAction.accept(Action.LIST, src + "/", null, children != null);
         }
         // continue on error
-        if (children != null) {
-            List<String> sorted = children.stream()
-                    .map(p -> pathToString(p, followSymlinks))
-                    .filter(Objects::nonNull)
-                    .sorted(PathOps.singleton::compare)
-                    .collect(Collectors.toList());
-            for (String s : sorted) {
-                if (abortRequested != null && abortRequested.get()) {
+        if (children == null) {
+            return true;
+        }
+        List<String> sorted = pathToStringAndFilterAndSort(children, followSymlinks);
+        for (String s : sorted) {
+            if (abortRequested != null && abortRequested.get()) {
+                return false;
+            }
+            if (onAction != null) {
+                onAction.accept(Action.MEET, s, null, null);
+            }
+            if (depth > 1 && s.endsWith("/")) {
+                if (!listDirectory(Paths.get(s), depth - 1, followSymlinks, abortRequested, onAction)) {
                     return false;
-                }
-                if (onAction != null) {
-                    onAction.accept(Action.MEET, s, null, null);
-                }
-                if (depth > 1 && s.endsWith("/")) {
-                    if (!listDirectory(Paths.get(s), depth - 1, followSymlinks, abortRequested, onAction)) {
-                        return false;
-                    }
                 }
             }
         }
@@ -405,10 +400,7 @@ public class FileOps extends FileOpsCore {
             if (children == null) {
                 return false;
             }
-            List<String> sorted = children.stream()
-                    .map(p -> pathToString(p, false))
-                    .sorted(PathOps.singleton::compare)
-                    .collect(Collectors.toList());
+            List<String> sorted = pathToStringAndFilterAndSort(children, false);
             for (String s : sorted) {
                 if (abortRequested != null && abortRequested.get()) {
                     return false;
@@ -504,21 +496,9 @@ public class FileOps extends FileOpsCore {
 
     protected boolean copyDirectory(Path src, Path dst,
             AtomicBoolean abortRequested, OnActionListener onAction) {
-        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS)) {
+        if (!Files.isDirectory(src, LinkOption.NOFOLLOW_LINKS) || !notExistsButParentExists(dst) || isDescendantOf(dst, src)) {
             if (onAction != null) {
                 // aim to create a directory so add '/' suffix
-                onAction.accept(Action.CREATE, null, dst + "/", false);
-            }
-            return false;
-        }
-        if (!notExistsButParentExists(dst)) {
-            if (onAction != null) {
-                onAction.accept(Action.CREATE, null, dst + "/", false);
-            }
-            return false;
-        }
-        if (isDescendantOf(dst, src)) {
-            if (onAction != null) {
                 onAction.accept(Action.CREATE, null, dst + "/", false);
             }
             return false;
@@ -545,10 +525,7 @@ public class FileOps extends FileOpsCore {
         if (children == null) {
             return false;
         }
-        List<String> sorted = children.stream()
-                .map(p -> pathToString(p, false))
-                .sorted(PathOps.singleton::compare)
-                .collect(Collectors.toList());
+        List<String> sorted = pathToStringAndFilterAndSort(children, false);
         for (String s : sorted) {
             if (abortRequested != null && abortRequested.get()) {
                 return false;
@@ -707,10 +684,7 @@ public class FileOps extends FileOpsCore {
     }
 
     private int move(Path src, Path dst, FileStat srcStat) {
-        if (!srcStat.exists(false)) {
-            return CODE_PRECHECK_FAILED;
-        }
-        if (!notExistsButParentExists(dst)) {
+        if (!srcStat.exists(false) || !notExistsButParentExists(dst)) {
             return CODE_PRECHECK_FAILED;
         }
         if (srcStat.isAnyTypeOf("d", "f", "l*")) {
@@ -768,13 +742,12 @@ public class FileOps extends FileOpsCore {
 
         if (parents) {
             Path parent = dst.getParent();
-            if (parent == null) {
-                parent = Paths.get("");
-            }
-            try {
-                Files.createDirectories(parent);
-            } catch (IOException e) {
-                return false;
+            if (parent != null) {
+                try {
+                    Files.createDirectories(parent);
+                } catch (IOException e) {
+                    return false;
+                }
             }
         }
 
