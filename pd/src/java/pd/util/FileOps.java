@@ -322,6 +322,20 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
+     * `directory` must be a directory or a symlink to a directory.
+     */
+    public Long countDirectoryDirectEntries(@NonNull String directory) {
+        throwIfEmpty(directory, "directory");
+
+        Path src = Paths.get(directory);
+        try (Stream<Path> stream = Files.list(src)) {
+            return stream.count();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
      * `pathToDirectory` must not exist.
      * Does not follow symlinks.
      * Fail-fast.
