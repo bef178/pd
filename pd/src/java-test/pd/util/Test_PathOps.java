@@ -17,9 +17,16 @@ class Test_PathOps {
         assertEquals(".", PathOps.singleton.dirname("."));
         assertEquals(".", PathOps.singleton.dirname("a"));
 
+        assertEquals(".gz", PathOps.singleton.extname("a.b.c.tar.gz"));
+        assertEquals("", PathOps.singleton.extname(".gitignore"));
+        assertEquals(".swp", PathOps.singleton.extname(".gitignore.swp"));
         assertEquals(".c", PathOps.singleton.extname("a/b.c//"));
-        assertEquals(".", PathOps.singleton.extname("a/b."));
         assertEquals("", PathOps.singleton.extname("a/b"));
+        assertEquals(".txt", PathOps.singleton.extname("....txt"));
+        assertEquals("", PathOps.singleton.extname("a...."));
+        assertEquals("", PathOps.singleton.extname("."));
+        assertEquals("", PathOps.singleton.extname(".."));
+        assertEquals("", PathOps.singleton.extname("..."));
 
         assertEquals("/a", PathOps.singleton.resolve("/", "a"));
     }
@@ -209,9 +216,9 @@ class Test_PathOps {
     class extname {
 
         @Test
-        void returnsExtensionAfterFirstDotInLastSegment() {
+        void returnsExtensionAfterLastDotInLastSegment() {
             assertEquals(".cd", pathOps.extname("ab.cd"));
-            assertEquals(".b.c", pathOps.extname("a.b.c"));
+            assertEquals(".c", pathOps.extname("a.b.c"));
             assertEquals(".txt", pathOps.extname("/tmp/a.b/c.txt"));
         }
 
@@ -240,9 +247,9 @@ class Test_PathOps {
         }
 
         @Test
-        void returnsDotForTrailingDot() {
-            assertEquals(".", pathOps.extname("/tmp/a."));
-            assertEquals(".", pathOps.extname("/x/y."));
+        void returnsEmptyForTrailingDot() {
+            assertEquals("", pathOps.extname("/tmp/a."));
+            assertEquals("", pathOps.extname("/x/y."));
         }
 
         @Test
@@ -252,20 +259,20 @@ class Test_PathOps {
         }
 
         @Test
-        void keepsConsecutiveDotsInExtension() {
-            assertEquals("..b", pathOps.extname("a..b"));
-            assertEquals("..", pathOps.extname("/x/y.."));
+        void usesLastDotWhenConsecutiveDotsPresent() {
+            assertEquals(".b", pathOps.extname("a..b"));
+            assertEquals("", pathOps.extname("/x/y.."));
         }
 
         @Test
-        void keepsTrailingDotInExtension() {
-            assertEquals(".b.", pathOps.extname("a.b."));
+        void returnsEmptyWhenExtensionIsOnlyTrailingDot() {
+            assertEquals("", pathOps.extname("a.b."));
         }
 
         @Test
-        void keepsTripleDotInExtension() {
-            assertEquals("...", pathOps.extname("a..."));
-            assertEquals("...", pathOps.extname("/a/b..."));
+        void returnsEmptyWhenSegmentEndsInDot() {
+            assertEquals("", pathOps.extname("a..."));
+            assertEquals("", pathOps.extname("/a/b..."));
         }
 
         @Test

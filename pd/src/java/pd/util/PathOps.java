@@ -80,8 +80,7 @@ public class PathOps {
     }
 
     /**
-     * within the last segment, skip leading `.`(s) and trailing `/`(s), get string starting at the next `.`
-     * extname cannot be basename
+     * 扩展名用于指示文件的解析方式。若无法区分，则应认为扩展名失效，返回空串
      */
     public String extname(@NonNull String path) {
         throwIfEmpty(path);
@@ -95,15 +94,22 @@ public class PathOps {
             return "";
         }
 
-        int startIndex = path.lastIndexOf('/', endIndex - 1) + 1;
-        while (startIndex < endIndex && path.charAt(startIndex) == '.') {
-            startIndex++;
+        if (path.charAt(endIndex - 1) == '.') {
+            return "";
         }
 
-        while (++startIndex < endIndex) {
-            if (path.charAt(startIndex) == '.') {
+        int startIndex = endIndex - 1;
+        while (startIndex >= 0) {
+            int ch = path.charAt(startIndex);
+            if (ch == '/') {
+                return "";
+            } else if (ch == '.') {
+                if (startIndex == 0 || path.charAt(startIndex - 1) == '/') {
+                    return "";
+                }
                 return path.substring(startIndex, endIndex);
             }
+            startIndex--;
         }
         return "";
     }
