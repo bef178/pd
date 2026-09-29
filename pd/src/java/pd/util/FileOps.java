@@ -1,6 +1,7 @@
 package pd.util;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -740,15 +741,13 @@ public class FileOps extends FileOpsCore {
     }
 
     /**
-     * `pathToFile` must not exist or be a regular file or be a symlink to a regular file.
+     * `pathToFile` must not exist.
+     * Does not follow symlinks.
      */
     public boolean save(@NonNull String pathToFile, byte[] bytes, boolean parents) {
         throwIfEmpty(pathToFile, "pathToFile");
 
         Path dst = Paths.get(pathToFile);
-        if (Files.exists(dst) && !Files.isRegularFile(dst)) {
-            return false;
-        }
 
         if (parents) {
             Path parent = dst.getParent();
@@ -761,12 +760,24 @@ public class FileOps extends FileOpsCore {
             }
         }
 
-        try {
-            Files.write(dst, bytes);
-        } catch (IOException e) {
+        if (!notExistsButParentExists(dst)) {
             return false;
         }
-        return true;
+
+        boolean created = false;
+        try (OutputStream stream = Files.newOutputStream(dst, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+            created = true;
+            stream.write(bytes);
+            return true;
+        } catch (IOException e) {
+            if (created) {
+                try {
+                    Files.deleteIfExists(dst);
+                } catch (IOException ignored) {
+                }
+            }
+            return false;
+        }
     }
 
     public boolean saveString(@NonNull String pathToFile, String s) {

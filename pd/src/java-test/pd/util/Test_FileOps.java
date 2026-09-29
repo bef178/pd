@@ -770,12 +770,12 @@ class Test_FileOps {
         }
 
         @Test
-        void overwritesExistingFile(@TempDir Path tmp) throws IOException {
+        void returnsFalseWhenFileAlreadyExists(@TempDir Path tmp) throws IOException {
             Path f = tmp.resolve("a.txt");
             writeFile(f, "old");
 
-            assertTrue(fileOps.save(f.toString(), "new".getBytes()));
-            assertArrayEquals("new".getBytes(), Files.readAllBytes(f));
+            assertFalse(fileOps.save(f.toString(), "new".getBytes()));
+            assertArrayEquals("old".getBytes(), Files.readAllBytes(f));
         }
 
         @Test
@@ -796,15 +796,15 @@ class Test_FileOps {
         }
 
         @Test
-        void writesThroughSymbolicLinkToFile(@TempDir Path tmp) throws IOException {
-            // Files.write follows symlinks, so the target content is updated
+        void returnsFalseForSymbolicLink(@TempDir Path tmp) throws IOException {
+            // does not follow symlinks: the link itself already exists
             Path target = tmp.resolve("target");
             writeFile(target, "old");
             Path link = tmp.resolve("link");
             Assumptions.assumeTrue(createSymbolicLink(link, target));
 
-            assertTrue(fileOps.save(link.toString(), "new".getBytes()));
-            assertArrayEquals("new".getBytes(), Files.readAllBytes(target));
+            assertFalse(fileOps.save(link.toString(), "new".getBytes()));
+            assertArrayEquals("old".getBytes(), Files.readAllBytes(target));
         }
 
         @Test
