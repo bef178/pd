@@ -125,15 +125,22 @@ class FileOpsCore {
     }
 
     /**
-     * Results not sorted.
+     * Results are not sorted.
      * Follow symlink.
      */
     protected List<Path> listDirectory(Path src) {
+        boolean opened = false;
+        List<Path> paths = null;
         try (Stream<Path> stream = Files.list(src)) {
-            return stream.collect(Collectors.toList());
-        } catch (IOException ignored) {
-            return null;
+            opened = true;
+            paths = stream.collect(Collectors.toList());
+        } catch (IOException e) {
+            // on error resume on stream closing
+            if (!opened) {
+                return null;
+            }
         }
+        return paths;
     }
 
     /**
@@ -325,15 +332,21 @@ public class FileOps extends FileOpsCore {
     /**
      * `directory` must be a directory or a symlink to a directory.
      */
-    public Long countDirectoryDirectEntries(@NonNull String directory) {
+    public Long getNumDirectoryEntries(@NonNull String directory) {
         throwIfEmpty(directory, "directory");
 
         Path src = Paths.get(directory);
+        boolean opened = false;
+        Long result = null;
         try (Stream<Path> stream = Files.list(src)) {
-            return stream.count();
+            opened = true;
+            result = stream.count();
         } catch (IOException e) {
-            return null;
+            if (!opened) {
+                return null;
+            }
         }
+        return result;
     }
 
     /**
@@ -641,6 +654,7 @@ public class FileOps extends FileOpsCore {
             }
             boolean created = false;
             boolean stuffed = false;
+            boolean aborted = false;
             try (FileChannel fci = FileChannel.open(src, StandardOpenOption.READ);
                  FileChannel fco = FileChannel.open(dst, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
                 created = true;
@@ -648,7 +662,8 @@ public class FileOps extends FileOpsCore {
                 long size = fci.size();
                 while (position < size) {
                     if (abortRequested != null && abortRequested.get()) {
-                        return CODE_ABORTED;
+                        aborted = true;
+                        break;
                     }
                     long n = fci.transferTo(position, Math.min(size - position, 4 * 1024 * 1024), fco);
                     if (n <= 0) {
@@ -665,6 +680,10 @@ public class FileOps extends FileOpsCore {
                     } catch (IOException ignored) {
                     }
                 }
+            }
+            // checked outside the try block so a close()-time IOException can't mask an abort as CODE_FAILED
+            if (aborted) {
+                return CODE_ABORTED;
             }
             return stuffed ? CODE_OK : CODE_FAILED;
         } else {
@@ -776,6 +795,7 @@ public class FileOps extends FileOpsCore {
                 } catch (IOException ignored) {
                 }
             }
+            // should be more strict than RO
             return false;
         }
     }
