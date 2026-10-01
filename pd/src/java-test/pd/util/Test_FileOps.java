@@ -913,7 +913,7 @@ class Test_FileOps {
         // asserts the call succeeded and returns the nodes met via callback
         private List<String> listAndCollect(String directory, int depth) {
             List<String> a = new LinkedList<>();
-            boolean succeeded = fileOps.listDirectory(directory, depth, true, null, (action, from, to, callbackSucceeded) -> {
+            boolean succeeded = fileOps.listDirectory(directory, depth, true, true, null, (action, from, to, callbackSucceeded) -> {
                 if (action == FileOps.Action.MEET) {
                     a.add(from);
                 }
@@ -922,17 +922,30 @@ class Test_FileOps {
             return a;
         }
 
+        // sort=false: nodes are reported as they are read; the walk remains depth-first
+        private List<String> listAndCollectUnsorted(String directory, int depth) {
+            List<String> a = new LinkedList<>();
+            boolean succeeded = fileOps.listDirectory(directory, depth, true, false, null,
+                    (action, from, to, callbackSucceeded) -> {
+                        if (action == FileOps.Action.MEET) {
+                            a.add(from);
+                        }
+                    });
+            assertTrue(succeeded, "expected listDirectory to succeed");
+            return a;
+        }
+
         @Test
         void listDirectory_baseline(@TempDir Path root) throws IOException {
             buildTree(root);
 
-            assertFalse(FileOps.singleton.listDirectory(root.toString(), 0, true, null, null));
+            assertFalse(FileOps.singleton.listDirectory(root.toString(), 0, true, true, null, null));
 
-            assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory("", 1, true, null, null));
+            assertThrows(IllegalArgumentException.class, () -> fileOps.listDirectory("", 1, true, true, null, null));
 
-            assertFalse(fileOps.listDirectory(root.resolve("not-exist").toString(), 1, true, null, null));
+            assertFalse(fileOps.listDirectory(root.resolve("not-exist").toString(), 1, true, true, null, null));
 
-            assertFalse(fileOps.listDirectory(root.resolve("empty-file").toString(), 1, true, null, null));
+            assertFalse(fileOps.listDirectory(root.resolve("empty-file").toString(), 1, true, true, null, null));
 
             List<String> a = listAndCollect(root.resolve("empty").toString(), 1);
             assertTrue(a.isEmpty());
@@ -955,7 +968,7 @@ class Test_FileOps {
                 }
             };
 
-            assertFalse(fileOps.listDirectory(root.resolve("docs").toString(), 1, true, new AtomicBoolean(true), listener));
+            assertFalse(fileOps.listDirectory(root.resolve("docs").toString(), 1, true, true, new AtomicBoolean(true), listener));
             assertTrue(met.isEmpty());
         }
 
@@ -984,7 +997,7 @@ class Test_FileOps {
 
             // not follow: symlinks are leaf nodes; a broken one is a node too
             List<String> notFollowed = new LinkedList<>();
-            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 1, false, null,
+            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 1, false, true, null,
                     (action, from, to, callbackSucceeded) -> {
                         if (action == FileOps.Action.MEET) {
                             notFollowed.add(from);
@@ -995,7 +1008,7 @@ class Test_FileOps {
 
             // depth=2: real directories still expand, the symlink does not
             notFollowed.clear();
-            succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 2, false, null,
+            succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 2, false, true, null,
                     (action, from, to, callbackSucceeded) -> {
                         if (action == FileOps.Action.MEET) {
                             notFollowed.add(from);
@@ -1046,7 +1059,7 @@ class Test_FileOps {
             // not follow: the symlink is a leaf; a broken symlink is a node too;
             // real directories still expand
             List<String> met = new LinkedList<>();
-            boolean succeeded = fileOps.listDirectory(d, 2, false, null, (action, from, to, callbackSucceeded) -> {
+            boolean succeeded = fileOps.listDirectory(d, 2, false, true, null, (action, from, to, callbackSucceeded) -> {
                 if (action == FileOps.Action.MEET) {
                     met.add(from);
                 }
@@ -1062,7 +1075,7 @@ class Test_FileOps {
 
             AtomicBoolean abort = new AtomicBoolean(false);
             List<String> met = new LinkedList<>();
-            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 3, true, abort,
+            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 3, true, true, abort,
                     (action, from, to, callbackSucceeded) -> {
                         if (action == FileOps.Action.MEET) {
                             met.add(from);
@@ -1087,6 +1100,70 @@ class Test_FileOps {
 
             // an empty directory is met once with "/", nothing below it
             assertArrayEquals(new String[] {d + "/empty/", d + "/sub/", d + "/sub/x"}, result.toArray());
+        }
+
+        @Test
+        void sortFalseReportsSameNodesAsSorted(@TempDir Path tmp) throws IOException {
+            Path root = tmp.resolve("root");
+            mkdir(root.resolve("d/b"));
+            writeFile(root.resolve("d/a.txt"), "a");
+            writeFile(root.resolve("d/b/c.txt"), "c");
+            writeFile(root.resolve("d/c.txt"), "c");
+            String d = root.resolve("d").toString();
+
+            List<String> streamed = listAndCollectUnsorted(d, 2);
+            List<String> sorted = listAndCollect(d, 2);
+
+            // no per-level order guarantee: the node sets coincide
+            assertEquals(sorted.size(), streamed.size());
+            assertTrue(streamed.containsAll(sorted));
+
+            // depth-first pre-order: a non-empty directory is immediately followed by its own child
+            String b = root.resolve("d/b") + "/";
+            assertEquals(streamed.indexOf(b) + 1, streamed.indexOf(root.resolve("d/b/c.txt").toString()));
+        }
+
+        @Test
+        void sortFalseStopsMidWalkWhenAbortRequested(@TempDir Path tmp) throws IOException {
+            Path root = buildTree(tmp.resolve("root"));
+
+            AtomicBoolean abort = new AtomicBoolean(false);
+            List<String> met = new LinkedList<>();
+            boolean succeeded = fileOps.listDirectory(root.resolve("docs").toString(), 3, true, false, abort,
+                    (action, from, to, callbackSucceeded) -> {
+                        if (action == FileOps.Action.MEET) {
+                            met.add(from);
+                            // request the abort right after the first node is met
+                            abort.set(true);
+                        }
+                    });
+
+            assertFalse(succeeded);
+            assertEquals(1, met.size());
+        }
+
+        @Test
+        void reportsListBeforeMeets(@TempDir Path tmp) throws IOException {
+            Path root = tmp.resolve("root");
+            mkdir(root.resolve("d/b"));
+            writeFile(root.resolve("d/a.txt"), "a");
+            writeFile(root.resolve("d/b/c.txt"), "c");
+            String d = root.resolve("d").toString();
+            String b = root.resolve("d/b") + "/";
+            String bc = root.resolve("d/b/c.txt").toString();
+
+            for (boolean sort : new boolean[] {true, false}) {
+                List<String> events = new LinkedList<>();
+                boolean succeeded = fileOps.listDirectory(d, 2, true, sort, null,
+                        (action, from, to, callbackSucceeded) -> events.add(action + "|" + from + "|" + callbackSucceeded));
+
+                assertTrue(succeeded);
+                // LIST opens its own level: the root's LIST is the very first event
+                assertEquals(FileOps.Action.LIST + "|" + d + "/|true", events.get(0));
+                // a subdirectory's LIST comes before its own MEETs
+                assertTrue(events.indexOf(FileOps.Action.LIST + "|" + b + "|true")
+                        < events.indexOf(FileOps.Action.MEET + "|" + bc + "|null"));
+            }
         }
     }
 

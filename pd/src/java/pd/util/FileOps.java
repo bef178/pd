@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -131,9 +132,12 @@ class FileOpsCore {
     protected List<Path> listDirectory(Path src) {
         boolean opened = false;
         List<Path> paths = null;
-        try (Stream<Path> stream = Files.list(src)) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(src)) {
             opened = true;
-            paths = stream.collect(Collectors.toList());
+            paths = new LinkedList<>();
+            for (Path p : stream) {
+                paths.add(p);
+            }
         } catch (IOException e) {
             // on error resume on stream closing
             if (!opened) {
@@ -284,12 +288,14 @@ public class FileOps extends FileOpsCore {
      * List `directory` down to `depth`.
      * `directory` must be a directory or a symlink to a directory.
      * `depth` should be positive.
-     * Discovered directory/file is reported in pre-order; Directories end with "/".
+     * Discovered directory/file is reported (directories end with "/") in pre-order.
      */
-    public boolean listDirectory(@NonNull String directory, int depth, boolean followSymlinks,
+    public boolean listDirectory(@NonNull String directory, int depth, boolean followSymlinks, boolean sort,
             AtomicBoolean abortRequested, OnActionListener onAction) {
         throwIfEmpty(directory, "directory");
-        return listDirectory(Paths.get(directory), depth, followSymlinks, abortRequested, onAction);
+        return sort
+                ? listDirectorySorted(Paths.get(directory), depth, followSymlinks, abortRequested, onAction)
+                : listDirectory(Paths.get(directory), depth, followSymlinks, abortRequested, onAction);
     }
 
     protected boolean listDirectory(Path src, final int depth, boolean followSymlinks,
@@ -304,12 +310,61 @@ public class FileOps extends FileOpsCore {
         if (abortRequested != null && abortRequested.get()) {
             return false;
         }
+
+        boolean opened = false;
+        boolean succeeded = true; // protect from IOE when close stream
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(src)) {
+            opened = true;
+            if (onAction != null) {
+                onAction.accept(Action.LIST, src + "/", null, true);
+            }
+            for (Path p : directoryStream) {
+                if (abortRequested != null && abortRequested.get()) {
+                    succeeded = false;
+                    break;
+                }
+                String s = pathToString(p, followSymlinks);
+                if (s == null) {
+                    continue;
+                }
+                if (onAction != null) {
+                    onAction.accept(Action.MEET, s, null, null);
+                }
+                if (depth > 1 && s.endsWith("/")) {
+                    if (!listDirectory(Paths.get(s), depth - 1, followSymlinks, abortRequested, onAction)) {
+                        succeeded = false;
+                        break;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            // resume on stream closing error
+            if (!opened && onAction != null) {
+                onAction.accept(Action.LIST, src + "/", null, false);
+            }
+        }
+        return succeeded;
+    }
+
+    protected boolean listDirectorySorted(Path src, final int depth, boolean followSymlinks,
+            AtomicBoolean abortRequested, OnActionListener onAction) {
+        if (!Files.isDirectory(src) || depth < 1) {
+            if (onAction != null) {
+                onAction.accept(Action.LIST, src + "/", null, false);
+            }
+            return false;
+        }
+
+        if (abortRequested != null && abortRequested.get()) {
+            return false;
+        }
+
         List<Path> children = listDirectory(src);
         if (onAction != null) {
             onAction.accept(Action.LIST, src + "/", null, children != null);
         }
-        // continue on error
         if (children == null) {
+            // on error resume
             return true;
         }
         List<String> sorted = pathToStringAndFilterAndSort(children, followSymlinks);
@@ -321,7 +376,7 @@ public class FileOps extends FileOpsCore {
                 onAction.accept(Action.MEET, s, null, null);
             }
             if (depth > 1 && s.endsWith("/")) {
-                if (!listDirectory(Paths.get(s), depth - 1, followSymlinks, abortRequested, onAction)) {
+                if (!listDirectorySorted(Paths.get(s), depth - 1, followSymlinks, abortRequested, onAction)) {
                     return false;
                 }
             }
