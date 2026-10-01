@@ -1,5 +1,8 @@
 package pd.util;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class FileStat {
 
     public static final int TYPE_FILE = 0x08;
@@ -13,13 +16,17 @@ public class FileStat {
     public Long mtime; // in milliseconds
 
     public FileStat(String path) {
-        this.path = path;
+        this(Paths.get(path));
+    }
+
+    public FileStat(Path src) {
+        this.path = src.toString();
     }
 
     public boolean exists(boolean followSymlinks) {
         return followSymlinks
-            ? type != 0 && type != TYPE_SYMLINK
-            : type != 0;
+                ? type != 0 && type != TYPE_SYMLINK
+                : type != 0;
     }
 
     public boolean isSymlink() {

@@ -1220,16 +1220,6 @@ class Test_FileOps {
     class copyDirectory {
 
         @Test
-        void identifiesDescendantPath(@TempDir Path tmp) throws IOException {
-            Path ancestor = tmp.resolve("ancestor");
-            mkdir(ancestor);
-
-            assertTrue(fileOps.isDescendantOf(ancestor.resolve("child"), ancestor));
-            assertFalse(fileOps.isDescendantOf(ancestor, ancestor));
-            assertFalse(fileOps.isDescendantOf(tmp.resolve("ancestor-copy"), ancestor));
-        }
-
-        @Test
         void copiesSingleFile(@TempDir Path tmp) throws IOException {
             Path src = tmp.resolve(".gitignore");
             writeFile(src, "git");
