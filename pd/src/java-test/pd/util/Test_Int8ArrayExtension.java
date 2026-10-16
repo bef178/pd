@@ -20,18 +20,21 @@ public class Test_Int8ArrayExtension {
         return a;
     }
 
-    // equals(byte[] a, int aStartIndex, int aEndIndex, byte[] b, int bStartIndex)
+    // equals(byte[] a, int aStartIndex, int aEndIndex, byte[] b, int bStartIndex, int bEndIndex)
 
     @Test
     public void test_equals() {
-        assertTrue(Int8ArrayExtension.equals(bytes(0x12, 0x34), 0, 2, bytes(0x12, 0x34), 0));
-        assertFalse(Int8ArrayExtension.equals(bytes(0x12, 0x34), 0, 2, bytes(0x12, 0x35), 0));
-        // a range of `a` against a starting point of `b`
-        assertTrue(Int8ArrayExtension.equals(bytes(0xFF, 0x12, 0x34, 0xFF), 1, 3, bytes(0x12, 0x34), 0));
-        // only the first `aEndIndex - aStartIndex` octets of `b` take part in the comparison
-        assertTrue(Int8ArrayExtension.equals(bytes(0x12, 0x34), 0, 2, bytes(0x12, 0x34, 0x56), 0));
-        // an empty range is vacuously equal
-        assertTrue(Int8ArrayExtension.equals(bytes(0x12, 0x34), 1, 1, bytes(0xFF), 1));
+        assertTrue(Int8ArrayExtension.equals(bytes(0x12, 0x34), 0, 2, bytes(0x12, 0x34), 0, 2));
+        assertFalse(Int8ArrayExtension.equals(bytes(0x12, 0x34), 0, 2, bytes(0x12, 0x35), 0, 2));
+        // the ranges take part in the comparison, not the whole arrays
+        assertTrue(Int8ArrayExtension.equals(bytes(0xFF, 0x12, 0x34, 0xFF), 1, 3, bytes(0x12, 0x34), 0, 2));
+        assertTrue(Int8ArrayExtension.equals(bytes(0xFF, 0x12, 0x34, 0xFF), 1, 3, bytes(0x56, 0x12, 0x34, 0x56), 1, 3));
+        // ranges of different lengths are not equal
+        assertFalse(Int8ArrayExtension.equals(bytes(0x12, 0x34), 0, 2, bytes(0x12, 0x34, 0x56), 0, 3));
+        assertFalse(Int8ArrayExtension.equals(bytes(0x12, 0x34, 0x56), 0, 3, bytes(0x12, 0x34), 0, 2));
+        // an empty range is vacuously equal to an empty range
+        assertTrue(Int8ArrayExtension.equals(bytes(0x12, 0x34), 1, 1, bytes(0xFF), 1, 1));
+        assertTrue(Int8ArrayExtension.equals(bytes(0x12, 0x34), 1, 1, bytes(0xFF), 0, 0));
     }
 
     @Test
@@ -39,17 +42,18 @@ public class Test_Int8ArrayExtension {
         final byte[] a = bytes(0x12, 0x34);
         final byte[] b = bytes(0x56, 0x78);
         // `a` or `b` is null
-        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(null, 0, 2, b, 0));
-        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, null, 0));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(null, 0, 2, b, 0, 2));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, null, 0, 2));
         // aStartIndex < 0, aStartIndex > aEndIndex, aEndIndex > a.length
-        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, -1, 2, b, 0));
-        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 2, 1, b, 0));
-        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 3, b, 0));
-        // bStartIndex < 0, bStartIndex + n > b.length
-        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, b, -1));
-        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, b, 1));
-        // `bStartIndex + n` *int*-adds and wraps around, so the bound must be checked without adding
-        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, b, Integer.MAX_VALUE));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, -1, 2, b, 0, 2));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 2, 1, b, 0, 2));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 3, b, 0, 2));
+        // bStartIndex < 0, bStartIndex > bEndIndex, bEndIndex > b.length
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, b, -1, 2));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, b, 2, 1));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, b, 0, 3));
+        // an end index of Integer.MAX_VALUE is out of range, and no arithmetic may wrap it back into range
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.equals(a, 0, 2, b, 0, Integer.MAX_VALUE));
     }
 
     // indexOf(byte[] haystack, int haystackStartIndex, int haystackEndIndex,
@@ -87,5 +91,42 @@ public class Test_Int8ArrayExtension {
         assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.indexOf(haystack, 0, 2, needle, -1, 2));
         assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.indexOf(haystack, 0, 2, needle, 2, 1));
         assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.indexOf(haystack, 0, 2, needle, 0, 3));
+    }
+
+    // startsWith(byte[] a, int aStartIndex, int aEndIndex, byte[] b, int bStartIndex, int bEndIndex)
+
+    @Test
+    public void test_startsWith() {
+        assertTrue(Int8ArrayExtension.startsWith(bytes(0x12, 0x34, 0x56), 0, 3, bytes(0x12, 0x34), 0, 2));
+        assertFalse(Int8ArrayExtension.startsWith(bytes(0x12, 0x34, 0x56), 0, 3, bytes(0x12, 0x35), 0, 2));
+        // both ranges start where they are told to, not at the beginning of their arrays
+        assertTrue(Int8ArrayExtension.startsWith(bytes(0xFF, 0x12, 0x34), 1, 3, bytes(0x34, 0x12, 0x34), 1, 3));
+        // a range is a prefix of itself
+        assertTrue(Int8ArrayExtension.startsWith(bytes(0x12, 0x34), 0, 2, bytes(0x12, 0x34), 0, 2));
+        // a shorter range of `a` is not a prefix, even if the octets so far match
+        assertFalse(Int8ArrayExtension.startsWith(bytes(0x12), 0, 1, bytes(0x12, 0x34), 0, 2));
+        // only the first `bEndIndex - bStartIndex` octets of `a` take part in the comparison
+        assertTrue(Int8ArrayExtension.startsWith(bytes(0x12, 0x34, 0xFF), 0, 3, bytes(0x12, 0x34), 0, 2));
+        // an empty range of `b` is vacuously a prefix
+        assertTrue(Int8ArrayExtension.startsWith(bytes(0x12, 0x34), 0, 2, bytes(0xFF), 1, 1));
+        // while an empty range of `a` is not a prefix of a non-empty range of `b`
+        assertFalse(Int8ArrayExtension.startsWith(bytes(0x12, 0x34), 1, 1, bytes(0x34), 0, 1));
+    }
+
+    @Test
+    public void test_startsWith_invalidArguments_throw() {
+        final byte[] a = bytes(0x12, 0x34);
+        final byte[] b = bytes(0x56, 0x78);
+        // `a` or `b` is null
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.startsWith(null, 0, 2, b, 0, 2));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.startsWith(a, 0, 2, null, 0, 2));
+        // aStartIndex < 0, aStartIndex > aEndIndex, aEndIndex > a.length
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.startsWith(a, -1, 2, b, 0, 2));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.startsWith(a, 2, 1, b, 0, 2));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.startsWith(a, 0, 3, b, 0, 2));
+        // bStartIndex < 0, bStartIndex > bEndIndex, bEndIndex > b.length
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.startsWith(a, 0, 2, b, -1, 2));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.startsWith(a, 0, 2, b, 2, 1));
+        assertThrows(IllegalArgumentException.class, () -> Int8ArrayExtension.startsWith(a, 0, 2, b, 0, 3));
     }
 }
