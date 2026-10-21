@@ -15,6 +15,12 @@ public class Int32ArrayExtension {
         return -1;
     }
 
+    static void checkOrThrow(int[] a, int i, int j) {
+        if (a == null || i < 0 || j > a.length || i > j) {
+            throw new IllegalArgumentException();
+        }
+    }
+
     private Int32ArrayExtension() {
         // dummy
     }
