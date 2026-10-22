@@ -266,35 +266,47 @@ public class PathOps {
         int i = 0;
         int j = 0;
         while (i < path.length() && j < another.length()) {
-            int ai = path.codePointAt(i);
-            int bi = another.codePointAt(j);
-            if (ai != bi) {
-                // directory first
-                if (ai == '/') {
-                    return -1;
-                } else if (bi == '/') {
-                    return 1;
-                }
-                boolean aIsDirectory = path.indexOf('/', i) >= 0;
-                boolean bIsDirectory = another.indexOf('/', j) >= 0;
-                if (aIsDirectory != bIsDirectory) {
-                    return aIsDirectory ? -1 : 1;
-                }
-                // dot first
-                if (ai == '.') {
-                    return -1;
-                } else if (bi == '.') {
-                    return 1;
-                }
-                return Integer.compare(ai, bi);
+            char ai = path.charAt(i);
+            char bj = another.charAt(j);
+            if (ai == bj) {
+                ++i;
+                ++j;
+                continue;
             }
-            i += Character.charCount(ai);
-            j += Character.charCount(bi);
+
+            // directory first
+            if (ai == '/') {
+                return -1;
+            } else if (bj == '/') {
+                return 1;
+            }
+            boolean aIsDirectory = path.indexOf('/', i) >= 0;
+            boolean bIsDirectory = another.indexOf('/', j) >= 0;
+            if (aIsDirectory != bIsDirectory) {
+                return aIsDirectory ? -1 : 1;
+            }
+
+            // dot first
+            if (ai == '.') {
+                return -1;
+            } else if (bj == '.') {
+                return 1;
+            }
+
+            // less code point value first
+            // a surrogate pair decodes to a supplementary code point, GT any BMP character
+            // a lone surrogate compares by its own value
+            boolean aPaired = isPartOfSurrogatePair(path, i);
+            boolean bPaired = isPartOfSurrogatePair(another, j);
+            if (aPaired != bPaired) {
+                return aPaired ? 1 : -1;
+            }
+            return Integer.compare(ai, bj);
         }
-        // one is a code-point prefix of the other
-        int remainingA = Character.codePointCount(path, i, path.length());
-        int remainingB = Character.codePointCount(another, j, another.length());
-        if (remainingA > remainingB) {
+
+        int aRemaining = path.length() - i;
+        int bRemaining = another.length() - j;
+        if (aRemaining > bRemaining) {
             // prefix first
             if (another.charAt(another.length() - 1) == '/') {
                 return 1;
@@ -302,7 +314,7 @@ public class PathOps {
             if (path.indexOf('/', i) >= 0) {
                 return -1;
             }
-        } else if (remainingA < remainingB) {
+        } else if (aRemaining < bRemaining) {
             if (path.charAt(path.length() - 1) == '/') {
                 return -1;
             }
@@ -310,7 +322,19 @@ public class PathOps {
                 return 1;
             }
         }
-        return Integer.compare(remainingA, remainingB);
+
+        // shorter first
+        return Integer.compare(aRemaining, bRemaining);
+    }
+
+    private static boolean isPartOfSurrogatePair(String path, int index) {
+        char c = path.charAt(index);
+        if (Character.isHighSurrogate(c)) {
+            return index + 1 < path.length() && Character.isLowSurrogate(path.charAt(index + 1));
+        } else if (Character.isLowSurrogate(c)) {
+            return index > 0 && Character.isHighSurrogate(path.charAt(index - 1));
+        }
+        return false;
     }
 
     static void throwIfEmpty(String path) {

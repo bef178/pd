@@ -606,6 +606,36 @@ class Test_PathOps {
         void comparesSupplementaryCodePointsByValue() {
             // U+00E9 (é = 233) > U+007A (z = 122), so "café" > "cafz"
             assertEquals(1, pathOps.compare("café", "cafz"));
+
+            // U+1F600 starts with high surrogate D83D < E000 as a code unit,
+            // but as a code point it is greater than any BMP character
+            assertEquals(1, pathOps.compare("\uD83D\uDE00", "\uE000"));
+            assertEquals(-1, pathOps.compare("\uE000", "\uD83D\uDE00"));
+        }
+
+        @Test
+        void directoryPriorityBeatsSupplementaryCodePoint() {
+            assertEquals(-1, pathOps.compare("\uD83D\uDE00/x", "y"));
+        }
+
+        @Test
+        void loneSurrogatesCompareByTheirOwnValue() {
+            // lone high and lone low are less than U+FFFD
+            assertEquals(-1, pathOps.compare("\uD83Dx", "\uFFFD"));
+            assertEquals(-1, pathOps.compare("\uDE00", "\uFFFD"));
+            // a pair (U+10000) is greater than a lone high
+            assertEquals(1, pathOps.compare("\uD800\uDE00", "\uD83D"));
+            // same leading high surrogate, only the second forms a pair
+            assertEquals(-1, pathOps.compare("\uD83D\uD800", "\uD83D\uDE00"));
+        }
+
+        @Test
+        void equalLoneSurrogatesDoNotAffectResult() {
+            // the order is decided by the suffix, not by the equal lone surrogate
+            assertEquals(-1, pathOps.compare("\uD83Dx", "\uD83Dy"));
+            assertEquals(-1, pathOps.compare("\uDE00x", "\uDE00y"));
+            // rules still apply after skipping the equal lone surrogate
+            assertEquals(-1, pathOps.compare("\uD83D/x", "\uD83Dy"));
         }
 
         @Test
